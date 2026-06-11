@@ -6,5 +6,13 @@ name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4"
 rev = "v4.27.0"
 
+# The executable interval-arithmetic kernel (no Mathlib imports), natively
+# precompiled so that `native_decide` evaluates the Layer B certificate
+# checker as compiled code instead of through the IR interpreter (~3x; the
+# remaining cost is GMP bignum arithmetic, native either way).
+[[lean_lib]]
+name = "Prop51Kernel"
+precompileModules = true
+
 [[lean_lib]]
 name = "Prop51"

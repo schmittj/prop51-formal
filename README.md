@@ -28,7 +28,7 @@ The proof (see `paper/prop51.tex`) has three layers:
 |---|---|---|---|
 | enumeration | `g ≤ 23` (`a ≤ 8`) | exact rationals over all partitions | **proved** (`CertificateSmall.lean`) |
 | majorant, exact | `9 ≤ a ≤ 60` | exact rationals, 10,764 pairs | **proved** (`CertificateExact.lean`) |
-| majorant, interval | `61 ≤ a ≤ 400` | 192-bit ball arithmetic, 480,984 pairs | external Arb certificate (`certificates/`), Lean port = Layer B |
+| majorant, interval | `61 ≤ a ≤ 400` | verified 192-bit dyadic intervals, 470,220 pairs | **proved** (`Prop51Kernel.lean` + `IntervalCert.lean` + 8 `native_decide` chunks) |
 | effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + saddle bounds | paper-level, Lean port = Layer C |
 
 ## What is machine-checked today
@@ -41,13 +41,19 @@ All Lean proofs are sorry-free.  Headline theorems:
 * `Prop51.unorm_neg_9_60` — the normalized majorant `U_a(N)/(N c_a)` is
   negative on the entire rectangle `9 ≤ a ≤ 60`, `6a-7 ≤ N ≤ 12a-8`,
   with the exact corner value pinned at `(9,100)`.
-* **`Prop51.coefficientNegativity_of_g_le_179`** — the capstone: for every
-  `2 ≤ g ≤ 179` with `g ≡ 0,2 (mod 3)` and every positive partition of
+* `Prop51.unorm_neg_9_400` — the certificate range assembled: exact
+  rationals for `9 ≤ a ≤ 60`, *verified dyadic interval arithmetic* for
+  `61 ≤ a ≤ 400` (`Prop51Kernel.lean` is a self-contained, Mathlib-free
+  interval kernel — 192-bit outward-rounded dyadic floats, the working
+  precision of the reference Arb run — whose enclosure semantics over `ℚ`
+  is proved in `Prop51/Dyadic.lean`/`IntervalCert.lean`).
+* **`Prop51.coefficientNegativity_of_g_le_1199`** — the capstone: for every
+  `2 ≤ g ≤ 1199` with `g ≡ 0,2 (mod 3)` and every positive partition of
   `2g-2`, the Proposition 5.1 coefficient is negative.  Layer A (the
   power-series bridge `Cseries = expSeries c`, the official characterization
-  `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) is fully
-  formalized with **no computational axioms**; only the finite certificates
-  use `native_decide`.
+  `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
+  soundness theory are fully formalized with **no computational axioms**;
+  only the finite certificates use `native_decide`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.
@@ -76,7 +82,8 @@ build time.
 ## Repository layout
 
 ```
-Prop51/            Lean library (Defs, Partitions, certificates, Main)
+Prop51Kernel.lean  executable interval kernel (no Mathlib; natively precompiled)
+Prop51/            Lean library (Defs, soundness theory, certificates, Main)
 scripts/           axiom report, constants check, corrected saddle scan
 paper/             the LaTeX proof document (tenth revision + errata)
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)

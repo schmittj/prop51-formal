@@ -33,18 +33,25 @@ No real analysis; everything is coefficient identities over ℚ.
       parts); upgrade `bCoeff_neg_g_le_23` to the `IsPartitionOf` form.
 - [ ] optional: align with `Mathlib.Combinatorics.Partition` / `Nat.Partition`.
 
-## Layer B — interval certificate `61 ≤ a ≤ 400`
+## Layer B — interval certificate `61 ≤ a ≤ 400` — **done**
 
-- [ ] verified dyadic interval arithmetic (`Int` mantissa, fixed precision
-      ≥ 128 bits; add/mul/div with directed rounding + soundness lemmas), or
-      adapt [girving/interval](https://github.com/girving/interval)
-      (64-bit; plain doubles empirically reproduce the 192-bit Arb values to
-      1e-12, so 64-bit may suffice — prototype on the `N = 4792` column).
-- [ ] interval port of the `X/Y` recurrences with per-`N` shared tables;
-      conservative sign handling exactly as in
-      `certificates/prop51_A400_certificate_package.zip`.
-- [ ] `native_decide` over all 480,984 pairs (budget: the Python/Arb run
-      takes 11 s on 24 cores; expect minutes single-threaded in Lean).
+- [x] verified dyadic interval arithmetic: `Prop51Kernel.lean` (executable,
+      Mathlib-free, natively precompiled) + `Prop51/Dyadic.lean` (enclosure
+      semantics over `ℚ`; 192-bit mantissas with outward rounding, the
+      working precision of the reference Arb run).  Hand-rolled rather than
+      girving/interval: the soundness statements stay in `ℚ`, no extra
+      dependency, and rounding soundness reduces to floor/ceil facts.
+- [x] interval port of the recurrences with per-`N` shared tables
+      (`bTab`/`qTab`); the *unnormalized* `B`/`Q` recurrences are tracked
+      directly (termwise a constant rescale of the certificate's `X`/`Y`
+      form, so numerically identical), which lets soundness reuse the exact
+      `expList` specs of Layer A verbatim.  Sign handling via `DI.hull0`
+      (hull with `{0}`) — strictly conservative, no interval sign decision.
+- [x] `native_decide` over all 470,220 pairs `61 ≤ a ≤ 400` (the 10,764
+      pairs `a ≤ 60` stay with the exact certificate): 8 equal-work chunks
+      (`CertificateInterval1-8.lean`, ~4 min each, parallel under
+      `lake build`), assembled into `unorm_neg_61_400` / `unorm_neg_9_400`,
+      capstone `coefficientNegativity_of_g_le_1199`.
 
 ## Layer C — the effective tail `a ≥ 401`
 

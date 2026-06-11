@@ -19,7 +19,7 @@ Until then, the authoritative map from paper to Lean is:
 | §6 positive part (saddle regimes + window scan) | Layer C + `scripts/positive_saddle_scan.py` | open |
 | §7 finite certificates: a ≤ 8 | `Prop51/CertificateSmall.lean` | **done** |
 | §7 finite certificates: 9 ≤ a ≤ 60 (exact layer) | `Prop51/CertificateExact.lean` | **done** |
-| §7 finite certificates: 9 ≤ a ≤ 400 (Arb) | `certificates/` (external) → Layer B | open |
-| §8 final theorem | `Prop51/Main.lean` (`CoefficientNegativity`) | stated |
+| §7 finite certificates: 9 ≤ a ≤ 400 (Arb) | `Prop51Kernel.lean` (interval kernel) + `Prop51/Dyadic.lean`, `Prop51/IntervalCert.lean` (soundness) + `Prop51/CertificateInterval*.lean` (`unorm_neg_9_400`) | **done** |
+| §8 final theorem | `Prop51/Main.lean` (`CoefficientNegativity`; proved through `g ≤ 1199` by `coefficientNegativity_of_g_le_1199`) | stated; open = Layer C |
 
 To bootstrap the web blueprint later: `pip install leanblueprint && leanblueprint new`.

@@ -27,3 +27,17 @@ import Prop51
 #print axioms Prop51.bCoeff_le_U
 #print axioms Prop51.bCoeff_neg_of_unorm
 #print axioms Prop51.coefficientNegativity_of_g_le_179
+
+-- Layer B: dyadic interval arithmetic + interval certificate
+#print axioms Prop51.shl_spec
+#print axioms Prop51.DI.mem_mul
+#print axioms Prop51.DI.mem_divNat
+#print axioms Prop51.mem_cTab
+#print axioms Prop51.mem_bTab
+#print axioms Prop51.mem_qTab
+#print axioms Prop51.checkPair_sound
+#print axioms Prop51.checkRange_sound
+#print axioms Prop51.checkRange_chunk1
+#print axioms Prop51.unorm_neg_61_400
+#print axioms Prop51.unorm_neg_9_400
+#print axioms Prop51.coefficientNegativity_of_g_le_1199

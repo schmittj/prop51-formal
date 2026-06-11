@@ -17,12 +17,13 @@ of Proposition 5.1 there).
 
 ## Status
 
-* `coefficientNegativity_of_g_le_23` : proved (machine-checked enumeration,
-  modulo generator-completeness `mem_partitions_iff`, tracked in ROADMAP).
-* `unorm_neg_9_60` : the exact majorant layer `9 ≤ a ≤ 60` is proved; the
-  bridge `b_a(μ) ≤ U_a(N)` (paper eq. 8) is Layer A of the roadmap.
-* `61 ≤ a ≤ 400` (interval certificate) and `a ≥ 401` (effective analytic
-  bound): not yet formalized — Layers B and C of the roadmap.
+* `coefficientNegativity_of_g_le_1199` : proved — the enumeration (`g ≤ 23`),
+  the exact-rational certificate (`9 ≤ a ≤ 60`), the verified dyadic
+  interval certificate (`61 ≤ a ≤ 400`, Layer B), and the Layer A majorant
+  bridge `b_a(μ) ≤ U_a(N)` (paper eq. 8) together cover every relevant
+  genus `g ≤ 1199` and every positive partition.
+* `a ≥ 401` (effective analytic bound): not yet formalized — Layer C of the
+  roadmap; it would upgrade the capstone to full `CoefficientNegativity`.
 -/
 import Prop51.Defs
 import Prop51.Partitions
@@ -30,6 +31,7 @@ import Prop51.CertificateSmall
 import Prop51.CertificateExact
 import Prop51.PartitionsComplete
 import Prop51.Majorant
+import Prop51.CertificateInterval
 
 namespace Prop51
 
@@ -104,6 +106,35 @@ theorem coefficientNegativity_of_g_le_179 :
     refine bCoeff_neg_of_unorm μ (g/3 + 1) ((μ.map (· + 1)).sum)
       hpos rfl (by omega) (by omega) ?_
     exact unorm_neg_9_60 (g/3 + 1) (by omega) (by omega)
+      ((μ.map (· + 1)).sum) (by omega) (by omega)
+
+/-- **The capstone of Layers 0+A+B**: for every genus `2 ≤ g ≤ 1199` with
+`g ≡ 0, 2 (mod 3)` and *every* positive partition `μ` of `2g-2`, the
+Chen–Larson Proposition 5.1 coefficient is negative.
+
+Extends `coefficientNegativity_of_g_le_179` with the verified dyadic
+interval certificate `unorm_neg_61_400` (`61 ≤ a ≤ 400`, i.e.
+`180 ≤ g ≤ 1199`); the partition-to-rectangle bookkeeping
+(`N = 2g-2+n`, `6a-7 ≤ N ≤ 12a-8`) is the same `omega` argument. -/
+theorem coefficientNegativity_of_g_le_1199 :
+    ∀ g, 2 ≤ g → g ≤ 1199 → g % 3 ≠ 1 →
+      ∀ μ : List Nat, IsPartitionOf μ (2*g - 2) →
+        bCoeff μ (g/3 + 1) < 0 := by
+  intro g h2 h1199 hres μ hμp
+  rcases Nat.lt_or_ge g 180 with hg | hg
+  · exact coefficientNegativity_of_g_le_179 g h2 (by omega) hres μ hμp
+  · obtain ⟨hsum, hpos⟩ := hμp
+    have hmap := sum_map_add_one μ
+    have hlen := length_le_sum μ hpos
+    have hne : 1 ≤ μ.length := by
+      rcases μ with - | ⟨x, l⟩
+      · exfalso; simp at hsum; omega
+      · simp
+    have hNval : (μ.map (· + 1)).sum = (2*g - 2) + μ.length := by
+      rw [hmap, hsum]
+    refine bCoeff_neg_of_unorm μ (g/3 + 1) ((μ.map (· + 1)).sum)
+      hpos rfl (by omega) (by omega) ?_
+    exact unorm_neg_61_400 (g/3 + 1) (by omega) (by omega)
       ((μ.map (· + 1)).sum) (by omega) (by omega)
 
 end Prop51
