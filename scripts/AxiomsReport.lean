@@ -13,3 +13,8 @@ import Prop51
 #print axioms Prop51.coefficientNegativity_of_g_le_23
 #print axioms Prop51.mem_partitions_iff
 #print axioms Prop51.coefficientNegativity_of_g_le_23'
+#print axioms Prop51.theta_expSeries
+#print axioms Prop51.logDeriv_unique
+#print axioms Prop51.Aseq_succ
+#print axioms Prop51.Cseries_eq_expSeries_c
+#print axioms Prop51.bridge_identity

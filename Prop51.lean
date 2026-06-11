@@ -3,4 +3,6 @@ import Prop51.Partitions
 import Prop51.CertificateSmall
 import Prop51.CertificateExact
 import Prop51.PartitionsComplete
+import Prop51.ExpSeries
+import Prop51.Bridge
 import Prop51.Main
