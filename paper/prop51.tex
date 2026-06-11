@@ -673,6 +673,10 @@ The accompanying script \texttt{prop51\_tenth\_positive\_saddle\_certificate.py}
 for $a>2000$.  The largest certified total for the displayed majorant in the finite scan occurs at $a=410$ and is less than $5.1\cdot10^{-17}$; the actual recurrence value at the corner $(401,4804)$ is $2.94\cdot10^{-120}$.  Thus the positive part is $<10^{-8}$.  The solo term $2^{-a-1}Y_a(N)$ is bounded by the same tempered saddle with $j=a$ and is $<\e^{-0.49a}<10^{-85}$ for $a\ge401$.
 \end{proof}
 
+\begin{remark}[erratum, this repository]
+The window scan cited above sampled only $N=12a-8$; the tempered majorant is decreasing in $N$, so this does not dominate the full rectangle.  The corrected two-edge scan (\texttt{scripts/positive\_saddle\_scan.py}; see \texttt{paper/ERRATA.md}) evaluates the small-regime formula at $N=12a-8$ and the tempered formula at $N=6a-7$, dominating every $N$; the worst summed majorant remains below $10^{-16}$, far under the $10^{-8}$ target.
+\end{remark}
+
 \begin{remark}
 The retention of $\binom{a-2}{k-1}^{-1}$ is essential.  Without it, the crude bound has size about $5.3\cdot10^9$ at $a=401$; with it, a direct recurrence regression at $(a,N)=(401,4804)$ gives an actual positive sum about $2.94\cdot10^{-120}$, and the explicit saddle majorant above is below $5.1\cdot10^{-17}$ throughout the scanned window.
 \end{remark}
