@@ -18,3 +18,5 @@ import Prop51
 #print axioms Prop51.Aseq_succ
 #print axioms Prop51.Cseries_eq_expSeries_c
 #print axioms Prop51.bridge_identity
+#print axioms Prop51.bCoeff_eq_expCoeff
+#print axioms Prop51.bSeries_official

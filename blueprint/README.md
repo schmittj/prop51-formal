@@ -10,7 +10,8 @@ Until then, the authoritative map from paper to Lean is:
 | paper (tenth revision) | Lean | status |
 |---|---|---|
 | §1 defs, eq. (3)–(7) | `Prop51/Defs.lean` (`c`, `expCoeff`, `bCoeff`, `Unorm`) | done (recurrence form) |
-| §1 eq. (1)–(2) power series; eq. (8) majorant bridge | Layer A (`ROADMAP.md`) | open |
+| §1 eq. (1)–(2) power series (`Cseries = expSeries c`, `bSeries_official`) | `Prop51/ExpSeries.lean`, `Prop51/Bridge.lean`, `Prop51/BCoeffSeries.lean` | **done** |
+| §1 eq. (8) majorant inequality `b ≤ U` | Layer A remainder (`ROADMAP.md`) | open |
 | §2 Lemma 2.1, Lemma 2.2 (binomial reciprocals) | Layer C | open |
 | §3 composition lemma (eq. 19) | Layer C | open |
 | §4 Δ-envelope (R ≤ 20) | Layer C | open |

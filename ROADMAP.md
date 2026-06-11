@@ -8,15 +8,15 @@ with the axiom footprint documented by `scripts/AxiomsReport.lean`.
 Connect the recurrence-defined objects to the official power series.
 No real analysis; everything is coefficient identities over ℚ.
 
-- [ ] `A r := (6r)!/((3r)!(2r)!·72^r)` and the ratio identity
+- [x] `A r := (6r)!/((3r)!(2r)!·72^r)` and the ratio identity
       `(k+1)·A_{k+1} = 6(k+1/6)(k+5/6)·A_k` (clears to integers).
-- [ ] exp-characterization: for `F` with `F₀ = 1`, `n·F_n = Σ_{j≤n} j·L_j·F_{n-j}`
+- [x] exp-characterization: for `F` with `F₀ = 1`, `n·F_n = Σ_{j≤n} j·L_j·F_{n-j}`
       iff `F = exp(Σ L_r t^r)` as `PowerSeries ℚ` (uniqueness by strong
       induction; existence = our `expList`).
-- [ ] the bridge identity `r·A_r = Σ_{j=1}^r j·c_j·A_{r-j}` (i.e. `c = log C`;
+- [x] the bridge identity `r·A_r = Σ_{j=1}^r j·c_j·A_{r-j}` (i.e. `c = log C`;
       from the hypergeometric ratio + the Riccati recurrence — the one real
       lemma of this layer; verified numerically to r = 40 exactly).
-- [ ] `bCoeff μ a = PowerSeries.coeff a (Π_i C(t/qᵢ) * (C^N)⁻¹)`.
+- [x] `bCoeff μ a = PowerSeries.coeff a (Π_i C(t/qᵢ) * (C^N)⁻¹)`.
 - [ ] majorant inequality `b_a(μ) ≤ U_a(N)` (paper eq. 8): coefficientwise
       domination `P_k(μ) ≤ Q_k(N)` by induction on the exp-recurrence
       (monotonicity in the exponent α over ℚ≥0), plus sign bookkeeping.
