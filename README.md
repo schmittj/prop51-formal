@@ -1,0 +1,84 @@
+# prop51-formal
+
+Formal verification (Lean 4 + mathlib) of the coefficient-negativity theorem
+behind **Chen–Larson, Proposition 5.1** (*Independence of tautological classes
+and cohomological stability for strata of differentials*,
+[arXiv:2603.23850](https://arxiv.org/abs/2603.23850)), together with the
+LaTeX proof document and the computational certificates it relies on.
+
+## The theorem
+
+Let `C(t) = Σ_k (6k)!/((3k)!(2k)!) (t/72)^k` and, for a positive partition
+`μ = (m_1, …, m_n)` of `2g-2`, let
+
+```
+b_a(μ) = [t^a]  Π_i C(t/(m_i+1)) / C(t)^(2g-2+n),    a = ⌊g/3⌋ + 1 .
+```
+
+**Target** (`Prop51.CoefficientNegativity` in `Prop51/Main.lean`): for every
+`g ≥ 2` with `g ≡ 0, 2 (mod 3)` and every positive partition `μ` of `2g-2`,
+`b_a(μ) < 0`.  In particular the coefficient is nonzero, which is the
+hypothesis of Chen–Larson Proposition 5.1; via their geometric reduction it
+yields their Conjecture 1.4 for holomorphic abelian strata in those residue
+classes — for *all* genera, extending their computer verification (`g ≤ 30`).
+
+The proof (see `paper/prop51.tex`) has three layers:
+
+| layer | range | method | formal status |
+|---|---|---|---|
+| enumeration | `g ≤ 23` (`a ≤ 8`) | exact rationals over all partitions | **proved** (`CertificateSmall.lean`) |
+| majorant, exact | `9 ≤ a ≤ 60` | exact rationals, 10,764 pairs | **proved** (`CertificateExact.lean`) |
+| majorant, interval | `61 ≤ a ≤ 400` | 192-bit ball arithmetic, 480,984 pairs | external Arb certificate (`certificates/`), Lean port = Layer B |
+| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + saddle bounds | paper-level, Lean port = Layer C |
+
+## What is machine-checked today
+
+All Lean proofs are sorry-free.  Headline theorems:
+
+* `Prop51.bCoeff_neg_g_le_23` — `b_a(μ) < 0` for every generated partition,
+  every relevant `g ≤ 23` (≈150k partitions; cardinalities cross-checked
+  against p(n)).
+* `Prop51.unorm_neg_9_60` — the normalized majorant `U_a(N)/(N c_a)` is
+  negative on the entire rectangle `9 ≤ a ≤ 60`, `6a-7 ≤ N ≤ 12a-8`,
+  with the exact corner value pinned at `(9,100)`.
+* Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
+  their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
+  carry no computational axioms.
+
+## Trust model
+
+Certificate theorems are proved by `native_decide`, so they depend on the
+axiom `Lean.ofReduceBool` (evaluation by the Lean compiler) in addition to
+the three standard axioms.  `scripts/AxiomsReport.lean` prints the axioms of
+every headline theorem; CI fails if anything beyond
+`propext, Classical.choice, Quot.sound, Lean.ofReduceBool` appears, or if any
+`sorry` is present.  Definitional/spec lemmas use no computational axioms.
+
+## Building
+
+```sh
+lake exe cache get   # fetch prebuilt mathlib oleans
+lake build           # builds everything incl. the native_decide certificates
+lake env lean scripts/AxiomsReport.lean   # axiom audit
+```
+
+Pinned: Lean `v4.27.0`, mathlib `v4.27.0`.  On WSL, build from a clone on the
+Linux filesystem (e.g. `~/lean/`), not from `/mnt/c` — I/O there dominates
+build time.
+
+## Repository layout
+
+```
+Prop51/            Lean library (Defs, Partitions, certificates, Main)
+scripts/           axiom report, constants check, corrected saddle scan
+paper/             the LaTeX proof document (tenth revision + errata)
+certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
+blueprint/         (planned) Lean blueprint
+ROADMAP.md         formalization plan: Layers A, A′, B, C
+```
+
+## Relation to the paper
+
+`paper/prop51.tex` is the human proof this repository formalizes.  Two
+*errata* against its tenth revision, found during formalization review, are
+recorded in `paper/ERRATA.md` (neither affects the conclusions).

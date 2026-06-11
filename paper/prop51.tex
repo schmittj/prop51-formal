@@ -1,0 +1,779 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1.05in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\C}{\mathsf C}
+\newcommand{\dd}{\mathrm d}
+\newcommand{\e}{\mathrm e}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\floor}[1]{\left\lfloor #1\right\rfloor}
+\DeclareMathOperator{\coeff}{coeff}
+
+\title{A tenth revision of the Chen--Larson Proposition 5.1 coefficient attack:\ audit repairs for sign-lock constants and positive part}
+\author{Research note generated for the coefficient problem}
+\date{11 June 2026}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This tenth revision responds to the two latest audits of the ninth proof package.  The main blocking objections were that the positive-part estimate still contained hidden saddle bounds and an unspecified calculus check, while the effective sign-lock section asserted several numerical constants--especially the $784/m^2$ cross-term allowance--without deriving them or reproducing them in code.  This version makes four changes.
+
+First, the proof of $d_r\le 1/(2\pi)$ is repaired by proving that $A_r/(6^r\Gamma(r))$ increases to $1/(2\pi)$.  Second, the nonlinear envelope is restated only in the actually used range $R\le20$, and all saddle arguments are explicitly for truncated polynomials.  Third, the P4 cross term is corrected to use the full product factors, and the new constants script computes it rather than hard-coding it.  Fourth, the positive-part section now states explicit saddle majorants in two regimes; the supporting script evaluates the resulting finite inequalities and records the worst cases.
+
+The status is slightly more cautious than the ninth revision: the overall argument is now much more audit-ready, and I believe the route closes, but the positive-part saddle majorant still rests on an elementary finite calculus/certificate layer rather than on a theorem-prover formalization.  The finite Arb rectangle $9\le a\le400$ remains unchanged.
+\end{abstract}
+
+\tableofcontents
+
+\section{Target coefficient and partition-free majorant}\label{sec:target}
+
+Let
+\[
+  \C(t)=\sum_{k\ge0}\frac{(6k)!}{(3k)!(2k)!}\left(\frac{t}{72}\right)^k,
+  \qquad
+  \log \C(t)=\sum_{r\ge1}c_rt^r.
+\]
+For a positive partition $\mu=(m_1,\ldots,m_n)$ of $2g-2$, set
+\[
+  q_i=m_i+1\ge2,
+  \qquad
+  N=2g-2+n=\sum_i q_i.
+\]
+The coefficient appearing in Chen--Larson Proposition 5.1 is
+\begin{equation}\label{eq:ba-def}
+  b_a(\mu)=[t^a]\frac{\prod_i\C(t/q_i)}{\C(t)^N},
+  \qquad a=\floor{g/3}+1.
+\end{equation}
+For $g\equiv0,2\pmod 3$, the positive-partition ranges are
+\[
+\begin{array}{c|c|c|c}
+  \text{residue} & g & 2g-2 & \text{range for }N \\
+  \midrule
+  g\equiv0\pmod3 & 3a-3 & 6a-8 & 6a-7\le N\le12a-16,\\
+  g\equiv2\pmod3 & 3a-1 & 6a-4 & 6a-3\le N\le12a-8.
+\end{array}
+\]
+Thus the enlarged rectangle
+\begin{equation}\label{eq:rectangle}
+  6a-7\le N\le12a-8
+\end{equation}
+contains all cases relevant to Proposition 5.1.  We prove the stronger sign statement
+\begin{equation}\label{eq:sign-goal}
+  b_a(\mu)<0.
+\end{equation}
+
+Define
+\[
+  B_k(N)=[t^k]\C(t)^{-N},
+  \qquad
+  Q_k(N)=[t^k]\C(t/2)^{N/2}.
+\]
+If
+\[
+  P_k(\mu)=[t^k]\prod_i\C(t/q_i),
+\]
+then
+\begin{equation}\label{eq:PQ-domination}
+  0\le P_k(\mu)\le Q_k(N).
+\end{equation}
+Indeed, $q_i\ge2$ gives $\prod_i\C(t/q_i)\preceq \C(t/2)^n$, and
+\[
+  \C(t/2)^\alpha
+  =\exp\left(\alpha\sum_{r\ge1}c_r2^{-r}t^r\right)
+\]
+has coefficients that are polynomials in $\alpha$ with nonnegative coefficients (using $c_r>0$, proved in Section~\ref{sec:coeff}); since $n\le N/2$, this proves \eqref{eq:PQ-domination}.
+
+Consequently,
+\begin{equation}\label{eq:majorant}
+  b_a(\mu)
+  \le
+  U_a(N):=B_a(N)+Q_a(N)+
+  \sum_{\substack{1\le k<a\\B_k(N)>0}}B_k(N)Q_{a-k}(N).
+\end{equation}
+Thus it suffices to show $U_a(N)<0$ on \eqref{eq:rectangle}.
+
+Normalize
+\begin{equation}\label{eq:XY-def}
+  X_r(N)=\frac{B_r(N)}{Nc_r},
+  \qquad
+  Y_r(N)=\frac{2^rQ_r(N)}{(N/2)c_r}
+\end{equation}
+for integers $N\ge1$.  Put
+\[
+  R_{j,r}=\frac{c_jc_{r-j}}{c_r}.
+\]
+Then
+\begin{align}
+  X_1&=-1,
+  &X_r&=-1-\frac Nr\sum_{j=1}^{r-1}jR_{j,r}X_{r-j},\label{eq:Xrec}\\
+  Y_1&=1,
+  &Y_r&=1+\frac N{2r}\sum_{j=1}^{r-1}jR_{j,r}Y_{r-j}.\label{eq:Yrec}
+\end{align}
+Equivalently,
+\begin{equation}\label{eq:Unorm}
+  \frac{U_a(N)}{Nc_a}=X_a(N)+2^{-a-1}Y_a(N)
+  +\frac N2\sum_{\substack{1\le k<a\\ X_k(N)>0}}
+   R_{k,a}2^{-(a-k)}X_k(N)Y_{a-k}(N).
+\end{equation}
+
+\section{Coefficient estimates}\label{sec:coeff}
+
+The hypergeometric identity
+\[
+  \C(t)={}_2F_0\left(\frac16,\frac56;;6t\right)
+\]
+gives, with $u=t\frac{\dd}{\dd t}\log\C(t)$,
+\[
+  u=6t\left(t\frac{\dd u}{\dd t}+u^2+u+\frac5{36}\right).
+\]
+Equating coefficients yields
+\begin{equation}\label{eq:crec}
+  c_1=\frac56,
+  \qquad
+  c_r=6(r-1)c_{r-1}+\frac6r\sum_{i=1}^{r-2}i(r-1-i)c_i c_{r-1-i}.
+\end{equation}
+In particular $c_r>0$.  Write
+\begin{equation}\label{eq:d-def}
+  c_r=6^r(r-1)!d_r.
+\end{equation}
+Then
+\begin{equation}\label{eq:drec}
+  d_r=d_{r-1}+\frac1r\sum_{i=1}^{r-2}
+  \frac{d_id_{r-1-i}}{\binom{r-1}{i}},
+\end{equation}
+so $d_r$ is nondecreasing and $d_1=d_2=5/36$.
+
+The ordinary coefficients
+\[
+  A_r=[t^r]\C(t)=\frac{(6r)!}{(3r)!(2r)!72^r}
+\]
+satisfy
+\begin{equation}\label{eq:beta-product}
+  \frac{A_r}{6^r\Gamma(r)}
+  =\frac{\Gamma(r+\frac16)\Gamma(r+\frac56)}
+  {\Gamma(\frac16)\Gamma(\frac56)\Gamma(r+1)\Gamma(r)}
+  \longrightarrow
+  \frac1{\Gamma(\frac16)\Gamma(\frac56)}=\frac1{2\pi}.
+\end{equation}
+Moreover,
+\[
+  F_r:=\frac{A_r}{6^r\Gamma(r)}
+  \quad\text{satisfies}\quad
+  \frac{F_{r+1}}{F_r}
+  =\frac{(r+\frac16)(r+\frac56)}{r(r+1)}
+  =1+\frac{5}{36r(r+1)}>1.
+\]
+Thus $F_r$ increases to $1/(2\pi)$, and since $c_r\le A_r$, we have
+\begin{equation}\label{eq:d-basic}
+  \frac5{36}\le d_r\le\frac1{2\pi}.
+\end{equation}
+
+\begin{lemma}[increment and ratio control]\label{lem:d-ratio}
+For every $r\ge2$,
+\begin{equation}\label{eq:d-increment}
+  0\le d_r-d_{r-1}\le\frac1{\pi^2r(r-1)}.
+\end{equation}
+Consequently, for $1\le s<m$,
+\begin{equation}\label{eq:dratio}
+  1-\frac{36}{5\pi^2}\frac{s}{m(m-s)}
+  \le
+  \frac{d_{m-s}}{d_m}
+  \le1.
+\end{equation}
+Also
+\begin{equation}\label{eq:cratio-exact}
+  \frac{c_{m-s}}{c_m}
+  =6^{-s}\frac{\Gamma(m-s)}{\Gamma(m)}\frac{d_{m-s}}{d_m}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+From \eqref{eq:drec} and \eqref{eq:d-basic},
+\[
+  0\le d_r-d_{r-1}\le\frac1r\frac1{4\pi^2}
+  \sum_{i=1}^{r-2}\binom{r-1}{i}^{-1}.
+\]
+Lemma~\ref{lem:binom-recip} gives \eqref{eq:d-increment}.  Summing from $m-s+1$ to $m$ gives
+\[
+  d_m-d_{m-s}\le\frac1{\pi^2}\left(\frac1{m-s}-\frac1m\right)
+  =\frac{s}{\pi^2m(m-s)}.
+\]
+Since $d_m\ge5/36$, division proves \eqref{eq:dratio}.  Formula \eqref{eq:cratio-exact} is immediate from \eqref{eq:d-def}.
+\end{proof}
+
+
+\begin{lemma}[reciprocal binomial sums]\label{lem:binom-recip}
+For $n\ge2$,
+\[
+  \sum_{i=1}^{n-1}\binom ni^{-1}\le \frac4n.
+\]
+For $n\ge4$,
+\[
+  \sum_{i=2}^{n-2}\binom ni^{-1}\le \frac{10}{n(n-1)}.
+\]
+\end{lemma}
+
+\begin{proof}
+The first inequality is checked directly for $n\le5$.  For $n\ge6$, the two endpoint terms contribute $2/n$, the two next-to-endpoint terms contribute $4/[n(n-1)]$, and all remaining terms are at most $\binom n3^{-1}$, giving
+\[
+  \frac2n+\frac{4}{n(n-1)}+\frac{6(n-5)}{n(n-1)(n-2)}\le\frac4n.
+\]
+For the second inequality, the endpoints $i=2,n-2$ contribute $4/[n(n-1)]$, and the middle terms are again at most $\binom n3^{-1}$, giving at most another $6/[n(n-1)]$.
+\end{proof}
+
+We shall repeatedly use the expansion
+\begin{equation}\label{eq:gamma-expansion}
+  m^s\frac{\Gamma(m-s)}{\Gamma(m)}
+  =\prod_{i=1}^s\frac{1}{1-i/m}
+  =1+\frac{s(s+1)}{2m}+O_s(m^{-2}),
+\end{equation}
+and, when checking the second-order term,
+\begin{equation}\label{eq:gamma-expansion-second}
+  m^s\frac{\Gamma(m-s)}{\Gamma(m)}
+  =1+\frac{s(s+1)}{2m}
+  +\frac{1}{m^2}\left(\frac{s^{\underline4}}8+\frac76s^{\underline3}+\frac52s^{\underline2}+s\right)+O_s(m^{-3}).
+\end{equation}
+
+\section{Composition and nonlinear-block estimates}\label{sec:composition}
+
+\begin{lemma}[ordered factorial compositions]\label{lem:composition}
+Let
+\[
+  G_r(p)=\sum_{\substack{j_1+\cdots+j_r=p\\j_i\ge2}}
+  \prod_{i=1}^r(j_i-1)!.
+\]
+Then, for $p\ge2r$,
+\begin{equation}\label{eq:composition}
+  G_r(p)\le4^{r-1}(p-2r+1)!.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For $r=1$ this is equality.  Assuming the claim for $r-1$,
+\[
+  G_r(p)=\sum_{j=2}^{p-2(r-1)}(j-1)!G_{r-1}(p-j)
+  \le4^{r-2}\sum_{j=2}^{p-2r+2}(j-1)!(p-j-2r+3)!.
+\]
+Put $i=j-1$ and $q=p-2r+2$.  The final sum is
+\[
+  \sum_{i=1}^{q-1}i!(q-i)!=q!\sum_{i=1}^{q-1}\binom qi^{-1}\le 4(q-1)!,
+\]
+using the binomial-reciprocal bound, with $q\le3$ checked directly.  This proves \eqref{eq:composition}.
+\end{proof}
+
+Combining \eqref{eq:composition} with
+\[
+  c_j\le\frac1{2\pi}6^j(j-1)!<\frac16 6^j(j-1)!,
+  \qquad
+  c_p\ge\frac5{36}6^p(p-1)!,
+\]
+gives
+\begin{equation}\label{eq:block-envelope}
+  \sum_{\substack{j_1+\cdots+j_r=p\\j_i\ge2}}
+  \frac{c_{j_1}\cdots c_{j_r}}{c_p}
+  \le
+  \frac95\left(\frac23\right)^r
+  \frac{(p-2r+1)!}{(p-1)!}.
+\end{equation}
+
+Let
+\[
+  H(t)=\sum_{j\ge2}c_jt^j,
+  \qquad
+  E_p^\pm(N)=[t^p]\exp(\pm NH(t)).
+\]
+From \eqref{eq:block-envelope},
+\begin{equation}\label{eq:Delta-def}
+  \left|\frac{E_p^-(N)}{-Nc_p}-1\right|,
+  \left|\frac{E_p^+(N)}{Nc_p}-1\right|
+  \le
+  \Delta(p,N):=
+  \sum_{r=2}^{\lfloor p/2\rfloor}
+  \frac95\left(\frac23\right)^r
+  \frac{N^{r-1}}{r!}\frac{(p-2r+1)!}{(p-1)!}.
+\end{equation}
+
+\begin{lemma}[explicit envelope in the used range]\label{lem:Delta-envelope}
+If $0\le N\le Rp$, $R\le20$, and $p\ge100$, then
+\begin{equation}\label{eq:Delta-envelope}
+  \Delta(p,N)
+  \le
+  \frac{\frac{2Rp}{5(p-1)(p-2)}}{1-\frac{8R}{9p}}
+  +\e^{-0.9p}.
+\end{equation}
+In particular, if $R\le20$ and $p\ge 2m/3$ with $m\ge361$, then $\Delta(p,N)\le13.2/m$.
+\end{lemma}
+
+\begin{proof}
+The two-block term is $2N/[5(p-1)(p-2)]$.  For $2\le r\le p/4$, the ratio of the $(r+1)$-block term to the $r$-block term in \eqref{eq:Delta-def} is at most
+\[
+  \frac{2N}{3(r+1)(p-2r)(p-2r+1)}\le\frac{8R}{9p}.
+\]
+This gives the geometric part of \eqref{eq:Delta-envelope}.  For $r>p/4$, write $x=r/p$.  Stirling's lower bound $r!\ge (r/e)^r$ and $(p-2r+1)!/(p-1)!\le ((p-2r+1)/(p-1))^{p-2r+1}(p-1)^{-2r+2}$ give the logarithmic bound
+\[
+  \frac1p\log T_r\le -0.92
+  \qquad(1/4\le x\le1/2,\; R\le20,\;p\ge100),
+\]
+for the $r$-block term $T_r$ in \eqref{eq:Delta-def}; the left side is a one-variable elementary function plus a negative $O(\log p/p)$ term.  The resulting geometric tail is bounded by $\e^{-0.9p}$.  The final numerical consequence follows by substituting $R=20$, $p\ge2m/3$, and $m\ge361$.
+\end{proof}
+
+The earlier false use of this envelope is avoided as follows.  In the sign-lock region we shall have $N\le(40/3)m$.  In the linear expansion of $X_m(N)$ we use Lemma~\ref{lem:Delta-envelope} only for $s\le m/3$, so $p=m-s\ge2m/3$ and
+\[
+  \frac{N}{p}\le\frac32\cdot\frac{40}{3}=20.
+\]
+The complementary range $s>m/3$ is handled separately by a Stirling tail estimate.
+
+\section{The second-order checksum}\label{sec:second-order}
+
+Set
+\begin{equation}\label{eq:zeta}
+  \zeta=\frac{Nc_1}{6m}=\frac{5N}{36m}.
+\end{equation}
+The following expansion is not used as an input to the final inequality.  It is retained as a checksum: the constants in Section~\ref{sec:c2} must dominate the exact second-order shadow.  The proof records the formal source terms; the rigorous sign-lock below is independent of this proposition.
+
+\begin{proposition}[formal second-order checksum]\label{thm:X-second-order}
+For fixed $R$, uniformly for integers $m\to\infty$ and $1\le N\le Rm$,
+\begin{equation}\label{eq:X-second-order}
+  X_m(N)=
+  -\e^{-\zeta}
+  +\frac{\e^{-\zeta}}{m}\left(2\zeta-\frac{\zeta^2}{2}\right)
+  +\frac{\kappa_2(\zeta)}{m^2}
+  +O_R(m^{-3}),
+\end{equation}
+where
+\begin{equation}\label{eq:kappa2}
+  \kappa_2(\zeta)=\e^{-\zeta}\left(\frac{623}{108}\zeta-6\zeta^2+\frac53\zeta^3-\frac18\zeta^4\right).
+\end{equation}
+Moreover,
+\begin{equation}\label{eq:kappa-bound}
+  |\kappa_2(\zeta)|<1\qquad(0\le\zeta\le10/3).
+\end{equation}
+\end{proposition}
+
+\begin{proof}[Formal derivation]
+Write
+\[
+  B_m(N)=\sum_{s=0}^m\frac{(-Nc_1)^s}{s!}E_{m-s}^-(N).
+\]
+The fixed-$s$ part gives the zeroth and first orders.  For the second order, all sums are reduced by
+\[
+  \sum_{s\ge0}\frac{(-\zeta)^s}{s!}s^{\underline j}=(-\zeta)^j\e^{-\zeta}.
+\]
+The six sources are as follows.
+
+First, \eqref{eq:gamma-expansion-second} contributes
+\[
+  \e^{-\zeta}\left(-\frac18\zeta^4+\frac76\zeta^3-\frac52\zeta^2+\zeta\right).
+\]
+Second, the product of the first gamma distortion with the first nonlinear correction contributes
+\[
+  \e^{-\zeta}\left(\frac12\zeta^3-\zeta^2\right).
+\]
+Third, the $(m-s)^{-2}$ expansion of the leading two-block term contributes $-2\zeta^2\e^{-\zeta}$.  Fourth, the leading three-block term contributes $-(\zeta^2/2)\e^{-\zeta}$.  Fifth, the subleading two-block endpoints give
+\[
+  \frac{1}{c_p}\sum_{j=2}^{p-2}c_jc_{p-j}
+  =\frac{5}{18p^2}+\frac{2725}{1944p^3}+O(p^{-4}),
+\]
+contributing $(545/108)\zeta\e^{-\zeta}$.  Sixth, the drift
+\[
+  \frac{d_{m-s}}{d_m}=1-\frac{5s}{18m^2}+O_s(m^{-3})
+\]
+contributes $-(5/18)\zeta\e^{-\zeta}$.  Adding these terms gives \eqref{eq:kappa2}.  The corrected $s\le m/3$ nonlinear envelope and the far-tail estimate below justify the termwise summation and give the stated remainder.  The bound \eqref{eq:kappa-bound} follows by checking the critical points of $\e^{-\zeta}$ times the quartic on $[0,10/3]$; the maximum absolute value is $0.9753102708\ldots$.
+\end{proof}
+
+\section{Effective sign-lock}\label{sec:c2}
+
+This is the main new constants section.  We prove a deliberately crude but explicit bound strong enough to force $X_m(N)<0$ in the range used by the $\theta=0.9$ split.
+
+\begin{theorem}[effective sign-lock]\label{thm:signlock}
+For every integer $m\ge361$ and every integer $1\le N\le(40/3)m$, with $\zeta=5N/(36m)$,
+\begin{equation}\label{eq:signlock-effective}
+  -X_m(N)
+  \ge
+  \e^{-\zeta}\left(1-\frac2m\right)-\frac{2215}{m^2}.
+\end{equation}
+Consequently,
+\begin{equation}\label{eq:X-negative-signlock}
+  X_m(N)<0
+  \qquad(m\ge361,\;1\le N\le(40/3)m).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Let $p=m-s$ and write, for $s\le m-2$,
+\begin{equation}\label{eq:signlock-factor}
+  \frac{(-Nc_1)^s}{s!}\frac{-E^-_{m-s}(N)}{Nc_m}
+  =\frac{(-\zeta)^s}{s!}\Pi_sD_s(1+\eps_p),
+\end{equation}
+where
+\[
+  \Pi_s=\prod_{i=1}^s\frac1{1-i/m},
+  \qquad
+  D_s=\frac{d_{m-s}}{d_m},
+  \qquad
+  E^-_p(N)=-Nc_p(1+\eps_p).
+\]
+Set $e_1(s)=s(s+1)/2$ and
+\begin{equation}\label{eq:w-def}
+  w_s=\Pi_sD_s(1+\eps_p)-1-\frac{e_1(s)}m+\frac{\zeta}{m}.
+\end{equation}
+Since
+\begin{equation}\label{eq:linear-sum}
+  \sum_{s\ge0}\frac{(-\zeta)^s}{s!}\left(1+\frac{e_1(s)}m-\frac{\zeta}{m}\right)
+  =\e^{-\zeta}\left(1-\frac{2\zeta-\zeta^2/2}{m}\right)
+  \ge \e^{-\zeta}\left(1-\frac2m\right)
+\end{equation}
+for $0\le\zeta\le50/27$, it suffices to prove
+\begin{equation}\label{eq:error-bound-goal}
+  \sum_{0\le s\le m/3}\frac{\zeta^s}{s!}|w_s|
+  +\text{tails}
+  \le\frac{2215}{m^2}.
+\end{equation}
+We now give the audit.
+
+\smallskip
+\noindent\textbf{P1: gamma-product residual.}
+For $x\le1/3$, $-\log(1-x)\le x+(3/4)x^2$.  Thus, for $s\le m/3$,
+\[
+  \frac{e_1(s)}m\le\log\Pi_s\le\frac{e_1(s)}m+\frac{3q_2(s)}{4m^2},
+  \qquad
+  q_2(s)=\frac{s(s+1)(2s+1)}6.
+\]
+Set $L_s=e_1(s)/m+3q_2(s)/(4m^2)$.  For $s\le m/3$ and $m\ge361$ we have
+\[
+  L_s\le \frac{s}{6}+\frac{s}{18}+\frac{s}{722}<0.2237s,
+  \qquad
+  L_s\le1.168\frac{e_1(s)}m,
+\]
+where the first inequality uses $(s+1)(2s+1)\le4s^2$ for $s\ge2$, with $s=0,1$ checked directly.  Since $e^x-1-x\le x^2e^x/2$, writing $\Pi_s=1+e_1(s)/m+\pi_s$ gives
+\[
+  0\le\pi_s\le
+  \frac12\left(1.168\frac{e_1(s)}m\right)^2\e^{0.2237s}
+  +\frac{3q_2(s)}{4m^2}.
+\]
+Weighted by $\zeta^s/s!$ with $\zeta\le50/27$, this contributes at most
+\begin{equation}\label{eq:P1}
+  \frac{426}{m^2}.
+\end{equation}
+The new script evaluates the corresponding Poisson moment as $410.913322/m^2$.
+
+\smallskip
+\noindent\textbf{P2: $d$-drift.}
+By Lemma~\ref{lem:d-ratio} and $m-s\ge2m/3$,
+\[
+  0\le1-D_s\le\frac{1.095s}{m^2}.
+\]
+Therefore
+\begin{equation}\label{eq:P2}
+  \sum_s\frac{\zeta^s}{s!}(1-D_s)\le\frac{13}{m^2}.
+\end{equation}
+
+\smallskip
+\noindent\textbf{P3: nonlinear recentring.}
+The leading two-block correction is extracted as $-\zeta/m$.  The residual is bounded in three pieces.  First,
+\begin{equation}\label{eq:P3a-pointwise}
+  \left|\frac{5N}{36(p-1)(p-2)}\frac{d_{p-2}}{d_p}-\frac{5N}{36m^2}\right|
+  \le\frac{4.258(2s+3)+0.25}{m^2}.
+\end{equation}
+Indeed, $m^2-(p-1)(p-2)\le (2s+3)m$ and $(p-1)(p-2)\ge0.435m^2$ for $m\ge361$, $p\ge2m/3$.  Hence the denominator-change part is at most
+\[
+  \frac{50}{27}\,\frac{2s+3}{0.435m^2}<\frac{4.258(2s+3)}{m^2}.
+\]
+The drift of $d_{p-2}/d_p$ contributes less than $0.25/m^2$ by Lemma~\ref{lem:d-ratio}, using again $p\ge2m/3$ and $N\le 40m/3$.  Weighted by $\zeta^s/s!$, this gives
+\begin{equation}\label{eq:P3a}
+  \frac{184}{m^2}.
+\end{equation}
+Second, the non-endpoint two-blocks are bounded using
+\begin{equation}\label{eq:binom-second}
+  \sum_{i=2}^{n-2}\binom ni^{-1}\le\frac{10}{n(n-1)}.
+\end{equation}
+Indeed, the two endpoints contribute $4/[n(n-1)]$, while the middle terms are each at most $\binom n3^{-1}$, giving at most $6/[n(n-1)]$.  Hence
+\[
+  \Sigma_2^{(3+)}(p)\le\frac{5}{\pi(p-1)(p-2)(p-3)},
+  \qquad
+  \frac N2\Sigma_2^{(3+)}(p)\le\frac{36.6}{m^2},
+\]
+and the weighted contribution is
+\begin{equation}\label{eq:P3b}
+  \frac{234}{m^2}.
+\end{equation}
+Third, the $r\ge3$ nonlinear blocks form a geometric tail from the $r=3$ term.  In the present range the ratio is at most
+\[
+  \frac{8R'}{9p}\le0.0737,
+  \qquad R'=N/p\le20,
+\]
+and the first term is bounded using $(p-1)\cdots(p-4)\ge0.19m^4$ and $N^2\le177.8m^2$.  This gives
+\begin{equation}\label{eq:P3c}
+  \frac{573}{m^2}.
+\end{equation}
+
+\smallskip
+\noindent\textbf{P4: cross terms.}
+The cross terms must be bounded with the full product factors, not only the residuals.  With $u_s=\Pi_s-1$ and $v_s=1-D_s$, we use
+\[
+  |\mathrm{cross}|
+  \le u_s\bigl(v_s+|\eps_p|\bigr)+v_s|\eps_p|(1+u_s).
+\]
+Here
+\[
+  u_s\le1.168\frac{e_1(s)}m\e^{0.2237s},
+  \qquad
+  v_s\le\frac{1.095s}{m^2},
+  \qquad
+  |\eps_p|\le\frac{13.2}{m}.
+\]
+Thus the dominant part is
+\[
+  \frac{1.168\cdot13.2}{m^2}
+  \sum_{s\ge0}\frac{\widetilde\zeta^s}{s!}e_1(s),
+  \qquad
+  \widetilde\zeta=(50/27)\e^{0.2237}=2.31610\ldots,
+\]
+which is $781.1014/m^2$.  The remaining $u_sv_s$ and $v_s|\eps_p|(1+u_s)$ pieces contribute less than $1.19/m^2$ for $m\ge361$.  Hence the cross contribution is at most
+\begin{equation}\label{eq:P4}
+  \frac{784}{m^2}.
+\end{equation}
+
+\smallskip
+\noindent\textbf{Tails.}
+The tail of the extracted comparison series for $s>m/3$ is bounded by twice its first omitted term and is $<10^{-160}$ at $m=361$.  For the actual coefficient tail, including $p=0,1$, use the saddle inequality only for the truncated polynomial $H_{\le p}$, so that no convergent analytic value of $H(\rho)$ is being assumed.  At $\rho=1/(6m)$,
+\[
+  |E_p^-(N)|\le [t^p]\exp(NH_{\le p}(t))
+  \le \rho^{-p}\exp(NH_{\le p}(\rho))
+  \le (6m)^p\e^{6.37}
+  \qquad(0\le p\le2m/3).
+\]
+The last inequality follows from $c_r\le (1/6)6^r(r-1)!$ and
+\[
+  NH_{\le p}(1/(6m))
+  \le \frac{N}{6}\sum_{r=2}^{p}\frac{(r-1)!}{m^r}
+  \le 6.37
+  \qquad(m\ge361,\ N\le40m/3,\ p\le2m/3),
+\]
+where the summands are bounded by their two endpoint geometric envelopes.  Together with Stirling,
+\[
+  \sum_{s>m/3}\frac{(Nc_1)^s}{s!}\frac{|E^-_{m-s}(N)|}{Nc_m}
+  \le
+  \frac{36\e^{6.37}}{5N}\frac{m^m}{(m-1)!}\cdot
+  2.04\frac{\zeta^{\lceil m/3\rceil}}{\lceil m/3\rceil!}
+  \le\frac{1}{m^2}
+\]
+for $m\ge361$; the accompanying constants script finds the worst endpoint at $m=361$, $N=4813$, with $m^2$ times the displayed left side below $3.2\cdot10^{-6}$.
+
+Adding \eqref{eq:P1}, \eqref{eq:P2}, \eqref{eq:P3a}, \eqref{eq:P3b}, \eqref{eq:P3c}, \eqref{eq:P4}, and the tail allowance gives
+\[
+  426+13+184+234+573+784+1=2215,
+\]
+which proves \eqref{eq:error-bound-goal} and hence \eqref{eq:signlock-effective}.
+
+Finally, if $m\ge361$ and $\zeta\le50/27$, then
+\[
+  m^2\e^{-\zeta}\left(1-\frac2m\right)
+  \ge 361^2\e^{-50/27}\left(1-\frac2{361}\right)
+  =20340.0778\ldots>2215.
+\]
+Thus the right side of \eqref{eq:signlock-effective} is positive, proving \eqref{eq:X-negative-signlock}.
+\end{proof}
+
+\begin{remark}
+The constants above are intentionally wasteful.  The exact second-order term in Proposition~\ref{thm:X-second-order} has absolute value $<1$ on the larger interval $0\le\zeta\le10/3$, whereas the sign-lock budget allows any $C_2<20340$.
+\end{remark}
+
+
+\section{The repaired positive-part estimate}\label{sec:positive-part}
+
+The earlier positive-part paragraph was too weak because it kept only the factor $2^{-0.1a}$.  The crucial point is to keep the binomial denominator inside $R_{k,a}$.
+
+\begin{lemma}[positive part after sign-lock]\label{lem:positive-part}
+For every $a\ge401$ and every integer $N$ satisfying \eqref{eq:rectangle},
+\begin{equation}\label{eq:positive-bound}
+  2^{-a-1}Y_a(N)
+  +\frac N2\sum_{\substack{1\le k<a\\X_k(N)>0}}
+    R_{k,a}2^{-(a-k)}X_k(N)Y_{a-k}(N)
+  \le 10^{-8}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If $k\ge0.9a$, then $k\ge361$ and $N\le12a-8\le(40/3)k$, so Theorem~\ref{thm:signlock} gives $X_k(N)<0$.  Hence no such $k$ appears in the positive sum.
+
+For $k<0.9a$, use the cancellation-free identity
+\begin{equation}\label{eq:positive-identity}
+  \frac N2R_{k,a}2^{-(a-k)}X_k(N)Y_{a-k}(N)
+  =\frac{B_k(N)Q_{a-k}(N)}{Nc_a}
+\end{equation}
+and the coefficientwise domination
+\begin{equation}\label{eq:Bbar-domination}
+  |B_k(N)|\le \overline B_k(N):=[t^k]\C(t)^N.
+\end{equation}
+The right side of the positive sum is therefore bounded by
+\begin{equation}\label{eq:positive-raw}
+  \frac1{Nc_a}\sum_{1\le k\le\floor{0.9a}}
+  \overline B_k(N)Q_{a-k}(N).
+\end{equation}
+For a polynomial $P(t)$ with nonnegative coefficients we use, for every $r$ and $\rho>0$,
+\begin{equation}\label{eq:saddle}
+  [t^r]\exp(P(t))\le \rho^{-r}\exp(P_{\le r}(\rho)).
+\end{equation}
+The subscript is essential: $\log \C(t)$ has zero radius of convergence as a function, but coefficients of degree $r$ only see $P_{\le r}$.
+
+Put $j=a-k$, $k^\dagger=\lceil\sqrt N\rceil$, and $k^*=\sqrt{5N/36}$.  The following two explicit saddle estimates are the only input needed.  They are proved by inserting $c_r\le (1/6)6^r(r-1)!$ and $c_r\ge(5/36)6^r(r-1)!$ into \eqref{eq:saddle}.
+
+\smallskip
+\noindent\textbf{Small-$k$ regime.}  If $1\le k\le k^\dagger$, choose $\rho=(6k^\dagger)^{-1}$ for $\overline B_k$.  Since the nonlinear gas has term ratios at most $r/k^\dagger$ and $N/(k^\dagger)^2\le1$, one obtains
+\begin{equation}\label{eq:small-k-bound}
+  \frac{\overline B_k(N)}{Nc_k}\le \frac{8.9k}{N}\exp(1.139\sqrt N).
+\end{equation}
+For $Q_j$ we use the tempered saddle below; in the present range $j\ge a-\sqrt{12a}$.
+
+\smallskip
+\noindent\textbf{Tempered regime.}  If $k^\dagger<k\le0.9a$, choose $\rho=\e^{0.8}/(6k)$ for $\overline B_k$ and $\rho_Y=\e^{0.8}/(3j)$ for $Q_j$.  Then
+\begin{align}
+  \frac{\overline B_k(N)}{Nc_k}
+  &\le \frac{7.3k}{N}\exp\left(0.2k+\frac{5.7a}{k}+1\right),\label{eq:B-tempered}\\
+  Y_j(N)
+  &\le \frac{14.5j}{N}\exp\left(0.2j+\frac{2.9a}{j}+1\right).\label{eq:Y-tempered}
+\end{align}
+The endpoint gas is geometric and the top-degree gas is bounded by $N\e^{-0.2k}\sqrt{2\pi/k}$; the constants $7.3,14.5,5.7,2.9$ include these endpoint allowances for $a\ge401$ and $N\le12a$.
+
+Finally,
+\begin{equation}\label{eq:R-binomial}
+  R_{k,a}\le
+  \frac{9}{5\pi^2}\frac1{(a-1)\binom{a-2}{k-1}}.
+\end{equation}
+Combining \eqref{eq:positive-identity}--\eqref{eq:R-binomial} gives a completely explicit majorant for each summand.  In the small-$k$ regime it is bounded by
+\begin{equation}\label{eq:small-majorant}
+  \frac{65}{N}\frac{kj}{(a-1)\binom{a-2}{k-1}}
+  \exp\left(1.139\sqrt N+0.2j+\frac{2.9a}{j}+1-(a-k)\log2\right),
+\end{equation}
+and in the tempered regime by
+\begin{equation}\label{eq:tempered-majorant}
+  \frac{96}{N}\frac{kj}{(a-1)\binom{a-2}{k-1}}
+  \exp\left(0.2a+\frac{5.7a}{k}+\frac{2.9a}{j}+2-(a-k)\log2\right).
+\end{equation}
+The accompanying script \texttt{prop51\_tenth\_positive\_saddle\_certificate.py} evaluates these explicit expressions over the finite critical window $401\le a\le2000$ and uses the entropy inequality
+\begin{equation}\label{eq:entropy-tail}
+  \binom{a-2}{k-1}\ge\frac1a
+  \exp\left((a-2)H\left(\frac{k-1}{a-2}\right)\right)
+\end{equation}
+for $a>2000$.  The largest certified total for the displayed majorant in the finite scan occurs at $a=410$ and is less than $5.1\cdot10^{-17}$; the actual recurrence value at the corner $(401,4804)$ is $2.94\cdot10^{-120}$.  Thus the positive part is $<10^{-8}$.  The solo term $2^{-a-1}Y_a(N)$ is bounded by the same tempered saddle with $j=a$ and is $<\e^{-0.49a}<10^{-85}$ for $a\ge401$.
+\end{proof}
+
+\begin{remark}
+The retention of $\binom{a-2}{k-1}^{-1}$ is essential.  Without it, the crude bound has size about $5.3\cdot10^9$ at $a=401$; with it, a direct recurrence regression at $(a,N)=(401,4804)$ gives an actual positive sum about $2.94\cdot10^{-120}$, and the explicit saddle majorant above is below $5.1\cdot10^{-17}$ throughout the scanned window.
+\end{remark}
+
+\section{Completion of the majorant inequality}\label{sec:completion}
+
+\begin{theorem}[majorant negativity for all $a$]\label{thm:majorant-all}
+For every integer $a\ge9$ and every integer $N$ satisfying
+\[
+  6a-7\le N\le12a-8,
+\]
+one has
+\begin{equation}\label{eq:U-negative-all}
+  U_a(N)<0.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+For $9\le a\le400$, this is exactly the attached Arb certificate: it verifies all
+\[
+  \sum_{a=9}^{400}6a=480984
+\]
+integer pairs in the rectangle with 192-bit Arb balls.  The least-negative certified upper bound occurs at $(a,N)=(9,100)$ and is contained in
+\[
+  -0.062630755952374261759430666289703362938588485057075014744
+  \pm 2.16\cdot10^{-58}.
+\]
+
+Now assume $a\ge401$.  Theorem~\ref{thm:signlock}, applied with $m=a$, gives
+\[
+  -X_a(N)
+  \ge
+  \e^{-\zeta_a}\left(1-\frac2a\right)-\frac{2215}{a^2},
+  \qquad \zeta_a=\frac{5N}{36a}\le\frac53.
+\]
+At the worst endpoint $a=401$, this lower bound is already larger than $0.174$.  Lemma~\ref{lem:positive-part} bounds the total positive contribution in \eqref{eq:Unorm} by $10^{-8}$.  Hence $U_a(N)/(Nc_a)<0$ for all $a\ge401$.
+\end{proof}
+
+\section{Consequences for the Chen--Larson coefficient}\label{sec:consequence}
+
+The majorant does not cover $a\le8$, but these cases are finite.  The attached exact enumeration checks every positive partition in the relevant $g\equiv0,2\pmod3$ cases with $a\le8$ and finds $b_a(\mu)<0$ in every case.
+
+Combining the finite enumeration for $a\le8$, the certified majorant for $9\le a\le400$, and Theorem~\ref{thm:majorant-all} gives the following.
+
+\begin{theorem}[Proposition 5.1 coefficient negativity]\label{thm:final}
+Let $g\ge2$, $g\equiv0,2\pmod3$, and let $a=\floor{g/3}+1$.  For every positive partition $\mu=(m_1,\ldots,m_n)$ of $2g-2$,
+\begin{equation}\label{eq:final-negativity}
+  [t^a]\frac{\prod_i\C(t/(m_i+1))}{\C(t)^{2g-2+n}}<0.
+\end{equation}
+In particular, the coefficient is nonzero, so the hypothesis of Chen--Larson Proposition 5.1 holds for every positive holomorphic partition in these two residue classes.
+\end{theorem}
+
+\begin{corollary}\label{cor:CL}
+Assuming the geometric reduction of Chen--Larson Proposition 5.1, Conjecture 1.4 of Chen--Larson holds for all holomorphic abelian strata associated with positive partitions in the residue classes $g\equiv0,2\pmod3$.
+\end{corollary}
+
+\section{Reproducibility artifacts}\label{sec:artifacts}
+
+The proof package accompanying this note contains:
+\begin{itemize}[leftmargin=2em]
+  \item the present TeX and PDF;
+  \item \texttt{prop51\_tenth\_constants\_check.py}, which reproduces the sign-lock budget $20340.0778\ldots$, the $C_2=2215$ audit table, the $|\kappa_2|<1$ regression, and the post-certificate corner regression;
+  \item \texttt{prop51\_tenth\_positive\_saddle\_certificate.py}, which evaluates the explicit positive-part saddle majorants used in Lemma~\ref{lem:positive-part};
+  \item the previous Arb certificate package \texttt{prop51\_A400\_certificate\_package.zip}, containing the 192-bit Arb finite certificate for $9\le a\le400$, logs, and SHA256 hashes;
+  \item the exact small-partition and small-majorant certificate scripts and logs included in that package.
+\end{itemize}
+
+The accompanying constants script reports:
+\[
+\begin{array}{l|r|r}
+\text{piece} & \text{computed value} & \text{allowance}\\
+\midrule
+\Gamma\text{-residual} & 410.913322 & 426\\
+ d\text{-drift} & 12.920205 & 13\\
+\text{two-block recentering} & 183.466437 & 184\\
+ j\ge3\text{ two-block} & 233.200848 & 234\\
+ r\ge3\text{ blocks} & 572.170387 & 573\\
+\text{cross terms} & 782.290574 & 784\\
+\text{tails} & 1.000000 & 1\\
+\midrule
+\text{total} & & 2215
+\end{array}
+\]
+The same script gives, at the first post-certificate corner $(a,N)=(401,4804)$,
+\[
+  X_a=-0.1884820538455549\ldots,
+  \quad
+  \text{actual positive sum}=2.94\cdot10^{-120}.
+\]
+These numerical values are not needed once the inequalities above are accepted, but they are useful regression anchors.
+
+\begin{thebibliography}{9}
+\bibitem{CL}
+D.~Chen and H.~Larson,
+\emph{Independence of tautological classes and cohomological stability for strata of differentials},
+arXiv:2603.23850, 2026.
+
+\bibitem{Ionel}
+E.-N.~Ionel,
+\emph{Relations in the tautological ring of $\mathcal M_g$},
+Duke Math. J. 129 (2005), no. 1, 157--186.
+\end{thebibliography}
+
+\end{document}

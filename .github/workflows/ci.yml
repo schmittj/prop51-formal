@@ -1,0 +1,25 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Lean project (lake build + mathlib cache)
+        uses: leanprover/lean-action@v1
+        with:
+          use-mathlib-cache: true
+      - name: Axiom report
+        run: |
+          ~/.elan/bin/lake env lean scripts/AxiomsReport.lean | tee axioms.txt
+          # No sorries anywhere:
+          ! grep -rn "sorryAx" axioms.txt
+          # Only the documented axioms may occur:
+          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|depends on axioms|^$" axioms.txt | grep -q "axiom"
+      - name: Python certificate scripts (fast layer)
+        run: |
+          python3 scripts/positive_saddle_scan.py --quick
