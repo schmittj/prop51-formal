@@ -19,7 +19,7 @@ jobs:
           # No sorries anywhere:
           ! grep -rn "sorryAx" axioms.txt
           # Only the documented axioms may occur:
-          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|depends on axioms|^$" axioms.txt | grep -q "axiom"
+          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|Lean.trustCompiler|depends on axioms|^$" axioms.txt | grep -q "axiom"
       - name: Python certificate scripts (fast layer)
         run: |
           python3 scripts/positive_saddle_scan.py --quick

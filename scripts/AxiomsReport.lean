@@ -11,3 +11,5 @@ import Prop51
 #print axioms Prop51.bCoeff_neg_g_le_23
 #print axioms Prop51.partitions_card_checks
 #print axioms Prop51.coefficientNegativity_of_g_le_23
+#print axioms Prop51.mem_partitions_iff
+#print axioms Prop51.coefficientNegativity_of_g_le_23'

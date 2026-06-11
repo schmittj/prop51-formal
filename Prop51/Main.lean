@@ -28,6 +28,7 @@ import Prop51.Defs
 import Prop51.Partitions
 import Prop51.CertificateSmall
 import Prop51.CertificateExact
+import Prop51.PartitionsComplete
 
 namespace Prop51
 
@@ -55,5 +56,24 @@ theorem coefficientNegativity_of_g_le_23 :
     ∀ g < 24, 2 ≤ g → g % 3 ≠ 1 →
       ∀ μ ∈ partitions (2*g - 2), bCoeff μ (g/3 + 1) < 0 :=
   bCoeff_neg_g_le_23
+
+/-- **Small-genus case of the target, in full generality**: for every
+relevant `g ≤ 23` and *every* positive partition `μ` of `2g-2` (arbitrary
+order, arbitrary list representation), the Chen–Larson coefficient is
+negative.  Combines the machine-checked enumeration with generator
+completeness (`mem_partitions_iff`) and permutation-invariance of `bCoeff`. -/
+theorem coefficientNegativity_of_g_le_23' :
+    ∀ g < 24, 2 ≤ g → g % 3 ≠ 1 →
+      ∀ μ : List Nat, IsPartitionOf μ (2*g - 2) →
+        bCoeff μ (g/3 + 1) < 0 := by
+  intro g hg h2 hres μ hμ
+  obtain ⟨hsum, hpos⟩ := hμ
+  obtain ⟨μ', hperm, hpair⟩ := exists_sorted_perm μ
+  have hmem : μ' ∈ partitions (2*g - 2) := by
+    rw [mem_partitions_iff]
+    refine ⟨by rw [← hperm.sum_eq]; exact hsum, hpair, ?_⟩
+    exact fun x hx => hpos x (hperm.mem_iff.mpr hx)
+  rw [bCoeff_perm hperm]
+  exact bCoeff_neg_g_le_23 g hg h2 hres μ' hmem
 
 end Prop51

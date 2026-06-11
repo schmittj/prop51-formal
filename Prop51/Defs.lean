@@ -39,6 +39,11 @@ The bridge between `bCoeff`/`Unorm` and the official power-series coefficient
 below is sorry-free.
 -/
 
+import Mathlib.Algebra.Order.Field.Rat
+import Mathlib.Data.List.Basic
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Push
+
 namespace Prop51
 
 /-! ## The logarithmic coefficients `c r` -/
@@ -52,7 +57,7 @@ def cList : Nat → List ℚ
   | (n+2) =>
     let l := cList (n+1)
     let r := n+2
-    let conv : ℚ := ((List.range (r-1)).map fun i =>
+    let conv : ℚ := ((List.range (r-1)).map fun (i : Nat) =>
       (i : ℚ) * ((r-1-i : Nat) : ℚ) * (l.getD i 0) * (l.getD (r-1-i) 0)).sum
     l ++ [6*((r : ℚ)-1) * l.getD (r-1) 0 + 6/(r : ℚ) * conv]
 
@@ -67,7 +72,7 @@ def expList (L : Nat → ℚ) : Nat → List ℚ
   | 0 => [1]
   | (n+1) =>
     let l := expList L n
-    let s : ℚ := ((List.range (n+1)).map fun t =>
+    let s : ℚ := ((List.range (n+1)).map fun (t : Nat) =>
       ((t+1 : Nat) : ℚ) * L (t+1) * l.getD (n-t) 0).sum
     l ++ [s / ((n+1 : Nat) : ℚ)]
 
@@ -79,7 +84,7 @@ def expCoeff (L : Nat → ℚ) (a : Nat) : ℚ := (expList L a).getD a 0
 /-- `Dr μ r = Σ_i (q_i - q_i^{-r})` with `q_i = m_i + 1`, for a partition
 `μ = [m_1, …, m_n]` (order irrelevant: this is a sum over parts). -/
 def Dr (μ : List Nat) (r : Nat) : ℚ :=
-  (μ.map fun mi => ((mi+1 : Nat) : ℚ) - 1 / ((mi+1 : Nat) : ℚ)^r).sum
+  (μ.map fun (mi : Nat) => ((mi+1 : Nat) : ℚ) - 1 / ((mi+1 : Nat) : ℚ)^r).sum
 
 /-- The Chen–Larson Proposition 5.1 coefficient
 `b_a(μ) = [t^a] (Π_i C(t/q_i)) / C(t)^N = [t^a] exp(-Σ_r D_r c_r t^r)`,
@@ -105,77 +110,76 @@ def Unorm (a N : Nat) : ℚ :=
   let cl := cList a
   let B := BListQ cl N a
   let Q := QListQ cl N a
-  let pos : ℚ := ((List.range a).map fun k =>
+  let pos : ℚ := ((List.range a).map fun (k : Nat) =>
     let bk := B.getD k 0
     if 1 ≤ k ∧ 0 < bk then bk * Q.getD (a-k) 0 else 0).sum
   (B.getD a 0 + Q.getD a 0 + pos) / ((N : ℚ) * cl.getD a 0)
 
 /-! ## Basic spec lemmas -/
 
+/-- Each step of `cList` appends exactly one entry. -/
+theorem cList_succ_append : ∀ n : Nat, ∃ x : ℚ, cList (n+1) = cList n ++ [x]
+  | 0 => ⟨5/6, rfl⟩
+  | (_+1) => ⟨_, rfl⟩
+
 theorem cList_length : ∀ n, (cList n).length = n + 1
   | 0 => rfl
-  | 1 => rfl
-  | (n+2) => by
-      rw [cList]
-      simpa using cList_length (n+1)
-
-theorem cList_succ_take (n : Nat) :
-    (cList (n+1)).take (n+1) = cList n := by
-  match n with
-  | 0 => rfl
-  | (m+1) =>
-      rw [cList]
-      simpa using List.take_left' (cList_length (m+1))
+  | (n+1) => by
+      obtain ⟨x, hx⟩ := cList_succ_append n
+      rw [hx, List.length_append, cList_length n]
+      rfl
 
 /-- Prefix stability: entries of `cList` do not change as the list grows. -/
 theorem cList_getD_eq (r m : Nat) (h : r ≤ m) :
     (cList m).getD r 0 = c r := by
   induction m with
-  | zero => match r, h with | 0, _ => rfl
+  | zero =>
+      have : r = 0 := by omega
+      subst this; rfl
   | succ m ih =>
       rcases Nat.lt_or_ge r (m+1) with hlt | hge
-      · have hr : r ≤ m := Nat.lt_succ_iff.mp hlt
-        rw [← ih hr, ← cList_succ_take m]
-        have hlen : r < ((cList (m+1)).take (m+1)).length := by
-          rw [List.length_take, cList_length]
-          omega
-        rw [List.getD_eq_getElem _ _ (by rw [cList_length]; omega),
-            List.getD_eq_getElem _ _ hlen, List.getElem_take]
+      · obtain ⟨x, hx⟩ := cList_succ_append m
+        rw [hx, List.getD_eq_getElem?_getD,
+            List.getElem?_append_left (by rw [cList_length]; omega),
+            ← List.getD_eq_getElem?_getD]
+        exact ih (by omega)
       · have : r = m+1 := le_antisymm h hge
-        subst this
-        rfl
+        subst this; rfl
 
 @[simp] theorem c_zero : c 0 = 0 := rfl
 @[simp] theorem c_one : c 1 = 5/6 := rfl
 
-/-- The defining Riccati recurrence for `c`, in clean form. -/
+/-- The defining Riccati recurrence for `c`, in clean form:
+`c_r = 6(r-1)·c_{r-1} + (6/r)·Σ_{i<r-1} i·(r-1-i)·c_i·c_{r-1-i}` at `r = n+2`. -/
 theorem c_succ_succ (n : Nat) :
-    c (n+2) = 6*((n+2 : Nat) : ℚ)*c (n+1) - 6*c (n+1)
+    c (n+2) = 6*(((n+2 : Nat) : ℚ) - 1)*c (n+1)
       + 6/((n+2 : Nat) : ℚ) *
-        ((List.range (n+1)).map fun i =>
+        ((List.range (n+1)).map fun (i : Nat) =>
           (i : ℚ) * ((n+1-i : Nat) : ℚ) * c i * c (n+1-i)).sum := by
-  show (cList (n+2)).getD (n+2) 0 = _
-  rw [cList]
   have hlen := cList_length (n+1)
-  have hgetD : ∀ i ≤ n+1, (cList (n+1)).getD i 0 = c i := fun i hi =>
+  have hgetD : ∀ i, i ≤ n+1 → (cList (n+1)).getD i 0 = c i := fun i hi =>
     cList_getD_eq i (n+1) hi
-  rw [List.getD_append_right (by omega)]
-  simp only [hlen]
-  have h1 : n + 2 - (n + 2) = 0 := by omega
-  rw [h1]
-  show 6*((n+2 : ℚ)-1) * (cList (n+1)).getD (n+1) 0
-      + 6/(n+2 : ℚ) * _ = _
+  show (cList (n+2)).getD (n+2) 0 = _
+  have hx : cList (n+2) = cList (n+1) ++
+      [6*(((n+2 : Nat) : ℚ)-1) * (cList (n+1)).getD (n+1) 0
+        + 6/((n+2 : Nat) : ℚ) *
+          ((List.range (n+1)).map fun (i : Nat) =>
+            (i : ℚ) * ((n+2-1-i : Nat) : ℚ) * ((cList (n+1)).getD i 0)
+              * ((cList (n+1)).getD (n+2-1-i) 0)).sum] := by
+    show cList (n+2) = _
+    rfl
+  rw [hx, List.getD_eq_getElem?_getD,
+      List.getElem?_append_right (by omega : (cList (n+1)).length ≤ n+2)]
+  rw [hlen]
+  have h0 : n + 2 - (n + 2) = 0 := by omega
+  rw [h0]
+  show 6*(((n+2 : Nat) : ℚ)-1) * (cList (n+1)).getD (n+1) 0
+      + 6/((n+2 : Nat) : ℚ) * _ = _
   rw [hgetD (n+1) le_rfl]
-  have hconv : ((List.range (n+1)).map fun i =>
-        (i : ℚ) * ((n+1-i : Nat) : ℚ) * ((cList (n+1)).getD i 0)
-          * ((cList (n+1)).getD (n+1-i) 0)).sum
-      = ((List.range (n+1)).map fun i =>
-        (i : ℚ) * ((n+1-i : Nat) : ℚ) * c i * c (n+1-i)).sum := by
-    refine congrArg List.sum (List.map_congr_left fun i hi => ?_)
-    have hi' : i < n+1 := List.mem_range.mp hi
-    rw [hgetD i (by omega), hgetD (n+1-i) (by omega)]
-  rw [hconv]
-  push_cast
-  ring
+  congr 2
+  refine congrArg List.sum (List.map_congr_left fun i hi => ?_)
+  have hi' : i < n+1 := List.mem_range.mp hi
+  have e : n + 2 - 1 - i = n + 1 - i := by omega
+  rw [e, hgetD i (by omega), hgetD (n+1-i) (by omega)]
 
 end Prop51

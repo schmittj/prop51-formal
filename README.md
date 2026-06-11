@@ -51,7 +51,7 @@ Certificate theorems are proved by `native_decide`, so they depend on the
 axiom `Lean.ofReduceBool` (evaluation by the Lean compiler) in addition to
 the three standard axioms.  `scripts/AxiomsReport.lean` prints the axioms of
 every headline theorem; CI fails if anything beyond
-`propext, Classical.choice, Quot.sound, Lean.ofReduceBool` appears, or if any
+`propext, Classical.choice, Quot.sound, Lean.ofReduceBool, Lean.trustCompiler` appears, or if any
 `sorry` is present.  Definitional/spec lemmas use no computational axioms.
 
 ## Building
