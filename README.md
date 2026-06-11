@@ -41,6 +41,13 @@ All Lean proofs are sorry-free.  Headline theorems:
 * `Prop51.unorm_neg_9_60` — the normalized majorant `U_a(N)/(N c_a)` is
   negative on the entire rectangle `9 ≤ a ≤ 60`, `6a-7 ≤ N ≤ 12a-8`,
   with the exact corner value pinned at `(9,100)`.
+* **`Prop51.coefficientNegativity_of_g_le_179`** — the capstone: for every
+  `2 ≤ g ≤ 179` with `g ≡ 0,2 (mod 3)` and every positive partition of
+  `2g-2`, the Proposition 5.1 coefficient is negative.  Layer A (the
+  power-series bridge `Cseries = expSeries c`, the official characterization
+  `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) is fully
+  formalized with **no computational axioms**; only the finite certificates
+  use `native_decide`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.

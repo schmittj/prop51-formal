@@ -29,6 +29,7 @@ import Prop51.Partitions
 import Prop51.CertificateSmall
 import Prop51.CertificateExact
 import Prop51.PartitionsComplete
+import Prop51.Majorant
 
 namespace Prop51
 
@@ -75,5 +76,34 @@ theorem coefficientNegativity_of_g_le_23' :
     exact fun x hx => hpos x (hperm.mem_iff.mpr hx)
   rw [bCoeff_perm hperm]
   exact bCoeff_neg_g_le_23 g hg h2 hres μ' hmem
+
+/-- **The capstone of Layers 0+A**: for every genus `2 ≤ g ≤ 179` with
+`g ≡ 0, 2 (mod 3)` and *every* positive partition `μ` of `2g-2`, the
+Chen–Larson Proposition 5.1 coefficient is negative.
+
+Combines: the small-genus enumeration (`g ≤ 23`), the exact-rational
+majorant certificate (`9 ≤ a ≤ 60`, i.e. `24 ≤ g ≤ 179`), and the majorant
+inequality `b_a(μ) ≤ N c_a · Unorm a N` of `Prop51.Majorant`.  The
+quantification over `μ` is the honest predicate form (`IsPartitionOf`). -/
+theorem coefficientNegativity_of_g_le_179 :
+    ∀ g, 2 ≤ g → g ≤ 179 → g % 3 ≠ 1 →
+      ∀ μ : List Nat, IsPartitionOf μ (2*g - 2) →
+        bCoeff μ (g/3 + 1) < 0 := by
+  intro g h2 h179 hres μ hμp
+  obtain ⟨hsum, hpos⟩ := hμp
+  rcases Nat.lt_or_ge g 24 with hg | hg
+  · exact coefficientNegativity_of_g_le_23' g hg h2 hres μ ⟨hsum, hpos⟩
+  · have hmap := sum_map_add_one μ
+    have hlen := length_le_sum μ hpos
+    have hne : 1 ≤ μ.length := by
+      rcases μ with - | ⟨x, l⟩
+      · exfalso; simp at hsum; omega
+      · simp
+    have hNval : (μ.map (· + 1)).sum = (2*g - 2) + μ.length := by
+      rw [hmap, hsum]
+    refine bCoeff_neg_of_unorm μ (g/3 + 1) ((μ.map (· + 1)).sum)
+      hpos rfl (by omega) (by omega) ?_
+    exact unorm_neg_9_60 (g/3 + 1) (by omega) (by omega)
+      ((μ.map (· + 1)).sum) (by omega) (by omega)
 
 end Prop51

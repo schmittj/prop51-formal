@@ -17,13 +17,13 @@ No real analysis; everything is coefficient identities over ℚ.
       from the hypergeometric ratio + the Riccati recurrence — the one real
       lemma of this layer; verified numerically to r = 40 exactly).
 - [x] `bCoeff μ a = PowerSeries.coeff a (Π_i C(t/qᵢ) * (C^N)⁻¹)`.
-- [ ] majorant inequality `b_a(μ) ≤ U_a(N)` (paper eq. 8): coefficientwise
+- [x] majorant inequality `b_a(μ) ≤ U_a(N)` (paper eq. 8): coefficientwise
       domination `P_k(μ) ≤ Q_k(N)` by induction on the exp-recurrence
       (monotonicity in the exponent α over ℚ≥0), plus sign bookkeeping.
-- [ ] `c_pos`, `d`-normalization `c_r = 6^r (r-1)! d_r`, `d` nondecreasing,
-      `c_r ≤ A_r` (induction via the bridge identity), `d_r ≤ 0.16`
-      (rationalized: `β_r ≤ β_{r₀}·exp(5/(36 r₀))` with `β_{r₀}` exact —
-      avoids Γ-reflection / π entirely).
+- [x] `c_pos`, `c_r ≤ A_r` (via the bridge identity).
+- [ ] (moved to Layer C prep) `d`-normalization `c_r = 6^r (r-1)! d_r`, `d`
+      nondecreasing, `d_r ≤ 0.16` (rationalized: `β_r ≤ β_{r₀}·exp(5/(36 r₀))`
+      with `β_{r₀}` exact — avoids Γ-reflection / π entirely).
 
 ## Layer A′ — partition quantifier upgrade
 

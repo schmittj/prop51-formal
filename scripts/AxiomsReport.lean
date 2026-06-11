@@ -20,3 +20,10 @@ import Prop51
 #print axioms Prop51.bridge_identity
 #print axioms Prop51.bCoeff_eq_expCoeff
 #print axioms Prop51.bSeries_official
+#print axioms Prop51.c_pos
+#print axioms Prop51.c_le_Aseq
+#print axioms Prop51.expCoeff_mono
+#print axioms Prop51.Cpow_mul_BSeriesQ
+#print axioms Prop51.bCoeff_le_U
+#print axioms Prop51.bCoeff_neg_of_unorm
+#print axioms Prop51.coefficientNegativity_of_g_le_179

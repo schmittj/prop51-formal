@@ -6,4 +6,5 @@ import Prop51.PartitionsComplete
 import Prop51.ExpSeries
 import Prop51.Bridge
 import Prop51.BCoeffSeries
+import Prop51.Majorant
 import Prop51.Main
