@@ -55,3 +55,8 @@ import Prop51
 #print axioms Prop51.sum_exp_le
 #print axioms Prop51.one_add_inv_pow_le
 #print axioms Prop51.factorial_lb
+#print axioms Prop51.expCoeff_eq_sum_pow
+#print axioms Prop51.abs_coeff_pow_le
+#print axioms Prop51.abs_hpow_le
+#print axioms Prop51.Eminus_split
+#print axioms Prop51.Eminus_residual_le

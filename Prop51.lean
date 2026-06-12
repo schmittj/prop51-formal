@@ -11,6 +11,7 @@ import Prop51.BinomRecip
 import Prop51.DNorm
 import Prop51.Composition
 import Prop51.ExpBounds
+import Prop51.HPow
 import Prop51.Dyadic
 import Prop51.IntervalCert
 import Prop51.CertificateInterval

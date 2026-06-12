@@ -94,11 +94,21 @@ Status:
       + (y^{T₀}/T₀!)/(1−y/T₀)` uniformly in `T`; `(1+1/n)^n ≤ 68/25` via
       the binomial theorem and `Σ 1/k! ≤ 1631/600`
       (`Prop51/ExpBounds.lean`).
-- [ ] `H`-power machinery: `hconv r p = [t^p] H(t)^r` recursively
-      (`H = Σ_{j≥2} c_j t^j`), `hconv ≤ (4/25)^r 6^p Gcomp r p`, and the
-      exp-formula `coeff p (expSeries L) = Σ_{r≤p} coeff p (G^r)/r!`
-      (finite θ-recurrence argument); then `ε_p` and the Δ-envelope
-      (Lemma 4.1) with the rational far tail.
+- [x] `H`-power machinery (`Prop51/HPow.lean`): the exponential formula
+      `expCoeff L p = Σ_{r≤p} [t^p]((mk L)^r)/r!` (finite, via the
+      θ-power rule `θ(G^{r+1}) = (r+1)·G^r·θG` and a double-sum swap);
+      the power bound `|[t^p]G^r| ≤ M^r 6^p Gcomp r p` for `L` supported
+      in degrees ≥ 2 with `|L_j| ≤ M·6^j(j-1)!` (the `Gcomp` recursion
+      consumed verbatim); `hpow r p = [t^p]H^r` with `hpow_eq_zero` for
+      `p < 2r`; the exact block split
+      `E⁻_p(N) = -N c_p + Σ_{r=2}^p (-N)^r [t^p]H^r/r!` and the residual
+      bound `|E⁻_p + N c_p| ≤ Σ_{r≥2} (4N/25)^r 6^p Gcomp r p / r!`.
+- [ ] the Δ-envelope numerics (Lemma 4.1, `Envelope.lean`): from
+      `Eminus_residual_le`, the normalized bound `|ε_p| ≤ 13.2/m` for
+      `p ≥ 2m/3`, `N ≤ 40m/3`, `m ≥ 361` — geometric domination by the
+      `r = 2` block (ratio ≤ `(16N/25)/(3(p-2r)(p-2r+1)) ≤ 17.1/p`) plus
+      the rational far tail `r > p/4` via `factorial_lb` and
+      `(p-1)!/(p-2r+1)! ≥ (2r-1)!`.
 - [ ] sign-lock §5: the exact finite decomposition
       `−X_m = Σ_s (−ζ)^s/s!·Π_s D_s (1+ε_{m-s}) ± boundary`, the P1–P4
       pieces (Poisson moments via partial-exp majorants), tails, and the
