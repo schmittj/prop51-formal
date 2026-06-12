@@ -21,9 +21,9 @@ No real analysis; everything is coefficient identities over ℚ.
       domination `P_k(μ) ≤ Q_k(N)` by induction on the exp-recurrence
       (monotonicity in the exponent α over ℚ≥0), plus sign bookkeeping.
 - [x] `c_pos`, `c_r ≤ A_r` (via the bridge identity).
-- [ ] (moved to Layer C prep) `d`-normalization `c_r = 6^r (r-1)! d_r`, `d`
-      nondecreasing, `d_r ≤ 0.16` (rationalized: `β_r ≤ β_{r₀}·exp(5/(36 r₀))`
-      with `β_{r₀}` exact — avoids Γ-reflection / π entirely).
+- [x] (Layer C prep) `d`-normalization `c_r = 6^r (r-1)! d_r`, `d`
+      nondecreasing, `5/36 ≤ d_r ≤ 4/25` — done, `Prop51/DNorm.lean`
+      (see Layer C below for the rationalization).
 
 ## Layer A′ — partition quantifier upgrade
 
@@ -55,21 +55,56 @@ No real analysis; everything is coefficient identities over ℚ.
 
 ## Layer C — the effective tail `a ≥ 401`
 
-Real analysis with explicit constants; the paper's §§4–6.
+The paper's §§2–6 with explicit constants.  **Design decision (2026-06-12):
+everything is rationalized — no `Real`, no `π`, no `e`, no Mathlib analysis.**
+Each transcendental ingredient of the paper is replaced by a rational
+surrogate, with the constant degradation absorbed by the sign-lock budget
+(`2215` allowed vs. `20340` available — an order of magnitude of slack):
 
-- [ ] effective Stirling bounds (from `stirlingSeq` antitonicity, or
-      elementary `(n/e)^n ≤ n!` inductions) and `exp` evaluation bounds
-      (`Real.exp_bound`-style Taylor remainders at rational points).
-- [ ] Lemma 2.1 chain + reciprocal-binomial lemmas (finite combinatorics).
-- [ ] composition lemma (eq. 19) — finite induction, already paper-complete.
-- [ ] Δ-envelope (Lemma 4.1, R ≤ 20) incl. the one-variable far-tail check.
-- [ ] sign-lock §5: P1–P4 + tails ⇒ `C₂ = 2215` (the long grind; the paper's
-      P-pieces map 1:1 to Lean lemmas; all weighted sums are finite sums plus
-      explicit geometric tails).
-- [ ] positive part §6: two saddle regimes + entropy tail; replace the
-      scripted window scan by a Lean-checked finite computation
-      (cf. `scripts/positive_saddle_scan.py`, corrected two-edge version).
-- [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A.
+* `d_r ≤ 1/(2π)`  →  `d_r ≤ 4/25` via the exact `F`-ratio
+  `1 + 5/(36r(r+1))` plus a Weierstrass product bound (`Π(1+xᵢ) ≤ 1/(1−Σxᵢ)`),
+  pinned at `F₃·(108/103) = 0.15935 ≤ 0.16`;
+* `1/π²` in the increment control  →  `(4/25)² · 4 = 64/625`;
+* Stirling `r! ≥ (r/e)^r`  →  `r! ≥ (25r/68)^r`, by induction from
+  `(1+1/n)^n ≤ Σ 1/k! ≤ 68/25` (binomial theorem + partial sum + geometric
+  tail — all in ℚ);
+* `exp` evaluations at rational points  →  partial sums + geometric tail
+  majorants (`Σ_{t≤T} y^t/t! ≤ Σ_{t<T₀} y^t/t! + (y^{T₀}/T₀!)/(1−y/T₀)`,
+  uniform in `T`); the infinite Poisson moments of §5 are finite sums here
+  (`s ≤ m/3`), bounded by such surrogates;
+* the alternating leading term `e^{-ζ}(1-2/m)`  →  a truncated alternating
+  sum with first-omitted-term remainder (parity trick), reduced to a
+  one-variable polynomial inequality on `0 ≤ ζ ≤ 50/27`;
+* the §6 window scan  →  `native_decide` over exact rationals / the Layer B
+  dyadic kernel; the `a > 2000` entropy tail  →  `C(n,k) ≥ (n/k)^k`.
+
+Status:
+
+- [x] reciprocal-binomial lemmas (paper Lemma 2.2): `Σ 1/C(n,i) ≤ 4/n`,
+      middle-term variant `≤ 10/(n(n-1))` (`Prop51/BinomRecip.lean`).
+- [x] `d`-normalization (paper Lemma 2.1, rationalized): recurrence,
+      monotonicity, `5/36 ≤ d_r ≤ 4/25`, increment control
+      `d_r − d_{r-1} ≤ (64/625)/(r(r-1))`, telescoped ratio bound
+      `1 − (2304/3125)s/(m(m-s)) ≤ d_{m-s}/d_m ≤ 1`; workhorse bounds
+      `(5/36)·6^r(r-1)! ≤ c_r ≤ (4/25)·6^r(r-1)!` (`Prop51/DNorm.lean`).
+- [x] composition lemma (paper Lemma 3.1): `G_r(p) ≤ 4^{r-1}(p-2r+1)!`
+      in recursive convolution form (`Prop51/Composition.lean`).
+- [ ] rational Stirling lower bound `r! ≥ (25r/68)^r` and the partial-exp
+      majorant machinery (`ExpBounds.lean`, next).
+- [ ] `H`-power machinery: `hconv r p = [t^p] H(t)^r` recursively
+      (`H = Σ_{j≥2} c_j t^j`), `hconv ≤ (4/25)^r 6^p Gcomp r p`, and the
+      exp-formula `coeff p (expSeries L) = Σ_{r≤p} coeff p (G^r)/r!`
+      (finite θ-recurrence argument); then `ε_p` and the Δ-envelope
+      (Lemma 4.1) with the rational far tail.
+- [ ] sign-lock §5: the exact finite decomposition
+      `−X_m = Σ_s (−ζ)^s/s!·Π_s D_s (1+ε_{m-s}) ± boundary`, the P1–P4
+      pieces (Poisson moments via partial-exp majorants), tails, and the
+      final positivity `m²e^{-ζ}(1-2/m) > 2215`-surrogate.
+- [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
+      two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
+      entropy tail for `a > 2000`.
+- [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
+      the final `CoefficientNegativity`.
 
 ## Infrastructure
 

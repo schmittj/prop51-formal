@@ -29,7 +29,7 @@ The proof (see `paper/prop51.tex`) has three layers:
 | enumeration | `g ≤ 23` (`a ≤ 8`) | exact rationals over all partitions | **proved** (`CertificateSmall.lean`) |
 | majorant, exact | `9 ≤ a ≤ 60` | exact rationals, 10,764 pairs | **proved** (`CertificateExact.lean`) |
 | majorant, interval | `61 ≤ a ≤ 400` | verified 192-bit dyadic intervals, 470,220 pairs | **proved** (`Prop51Kernel.lean` + `IntervalCert.lean` + 8 `native_decide` chunks) |
-| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + saddle bounds | paper-level, Lean port = Layer C |
+| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + saddle bounds | **in progress** (Layer C, all-rational: §2 estimates + composition lemma done — `BinomRecip`/`DNorm`/`Composition.lean`) |
 
 ## What is machine-checked today
 

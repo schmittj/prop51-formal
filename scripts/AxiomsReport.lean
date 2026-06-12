@@ -41,3 +41,14 @@ import Prop51
 #print axioms Prop51.unorm_neg_61_400
 #print axioms Prop51.unorm_neg_9_400
 #print axioms Prop51.coefficientNegativity_of_g_le_1199
+
+-- Layer C groundwork: reciprocal binomials, d-normalization, compositions
+#print axioms Prop51.sum_choose_recip_le
+#print axioms Prop51.sum_choose_recip_inner_le
+#print axioms Prop51.d_succ_succ
+#print axioms Prop51.d_lb
+#print axioms Prop51.d_ub
+#print axioms Prop51.c_lb
+#print axioms Prop51.c_ub
+#print axioms Prop51.d_ratio_lb
+#print axioms Prop51.Gcomp_le

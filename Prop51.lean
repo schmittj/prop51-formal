@@ -7,6 +7,9 @@ import Prop51.ExpSeries
 import Prop51.Bridge
 import Prop51.BCoeffSeries
 import Prop51.Majorant
+import Prop51.BinomRecip
+import Prop51.DNorm
+import Prop51.Composition
 import Prop51.Dyadic
 import Prop51.IntervalCert
 import Prop51.CertificateInterval
