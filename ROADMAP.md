@@ -89,8 +89,11 @@ Status:
       `(5/36)·6^r(r-1)! ≤ c_r ≤ (4/25)·6^r(r-1)!` (`Prop51/DNorm.lean`).
 - [x] composition lemma (paper Lemma 3.1): `G_r(p) ≤ 4^{r-1}(p-2r+1)!`
       in recursive convolution form (`Prop51/Composition.lean`).
-- [ ] rational Stirling lower bound `r! ≥ (25r/68)^r` and the partial-exp
-      majorant machinery (`ExpBounds.lean`, next).
+- [x] rational Stirling lower bound `r! ≥ (25r/68)^r` and the partial-exp
+      majorant machinery: `Σ_{t<T} y^t/t! ≤ Σ_{t<T₀} y^t/t!
+      + (y^{T₀}/T₀!)/(1−y/T₀)` uniformly in `T`; `(1+1/n)^n ≤ 68/25` via
+      the binomial theorem and `Σ 1/k! ≤ 1631/600`
+      (`Prop51/ExpBounds.lean`).
 - [ ] `H`-power machinery: `hconv r p = [t^p] H(t)^r` recursively
       (`H = Σ_{j≥2} c_j t^j`), `hconv ≤ (4/25)^r 6^p Gcomp r p`, and the
       exp-formula `coeff p (expSeries L) = Σ_{r≤p} coeff p (G^r)/r!`

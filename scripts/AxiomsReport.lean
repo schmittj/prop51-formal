@@ -52,3 +52,6 @@ import Prop51
 #print axioms Prop51.c_ub
 #print axioms Prop51.d_ratio_lb
 #print axioms Prop51.Gcomp_le
+#print axioms Prop51.sum_exp_le
+#print axioms Prop51.one_add_inv_pow_le
+#print axioms Prop51.factorial_lb
