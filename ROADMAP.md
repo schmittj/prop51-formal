@@ -150,9 +150,12 @@ Status:
       the abstract product-cross inequality has also been bridged to those
       four weighted P4 budget terms.  The formalized near-range `d`-drift
       gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
-      `v_s|ε_p|` bridge input is closed.  Remaining: connect the closed
-      near-range weighted P1/P4 bridge lemmas into the global sign-lock sum,
-      and close the residual near/far tails.
+      `v_s|ε_p|` bridge input is closed.  The closed P1/P4 actual weighted
+      bridges are now summed with P2/P3 into a `2214/m²` near-range component
+      audit, and a conditional `w_s` near-range theorem records exactly the
+      remaining nonlinear recentering hypothesis.  Remaining: prove that
+      exact recentering bridge for `ε_p` from the `E^-_p` block expansion,
+      then add the `1/m²` far-tail allowance.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

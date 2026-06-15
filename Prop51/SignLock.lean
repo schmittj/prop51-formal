@@ -964,6 +964,11 @@ theorem poissonThird_zetaMax_le (T : Nat) :
     _ ≤ 118 := by
           norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
 
+private theorem three_mul_le_of_mem_near {m s : Nat}
+    (hs : s ∈ Finset.range (m/3 + 1)) : 3*s ≤ m := by
+  have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+  exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+
 /-! ## P1: gamma-product residual numerical budget
 
 Formalization note: the paper writes the product estimates with `exp(0.2237s)`.
@@ -1683,6 +1688,21 @@ theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     _ ≤ 426 / (m : ℚ)^2 := by
           field_simp [hmpos.ne']
           norm_num
+
+/-- Closed P1 contribution for the actual gamma-product residual in the near
+range. -/
+theorem signLock_P1_actual_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+      ≤ 426 / (m : ℚ)^2 := by
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+        ≤ ∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s := by
+    exact Finset.sum_le_sum fun s hs =>
+      weighted_piResidual_le_gammaResidualBudgetTerm_near
+        (m := m) (s := s) hm (three_mul_le_of_mem_near hs)
+  exact hpoint.trans (signLock_P1_budget_zetaMax (by omega : 1 ≤ m))
 
 /-! ## P2: `d`-drift budget
 
@@ -3240,6 +3260,295 @@ theorem signLock_P4_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
           exact add_le_add le_rfl (signLock_P4_small_budget_zetaMax hm)
     _ ≤ 784 / (m : ℚ)^2 :=
           signLock_P4_numerical_budget_zetaMax (by omega : 1 ≤ m)
+
+/-- Closed P4 contribution for the actual product-cross residual in the near
+range. -/
+theorem signLock_P4_actual_budget_zetaMax {N m : Nat}
+    (hN : 1 ≤ N) (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ 784 / (m : ℚ)^2 := by
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+        ≤ ∑ s ∈ Finset.range (m/3 + 1),
+            (crossDominantBudgetTerm m s + crossSmallBudgetTerm m s) := by
+    exact Finset.sum_le_sum fun s hs =>
+      productCrossResidual_weighted_le_P4_budgetTerm_near
+        (N := N) (m := m) (s := s) hN hN40 hm (three_mul_le_of_mem_near hs)
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ ∑ s ∈ Finset.range (m/3 + 1),
+          (crossDominantBudgetTerm m s + crossSmallBudgetTerm m s) := hpoint
+    _ =
+        ∑ s ∈ Finset.range (m/3 + 1), crossDominantBudgetTerm m s
+          + ∑ s ∈ Finset.range (m/3 + 1), crossSmallBudgetTerm m s := by
+          rw [Finset.sum_add_distrib]
+    _ ≤ 784 / (m : ℚ)^2 := signLock_P4_budget_zetaMax hm
+
+/-! ## Near-range component assembly -/
+
+/-- The six formalized near-range component budgets add to `2214/m²`.
+
+This is the summed audit before the final `1/m²` tail allowance.  It packages
+the now-closed P1/P4 actual bridges together with the existing P2/P3 budgets.
+The remaining assembly step is to connect the exact nonlinear recentering
+identity for `ε_p` to the P3a/P3b/P3c majorants and then add the far-tail
+allowance. -/
+theorem signLock_near_component_budget_zetaMax {N m : Nat}
+    (hN : 1 ≤ N) (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|)
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|)
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            twoNonEndpointCorrectionBound N (m-s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            threeBlockTailBound N (m-s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|)
+      ≤ 2214 / (m : ℚ)^2 := by
+  have hP1 := signLock_P1_actual_budget_zetaMax (m := m) hm
+  have hP2 := signLock_P2_budget_zetaMax (m := m) hm
+  have hP3a := signLock_P3a_budget_zetaMax (N := N) (m := m) hN40 hm
+  have hP3b := signLock_P3b_budget_zetaMax (N := N) (m := m) hN40 hm
+  have hP3c := signLock_P3c_budget_zetaMax (N := N) (m := m) hN40 hm
+  have hP4 := signLock_P4_actual_budget_zetaMax
+    (N := N) (m := m) hN hN40 hm
+  calc
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|)
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|)
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            twoNonEndpointCorrectionBound N (m-s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            threeBlockTailBound N (m-s))
+      + (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|)
+      ≤ 426 / (m : ℚ)^2 + 13 / (m : ℚ)^2 + 184 / (m : ℚ)^2
+          + 234 / (m : ℚ)^2 + 573 / (m : ℚ)^2 + 784 / (m : ℚ)^2 := by
+          exact add_le_add
+            (add_le_add
+              (add_le_add
+                (add_le_add
+                  (add_le_add hP1 hP2)
+                  hP3a)
+                hP3b)
+              hP3c)
+            hP4
+    _ = 2214 / (m : ℚ)^2 := by ring_nf
+
+/-! ## Conditional assembly of the near-range `w_s` error -/
+
+/-- The nonlinear recentering residual after extracting the leading
+two-endpoint correction from `ε_p`.  The remaining exact P3 bridge is to bound
+this by the non-endpoint two-block and three-and-more-block majorants. -/
+def nonlinearRecenteringRemainder (N m s : Nat) : ℚ :=
+  epsilonMinus N (m-s) + twoEndpointCorrection N (m-s)
+
+/-- The P3 pointwise budget attached to the nonlinear recentering residual. -/
+def nonlinearRecenteringBudgetTerm (N m s : Nat) : ℚ :=
+  |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+    + twoNonEndpointCorrectionBound N (m-s)
+    + threeBlockTailBound N (m-s)
+
+theorem twoEndpointTarget_eq_zeta_div (N : Nat) {m : Nat} (hm : 1 ≤ m) :
+    twoEndpointTarget N m = zetaQ N m / (m : ℚ) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  unfold twoEndpointTarget zetaQ
+  field_simp [hmpos.ne']
+
+theorem abs_epsilon_zeta_le_nonlinearRecenteringBudget
+    {N m s : Nat} (hm : 1 ≤ m)
+    (hrem :
+      |nonlinearRecenteringRemainder N m s|
+        ≤ twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s)) :
+    |epsilonMinus N (m-s) + zetaQ N m / (m : ℚ)|
+      ≤ nonlinearRecenteringBudgetTerm N m s := by
+  have htarget := twoEndpointTarget_eq_zeta_div N (m := m) hm
+  calc
+    |epsilonMinus N (m-s) + zetaQ N m / (m : ℚ)|
+        =
+      |(epsilonMinus N (m-s) + twoEndpointCorrection N (m-s))
+        + (twoEndpointTarget N m - twoEndpointCorrection N (m-s))| := by
+          rw [← htarget]
+          congr 1
+          ring_nf
+    _ ≤ |epsilonMinus N (m-s) + twoEndpointCorrection N (m-s)|
+          + |twoEndpointTarget N m - twoEndpointCorrection N (m-s)| :=
+          abs_add_le _ _
+    _ = |nonlinearRecenteringRemainder N m s|
+          + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m| := by
+          unfold nonlinearRecenteringRemainder
+          rw [show twoEndpointTarget N m - twoEndpointCorrection N (m-s)
+              = -(twoEndpointCorrection N (m-s) - twoEndpointTarget N m) by ring_nf,
+            abs_neg]
+    _ ≤ (twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s))
+          + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m| :=
+          add_le_add hrem le_rfl
+    _ = nonlinearRecenteringBudgetTerm N m s := by
+          unfold nonlinearRecenteringBudgetTerm
+          ring_nf
+
+private theorem abs_cross_pi_v_eps_le
+    (cross pi v eps : ℚ) (hv : 0 ≤ v) :
+    |cross + pi - v + eps| ≤ |pi| + v + |eps| + |cross| := by
+  calc
+    |cross + pi - v + eps| = |cross - (-pi) - v - (-eps)| := by ring_nf
+    _ ≤ |cross| + |-pi| + |v| + |-eps| := abs_four_sub_le cross (-pi) v (-eps)
+    _ = |pi| + v + |eps| + |cross| := by
+        rw [abs_neg, abs_neg, abs_of_nonneg hv]
+        ring_nf
+
+theorem signLockErrorW_eq_components (N m s : Nat) :
+    signLockErrorW N m s =
+      productCrossResidual N m s + piResidual m s - (1 - DFactor m s)
+        + (epsilonMinus N (m-s) + zetaQ N m / (m : ℚ)) := by
+  unfold signLockErrorW productCrossResidual piResidual
+  ring_nf
+
+/-- Pointwise near-range `w_s` assembly, conditional on the remaining exact P3
+bridge for the nonlinear recentering residual. -/
+theorem abs_signLockErrorW_le_components_of_nonlinearRecentering
+    {N m s : Nat} (hm : 1 ≤ m) (hD : DFactor m s ≤ 1)
+    (hrem :
+      |nonlinearRecenteringRemainder N m s|
+        ≤ twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s)) :
+    |signLockErrorW N m s|
+      ≤ |piResidual m s| + (1 - DFactor m s)
+          + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+          + twoNonEndpointCorrectionBound N (m-s)
+          + threeBlockTailBound N (m-s)
+          + |productCrossResidual N m s| := by
+  have hv : 0 ≤ 1 - DFactor m s := by linarith
+  have hnonlin :=
+    abs_epsilon_zeta_le_nonlinearRecenteringBudget
+      (N := N) (m := m) (s := s) hm hrem
+  rw [signLockErrorW_eq_components]
+  have htri := abs_cross_pi_v_eps_le
+    (cross := productCrossResidual N m s)
+    (pi := piResidual m s)
+    (v := 1 - DFactor m s)
+    (eps := epsilonMinus N (m-s) + zetaQ N m / (m : ℚ)) hv
+  unfold nonlinearRecenteringBudgetTerm at hnonlin
+  linarith
+
+/-- Conditional near-range audit for the actual `w_s` errors.  The sole
+remaining hypothesis is the exact nonlinear recentering bridge from the
+coefficient expansion of `E^-_p`. -/
+theorem signLock_near_error_budget_zetaMax_of_nonlinearRecentering
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hrem : ∀ s, s ∈ Finset.range (m/3 + 1) →
+      |nonlinearRecenteringRemainder N m s|
+        ≤ twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s)) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+      ≤ 2214 / (m : ℚ)^2 := by
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+        ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            (|piResidual m s| + (1 - DFactor m s)
+              + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+              + twoNonEndpointCorrectionBound N (m-s)
+              + threeBlockTailBound N (m-s)
+              + |productCrossResidual N m s|) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+      have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+      positivity
+    exact mul_le_mul_of_nonneg_left
+      (abs_signLockErrorW_le_components_of_nonlinearRecentering
+        (N := N) (m := m) (s := s) (by omega : 1 ≤ m)
+        (DFactor_le_one (m := m) (s := s) (by omega : 1 ≤ m))
+        (hrem s hs))
+      hweight
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) *
+            (|piResidual m s| + (1 - DFactor m s)
+              + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+              + twoNonEndpointCorrectionBound N (m-s)
+              + threeBlockTailBound N (m-s)
+              + |productCrossResidual N m s|) := hpoint
+    _ =
+      (∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|)
+        + (∑ s ∈ Finset.range (m/3 + 1),
+            (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s))
+        + (∑ s ∈ Finset.range (m/3 + 1),
+            (zetaMax^s / (s.factorial : ℚ)) *
+              |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|)
+        + (∑ s ∈ Finset.range (m/3 + 1),
+            (zetaMax^s / (s.factorial : ℚ)) *
+              twoNonEndpointCorrectionBound N (m-s))
+        + (∑ s ∈ Finset.range (m/3 + 1),
+            (zetaMax^s / (s.factorial : ℚ)) *
+              threeBlockTailBound N (m-s))
+        + (∑ s ∈ Finset.range (m/3 + 1),
+            (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|) := by
+        calc
+          ∑ s ∈ Finset.range (m/3 + 1),
+              (zetaMax^s / (s.factorial : ℚ)) *
+                (|piResidual m s| + (1 - DFactor m s)
+                  + |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+                  + twoNonEndpointCorrectionBound N (m-s)
+                  + threeBlockTailBound N (m-s)
+                  + |productCrossResidual N m s|)
+            =
+          ∑ s ∈ Finset.range (m/3 + 1),
+              ((zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+                + (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s)
+                + (zetaMax^s / (s.factorial : ℚ)) *
+                    |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+                + (zetaMax^s / (s.factorial : ℚ)) *
+                    twoNonEndpointCorrectionBound N (m-s)
+                + (zetaMax^s / (s.factorial : ℚ)) *
+                    threeBlockTailBound N (m-s)
+                + (zetaMax^s / (s.factorial : ℚ)) *
+                    |productCrossResidual N m s|) := by
+                refine Finset.sum_congr rfl fun s hs => ?_
+                ring_nf
+          _ =
+              (∑ s ∈ Finset.range (m/3 + 1),
+                  (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|)
+                + (∑ s ∈ Finset.range (m/3 + 1),
+                    (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s))
+                + (∑ s ∈ Finset.range (m/3 + 1),
+                    (zetaMax^s / (s.factorial : ℚ)) *
+                      |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|)
+                + (∑ s ∈ Finset.range (m/3 + 1),
+                    (zetaMax^s / (s.factorial : ℚ)) *
+                      twoNonEndpointCorrectionBound N (m-s))
+                + (∑ s ∈ Finset.range (m/3 + 1),
+                    (zetaMax^s / (s.factorial : ℚ)) *
+                      threeBlockTailBound N (m-s))
+                + (∑ s ∈ Finset.range (m/3 + 1),
+                    (zetaMax^s / (s.factorial : ℚ)) *
+                      |productCrossResidual N m s|) := by
+                rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
+                  Finset.sum_add_distrib, Finset.sum_add_distrib,
+                  Finset.sum_add_distrib]
+    _ ≤ 2214 / (m : ℚ)^2 :=
+        signLock_near_component_budget_zetaMax (N := N) (m := m) hN hN40 hm
 
 /-! ## Final rational positivity margin -/
 
