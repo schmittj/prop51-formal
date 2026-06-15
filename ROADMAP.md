@@ -179,7 +179,9 @@ Status:
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
       bookkeeping and the retained range `1 ≤ k ≤ floor(0.9a)` are now
-      formalized in `Prop51/PositiveSaddle.lean`.
+      formalized in `Prop51/PositiveSaddle.lean`; that file also defines the
+      executable rational small/tempered edge summand majorants and proves
+      their finite-window exponent cutoffs for `401 ≤ a ≤ 2000`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 
