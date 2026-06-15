@@ -113,6 +113,10 @@ Status:
       `r = 2` block (ratio ≤ `(16N/25)/(3(p-2r)(p-2r+1)) ≤ 17.1/p`) plus
       the rational far tail `r > p/4` via `factorial_lb` and
       `(p-1)!/(p-2r+1)! ≥ (2r-1)!`.
+      The near-range half is now structured in Lean: `DeltaRat` splits at
+      `p/4`, the `r ≤ p/4` slice is bounded by `DeltaNearGeomBound`, and the
+      remaining obligation is the far-tail slice plus final numeric
+      simplification.
 - [ ] sign-lock §5: the exact finite decomposition
       `−X_m = Σ_s (−ζ)^s/s!·Π_s D_s (1+ε_{m-s}) ± boundary`, the P1–P4
       pieces (Poisson moments via partial-exp majorants), tails, and the

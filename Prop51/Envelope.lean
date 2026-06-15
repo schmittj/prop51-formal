@@ -39,6 +39,14 @@ block counts. -/
 def DeltaRat (p : Nat) (N : ℚ) : ℚ :=
   ∑ r ∈ Finset.Icc 2 (p/2), DeltaRatTerm p N r
 
+/-- Near part of `DeltaRat`, up to the paper's cutoff `r ≤ p/4`. -/
+def DeltaRatNear (p : Nat) (N : ℚ) : ℚ :=
+  ∑ r ∈ Finset.Icc 2 (p/4), DeltaRatTerm p N r
+
+/-- Far part of `DeltaRat`, beyond the paper's cutoff `r > p/4`. -/
+def DeltaRatFar (p : Nat) (N : ℚ) : ℚ :=
+  ∑ r ∈ Finset.Icc (p/4 + 1) (p/2), DeltaRatTerm p N r
+
 /-- The residual block appearing on the right side of `Eminus_residual_le`. -/
 def EminusResidualBlock (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
   (N*(4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ)
@@ -379,6 +387,58 @@ theorem DeltaRatTerm_Icc_sum_le_near_closed (p M : Nat) {N R : ℚ}
             * (1/(1 - DeltaNearRatio p R)) := by
               ring
   exact hslice.trans hclosed
+
+/-- The near part of `DeltaRat`, cut off at `r ≤ p/4`, is bounded by the
+closed-form near geometric majorant. -/
+theorem DeltaRatNear_le_geomBound (p : Nat) {N R : ℚ}
+    (hN : 0 ≤ N) (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 8 ≤ p) (hq1 : DeltaNearRatio p R < 1) :
+    DeltaRatNear p N ≤ DeltaNearGeomBound p R := by
+  unfold DeltaRatNear
+  refine DeltaRatTerm_Icc_sum_le_near_closed p (p/4) (by omega) hN hR hNp
+    (by omega) hq1 ?_
+  intro r _hr2 hr
+  omega
+
+/-- Split `DeltaRat` at the paper's cutoff `r = p/4`. -/
+theorem DeltaRat_eq_near_add_far (p : Nat) (N : ℚ) (hp : 4 ≤ p) :
+    DeltaRat p N = DeltaRatNear p N + DeltaRatFar p N := by
+  unfold DeltaRat DeltaRatNear DeltaRatFar
+  have hsplit :
+      Finset.Icc 2 (p/2)
+        = Finset.Icc 2 (p/4) ∪ Finset.Icc (p/4 + 1) (p/2) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_union]
+    constructor
+    · intro hr
+      by_cases hle : r ≤ p/4
+      · exact Or.inl ⟨hr.1, hle⟩
+      · exact Or.inr ⟨Nat.succ_le_of_lt (Nat.lt_of_not_ge hle), hr.2⟩
+    · intro hr
+      rcases hr with hnear | hfar
+      · exact ⟨hnear.1, by omega⟩
+      · exact ⟨by omega, hfar.2⟩
+  have hdisj :
+      Disjoint (Finset.Icc 2 (p/4)) (Finset.Icc (p/4 + 1) (p/2)) := by
+    rw [Finset.disjoint_left]
+    intro r hnear hfar
+    simp only [Finset.mem_Icc] at hnear hfar
+    omega
+  rw [hsplit, Finset.sum_union hdisj]
+
+/-- After the near/far split, the near part may be replaced by its closed
+geometric majorant. -/
+theorem DeltaRat_le_nearGeomBound_add_far (p : Nat) {N R : ℚ}
+    (hN : 0 ≤ N) (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 8 ≤ p) (hq1 : DeltaNearRatio p R < 1) :
+    DeltaRat p N ≤ DeltaNearGeomBound p R + DeltaRatFar p N := by
+  have hnear : DeltaRatNear p N ≤ DeltaNearGeomBound p R :=
+    DeltaRatNear_le_geomBound p hN hR hNp hp hq1
+  calc DeltaRat p N
+      = DeltaRatNear p N + DeltaRatFar p N :=
+          DeltaRat_eq_near_add_far p N (by omega)
+    _ ≤ DeltaNearGeomBound p R + DeltaRatFar p N :=
+          add_le_add hnear le_rfl
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/

@@ -74,4 +74,7 @@ import Prop51
 #print axioms Prop51.DeltaRatTerm_Icc_sum_le_near_geom
 #print axioms Prop51.DeltaRatTerm_Icc_sum_le_near_inv_one_sub
 #print axioms Prop51.DeltaRatTerm_Icc_sum_le_near_closed
+#print axioms Prop51.DeltaRatNear_le_geomBound
+#print axioms Prop51.DeltaRat_eq_near_add_far
+#print axioms Prop51.DeltaRat_le_nearGeomBound_add_far
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat
