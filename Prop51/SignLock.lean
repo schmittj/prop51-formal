@@ -40,6 +40,24 @@ def DFactor (m s : Nat) : ℚ := d (m-s) / d m
 /-- The normalized nonlinear coefficient `-E^-_p(N)/(N c_p)`. -/
 def EminusNorm (N p : Nat) : ℚ := -(Eminus (N : ℚ) p) / ((N : ℚ) * c p)
 
+/-- The sign-lock nonlinear residual `ε_p`, defined by
+`E^-_p(N) = -N c_p (1+ε_p)`. -/
+def epsilonMinus (N p : Nat) : ℚ := EminusNorm N p - 1
+
+/-- `e_1(s)=s(s+1)/2`, the first correction in the `Π_s` expansion. -/
+def eOne (s : Nat) : ℚ := (s : ℚ) * ((s+1 : Nat) : ℚ) / 2
+
+/-- The pointwise sign-lock error `w_s` from paper §5. -/
+def signLockErrorW (N m s : Nat) : ℚ :=
+  PiFactor m s * DFactor m s * (1 + epsilonMinus N (m-s))
+    - 1 - eOne s / (m : ℚ) + zetaQ N m / (m : ℚ)
+
+/-- By definition, the normalized nonlinear coefficient is `1+ε_p`. -/
+theorem EminusNorm_eq_one_add_epsilonMinus (N p : Nat) :
+    EminusNorm N p = 1 + epsilonMinus N p := by
+  unfold epsilonMinus
+  ring
+
 /-! ## Splitting off the linear exponential -/
 
 /-- The sequence with a single nonzero logarithmic coefficient in degree `1`. -/
@@ -211,5 +229,97 @@ theorem signLock_summand_factor (N m s : Nat) (hN : 1 ≤ N) (hs : s < m) :
       -(↑N ^ s * Eminus (↑N) (m - s) * (m : ℚ)^s *
           ((m : ℚ)⁻¹)^s * (-5 / 36 : ℚ)^s * (6 : ℚ)^s) := by
         ring
+
+/-- The same summand factorization, with the nonlinear coefficient written as
+`1 + ε_{m-s}`. -/
+theorem signLock_summand_factor_epsilon
+    (N m s : Nat) (hN : 1 ≤ N) (hs : s < m) :
+    ((-(N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+        (-(Eminus (N : ℚ) (m-s)) / ((N : ℚ) * c m))
+      =
+    ((-zetaQ N m)^s / (s.factorial : ℚ)) *
+        PiFactor m s * DFactor m s * (1 + epsilonMinus N (m-s)) := by
+  rw [signLock_summand_factor N m s hN hs,
+    EminusNorm_eq_one_add_epsilonMinus]
+
+private theorem epsilonMinus_eq_envelope_residual (N p : Nat) :
+    epsilonMinus N p =
+      Eminus (N : ℚ) p / (-(N : ℚ) * c p) - 1 := by
+  unfold epsilonMinus EminusNorm
+  ring
+
+/-- The completed Δ-envelope translated into sign-lock `ε_p` notation. -/
+theorem abs_epsilonMinus_le_final {N m p : Nat}
+    (hN : 1 ≤ N) (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hpm : 2*m ≤ 3*p) :
+    |epsilonMinus N p| ≤ (66/5) / (m : ℚ) := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  rw [epsilonMinus_eq_envelope_residual]
+  exact Eminus_normalized_residual_le_final (p := p) (m := m)
+    (N := (N : ℚ)) hNpos hN40 hm hpm
+
+/-- Near-range version used in the P1--P4 audit: if `s≤m/3`, then
+`p=m-s` is in the Δ-envelope range. -/
+theorem abs_epsilonMinus_le_final_of_three_mul_le
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    |epsilonMinus N (m-s)| ≤ (66/5) / (m : ℚ) := by
+  apply abs_epsilonMinus_le_final hN hN40 hm
+  omega
+
+/-! ## Final rational positivity margin -/
+
+/-- Alternating partial sum surrogate for `exp(-x)`. -/
+def expNegPartial (x : ℚ) (T : Nat) : ℚ :=
+  ∑ k ∈ Finset.range T, (-x)^k / (k.factorial : ℚ)
+
+/-- A concrete rational lower surrogate for `exp(-50/27)`.
+Ten terms already leave far more than the required sign-lock margin. -/
+def expNegLower50 : ℚ := expNegPartial (50/27) 10
+
+theorem expNegLower50_eq :
+    expNegLower50 = 678107852315029 / 4323713773987629 := by
+  norm_num [expNegLower50, expNegPartial, Finset.sum_range_succ, Nat.factorial]
+
+theorem expNegLower50_pos : 0 < expNegLower50 := by
+  rw [expNegLower50_eq]
+  norm_num
+
+/-- Exact rational audit of the endpoint margin. -/
+theorem signLock_final_margin_endpoint :
+    (2215 : ℚ) <
+      (361 : ℚ)^2 * expNegLower50 * (1 - 2/(361 : ℚ)) := by
+  rw [expNegLower50_eq]
+  norm_num
+
+/-- The endpoint margin propagates to every `m ≥ 361` through the increasing
+factor `m^2(1-2/m) = m^2-2m`. -/
+theorem signLock_final_margin_of_ge_361 {m : Nat} (hm : 361 ≤ m) :
+    (2215 : ℚ) <
+      (m : ℚ)^2 * expNegLower50 * (1 - 2/(m : ℚ)) := by
+  have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hpoly :
+      (361 : ℚ)^2 - 2*(361 : ℚ) ≤ (m : ℚ)^2 - 2*(m : ℚ) := by
+    have hleft : 0 ≤ (m : ℚ) - 361 := by linarith
+    have hright : 0 ≤ (m : ℚ) + 361 - 2 := by linarith
+    have hprod : 0 ≤ ((m : ℚ) - 361) * ((m : ℚ) + 361 - 2) :=
+      mul_nonneg hleft hright
+    nlinarith
+  have hmono :
+      (361 : ℚ)^2 * expNegLower50 * (1 - 2/(361 : ℚ))
+        ≤ (m : ℚ)^2 * expNegLower50 * (1 - 2/(m : ℚ)) := by
+    have h361 :
+        (361 : ℚ)^2 * expNegLower50 * (1 - 2/(361 : ℚ))
+          = expNegLower50 * ((361 : ℚ)^2 - 2*(361 : ℚ)) := by
+        ring
+    have hmrew :
+        (m : ℚ)^2 * expNegLower50 * (1 - 2/(m : ℚ))
+          = expNegLower50 * ((m : ℚ)^2 - 2*(m : ℚ)) := by
+        field_simp [hmpos.ne']
+    rw [h361, hmrew]
+    exact mul_le_mul_of_nonneg_left hpoly expNegLower50_pos.le
+  exact lt_of_lt_of_le signLock_final_margin_endpoint hmono
 
 end Prop51

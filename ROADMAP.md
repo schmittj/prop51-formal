@@ -119,9 +119,11 @@ Status:
 - [ ] sign-lock §5 (`Prop51/SignLock.lean`): exact finite decomposition
       of `−X_m` and the non-boundary
       `(-ζ)^s/s!·Π_s D_s·(-E^-_{m-s}/(Nc_{m-s}))` summand factorization
-      are done.  Remaining: convert to `(1+ε_{m-s})`, prove the P1–P4
-      pieces (Poisson moments via partial-exp majorants), tails, and the
-      final positivity `m²e^{-ζ}(1-2/m) > 2215`-surrogate.
+      are done; this is also converted to `(1+ε_{m-s})`, with the completed
+      Δ-envelope exposed as `|ε_{m-s}| ≤ 66/(5m)` for `3s ≤ m`.  The final
+      rational positivity margin against `2215` is done via a 10-term
+      alternating surrogate at `50/27`.  Remaining: prove the P1–P4 pieces
+      (Poisson moments via partial-exp majorants) and tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
