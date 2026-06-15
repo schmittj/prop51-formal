@@ -186,7 +186,10 @@ Status:
       arbitrary `N` in the rectangle to the corrected two-edge scan is also
       in place, as is the algebraic bridge restricting the guarded raw
       positive sum to `k ≤ floor(0.9a)` once the large-`k` sign-lock
-      nonpositivity is available.
+      nonpositivity is available.  `Unorm` is now rewritten as
+      `Xnorm + normalizedSoloTerm + normalizedPositiveRangeSum`, with a
+      conditional theorem bounding the retained positive sum by the corrected
+      edge scan.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

@@ -268,6 +268,11 @@ def positiveEdgeMajorantSum (a : Nat) : ℚ :=
 
 /-! ## Raw normalized positive contribution -/
 
+/-- The normalized solo `Q_a` contribution in `Unorm`.  In the paper's
+notation this is the term written as `2^{-a-1}Y_a(N)`. -/
+def normalizedSoloTerm (a N : Nat) : ℚ :=
+  Qq N a / ((N : ℚ) * c a)
+
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
 def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
@@ -307,6 +312,44 @@ theorem not_Bq_pos_of_Xnorm_nonpos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k)
   have hXpos := (Bq_pos_iff_Xnorm_pos hN hk).mp hB
   linarith
 
+theorem normalizedPositiveIfTerm_eq_guard_div (a N k : Nat) :
+    normalizedPositiveIfTerm a N k
+      =
+    (if 1 ≤ k ∧ 0 < Bq N k then Bq N k * Qq N (a-k) else 0)
+      / ((N : ℚ) * c a) := by
+  unfold normalizedPositiveIfTerm normalizedPositiveRawTerm
+  split <;> ring
+
+theorem normalizedPositiveRangeSum_eq_guard_div (a N : Nat) :
+    normalizedPositiveRangeSum a N
+      =
+    (∑ k ∈ Finset.range a,
+        (if 1 ≤ k ∧ 0 < Bq N k then Bq N k * Qq N (a-k) else 0))
+      / ((N : ℚ) * c a) := by
+  unfold normalizedPositiveRangeSum
+  calc
+    ∑ k ∈ Finset.range a, normalizedPositiveIfTerm a N k
+        =
+      ∑ k ∈ Finset.range a,
+        ((if 1 ≤ k ∧ 0 < Bq N k then Bq N k * Qq N (a-k) else 0)
+          / ((N : ℚ) * c a)) := by
+          refine Finset.sum_congr rfl fun k _ => ?_
+          exact normalizedPositiveIfTerm_eq_guard_div a N k
+    _ =
+      (∑ k ∈ Finset.range a,
+        (if 1 ≤ k ∧ 0 < Bq N k then Bq N k * Qq N (a-k) else 0))
+      / ((N : ℚ) * c a) := by
+        rw [← Finset.sum_div]
+
+/-- Algebraic form of paper equation `(Unorm)`: `Unorm` splits into the
+sign-lock term, the solo `Q_a` term, and the guarded positive sum. -/
+theorem Unorm_eq_Xnorm_add_solo_add_positive (a N : Nat) :
+    Unorm a N =
+      Xnorm N a + normalizedSoloTerm a N + normalizedPositiveRangeSum a N := by
+  rw [Unorm_eq, normalizedPositiveRangeSum_eq_guard_div]
+  unfold Xnorm normalizedSoloTerm
+  ring
+
 theorem positiveKRange_subset_range {a : Nat} (ha : 1 ≤ a) :
     positiveKRange a ⊆ Finset.range a := by
   intro k hk
@@ -343,6 +386,14 @@ theorem normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos
     fun k hklt hklarge =>
       not_Bq_pos_of_Xnorm_nonpos hN (by omega : 1 ≤ k)
         (hlarge k hklt hklarge (by omega : 1 ≤ k))
+
+theorem Unorm_eq_Xnorm_add_solo_add_retained_of_large_Xnorm_nonpos
+    {a N : Nat} (ha : 1 ≤ a) (hN : 1 ≤ N)
+    (hlarge : ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0) :
+    Unorm a N =
+      Xnorm N a + normalizedSoloTerm a N + normalizedPositiveRetainedSum a N := by
+  rw [Unorm_eq_Xnorm_add_solo_add_positive,
+    normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos ha hN hlarge]
 
 theorem positiveBinomDen_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
     (hkmax : k ≤ posKmax a) :
@@ -569,6 +620,40 @@ theorem sum_le_positiveEdgeMajorantSum_of_regime_bounds {a N : Nat}
   sum_le_positiveEdgeMajorantSum fun k hk =>
     term_le_positiveEdgeMajorantTerm_of_regime_bounds hrect
       (hFsmall k hk) (hFtempered k hk)
+
+theorem normalizedPositiveRetainedSum_le_edge_of_regime_bounds {a N : Nat}
+    (hrect : positiveRectangle a N)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k) :
+    normalizedPositiveRetainedSum a N ≤ positiveEdgeMajorantSum a := by
+  unfold normalizedPositiveRetainedSum
+  exact sum_le_positiveEdgeMajorantSum_of_regime_bounds hrect hsmall htempered
+
+/-- Conditional large-`a` positive-part assembly.  Once sign-lock has excluded
+large `k` and the two saddle estimates bound the retained summands, `Unorm`
+is controlled by `Xnorm`, the solo term, and the corrected two-edge scan. -/
+theorem Unorm_le_Xnorm_add_solo_add_edge_of_large_Xnorm_nonpos
+    {a N : Nat} (ha : 1 ≤ a) (hN : 1 ≤ N) (hrect : positiveRectangle a N)
+    (hlarge : ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k) :
+    Unorm a N ≤ Xnorm N a + normalizedSoloTerm a N + positiveEdgeMajorantSum a := by
+  rw [Unorm_eq_Xnorm_add_solo_add_retained_of_large_Xnorm_nonpos ha hN hlarge]
+  have hsum := normalizedPositiveRetainedSum_le_edge_of_regime_bounds
+    (a := a) (N := N) hrect hsmall htempered
+  linarith
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
