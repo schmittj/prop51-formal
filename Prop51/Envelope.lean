@@ -56,6 +56,10 @@ def DeltaRatStepRatioBound (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
   ((16/25) * N)
     / (3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ))
 
+/-- Uniform near-range ratio bound when `N ≤ R p`. -/
+def DeltaNearRatio (p : Nat) (R : ℚ) : ℚ :=
+  (64*R)/(75*(p:ℚ))
+
 theorem DeltaRatTerm_nonneg (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
     0 ≤ DeltaRatTerm p N r := by
   unfold DeltaRatTerm
@@ -133,6 +137,72 @@ theorem DeltaRatTerm_succ_le (p : Nat) {N : ℚ} (r : Nat)
   exact mul_le_mul_of_nonneg_left
     (DeltaRatStepRatio_le_bound p r hN hr hrp)
     (DeltaRatTerm_nonneg p r hN)
+
+/-- Concrete near-range ratio bound.  If `N ≤ R p` and `4r ≤ p`, then the
+geometric ratio is bounded by `(64R)/(75p)`. -/
+theorem DeltaRatStepRatioBound_le_near (p r : Nat) {N R : ℚ}
+    (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 1 ≤ p) (hrnear : 4*r ≤ p) :
+    DeltaRatStepRatioBound p N r ≤ DeltaNearRatio p R := by
+  unfold DeltaRatStepRatioBound
+  have hpQ : (0:ℚ) < p := by exact_mod_cast hp
+  have h2rle : 2*r ≤ p := by omega
+  have h4rq : (4:ℚ) * r ≤ p := by exact_mod_cast hrnear
+  have hA_lower : (p:ℚ)/2 ≤ ((p - 2*r : Nat) : ℚ) := by
+    rw [Nat.cast_sub h2rle]
+    norm_num
+    nlinarith
+  have hA_nonneg : (0:ℚ) ≤ ((p - 2*r : Nat) : ℚ) :=
+    le_trans (by positivity : (0:ℚ) ≤ (p:ℚ)/2) hA_lower
+  have hA_pos : (0:ℚ) < ((p - 2*r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < p - 2*r)
+  have hB_lower : (p:ℚ)/2 ≤ ((p - 2*r + 1 : Nat) : ℚ) := by
+    exact le_trans hA_lower (by norm_num)
+  have hB_pos : (0:ℚ) < ((p - 2*r + 1 : Nat) : ℚ) := by positivity
+  have hprod :
+      ((p:ℚ)/2) * ((p:ℚ)/2)
+        ≤ ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ) := by
+    exact mul_le_mul hA_lower hB_lower (by positivity) hA_nonneg
+  have hden_lower :
+      3 * ((p:ℚ)/2) * ((p:ℚ)/2)
+        ≤ 3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ) := by
+    nlinarith [hprod]
+  have hden_pos :
+      (0:ℚ) < 3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ) := by
+    positivity
+  have hden0_pos : (0:ℚ) < 3 * ((p:ℚ)/2) * ((p:ℚ)/2) := by
+    positivity
+  have hnum_le : (16/25) * N ≤ (16/25) * (R * (p:ℚ)) := by
+    exact mul_le_mul_of_nonneg_left hNp (by norm_num)
+  have hnum_nonneg : 0 ≤ (16/25) * (R * (p:ℚ)) := by positivity
+  calc ((16/25) * N)
+        / (3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ))
+      ≤ ((16/25) * (R * (p:ℚ)))
+        / (3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ)) := by
+          exact div_le_div_of_nonneg_right hnum_le hden_pos.le
+    _ ≤ ((16/25) * (R * (p:ℚ))) / (3 * ((p:ℚ)/2) * ((p:ℚ)/2)) := by
+          exact div_le_div_of_nonneg_left hnum_nonneg hden0_pos hden_lower
+    _ = DeltaNearRatio p R := by
+          unfold DeltaNearRatio
+          field_simp [ne_of_gt hpQ]
+          ring
+
+theorem DeltaNearRatio_nonneg (p : Nat) {R : ℚ} (hR : 0 ≤ R) (hp : 1 ≤ p) :
+    0 ≤ DeltaNearRatio p R := by
+  unfold DeltaNearRatio
+  positivity
+
+/-- In the paper's used range `R ≤ 20`, the near-range ratio is already
+strictly below `1` for `p ≥ 18` (hence certainly for `p ≥ 100`). -/
+theorem DeltaNearRatio_lt_one_of_le_20 (p : Nat) {R : ℚ}
+    (hR20 : R ≤ 20) (hp : 18 ≤ p) :
+    DeltaNearRatio p R < 1 := by
+  unfold DeltaNearRatio
+  have hpQ : (0:ℚ) < p := by exact_mod_cast (by omega : 0 < p)
+  have hp18Q : (18:ℚ) ≤ p := by exact_mod_cast hp
+  have hden : (0:ℚ) < 75 * (p:ℚ) := by positivity
+  rw [div_lt_iff₀ hden]
+  nlinarith
 
 /-! ## Finite geometric domination for the near range -/
 
@@ -231,6 +301,36 @@ theorem DeltaRatTerm_Icc_sum_le_inv_one_sub (p M : Nat) {N q : ℚ}
   exact DeltaRatTerm_shifted_sum_le_inv_one_sub p (M-1) hN hq0 hq1
     (fun j hj => hratio (j+2) (by omega) (by omega))
     (fun j hj => hpstep (j+2) (by omega) (by omega))
+
+/-- Concrete near-range finite geometric bound for `Icc 2 M`, under
+`N ≤ R p` and `4r ≤ p` throughout the slice. -/
+theorem DeltaRatTerm_Icc_sum_le_near_geom (p M : Nat) {N R : ℚ}
+    (hM : 2 ≤ M) (hN : 0 ≤ N) (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 1 ≤ p) (hnear : ∀ r, 2 ≤ r → r < M → 4*r ≤ p) :
+    ∑ r ∈ Finset.Icc 2 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 2 * ∑ j ∈ Finset.range (M-1), (DeltaNearRatio p R)^j := by
+  refine DeltaRatTerm_Icc_sum_le_geom p M hM hN
+    (DeltaNearRatio_nonneg p hR hp) ?_ ?_
+  · intro r hr2 hrM
+    exact DeltaRatStepRatioBound_le_near p r hR hNp hp (hnear r hr2 hrM)
+  · intro r hr2 hrM
+    have h4 := hnear r hr2 hrM
+    omega
+
+/-- Concrete near-range infinite-tail bound for `Icc 2 M`. -/
+theorem DeltaRatTerm_Icc_sum_le_near_inv_one_sub (p M : Nat) {N R : ℚ}
+    (hM : 2 ≤ M) (hN : 0 ≤ N) (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 1 ≤ p) (hq1 : DeltaNearRatio p R < 1)
+    (hnear : ∀ r, 2 ≤ r → r < M → 4*r ≤ p) :
+    ∑ r ∈ Finset.Icc 2 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 2 * (1/(1 - DeltaNearRatio p R)) := by
+  refine DeltaRatTerm_Icc_sum_le_inv_one_sub p M hM hN
+    (DeltaNearRatio_nonneg p hR hp) hq1 ?_ ?_
+  · intro r hr2 hrM
+    exact DeltaRatStepRatioBound_le_near p r hR hNp hp (hnear r hr2 hrM)
+  · intro r hr2 hrM
+    have h4 := hnear r hr2 hrM
+    omega
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
