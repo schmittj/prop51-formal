@@ -591,6 +591,180 @@ theorem DeltaRatFar_le_termBound (p : Nat) {N : ℚ}
     omega
   exact DeltaRatTerm_le_farTermBound p r hN hN20 hrfar hrp
 
+theorem DeltaRatFarTermBound_nonneg (r : Nat) :
+    0 ≤ DeltaRatFarTermBound r := by
+  unfold DeltaRatFarTermBound
+  positivity
+
+private theorem DeltaRatFarTermBound_succ_ratio (r : Nat) (hr : 1 ≤ r) :
+    DeltaRatFarTermBound (r+1)
+      =
+    DeltaRatFarTermBound r
+      * (((256/5) * ((((r+1 : Nat) : ℚ)/(r:ℚ))^(r-1)))
+          / (((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ)))) := by
+  have hrQ : (0:ℚ) < r := by exact_mod_cast (by omega : 0 < r)
+  have hrf : ((r.factorial : ℕ) : ℚ) ≠ 0 := by positivity
+  have h2rf : ((((2*r - 1 : Nat).factorial : ℕ) : ℚ)) ≠ 0 := by positivity
+  have h2rQ : (((2*r : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : 2*r ≠ 0)
+  have h2r1Q : (((2*r + 1 : Nat) : ℚ)) ≠ 0 := by positivity
+  have hfact_r :
+      (((r+1).factorial : ℕ) : ℚ) = ((r:ℚ)+1) * (r.factorial : ℚ) := by
+    push_cast [Nat.factorial_succ]
+    ring
+  have hfact_2r :
+      ((((2*(r+1) - 1 : Nat).factorial : ℕ) : ℚ))
+        = (((2*r + 1 : Nat) : ℚ)) * (((2*r : Nat) : ℚ))
+            * (((2*r - 1 : Nat).factorial : ℚ)) := by
+    have hnat :
+        (2*(r+1) - 1).factorial
+          = (2*r + 1) * (2*r) * (2*r - 1).factorial := by
+      rw [show 2*(r+1) - 1 = 2*r + 1 by omega,
+          show 2*r + 1 = (2*r) + 1 by omega, Nat.factorial_succ,
+          show 2*r = (2*r - 1) + 1 by omega, Nat.factorial_succ]
+      simp
+      ring_nf
+    exact_mod_cast hnat
+  have hpow_cancel :
+      (r:ℚ)^(r-1) * ((r:ℚ)⁻¹)^(r-1) = 1 := by
+    rw [← mul_pow]
+    field_simp [ne_of_gt hrQ]
+    simp
+  have hpow_cancel_pref (P : ℚ) :
+      P * (r:ℚ) * (r:ℚ)^(r-1) * ((r:ℚ)⁻¹)^(r-1) = P * (r:ℚ) := by
+    calc
+      P * (r:ℚ) * (r:ℚ)^(r-1) * ((r:ℚ)⁻¹)^(r-1)
+          = P * ((r:ℚ) * ((r:ℚ)^(r-1) * ((r:ℚ)⁻¹)^(r-1))) := by ring
+      _ = P * ((r:ℚ) * 1) := by rw [hpow_cancel]
+      _ = P * (r:ℚ) := by ring
+  have hpow_cancel_pref0 (P : ℚ) :
+      P * (r:ℚ)^(r-1) * ((r:ℚ)⁻¹)^(r-1) = P := by
+    rw [mul_assoc, hpow_cancel, mul_one]
+  unfold DeltaRatFarTermBound
+  rw [hfact_r, hfact_2r]
+  field_simp [ne_of_gt hrQ, hrf, h2rf, h2rQ, h2r1Q]
+  ring_nf
+  rw [hpow_cancel_pref ((((1 + r : Nat) : ℚ))^(r-1))]
+  rw [hpow_cancel_pref0 ((((1 + r : Nat) : ℚ))^(r-1))]
+  conv_lhs =>
+    rw [show 1 + r - 1 = (r - 1) + 1 by omega]
+    rw [pow_succ]
+    rw [pow_succ]
+  push_cast
+  ring_nf
+
+theorem DeltaRatFarTermBound_succ_le_half (r : Nat) (hr : 61 ≤ r) :
+    DeltaRatFarTermBound (r+1) ≤ DeltaRatFarTermBound r * (1/2) := by
+  have hr1 : 1 ≤ r := by omega
+  have hrQ : (0:ℚ) < r := by exact_mod_cast (by omega : 0 < r)
+  have hbase_one : (1:ℚ) ≤ 1 + 1/(r:ℚ) := by
+    have hinv_nonneg : (0:ℚ) ≤ 1/(r:ℚ) := by positivity
+    linarith
+  have hpow_mono :
+      (1 + 1/(r:ℚ))^(r-1) ≤ (1 + 1/(r:ℚ))^r :=
+    pow_right_mono₀ hbase_one (by omega)
+  have hpow_le : (1 + 1/(r:ℚ))^(r-1) ≤ 68/25 :=
+    hpow_mono.trans (one_add_inv_pow_le r hr1)
+  have hratio_base :
+      (((r+1 : Nat) : ℚ)/(r:ℚ)) = 1 + 1/(r:ℚ) := by
+    have hcast : (((r+1 : Nat) : ℚ)) = (r:ℚ) + 1 := by
+      push_cast
+      ring
+    rw [hcast]
+    field_simp [ne_of_gt hrQ]
+  have hden_pos :
+      (0:ℚ) < ((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ)) := by positivity
+  have hratio :
+      (((256/5) * ((((r+1 : Nat) : ℚ)/(r:ℚ))^(r-1)))
+          / (((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ)))) ≤ 1/2 := by
+    rw [hratio_base]
+    rw [div_le_iff₀ hden_pos]
+    have hr61 : (61:ℚ) ≤ r := by exact_mod_cast hr
+    have hden_cast :
+        (((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ))
+          = (2*(r:ℚ)) * (2*(r:ℚ)+1)) := by
+      push_cast
+      ring
+    rw [hden_cast]
+    nlinarith
+  rw [DeltaRatFarTermBound_succ_ratio r hr1]
+  exact mul_le_mul_of_nonneg_left hratio (DeltaRatFarTermBound_nonneg r)
+
+private theorem geom_chain_bound_from (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat} (hstep : ∀ j, j + 1 < K → F (a+j+1) ≤ F (a+j) * q) :
+    ∀ j, j < K → F (a+j) ≤ F a * q^j := by
+  intro j hj
+  induction j with
+  | zero =>
+      simp
+  | succ j ih =>
+      calc F (a + (j+1))
+          = F (a+j+1) := by rw [Nat.add_assoc]
+        _ ≤ F (a+j) * q := hstep j hj
+        _ ≤ (F a * q^j) * q := by
+            exact mul_le_mul_of_nonneg_right (ih (Nat.lt_of_succ_lt hj)) hq0
+        _ = F a * q^(j+1) := by
+            rw [pow_succ]
+            ring
+
+private theorem geom_chain_sum_from_le (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat} (hstep : ∀ j, j + 1 < K → F (a+j+1) ≤ F (a+j) * q) :
+    ∑ j ∈ Finset.range K, F (a+j)
+      ≤ F a * ∑ j ∈ Finset.range K, q^j := by
+  calc ∑ j ∈ Finset.range K, F (a+j)
+      ≤ ∑ j ∈ Finset.range K, F a * q^j := by
+          refine Finset.sum_le_sum fun j hj => ?_
+          exact geom_chain_bound_from F hq0 hstep j (Finset.mem_range.mp hj)
+    _ = F a * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
+private theorem sum_Icc_eq_shift_from (F : Nat → ℚ) (a b : Nat) :
+    ∑ r ∈ Finset.Icc a b, F r = ∑ j ∈ Finset.range (b+1-a), F (a+j) := by
+  have hIccIco : Finset.Icc a b = Finset.Ico a (b+1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIccIco, Finset.sum_Ico_eq_sum_range]
+
+theorem DeltaRatFarTermBound_Icc_sum_le_two_first (a b : Nat) (ha : 61 ≤ a) :
+    ∑ r ∈ Finset.Icc a b, DeltaRatFarTermBound r
+      ≤ 2 * DeltaRatFarTermBound a := by
+  by_cases hab : a ≤ b
+  · rw [sum_Icc_eq_shift_from (fun r => DeltaRatFarTermBound r) a b]
+    have hgeom :
+        ∑ j ∈ Finset.range (b+1-a), DeltaRatFarTermBound (a+j)
+          ≤ DeltaRatFarTermBound a
+              * ∑ j ∈ Finset.range (b+1-a), (1/2:ℚ)^j := by
+      refine geom_chain_sum_from_le (fun r => DeltaRatFarTermBound r)
+        (by norm_num : (0:ℚ) ≤ 1/2) ?_
+      intro j hj
+      exact DeltaRatFarTermBound_succ_le_half (a+j) (by omega)
+    calc
+      ∑ j ∈ Finset.range (b+1-a), DeltaRatFarTermBound (a+j)
+          ≤ DeltaRatFarTermBound a
+              * ∑ j ∈ Finset.range (b+1-a), (1/2:ℚ)^j := hgeom
+      _ ≤ DeltaRatFarTermBound a * (1/(1-(1/2:ℚ))) := by
+            exact mul_le_mul_of_nonneg_left
+              (geom_sum_le_inv_one_sub (1/2) (by norm_num) (by norm_num) _)
+              (DeltaRatFarTermBound_nonneg a)
+      _ = 2 * DeltaRatFarTermBound a := by ring
+  · have hzero :
+        ∑ r ∈ Finset.Icc a b, DeltaRatFarTermBound r = 0 := by
+      apply Finset.sum_eq_zero
+      intro r hrmem
+      obtain ⟨hrlo, hrhi⟩ := Finset.mem_Icc.mp hrmem
+      omega
+    rw [hzero]
+    exact mul_nonneg (by norm_num) (DeltaRatFarTermBound_nonneg a)
+
+theorem DeltaRatFar_le_two_first (p : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 240 ≤ p) :
+    DeltaRatFar p N ≤ 2 * DeltaRatFarTermBound (p/4 + 1) := by
+  have hfar := DeltaRatFar_le_termBound p hN hN20
+  have hsum :=
+    DeltaRatFarTermBound_Icc_sum_le_two_first (p/4 + 1) (p/2) (by omega)
+  exact hfar.trans hsum
+
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
 theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)
