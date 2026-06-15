@@ -184,7 +184,9 @@ Status:
       their finite-window exponent cutoffs for `401 ≤ a ≤ 2000`.  The
       abstract reducer from pointwise small/tempered saddle estimates at an
       arbitrary `N` in the rectangle to the corrected two-edge scan is also
-      in place.
+      in place, as is the algebraic bridge restricting the guarded raw
+      positive sum to `k ≤ floor(0.9a)` once the large-`k` sign-lock
+      nonpositivity is available.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

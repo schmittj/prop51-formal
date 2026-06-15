@@ -266,6 +266,84 @@ def positiveEdgeMajorantTerm (a k : Nat) : ℚ :=
 def positiveEdgeMajorantSum (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
 
+/-! ## Raw normalized positive contribution -/
+
+/-- One normalized raw positive summand from `Unorm_eq`, without the positivity
+guard. -/
+def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
+  Bq N k * Qq N (a-k) / ((N : ℚ) * c a)
+
+/-- One normalized raw positive summand with the same guard as `Unorm_eq`. -/
+def normalizedPositiveIfTerm (a N k : Nat) : ℚ :=
+  if 1 ≤ k ∧ 0 < Bq N k then normalizedPositiveRawTerm a N k else 0
+
+/-- The full normalized positive sum appearing in `Unorm_eq`. -/
+def normalizedPositiveRangeSum (a N : Nat) : ℚ :=
+  ∑ k ∈ Finset.range a, normalizedPositiveIfTerm a N k
+
+/-- The retained normalized positive sum after the `k > floor(0.9a)`
+sign-lock exclusion. -/
+def normalizedPositiveRetainedSum (a N : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a, normalizedPositiveIfTerm a N k
+
+theorem Bq_pos_iff_Xnorm_pos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k) :
+    0 < Bq N k ↔ 0 < Xnorm N k := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hcQ : 0 < c k := c_pos k hk
+  have hden : 0 < (N : ℚ) * c k := mul_pos hNQ hcQ
+  unfold Xnorm
+  constructor
+  · intro hB
+    exact div_pos hB hden
+  · intro hX
+    have hmul : 0 < (Bq N k / ((N : ℚ) * c k)) * ((N : ℚ) * c k) :=
+      mul_pos hX hden
+    rwa [div_mul_cancel₀ _ hden.ne'] at hmul
+
+theorem not_Bq_pos_of_Xnorm_nonpos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k)
+    (hX : Xnorm N k ≤ 0) :
+    ¬ 0 < Bq N k := by
+  intro hB
+  have hXpos := (Bq_pos_iff_Xnorm_pos hN hk).mp hB
+  linarith
+
+theorem positiveKRange_subset_range {a : Nat} (ha : 1 ≤ a) :
+    positiveKRange a ⊆ Finset.range a := by
+  intro k hk
+  rcases (mem_positiveKRange.mp hk) with ⟨_hk1, hkmax⟩
+  exact Finset.mem_range.mpr (lt_self_of_le_posKmax ha hkmax)
+
+/-- Restrict the guarded positive sum to the retained `k` range once all
+larger `k < a` have nonpositive `Bq`. -/
+theorem normalizedPositiveRangeSum_eq_retained_of_large_nonpos
+    {a N : Nat} (ha : 1 ≤ a)
+    (hlarge : ∀ k, k < a → posKmax a < k → ¬ 0 < Bq N k) :
+    normalizedPositiveRangeSum a N = normalizedPositiveRetainedSum a N := by
+  unfold normalizedPositiveRangeSum normalizedPositiveRetainedSum
+  symm
+  apply Finset.sum_subset (positiveKRange_subset_range ha)
+  intro k hkRange hkNot
+  have hklt : k < a := Finset.mem_range.mp hkRange
+  by_cases hk1 : 1 ≤ k
+  · have hklarge : posKmax a < k := by
+      by_contra hnot
+      exact hkNot (mem_positiveKRange.mpr ⟨hk1, Nat.le_of_not_gt hnot⟩)
+    have hnotB : ¬ 0 < Bq N k := hlarge k hklt hklarge
+    simp [normalizedPositiveIfTerm, hnotB]
+  · have hguard : ¬ (1 ≤ k ∧ 0 < Bq N k) := fun h => hk1 h.1
+    simp [normalizedPositiveIfTerm, hguard]
+
+/-- Variant of `normalizedPositiveRangeSum_eq_retained_of_large_nonpos`
+using the normalized sign-lock quantity `Xnorm`. -/
+theorem normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos
+    {a N : Nat} (ha : 1 ≤ a) (hN : 1 ≤ N)
+    (hlarge : ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0) :
+    normalizedPositiveRangeSum a N = normalizedPositiveRetainedSum a N :=
+  normalizedPositiveRangeSum_eq_retained_of_large_nonpos (a := a) (N := N) ha
+    fun k hklt hklarge =>
+      not_Bq_pos_of_Xnorm_nonpos hN (by omega : 1 ≤ k)
+        (hlarge k hklt hklarge (by omega : 1 ≤ k))
+
 theorem positiveBinomDen_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
     (hkmax : k ≤ posKmax a) :
     0 < positiveBinomDen a k := by
