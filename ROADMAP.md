@@ -142,10 +142,13 @@ Status:
       the abstract product-cross inequality has also been bridged to those
       four weighted P4 budget terms.  The formalized near-range `d`-drift
       gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
-      `v_s|ε_p|` bridge input is closed.
+      `v_s|ε_p|` bridge input is closed.  The remaining P4 inputs are now
+      packaged as conditional bridge lemmas from the single pointwise majorant
+      `Π_s-1 ≤ piUBridgeBound m s`, including a one-call product-cross theorem.
       Remaining: connect the `PiFactor` product residual to the P1 majorant,
-      prove the pointwise `u_s` estimate that feeds the remaining P4 bridge
-      inputs, and close the residual near/far tails.
+      prove the pointwise `u_s` product estimate (likely via a sharper
+      product/log argument or rational certificates), and close the residual
+      near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

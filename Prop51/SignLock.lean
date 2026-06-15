@@ -50,6 +50,10 @@ def eOne (s : Nat) : ℚ := (s : ℚ) * ((s+1 : Nat) : ℚ) / 2
 /-- The gamma-product residual after extracting the first-order term. -/
 def piResidual (m s : Nat) : ℚ := PiFactor m s - 1 - eOne s / (m : ℚ)
 
+theorem eOne_nonneg (s : Nat) : 0 ≤ eOne s := by
+  unfold eOne
+  positivity
+
 theorem PiFactor_zero (m : Nat) (hm : 1 ≤ m) : PiFactor m 0 = 1 := by
   unfold PiFactor
   rw [show m-0-1 = m-1 by omega]
@@ -2117,6 +2121,87 @@ def crossVEpsUBudgetTerm (m s : Nat) : ℚ :=
 def crossSmallBudgetTerm (m s : Nat) : ℚ :=
   crossUVBudgetTerm m s + crossVEpsBudgetTerm m s + crossVEpsUBudgetTerm m s
 
+/-- Pointwise P4 majorant for `u_s = Π_s-1`.  The hard remaining product
+estimate is to prove `Π_s-1 ≤ piUBridgeBound m s`; the bridge lemmas below
+then convert it into the weighted P4 budgets. -/
+def piUBridgeBound (m s : Nat) : ℚ :=
+  ((146/125) * eOne s * (gammaTilt / zetaMax)^s) / (m : ℚ)
+
+theorem piUBridgeBound_nonneg {m s : Nat} (hm : 1 ≤ m) :
+    0 ≤ piUBridgeBound m s := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have htilt : 0 ≤ gammaTilt / zetaMax := by norm_num [gammaTilt, zetaMax]
+  unfold piUBridgeBound
+  exact div_nonneg
+    (mul_nonneg
+      (mul_nonneg (by norm_num) (eOne_nonneg s))
+      (pow_nonneg htilt s))
+    hmpos.le
+
+private theorem zetaMax_pow_mul_tilt_pow (s : Nat) :
+    zetaMax^s * (gammaTilt / zetaMax)^s = gammaTilt^s := by
+  rw [← mul_pow]
+  have hbase : zetaMax * (gammaTilt / zetaMax) = gammaTilt := by
+    norm_num [zetaMax, gammaTilt]
+  rw [hbase]
+
+private theorem weighted_piUBridgeBound_epsBound_eq_crossDominant
+    (m s : Nat) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (piUBridgeBound m s * ((66/5) / (m : ℚ)))
+      = crossDominantBudgetTerm m s := by
+  unfold piUBridgeBound crossDominantBudgetTerm
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        ((((146/125) * eOne s * (gammaTilt / zetaMax)^s) / (m : ℚ)) *
+          ((66/5) / (m : ℚ)))
+      = ((146/125) * (66/5) * eOne s *
+          (zetaMax^s * (gammaTilt / zetaMax)^s) / (s.factorial : ℚ)) /
+          (m : ℚ)^2 := by
+          ring
+    _ = ((146/125) * (66/5) * eOne s * gammaTilt^s /
+          (s.factorial : ℚ)) / (m : ℚ)^2 := by
+          rw [zetaMax_pow_mul_tilt_pow]
+
+private theorem weighted_piUBridgeBound_vBound_eq_crossUV (m s : Nat) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (piUBridgeBound m s * ((28/25) * (s : ℚ) / (m : ℚ)^2))
+      = crossUVBudgetTerm m s := by
+  unfold piUBridgeBound crossUVBudgetTerm
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        ((((146/125) * eOne s * (gammaTilt / zetaMax)^s) / (m : ℚ)) *
+          ((28/25) * (s : ℚ) / (m : ℚ)^2))
+      = ((146/125) * (28/25) * eOne s * (s : ℚ) *
+          (zetaMax^s * (gammaTilt / zetaMax)^s) / (s.factorial : ℚ)) /
+          (m : ℚ)^3 := by
+          ring
+    _ = ((146/125) * (28/25) * eOne s * (s : ℚ) * gammaTilt^s /
+          (s.factorial : ℚ)) / (m : ℚ)^3 := by
+          rw [zetaMax_pow_mul_tilt_pow]
+
+private theorem weighted_vBound_epsBound_piUBridgeBound_eq_crossVEpsU
+    (m s : Nat) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (((28/25) * (s : ℚ) / (m : ℚ)^2) *
+          ((66/5) / (m : ℚ)) * piUBridgeBound m s)
+      = crossVEpsUBudgetTerm m s := by
+  unfold piUBridgeBound crossVEpsUBudgetTerm
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (((28/25) * (s : ℚ) / (m : ℚ)^2) *
+          ((66/5) / (m : ℚ)) *
+          (((146/125) * eOne s * (gammaTilt / zetaMax)^s) / (m : ℚ)))
+      =
+        ((28/25) * (66/5) * (146/125) * eOne s * (s : ℚ) *
+          (zetaMax^s * (gammaTilt / zetaMax)^s) / (s.factorial : ℚ)) /
+          (m : ℚ)^4 := by
+          ring
+    _ =
+        ((28/25) * (66/5) * (146/125) * eOne s * (s : ℚ) *
+          gammaTilt^s / (s.factorial : ℚ)) / (m : ℚ)^4 := by
+          rw [zetaMax_pow_mul_tilt_pow]
+
 /-- Pointwise bridge from the actual product cross residual to the four P4
 budget terms, assuming the displayed pointwise `u`, `v`, and `ε` estimates have
 already been converted into the corresponding weighted inequalities. -/
@@ -2205,6 +2290,142 @@ theorem weighted_VEps_le_crossVEpsBudgetTerm
     _ = crossVEpsBudgetTerm m s := by
           unfold crossVEpsBudgetTerm
           ring
+
+/-- Conditional P4 dominant bridge: a pointwise `u_s` bound plus the
+completed `ε` envelope gives the weighted dominant cross budget. -/
+theorem weighted_uEps_le_crossDominantBudgetTerm
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hU : PiFactor m s - 1 ≤ piUBridgeBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (PiFactor m s - 1) * |epsilonMinus N (m-s)|
+      ≤ crossDominantBudgetTerm m s := by
+  have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+    have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+    positivity
+  have hE := abs_epsilonMinus_le_final_of_three_mul_le
+    (N := N) (m := m) (s := s) hN hN40 hm hs3
+  have hUbound_nonneg : 0 ≤ piUBridgeBound m s :=
+    piUBridgeBound_nonneg (m := m) (s := s) (by omega : 1 ≤ m)
+  have hmul :
+      (PiFactor m s - 1) * |epsilonMinus N (m-s)|
+        ≤ piUBridgeBound m s * ((66/5) / (m : ℚ)) :=
+    mul_le_mul hU hE (abs_nonneg _) hUbound_nonneg
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (PiFactor m s - 1) * |epsilonMinus N (m-s)|
+      = (zetaMax^s / (s.factorial : ℚ)) *
+          ((PiFactor m s - 1) * |epsilonMinus N (m-s)|) := by
+          ring
+    _ ≤ (zetaMax^s / (s.factorial : ℚ)) *
+          (piUBridgeBound m s * ((66/5) / (m : ℚ))) :=
+          mul_le_mul_of_nonneg_left hmul hweight
+    _ = crossDominantBudgetTerm m s :=
+          weighted_piUBridgeBound_epsBound_eq_crossDominant m s
+
+/-- Conditional P4 `u_s v_s` bridge from the pointwise `u_s` estimate and the
+formal near-range `d`-drift bound. -/
+theorem weighted_uV_le_crossUVBudgetTerm
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hU : PiFactor m s - 1 ≤ piUBridgeBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (PiFactor m s - 1) * (1 - DFactor m s)
+      ≤ crossUVBudgetTerm m s := by
+  have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+    have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+    positivity
+  have hD := DFactor_le_one (m := m) (s := s) (by omega : 1 ≤ m)
+  have hV := one_sub_DFactor_le_linear_near (m := m) (s := s) (by omega : 1 ≤ m) hs3
+  have hV_nonneg : 0 ≤ 1 - DFactor m s := by linarith
+  have hUbound_nonneg : 0 ≤ piUBridgeBound m s :=
+    piUBridgeBound_nonneg (m := m) (s := s) (by omega : 1 ≤ m)
+  have hmul :
+      (PiFactor m s - 1) * (1 - DFactor m s)
+        ≤ piUBridgeBound m s * ((28/25) * (s : ℚ) / (m : ℚ)^2) :=
+    mul_le_mul hU hV hV_nonneg hUbound_nonneg
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (PiFactor m s - 1) * (1 - DFactor m s)
+      = (zetaMax^s / (s.factorial : ℚ)) *
+          ((PiFactor m s - 1) * (1 - DFactor m s)) := by
+          ring
+    _ ≤ (zetaMax^s / (s.factorial : ℚ)) *
+          (piUBridgeBound m s * ((28/25) * (s : ℚ) / (m : ℚ)^2)) :=
+          mul_le_mul_of_nonneg_left hmul hweight
+    _ = crossUVBudgetTerm m s :=
+          weighted_piUBridgeBound_vBound_eq_crossUV m s
+
+/-- Conditional P4 `v_s|ε_p|u_s` bridge from the pointwise `u_s` estimate, the
+formal near-range `d`-drift bound, and the completed `ε` envelope. -/
+theorem weighted_VEpsU_le_crossVEpsUBudgetTerm
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hU : PiFactor m s - 1 ≤ piUBridgeBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+        (PiFactor m s - 1)
+      ≤ crossVEpsUBudgetTerm m s := by
+  have hslt : s < m := by omega
+  have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+    have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+    positivity
+  have hV := one_sub_DFactor_le_linear_near (m := m) (s := s) (by omega : 1 ≤ m) hs3
+  have hE := abs_epsilonMinus_le_final_of_three_mul_le
+    (N := N) (m := m) (s := s) hN hN40 hm hs3
+  have hVbound_nonneg : 0 ≤ (28/25) * (s : ℚ) / (m : ℚ)^2 := by positivity
+  have hVE :
+      (1 - DFactor m s) * |epsilonMinus N (m-s)|
+        ≤ ((28/25) * (s : ℚ) / (m : ℚ)^2) * ((66/5) / (m : ℚ)) :=
+    mul_le_mul hV hE (abs_nonneg _) hVbound_nonneg
+  have hu_nonneg : 0 ≤ PiFactor m s - 1 := by
+    linarith [one_le_PiFactor (m := m) (s := s) hslt]
+  have hVEbound_nonneg :
+      0 ≤ ((28/25) * (s : ℚ) / (m : ℚ)^2) * ((66/5) / (m : ℚ)) := by
+    positivity
+  have hmul :
+      (1 - DFactor m s) * |epsilonMinus N (m-s)| * (PiFactor m s - 1)
+        ≤ ((28/25) * (s : ℚ) / (m : ℚ)^2) *
+            ((66/5) / (m : ℚ)) * piUBridgeBound m s :=
+    mul_le_mul hVE hU hu_nonneg hVEbound_nonneg
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+        (PiFactor m s - 1)
+      = (zetaMax^s / (s.factorial : ℚ)) *
+          ((1 - DFactor m s) * |epsilonMinus N (m-s)| *
+            (PiFactor m s - 1)) := by
+          ring
+    _ ≤ (zetaMax^s / (s.factorial : ℚ)) *
+          (((28/25) * (s : ℚ) / (m : ℚ)^2) *
+            ((66/5) / (m : ℚ)) * piUBridgeBound m s) :=
+          mul_le_mul_of_nonneg_left hmul hweight
+    _ = crossVEpsUBudgetTerm m s :=
+          weighted_vBound_epsBound_piUBridgeBound_eq_crossVEpsU m s
+
+/-- Packaged pointwise P4 bridge: after the remaining pointwise `u_s` product
+estimate is supplied, the actual weighted product-cross residual is bounded by
+the P4 budget terms. -/
+theorem productCrossResidual_weighted_le_P4_budgetTerm_of_u_bound
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hU : PiFactor m s - 1 ≤ piUBridgeBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ crossDominantBudgetTerm m s + crossSmallBudgetTerm m s := by
+  exact productCrossResidual_weighted_le_P4_budgetTerm
+    (N := N) (m := m) (s := s)
+    (by omega : s < m)
+    (DFactor_le_one (m := m) (s := s) (by omega : 1 ≤ m))
+    (weighted_uEps_le_crossDominantBudgetTerm
+      (N := N) (m := m) (s := s) hN hN40 hm hs3 hU)
+    (weighted_uV_le_crossUVBudgetTerm
+      (m := m) (s := s) hm hs3 hU)
+    (weighted_VEps_le_crossVEpsBudgetTerm
+      (N := N) (m := m) (s := s) hN hN40 hm hs3)
+    (weighted_VEpsU_le_crossVEpsUBudgetTerm
+      (N := N) (m := m) (s := s) hN hN40 hm hs3 hU)
 
 /-- The smaller P4 cross terms fit inside the `3/2·m⁻²` reserve used by
 `signLock_P4_numerical_budget_zetaMax`. -/
