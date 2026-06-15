@@ -4668,6 +4668,35 @@ theorem signLockFarTail_le_saddleScalar_of_Eminus_bound
         dsimp [K]
         ring
 
+theorem signLockFarTail_le_one_over_m_sq_of_saddleScalar
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hE : ∀ p, 3*p ≤ 2*m →
+      |Eminus (N : ℚ) p| ≤ farTailExpUpper * (6 * (m : ℚ))^p)
+    (hscalar : signLockFarTailScalar N m ≤ 1 / (m : ℚ)^2) :
+    signLockFarTail N m ≤ 1 / (m : ℚ)^2 :=
+  (signLockFarTail_le_saddleScalar_of_Eminus_bound
+    (N := N) (m := m) hN hN40 hm hE).trans hscalar
+
+/-- Near-range `w_s` audit plus the separate far-tail allowance gives the
+paper's `2215/m²` error budget. -/
+theorem signLock_error_budget_zetaMax_of_farTail
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hfar : signLockFarTail N m ≤ 1 / (m : ℚ)^2) :
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|)
+      + signLockFarTail N m
+      ≤ 2215 / (m : ℚ)^2 := by
+  have hnear := signLock_near_error_budget_zetaMax
+    (N := N) (m := m) hN hN40 hm
+  calc
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|)
+      + signLockFarTail N m
+      ≤ 2214 / (m : ℚ)^2 + 1 / (m : ℚ)^2 := add_le_add hnear hfar
+    _ = 2215 / (m : ℚ)^2 := by ring_nf
+
 /-! ## Final rational positivity margin -/
 
 /-- Alternating partial sum surrogate for `exp(-x)`. -/

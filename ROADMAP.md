@@ -170,8 +170,10 @@ Status:
       `2.04` first-omitted-term allowance, and the algebraic reduction from
       the actual coefficient tail to the displayed saddle/Stirling scalar
       under the explicit `|E^-_p| ≤ 600(6m)^p` hypothesis for `p ≤ 2m/3`.
-      Remaining: prove that saddle coefficient hypothesis and certify the
-      resulting scalar is at most `1/m²`.
+      The near audit plus any proved `1/m²` far-tail allowance is now also
+      assembled as a `2215/m²` error-budget wrapper.  Remaining: prove that
+      saddle coefficient hypothesis and certify the resulting scalar is at
+      most `1/m²`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
