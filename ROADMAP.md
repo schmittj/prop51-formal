@@ -138,10 +138,12 @@ Status:
       `426/m²` numerical majorant budget for the explicit gamma-residual
       terms.  P4 now has the dominant cross-term numerical reserve, and the
       smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s` pieces are expanded
-      explicitly inside the `3/2·m⁻²` allowance, giving the `784/m²` budget.
+      explicitly inside the `3/2·m⁻²` allowance, giving the `784/m²` budget;
+      the abstract product-cross inequality has also been bridged to those
+      four weighted P4 budget terms.
       Remaining: connect the `PiFactor` product residual to the P1 majorant,
-      bridge the actual P4 product-residual factors to this numerical reserve,
-      and close the residual near/far tails.
+      prove the pointwise `u_s`/`v_s` estimates that feed the P4 bridge, and
+      close the residual near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

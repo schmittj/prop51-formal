@@ -1994,6 +1994,54 @@ theorem signLock_P3c_budget_zetaMax {N m : Nat}
 
 /-! ## P4: cross-term numerical reserve -/
 
+/-- The product cross residual after removing the linear `u`, `v`, and `ε`
+pieces from `(1+u)(1-v)(1+ε)`. -/
+def productCrossResidual (N m s : Nat) : ℚ :=
+  PiFactor m s * DFactor m s * (1 + epsilonMinus N (m-s))
+    - (1 + (PiFactor m s - 1) - (1 - DFactor m s) + epsilonMinus N (m-s))
+
+private theorem abs_four_sub_le (a b c d : ℚ) :
+    |a - b - c - d| ≤ |a| + |b| + |c| + |d| := by
+  have h1 : |a - b - c - d| ≤ |a - b - c| + |d| := by
+    simpa [sub_eq_add_neg, add_assoc] using abs_add_le (a - b - c) (-d)
+  have h2 : |a - b - c| ≤ |a - b| + |c| := by
+    simpa [sub_eq_add_neg, add_assoc] using abs_add_le (a - b) (-c)
+  have h3 : |a - b| ≤ |a| + |b| := by
+    simpa [sub_eq_add_neg] using abs_add_le a (-b)
+  linarith
+
+private theorem abs_product_cross_le {u v eps : ℚ} (hu : 0 ≤ u) (hv : 0 ≤ v) :
+    |(1+u) * (1-v) * (1+eps) - (1+u-v+eps)|
+      ≤ u * (v + |eps|) + v * |eps| * (1 + u) := by
+  have hrewrite :
+      (1+u) * (1-v) * (1+eps) - (1+u-v+eps)
+        = u*eps - v*eps - u*v - u*v*eps := by
+    ring
+  rw [hrewrite]
+  calc
+    |u*eps - v*eps - u*v - u*v*eps|
+      ≤ |u*eps| + |v*eps| + |u*v| + |u*v*eps| :=
+        abs_four_sub_le (u*eps) (v*eps) (u*v) (u*v*eps)
+    _ = u * |eps| + v * |eps| + u*v + u*v*|eps| := by
+        rw [abs_mul, abs_mul, abs_mul, abs_mul, abs_mul]
+        simp [abs_of_nonneg hu, abs_of_nonneg hv]
+    _ = u * (v + |eps|) + v * |eps| * (1 + u) := by ring
+
+theorem abs_productCrossResidual_le
+    {N m s : Nat} (hs : s < m) (hD : DFactor m s ≤ 1) :
+    |productCrossResidual N m s|
+      ≤ (PiFactor m s - 1) * ((1 - DFactor m s) + |epsilonMinus N (m-s)|)
+          + (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+            (1 + (PiFactor m s - 1)) := by
+  have hu : 0 ≤ PiFactor m s - 1 := by
+    linarith [one_le_PiFactor (m := m) (s := s) hs]
+  have hv : 0 ≤ 1 - DFactor m s := by linarith
+  simpa [productCrossResidual] using
+    (abs_product_cross_le
+      (u := PiFactor m s - 1)
+      (v := 1 - DFactor m s)
+      (eps := epsilonMinus N (m-s)) hu hv)
+
 /-- Dominant P4 cross-term budget, corresponding to
 `1.168 * 13.2 * e₁(s) * exp(0.2237s) / m²` after absorbing
 `ζ^s` into `gammaTilt^s`. -/
@@ -2020,6 +2068,64 @@ def crossVEpsUBudgetTerm (m s : Nat) : ℚ :=
 /-- The explicitly budgeted smaller P4 cross terms. -/
 def crossSmallBudgetTerm (m s : Nat) : ℚ :=
   crossUVBudgetTerm m s + crossVEpsBudgetTerm m s + crossVEpsUBudgetTerm m s
+
+/-- Pointwise bridge from the actual product cross residual to the four P4
+budget terms, assuming the displayed pointwise `u`, `v`, and `ε` estimates have
+already been converted into the corresponding weighted inequalities. -/
+theorem productCrossResidual_weighted_le_P4_budgetTerm
+    {N m s : Nat} (hs : s < m) (hD : DFactor m s ≤ 1)
+    (hDominant :
+      (zetaMax^s / (s.factorial : ℚ)) *
+          (PiFactor m s - 1) * |epsilonMinus N (m-s)|
+        ≤ crossDominantBudgetTerm m s)
+    (hUV :
+      (zetaMax^s / (s.factorial : ℚ)) *
+          (PiFactor m s - 1) * (1 - DFactor m s)
+        ≤ crossUVBudgetTerm m s)
+    (hVEps :
+      (zetaMax^s / (s.factorial : ℚ)) *
+          (1 - DFactor m s) * |epsilonMinus N (m-s)|
+        ≤ crossVEpsBudgetTerm m s)
+    (hVEpsU :
+      (zetaMax^s / (s.factorial : ℚ)) *
+          (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+          (PiFactor m s - 1)
+        ≤ crossVEpsUBudgetTerm m s) :
+    (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ crossDominantBudgetTerm m s + crossSmallBudgetTerm m s := by
+  have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+    have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+    positivity
+  have hcross := abs_productCrossResidual_le (N := N) (m := m) (s := s) hs hD
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ (zetaMax^s / (s.factorial : ℚ)) *
+          ((PiFactor m s - 1) *
+              ((1 - DFactor m s) + |epsilonMinus N (m-s)|)
+            + (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+              (1 + (PiFactor m s - 1))) :=
+          mul_le_mul_of_nonneg_left hcross hweight
+    _ =
+        (zetaMax^s / (s.factorial : ℚ)) *
+            (PiFactor m s - 1) * |epsilonMinus N (m-s)|
+          + (zetaMax^s / (s.factorial : ℚ)) *
+            (PiFactor m s - 1) * (1 - DFactor m s)
+          + (zetaMax^s / (s.factorial : ℚ)) *
+            (1 - DFactor m s) * |epsilonMinus N (m-s)|
+          + (zetaMax^s / (s.factorial : ℚ)) *
+            (1 - DFactor m s) * |epsilonMinus N (m-s)| *
+            (PiFactor m s - 1) := by
+          ring
+    _ ≤ crossDominantBudgetTerm m s + crossUVBudgetTerm m s
+          + crossVEpsBudgetTerm m s + crossVEpsUBudgetTerm m s := by
+          exact add_le_add
+            (add_le_add
+              (add_le_add hDominant hUV)
+              hVEps)
+            hVEpsU
+    _ = crossDominantBudgetTerm m s + crossSmallBudgetTerm m s := by
+          unfold crossSmallBudgetTerm
+          ring
 
 /-- The smaller P4 cross terms fit inside the `3/2·m⁻²` reserve used by
 `signLock_P4_numerical_budget_zetaMax`. -/
