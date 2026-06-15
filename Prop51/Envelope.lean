@@ -60,6 +60,12 @@ def DeltaRatStepRatioBound (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
 def DeltaNearRatio (p : Nat) (R : ℚ) : ℚ :=
   (64*R)/(75*(p:ℚ))
 
+/-- Closed-form geometric majorant for the near-range Δ terms. -/
+def DeltaNearGeomBound (p : Nat) (R : ℚ) : ℚ :=
+  ((1152/3125) * R * (p:ℚ)
+      / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+    * (1/(1 - DeltaNearRatio p R))
+
 theorem DeltaRatTerm_nonneg (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
     0 ≤ DeltaRatTerm p N r := by
   unfold DeltaRatTerm
@@ -331,6 +337,48 @@ theorem DeltaRatTerm_Icc_sum_le_near_inv_one_sub (p M : Nat) {N R : ℚ}
   · intro r hr2 hrM
     have h4 := hnear r hr2 hrM
     omega
+
+/-- Closed-form version of the near-range geometric bound. -/
+theorem DeltaRatTerm_Icc_sum_le_near_closed (p M : Nat) {N R : ℚ}
+    (hM : 2 ≤ M) (hN : 0 ≤ N) (hR : 0 ≤ R) (hNp : N ≤ R * (p:ℚ))
+    (hp : 4 ≤ p) (hq1 : DeltaNearRatio p R < 1)
+    (hnear : ∀ r, 2 ≤ r → r < M → 4*r ≤ p) :
+    ∑ r ∈ Finset.Icc 2 M, DeltaRatTerm p N r
+      ≤ DeltaNearGeomBound p R := by
+  have hslice := DeltaRatTerm_Icc_sum_le_near_inv_one_sub
+    p M hM hN hR hNp (by omega : 1 ≤ p) hq1 hnear
+  have hterm2 :
+      DeltaRatTerm p N 2
+        ≤ (1152/3125) * (R * (p:ℚ))
+          / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)) := by
+    rw [DeltaRatTerm_two p N hp]
+    have hden_pos :
+        (0:ℚ) < ((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ) := by
+      have h1 : (0:ℚ) < ((p-1 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 0 < p-1)
+      have h2 : (0:ℚ) < ((p-2 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 0 < p-2)
+      positivity
+    have hnum_le : (1152/3125) * N ≤ (1152/3125) * (R * (p:ℚ)) := by
+      exact mul_le_mul_of_nonneg_left hNp (by norm_num)
+    exact div_le_div_of_nonneg_right hnum_le hden_pos.le
+  have htail_nonneg : 0 ≤ 1/(1 - DeltaNearRatio p R) := by
+    have hpos : (0:ℚ) < 1 - DeltaNearRatio p R := by linarith
+    positivity
+  have hclosed :
+      DeltaRatTerm p N 2 * (1/(1 - DeltaNearRatio p R))
+        ≤ DeltaNearGeomBound p R := by
+    unfold DeltaNearGeomBound
+    calc DeltaRatTerm p N 2 * (1/(1 - DeltaNearRatio p R))
+        ≤ ((1152/3125) * (R * (p:ℚ))
+            / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+            * (1/(1 - DeltaNearRatio p R)) := by
+              exact mul_le_mul_of_nonneg_right hterm2 htail_nonneg
+      _ = ((1152/3125) * R * (p:ℚ)
+            / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+            * (1/(1 - DeltaNearRatio p R)) := by
+              ring
+  exact hslice.trans hclosed
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
