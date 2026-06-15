@@ -189,7 +189,9 @@ Status:
       nonpositivity is available.  `Unorm` is now rewritten as
       `Xnorm + normalizedSoloTerm + normalizedPositiveRangeSum`, with a
       conditional theorem bounding the retained positive sum by the corrected
-      edge scan.
+      edge scan.  The rectangle arithmetic needed to feed the sign-lock
+      theorem into the large-`k` exclusion (`k ≥ 361`, `N ≤ 40k/3`) is now
+      packaged as a reusable interface.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

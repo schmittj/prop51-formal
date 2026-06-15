@@ -104,6 +104,12 @@ theorem positiveRectangle_nonempty {a : Nat} (ha : 1 ≤ a) :
     positiveRectangle a (posNlo a) := by
   exact ⟨le_rfl, posNlo_le_posNhi ha⟩
 
+theorem positiveRectangle_N_pos {a N : Nat} (ha : 2 ≤ a)
+    (hrect : positiveRectangle a N) :
+    1 ≤ N := by
+  have hlo : 0 < posNlo a := posNlo_pos ha
+  exact Nat.succ_le_of_lt (hlo.trans_le hrect.1)
+
 /-- If a `k` can lie in the small-`k` regime for some `N` in the rectangle,
 then it is below the upper-edge cutoff. -/
 theorem smallRegime_le_upper_edge {a N k : Nat}
@@ -202,6 +208,19 @@ theorem posNhi_le_signLock_range_of_posKmax_lt {a k : Nat}
   have h9 : 9*a ≤ 10*k := nine_mul_le_ten_mul_of_posKmax_lt hk
   unfold posNhi
   omega
+
+theorem rectangle_N_le_signLock_range_of_posKmax_lt
+    {a N k : Nat} (hrect : positiveRectangle a N)
+    (hk : posKmax a < k) :
+    (N : ℚ) ≤ (40/3) * (k : ℚ) := by
+  have h3N_hi : 3*N ≤ 3*posNhi a :=
+    Nat.mul_le_mul_left 3 hrect.2
+  have h3hi_k : 3*posNhi a ≤ 40*k :=
+    posNhi_le_signLock_range_of_posKmax_lt hk
+  have h3N_k : 3*N ≤ 40*k := h3N_hi.trans h3hi_k
+  have hQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (k : ℚ) := by
+    exact_mod_cast h3N_k
+  nlinarith
 
 /-! ## Executable rational summand majorants -/
 
@@ -387,6 +406,28 @@ theorem normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos
       not_Bq_pos_of_Xnorm_nonpos hN (by omega : 1 ≤ k)
         (hlarge k hklt hklarge (by omega : 1 ≤ k))
 
+/-- The rectangle arithmetic needed to feed the sign-lock theorem into the
+large-`k` exclusion in §6. -/
+theorem large_Xnorm_nonpos_of_signLock_nonpos
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0) :
+    ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0 := by
+  intro k _hklt hklarge _hk1
+  exact hSL k
+    (signLock_m_ge_of_posKmax_lt ha hklarge)
+    (rectangle_N_le_signLock_range_of_posKmax_lt hrect hklarge)
+
+theorem normalizedPositiveRangeSum_eq_retained_of_signLock_nonpos
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0) :
+    normalizedPositiveRangeSum a N = normalizedPositiveRetainedSum a N := by
+  exact normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos
+    (a := a) (N := N) (by omega : 1 ≤ a)
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+    (large_Xnorm_nonpos_of_signLock_nonpos ha hrect hSL)
+
 theorem Unorm_eq_Xnorm_add_solo_add_retained_of_large_Xnorm_nonpos
     {a N : Nat} (ha : 1 ≤ a) (hN : 1 ≤ N)
     (hlarge : ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0) :
@@ -394,6 +435,15 @@ theorem Unorm_eq_Xnorm_add_solo_add_retained_of_large_Xnorm_nonpos
       Xnorm N a + normalizedSoloTerm a N + normalizedPositiveRetainedSum a N := by
   rw [Unorm_eq_Xnorm_add_solo_add_positive,
     normalizedPositiveRangeSum_eq_retained_of_large_Xnorm_nonpos ha hN hlarge]
+
+theorem Unorm_eq_Xnorm_add_solo_add_retained_of_signLock_nonpos
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0) :
+    Unorm a N =
+      Xnorm N a + normalizedSoloTerm a N + normalizedPositiveRetainedSum a N := by
+  rw [Unorm_eq_Xnorm_add_solo_add_positive,
+    normalizedPositiveRangeSum_eq_retained_of_signLock_nonpos ha hrect hSL]
 
 theorem positiveBinomDen_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
     (hkmax : k ≤ posKmax a) :
@@ -654,6 +704,25 @@ theorem Unorm_le_Xnorm_add_solo_add_edge_of_large_Xnorm_nonpos
   have hsum := normalizedPositiveRetainedSum_le_edge_of_regime_bounds
     (a := a) (N := N) hrect hsmall htempered
   linarith
+
+theorem Unorm_le_Xnorm_add_solo_add_edge_of_signLock_nonpos
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k) :
+    Unorm a N ≤ Xnorm N a + normalizedSoloTerm a N + positiveEdgeMajorantSum a := by
+  exact Unorm_le_Xnorm_add_solo_add_edge_of_large_Xnorm_nonpos
+    (a := a) (N := N) (by omega : 1 ≤ a)
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) hrect
+    (large_Xnorm_nonpos_of_signLock_nonpos ha hrect hSL)
+    hsmall htempered
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
