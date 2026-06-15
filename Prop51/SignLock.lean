@@ -392,6 +392,16 @@ theorem poissonZero_zetaMax_le (T : Nat) :
     _ ≤ 32/5 := by
           norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
 
+theorem poissonZero_zetaMax_le_tight (T : Nat) :
+    ∑ s ∈ Finset.range T, zetaMax^s / (s.factorial : ℚ) ≤ 319/50 := by
+  calc
+    ∑ s ∈ Finset.range T, zetaMax^s / (s.factorial : ℚ)
+        ≤ partialExpUpper zetaMax 18 :=
+          poissonZero_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 319/50 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
 theorem poissonFirst_zetaMax_le (T : Nat) :
     ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ) ≤ 12 := by
   calc
@@ -930,6 +940,32 @@ theorem signLock_P3a_budget_zetaMax {N m : Nat}
             (mul_le_mul_of_nonneg_left (poissonFirst_zetaMax_le_sharp _) (by positivity))
             (mul_le_mul_of_nonneg_left (poissonZero_zetaMax_le _) (by positivity))
     _ ≤ 184 / (m : ℚ)^2 := by
+          field_simp [hmpos.ne']
+          norm_num
+
+/-! ## P3b: non-endpoint two-block scalar budget -/
+
+/-- Scalar budget for the P3b pointwise bound
+`(183/5)/m² = 36.6/m²`.  The remaining P3b work is to connect the
+non-endpoint two-block contribution to this pointwise bound. -/
+theorem signLock_P3b_scalar_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * ((183/5) / (m : ℚ)^2)
+      ≤ 234 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * ((183/5) / (m : ℚ)^2)
+      =
+        ((183/5) / (m : ℚ)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1), zetaMax^s / (s.factorial : ℚ)) := by
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun s hs => ?_
+          ring
+    _ ≤ ((183/5) / (m : ℚ)^2) * (319/50) := by
+          exact mul_le_mul_of_nonneg_left
+            (poissonZero_zetaMax_le_tight _) (by positivity)
+    _ ≤ 234 / (m : ℚ)^2 := by
           field_simp [hmpos.ne']
           norm_num
 
