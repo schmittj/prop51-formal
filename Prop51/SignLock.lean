@@ -898,6 +898,25 @@ theorem poissonFourth_sum_le_partialExpUpper
 /-- The endpoint `ζ` used throughout §5. -/
 def zetaMax : ℚ := 50/27
 
+theorem zetaQ_nonneg (N m : Nat) : 0 ≤ zetaQ N m := by
+  unfold zetaQ
+  positivity
+
+theorem zetaQ_le_zetaMax {N m : Nat}
+    (hm : 1 ≤ m) (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) :
+    zetaQ N m ≤ zetaMax := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  unfold zetaQ zetaMax
+  calc
+    5 * (N : ℚ) / (36 * (m : ℚ))
+        ≤ 5 * ((40/3) * (m : ℚ)) / (36 * (m : ℚ)) := by
+          exact div_le_div_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hN40 (by norm_num))
+            (by positivity)
+    _ = 50/27 := by
+          field_simp [hmpos.ne']
+          ring
+
 theorem poissonZero_sum_le_partialExpUpper
     (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
     ∑ s ∈ Finset.range T, y^s / (s.factorial : ℚ)
@@ -4384,6 +4403,270 @@ theorem signLock_near_error_budget_zetaMax
     exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
   exact threeBlockDeltaTail_le_threeBlockTailBound_near
     (N := N) (m := m) (s := s) hN hN40 hm hs3
+
+/-! ## Far-tail allowance for `s > m/3` -/
+
+/-- Rational replacement for the paper's `exp(6.37)` in the far-tail saddle
+bound.  The eventual analytic bridge should prove
+`|E^-_p(N)| ≤ farTailExpUpper * (6m)^p` for `p ≤ 2m/3`; this file records
+the downstream algebra without using real exponentials. -/
+def farTailExpUpper : ℚ := 600
+
+/-- The paper's `2.04` tail multiplier, kept as an exact rational. -/
+def farTailPoissonFactor : ℚ := 51/25
+
+/-- The omitted actual coefficient tail in the sign-lock decomposition,
+corresponding to the `s > m/3` terms in the TeX proof. -/
+def signLockFarTail (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+      * |Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m)
+
+/-- The scalar saddle/Stirling expression displayed in the paper, with
+`exp(6.37)` replaced by `farTailExpUpper` and `2.04` by
+`farTailPoissonFactor`. -/
+def signLockFarTailScalar (N m : Nat) : ℚ :=
+  ((36 * farTailExpUpper) / (5 * (N : ℚ)))
+    * ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ))
+    * farTailPoissonFactor
+    * ((zetaQ N m)^(m/3 + 1) / (((m/3 + 1).factorial : Nat) : ℚ))
+
+private theorem exp_tail_term_from_le (y : ℚ) (hy : 0 ≤ y) (L j : Nat)
+    (hL : 1 ≤ L) :
+    y^(L+j) / ((L+j).factorial : ℚ)
+      ≤ (y^L / (L.factorial : ℚ)) * (y/(L:ℚ))^j := by
+  have hNat : L.factorial * L^j ≤ (L+j).factorial :=
+    le_trans (Nat.mul_le_mul_left _ (Nat.pow_le_pow_left (by omega) j))
+      Nat.factorial_mul_pow_le_factorial
+  have hden : (0:ℚ) < (L.factorial : ℚ) * (L:ℚ)^j := by
+    have h1 : (0:ℚ) < (L.factorial : ℚ) := by
+      exact_mod_cast L.factorial_pos
+    have h2 : (0:ℚ) < (L:ℚ)^j := by
+      have : (0:ℚ) < (L:ℚ) := by exact_mod_cast (by omega : 0 < L)
+      positivity
+    positivity
+  rw [pow_add, div_pow, div_mul_div_comm]
+  apply div_le_div_of_nonneg_left (by positivity) hden
+  exact_mod_cast hNat
+
+private theorem poisson_tail_Ico_le_first_mul_inv
+    (y : ℚ) (hy : 0 ≤ y) {L M : Nat} (hL : 1 ≤ L) (hyL : y < (L : ℚ)) :
+    ∑ s ∈ Finset.Ico L M, y^s / (s.factorial : ℚ)
+      ≤ (y^L / (L.factorial : ℚ)) * (1 / (1 - y/(L:ℚ))) := by
+  have hLpos : (0:ℚ) < (L:ℚ) := by exact_mod_cast (by omega : 0 < L)
+  have hq0 : 0 ≤ y/(L:ℚ) := div_nonneg hy hLpos.le
+  have hq1 : y/(L:ℚ) < 1 := by
+    rw [div_lt_one hLpos]
+    exact hyL
+  have hfirst_nonneg : 0 ≤ y^L / (L.factorial : ℚ) := by positivity
+  rw [Finset.sum_Ico_eq_sum_range]
+  calc
+    ∑ j ∈ Finset.range (M - L), y^(L+j) / ((L+j).factorial : ℚ)
+        ≤ ∑ j ∈ Finset.range (M - L),
+            (y^L / (L.factorial : ℚ)) * (y/(L:ℚ))^j := by
+          exact Finset.sum_le_sum fun j _ => exp_tail_term_from_le y hy L j hL
+    _ = (y^L / (L.factorial : ℚ))
+          * ∑ j ∈ Finset.range (M - L), (y/(L:ℚ))^j := by
+          rw [Finset.mul_sum]
+    _ ≤ (y^L / (L.factorial : ℚ)) * (1 / (1 - y/(L:ℚ))) := by
+          exact mul_le_mul_of_nonneg_left
+            (geom_sum_le_inv_one_sub _ hq0 hq1 _) hfirst_nonneg
+
+/-- The finite Poisson tail beginning at `m/3+1` is much smaller than the
+paper's `2.04` first-omitted-term allowance. -/
+theorem zetaQ_tail_Ico_le_first
+    {N m : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+        (zetaQ N m)^s / (s.factorial : ℚ)
+      ≤ farTailPoissonFactor
+          * ((zetaQ N m)^(m/3 + 1)
+              / (((m/3 + 1).factorial : Nat) : ℚ)) := by
+  let L : Nat := m/3 + 1
+  have hL121 : 121 ≤ L := by
+    dsimp [L]
+    omega
+  have hL : 1 ≤ L := by omega
+  have hLpos : (0:ℚ) < (L:ℚ) := by exact_mod_cast (by omega : 0 < L)
+  have hLQ : (121 : ℚ) ≤ (L : ℚ) := by exact_mod_cast hL121
+  have hy0 : 0 ≤ zetaQ N m := zetaQ_nonneg N m
+  have hymax : zetaQ N m ≤ zetaMax :=
+    zetaQ_le_zetaMax (by omega : 1 ≤ m) hN40
+  have hy50 : zetaQ N m ≤ 50/27 := by simpa [zetaMax] using hymax
+  have hyL : zetaQ N m < (L : ℚ) := by
+    calc
+      zetaQ N m ≤ 50/27 := hy50
+      _ < 121 := by norm_num
+      _ ≤ (L : ℚ) := hLQ
+  have htail := poisson_tail_Ico_le_first_mul_inv
+    (zetaQ N m) hy0 (L := L) (M := m+1) hL hyL
+  have hratio_half : zetaQ N m / (L : ℚ) ≤ 1/2 := by
+    have hhalfL : (50/27 : ℚ) ≤ (L : ℚ) / 2 := by
+      calc
+        (50/27 : ℚ) ≤ 121 / 2 := by norm_num
+        _ ≤ (L : ℚ) / 2 := by linarith
+    have hy_halfL : zetaQ N m ≤ (L : ℚ) / 2 := hy50.trans hhalfL
+    rw [div_le_iff₀ hLpos]
+    linarith
+  have hlow : (1/2 : ℚ) ≤ 1 - zetaQ N m / (L : ℚ) := by
+    linarith
+  have hinv_le : 1 / (1 - zetaQ N m / (L : ℚ)) ≤ farTailPoissonFactor := by
+    calc
+      1 / (1 - zetaQ N m / (L : ℚ)) ≤ 1 / (1/2 : ℚ) :=
+        one_div_le_one_div_of_le (by norm_num) hlow
+      _ ≤ farTailPoissonFactor := by
+        norm_num [farTailPoissonFactor]
+  have hfirst_nonneg :
+      0 ≤ (zetaQ N m)^L / (L.factorial : ℚ) := by positivity
+  calc
+    ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+        (zetaQ N m)^s / (s.factorial : ℚ)
+      = ∑ s ∈ Finset.Ico L (m+1),
+          (zetaQ N m)^s / (s.factorial : ℚ) := by rfl
+    _ ≤ (zetaQ N m)^L / (L.factorial : ℚ)
+          * (1 / (1 - zetaQ N m / (L : ℚ))) := htail
+    _ ≤ (zetaQ N m)^L / (L.factorial : ℚ) * farTailPoissonFactor :=
+          mul_le_mul_of_nonneg_left hinv_le hfirst_nonneg
+    _ = farTailPoissonFactor
+          * ((zetaQ N m)^(m/3 + 1)
+              / (((m/3 + 1).factorial : Nat) : ℚ)) := by
+          dsimp [L]
+          ring
+
+private theorem farTail_summand_saddle_rewrite
+    {N m s : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) (hs : s ≤ m) :
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+      (farTailExpUpper * (6 * (m : ℚ))^(m-s)) /
+        ((N : ℚ) * ((5/36) * ((6:ℚ)^m * ((m-1).factorial : ℚ))))
+      =
+    ((36 * farTailExpUpper) / (5 * (N : ℚ))) *
+      ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ)) *
+      ((zetaQ N m)^s / (s.factorial : ℚ)) := by
+  have hNq : ((N : ℚ) ≠ 0) := by exact_mod_cast (by omega : N ≠ 0)
+  have hmq : ((m : ℚ) ≠ 0) := by exact_mod_cast (by omega : m ≠ 0)
+  have hsf : ((s.factorial : ℚ) ≠ 0) := by positivity
+  have hmf : ((((m-1).factorial : Nat) : ℚ) ≠ 0) := by positivity
+  have hm_decomp : m = (m-s) + s := by omega
+  have hmpow0 : (m : ℚ)^m = (m : ℚ)^((m-s)+s) :=
+    congrArg (fun n : Nat => (m : ℚ)^n) hm_decomp
+  have hmpow : (m : ℚ)^m = (m : ℚ)^(m-s) * (m : ℚ)^s := by
+    rw [hmpow0, pow_add]
+  have h6pow0 : (6 : ℚ)^m = (6 : ℚ)^((m-s)+s) :=
+    congrArg (fun n : Nat => (6 : ℚ)^n) hm_decomp
+  have h6pow : (6 : ℚ)^m = (6 : ℚ)^(m-s) * (6 : ℚ)^s := by
+    rw [h6pow0, pow_add]
+  have hm_cancel : (m : ℚ)^s * ((m : ℚ)⁻¹)^s = 1 := by
+    rw [← mul_pow, mul_inv_cancel₀ hmq, one_pow]
+  have hzpow : ((N : ℚ) * 5 / ((m : ℚ) * 36))^s
+      = (N : ℚ)^s * (5/36 : ℚ)^s * ((m : ℚ)⁻¹)^s := by
+    rw [show (N : ℚ) * 5 / ((m : ℚ) * 36)
+        = (N : ℚ) * (5/36) * (m : ℚ)⁻¹ by
+      field_simp [hmq]]
+    rw [mul_pow, mul_pow]
+  have hleftpow :
+      (((N : ℚ) * 5 / 6)^s) = (N : ℚ)^s * (5/6 : ℚ)^s := by
+    rw [show (N : ℚ) * 5 / 6 = (N : ℚ) * (5/6) by ring, mul_pow]
+  have hfive : ((5/6 : ℚ)^s) = (5/36 : ℚ)^s * (6:ℚ)^s := by
+    rw [← mul_pow]
+    norm_num
+  rw [c_one]
+  unfold zetaQ farTailExpUpper
+  rw [hmpow, h6pow]
+  field_simp [hNq, hmq, hsf, hmf]
+  rw [mul_pow (6:ℚ) (m:ℚ) (m-s)]
+  rw [hleftpow, hzpow, hfive]
+  rw [show (6:ℚ) ^ (m - s) * (6:ℚ) ^ s * (m:ℚ) ^ (m - s)
+      * (m:ℚ)^s * ((N:ℚ)^s * (5/36:ℚ)^s * ((m:ℚ)⁻¹)^s)
+        =
+      (N:ℚ)^s * (5/36:ℚ)^s * (6:ℚ)^s * (6:ℚ)^(m-s)
+        * ((m:ℚ)^s * ((m:ℚ)⁻¹)^s) * (m:ℚ)^(m-s) by ring]
+  rw [hm_cancel]
+  ring
+
+/-- Algebraic reduction of the omitted actual tail to the displayed
+saddle/Stirling scalar.  The only serious analytic input left explicit is the
+coefficient bound for `E^-_p` in the range `p ≤ 2m/3`; the Poisson tail and
+normalization by `c_m` are discharged here. -/
+theorem signLockFarTail_le_saddleScalar_of_Eminus_bound
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hE : ∀ p, 3*p ≤ 2*m →
+      |Eminus (N : ℚ) p| ≤ farTailExpUpper * (6 * (m : ℚ))^p) :
+    signLockFarTail N m ≤ signLockFarTailScalar N m := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hcm_pos : 0 < c m := c_pos m (by omega : 1 ≤ m)
+  have hden_pos : 0 < (N : ℚ) * c m := mul_pos hNpos hcm_pos
+  have hpoint :
+      signLockFarTail N m
+        ≤ ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+            ((36 * farTailExpUpper) / (5 * (N : ℚ))) *
+              ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ)) *
+              ((zetaQ N m)^s / (s.factorial : ℚ)) := by
+    unfold signLockFarTail
+    refine Finset.sum_le_sum fun s hs => ?_
+    obtain ⟨hslo, hshi⟩ := Finset.mem_Ico.mp hs
+    have hsle : s ≤ m := by omega
+    have hpcond : 3*(m-s) ≤ 2*m := by omega
+    have hE_s := hE (m-s) hpcond
+    have hweight_nonneg :
+        0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+      rw [c_one]
+      positivity
+    have hbounded_num_nonneg :
+        0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+            * (farTailExpUpper * (6 * (m : ℚ))^(m-s)) := by
+      exact mul_nonneg hweight_nonneg (by unfold farTailExpUpper; positivity)
+    have hden_lb_pos :
+        0 < (N : ℚ) * ((5/36) * ((6:ℚ)^m * ((m-1).factorial : ℚ))) := by
+      positivity
+    have hden_lb_le :
+        (N : ℚ) * ((5/36) * ((6:ℚ)^m * ((m-1).factorial : ℚ)))
+          ≤ (N : ℚ) * c m := by
+      exact mul_le_mul_of_nonneg_left (c_lb m (by omega : 1 ≤ m)) hNpos.le
+    calc
+      (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+          * |Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m)
+        ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+            * (farTailExpUpper * (6 * (m : ℚ))^(m-s)) / ((N : ℚ) * c m) := by
+          exact div_le_div_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hE_s hweight_nonneg) hden_pos.le
+      _ ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+            * (farTailExpUpper * (6 * (m : ℚ))^(m-s))
+              / ((N : ℚ) * ((5/36) * ((6:ℚ)^m * ((m-1).factorial : ℚ)))) := by
+          exact div_le_div_of_nonneg_left hbounded_num_nonneg
+            hden_lb_pos hden_lb_le
+      _ =
+          ((36 * farTailExpUpper) / (5 * (N : ℚ))) *
+            ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ)) *
+            ((zetaQ N m)^s / (s.factorial : ℚ)) :=
+          farTail_summand_saddle_rewrite hN (by omega : 1 ≤ m) hsle
+  let K : ℚ :=
+    ((36 * farTailExpUpper) / (5 * (N : ℚ))) *
+      ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ))
+  have hK_nonneg : 0 ≤ K := by
+    dsimp [K]
+    have hcoef : 0 ≤ (36 * farTailExpUpper) / (5 * (N : ℚ)) := by
+      exact div_nonneg (by norm_num [farTailExpUpper]) (by positivity)
+    have hpowfac :
+        0 ≤ (m : ℚ)^m / (((m-1).factorial : Nat) : ℚ) := by
+      positivity
+    exact mul_nonneg hcoef hpowfac
+  have hpois := zetaQ_tail_Ico_le_first (N := N) (m := m) hN40 hm
+  calc
+    signLockFarTail N m
+      ≤ ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+          K * ((zetaQ N m)^s / (s.factorial : ℚ)) := by
+        simpa [K] using hpoint
+    _ = K * ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+          (zetaQ N m)^s / (s.factorial : ℚ) := by
+        rw [Finset.mul_sum]
+    _ ≤ K * (farTailPoissonFactor
+          * ((zetaQ N m)^(m/3 + 1)
+              / (((m/3 + 1).factorial : Nat) : ℚ))) :=
+        mul_le_mul_of_nonneg_left hpois hK_nonneg
+    _ = signLockFarTailScalar N m := by
+        unfold signLockFarTailScalar
+        dsimp [K]
+        ring
 
 /-! ## Final rational positivity margin -/
 

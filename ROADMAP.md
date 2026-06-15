@@ -165,8 +165,13 @@ Status:
       term, and the far slice is bounded by the exact reserve
       `DeltaRatFar ≤ (4/575)·DeltaRatTerm₃`.  Consequently the nonlinear
       recentering hypothesis is discharged and the actual near-range `w_s`
-      audit is proved with budget `2214/m²`.  Remaining: add the separate
-      `1/m²` sign-lock far-tail allowance.
+      audit is proved with budget `2214/m²`.  The far-tail work now has the
+      exact omitted-tail definition, a rational proof of the finite Poisson
+      `2.04` first-omitted-term allowance, and the algebraic reduction from
+      the actual coefficient tail to the displayed saddle/Stirling scalar
+      under the explicit `|E^-_p| ≤ 600(6m)^p` hypothesis for `p ≤ 2m/3`.
+      Remaining: prove that saddle coefficient hypothesis and certify the
+      resulting scalar is at most `1/m²`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
