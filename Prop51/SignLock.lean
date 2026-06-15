@@ -1132,6 +1132,203 @@ theorem signLock_P3b_budget_zetaMax {N m : Nat}
       (twoNonEndpointCorrectionBound_pointwise_P3b hN40 hm hs3) hweight
   exact hpoint.trans (signLock_P3b_scalar_budget_zetaMax (by omega : 1 ≤ m))
 
+/-! ## P3c: three-and-more-block nonlinear tail -/
+
+/-- Explicit geometric-tail majorant for the `r ≥ 3` nonlinear blocks, starting
+from the rationalized three-block Δ term and using the uniform multiplier
+`25/23`. -/
+def threeBlockTailBound (N p : Nat) : ℚ :=
+  (6144/78125) * (N : ℚ)^2 /
+      ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+        * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)))
+    * (25/23)
+
+private theorem near_p_sub_four_linear_lower
+    {m s k : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) (hk : 1 ≤ k) (hk4 : k ≤ 4) :
+    (2/3) * (m : ℚ) - (k : ℚ) ≤ (((m-s-k : Nat) : ℚ)) := by
+  have hsk : s + k ≤ m := by
+    omega
+  rw [show m-s-k = m-(s+k) by omega, Nat.cast_sub hsk]
+  push_cast
+  have hsQ : (3 : ℚ) * (s : ℚ) ≤ (m : ℚ) := by exact_mod_cast hs
+  linarith
+
+private theorem near_four_denominator_product
+    {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (3/16) * (m : ℚ)^4
+      ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+          * (((m-s-3 : Nat) : ℚ)) * (((m-s-4 : Nat) : ℚ)) := by
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  have h1 := near_p_sub_four_linear_lower (m := m) (s := s) (k := 1) hm hs
+    (by norm_num) (by norm_num)
+  have h2 := near_p_sub_four_linear_lower (m := m) (s := s) (k := 2) hm hs
+    (by norm_num) (by norm_num)
+  have h3 := near_p_sub_four_linear_lower (m := m) (s := s) (k := 3) hm hs
+    (by norm_num) (by norm_num)
+  have h4 := near_p_sub_four_linear_lower (m := m) (s := s) (k := 4) hm hs
+    (by norm_num) (by norm_num)
+  have hl1_nonneg : 0 ≤ (2/3) * (m : ℚ) - 1 := by nlinarith
+  have hl2_nonneg : 0 ≤ (2/3) * (m : ℚ) - 2 := by nlinarith
+  have hl3_nonneg : 0 ≤ (2/3) * (m : ℚ) - 3 := by nlinarith
+  have hl4_nonneg : 0 ≤ (2/3) * (m : ℚ) - 4 := by nlinarith
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hp3pos : (0 : ℚ) < (((m-s-3 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-3)
+  have h12 :
+      ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+        ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) :=
+    mul_le_mul h1 h2 hl2_nonneg hp1pos.le
+  have h123 :
+      ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+          * ((2/3) * (m : ℚ) - 3)
+        ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+          * (((m-s-3 : Nat) : ℚ)) :=
+    mul_le_mul h12 h3 hl3_nonneg
+      (mul_nonneg hp1pos.le hp2pos.le)
+  have h1234 :
+      ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+          * ((2/3) * (m : ℚ) - 3) * ((2/3) * (m : ℚ) - 4)
+        ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+          * (((m-s-3 : Nat) : ℚ)) * (((m-s-4 : Nat) : ℚ)) :=
+    mul_le_mul h123 h4 hl4_nonneg
+      (mul_nonneg (mul_nonneg hp1pos.le hp2pos.le) hp3pos.le)
+  have hpoly :
+      (3/16) * (m : ℚ)^4
+        ≤ ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+          * ((2/3) * (m : ℚ) - 3) * ((2/3) * (m : ℚ) - 4) := by
+    have hc1 : (33/50) * (m : ℚ) ≤ (2/3) * (m : ℚ) - 1 := by nlinarith
+    have hc2 : (33/50) * (m : ℚ) ≤ (2/3) * (m : ℚ) - 2 := by nlinarith
+    have hc3 : (79/120) * (m : ℚ) ≤ (2/3) * (m : ℚ) - 3 := by nlinarith
+    have hc4 : (59/90) * (m : ℚ) ≤ (2/3) * (m : ℚ) - 4 := by nlinarith
+    have hcbase1 : 0 ≤ (33/50) * (m : ℚ) := by positivity
+    have hcbase2 : 0 ≤ (79/120) * (m : ℚ) := by positivity
+    have hcbase3 : 0 ≤ (59/90) * (m : ℚ) := by positivity
+    have hc12 :
+        ((33/50) * (m : ℚ)) * ((33/50) * (m : ℚ))
+          ≤ ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2) :=
+      mul_le_mul hc1 hc2 hcbase1 hl1_nonneg
+    have hc123 :
+        ((33/50) * (m : ℚ)) * ((33/50) * (m : ℚ)) * ((79/120) * (m : ℚ))
+          ≤ ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+            * ((2/3) * (m : ℚ) - 3) :=
+      mul_le_mul hc12 hc3 hcbase2 (mul_nonneg hl1_nonneg hl2_nonneg)
+    have hc1234 :
+        ((33/50) * (m : ℚ)) * ((33/50) * (m : ℚ)) * ((79/120) * (m : ℚ))
+            * ((59/90) * (m : ℚ))
+          ≤ ((2/3) * (m : ℚ) - 1) * ((2/3) * (m : ℚ) - 2)
+            * ((2/3) * (m : ℚ) - 3) * ((2/3) * (m : ℚ) - 4) :=
+      mul_le_mul hc123 hc4 hcbase3
+        (mul_nonneg (mul_nonneg hl1_nonneg hl2_nonneg) hl3_nonneg)
+    have hconst : (3/16 : ℚ) ≤ (33/50) * (33/50) * (79/120) * (59/90) := by
+      norm_num
+    have hm4_nonneg : 0 ≤ (m : ℚ)^4 := by positivity
+    have hconstprod :
+        (3/16) * (m : ℚ)^4
+          ≤ ((33/50) * (m : ℚ)) * ((33/50) * (m : ℚ))
+              * ((79/120) * (m : ℚ)) * ((59/90) * (m : ℚ)) := by
+      calc
+        (3/16) * (m : ℚ)^4
+            ≤ ((33/50) * (33/50) * (79/120) * (59/90)) * (m : ℚ)^4 :=
+              mul_le_mul_of_nonneg_right hconst hm4_nonneg
+        _ = ((33/50) * (m : ℚ)) * ((33/50) * (m : ℚ))
+              * ((79/120) * (m : ℚ)) * ((59/90) * (m : ℚ)) := by
+              ring
+    exact hconstprod.trans hc1234
+  exact hpoly.trans h1234
+
+theorem threeBlockTailBound_pointwise_P3c
+    {N m s : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    threeBlockTailBound N (m-s) ≤ 89 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hp3pos : (0 : ℚ) < (((m-s-3 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-3)
+  have hp4pos : (0 : ℚ) < (((m-s-4 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-4)
+  have hN2 : (N : ℚ)^2 ≤ (1600/9) * (m : ℚ)^2 := by
+    have hNnonneg : (0 : ℚ) ≤ N := by positivity
+    nlinarith
+  have hden := near_four_denominator_product (m := m) (s := s) hm hs
+  have hNscaled :
+      (N : ℚ)^2 * (6144 * 25 * (m : ℚ)^2)
+        ≤ ((1600/9) * (m : ℚ)^2) * (6144 * 25 * (m : ℚ)^2) := by
+    exact mul_le_mul_of_nonneg_right hN2 (by positivity)
+  have hden_scaled :
+      ((1600/9) * (m : ℚ)^2) * (6144 * 25 * (m : ℚ)^2)
+        ≤ 78125 * 23 * 89 *
+          ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+            * (((m-s-3 : Nat) : ℚ)) * (((m-s-4 : Nat) : ℚ))) := by
+    have hconst : (6144 * (1600/9) * 25 : ℚ)
+        ≤ 78125 * 23 * 89 * (3/16) := by
+      norm_num
+    have hm4_nonneg : 0 ≤ (m : ℚ)^4 := by positivity
+    calc
+      ((1600/9) * (m : ℚ)^2) * (6144 * 25 * (m : ℚ)^2)
+          = (6144 * (1600/9) * 25 : ℚ) * (m : ℚ)^4 := by ring
+      _ ≤ (78125 * 23 * 89 * (3/16)) * (m : ℚ)^4 :=
+          mul_le_mul_of_nonneg_right hconst hm4_nonneg
+      _ = 78125 * 23 * 89 * ((3/16) * (m : ℚ)^4) := by ring
+      _ ≤ 78125 * 23 * 89 *
+          ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+            * (((m-s-3 : Nat) : ℚ)) * (((m-s-4 : Nat) : ℚ))) :=
+          mul_le_mul_of_nonneg_left hden (by norm_num)
+  unfold threeBlockTailBound
+  field_simp [hmpos.ne', hp1pos.ne', hp2pos.ne', hp3pos.ne', hp4pos.ne']
+  nlinarith [hNscaled, hden_scaled]
+
+theorem signLock_P3c_scalar_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (89 / (m : ℚ)^2)
+      ≤ 573 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (89 / (m : ℚ)^2)
+      =
+        (89 / (m : ℚ)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1), zetaMax^s / (s.factorial : ℚ)) := by
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun s hs => ?_
+          ring
+    _ ≤ (89 / (m : ℚ)^2) * (319/50) := by
+          exact mul_le_mul_of_nonneg_left
+            (poissonZero_zetaMax_le_tight _) (by positivity)
+    _ ≤ 573 / (m : ℚ)^2 := by
+          field_simp [hmpos.ne']
+          norm_num
+
+/-- Weighted P3c budget for the explicit three-and-more-block tail majorant. -/
+theorem signLock_P3c_budget_zetaMax {N m : Nat}
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          threeBlockTailBound N (m-s)
+      ≤ 573 / (m : ℚ)^2 := by
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          threeBlockTailBound N (m-s)
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (89 / (m : ℚ)^2) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hs3 : 3*s ≤ m := by
+      have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+      exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+    have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+      have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+      positivity
+    exact mul_le_mul_of_nonneg_left
+      (threeBlockTailBound_pointwise_P3c hN40 hm hs3) hweight
+  exact hpoint.trans (signLock_P3c_scalar_budget_zetaMax (by omega : 1 ≤ m))
+
 /-! ## Final rational positivity margin -/
 
 /-- Alternating partial sum surrogate for `exp(-x)`. -/
