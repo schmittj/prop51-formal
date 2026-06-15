@@ -1983,6 +1983,25 @@ theorem epsilonMinus_add_twoEndpointCorrection_eq_middle_tail
   field_simp [hNq, hcp]
   ring
 
+/-- Normalized non-endpoint two-block contribution left after endpoint
+recentering. -/
+def twoBlockMiddleNormalized (N p : Nat) : ℚ :=
+  -((N : ℚ) * hpowTwoMiddle p) / (2 * c p)
+
+/-- Exact normalized `r ≥ 3` contribution left after endpoint recentering. -/
+noncomputable def threeBlockExactTail (N p : Nat) : ℚ :=
+  -(∑ r ∈ Finset.Icc 3 p,
+      (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ))
+    / ((N : ℚ) * c p)
+
+theorem epsilonMinus_add_twoEndpointCorrection_eq_exactPieces
+    {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p) :
+    epsilonMinus N p + twoEndpointCorrection N p =
+      twoBlockMiddleNormalized N p + threeBlockExactTail N p := by
+  rw [epsilonMinus_add_twoEndpointCorrection_eq_middle_tail hN hp]
+  unfold twoBlockMiddleNormalized threeBlockExactTail
+  ring
+
 theorem DFactor_nonneg (m s : Nat) : 0 ≤ DFactor m s := by
   unfold DFactor
   exact div_nonneg (d_nonneg (m-s)) (d_nonneg m)
@@ -2384,6 +2403,142 @@ def twoNonEndpointMajorant (p : Nat) : ℚ :=
 majorant. -/
 def twoNonEndpointCorrectionBound (N p : Nat) : ℚ :=
   ((N : ℚ) / 2) * twoNonEndpointMajorant p
+
+private theorem twoNonEndpointMajorant_eq_middle_index {p : Nat} (hp : 5 ≤ p) :
+    twoNonEndpointMajorant p =
+      (576/3125) / (((p-1 : Nat) : ℚ)) *
+        ∑ j ∈ Finset.Ico 3 (p-2), (1:ℚ)/((p-2).choose (j-1)) := by
+  unfold twoNonEndpointMajorant
+  rw [Finset.sum_Ico_eq_sum_range, Finset.sum_Ico_eq_sum_range]
+  rw [show p-3-2 = p-2-3 by omega]
+  congr 1
+  refine Finset.sum_congr rfl fun k hk => ?_
+  rw [show 3 + k - 1 = 2 + k by omega]
+
+private theorem middle_twoBlock_term_div_c_le
+    {p j : Nat} (hp : 5 ≤ p) (hj : j ∈ Finset.Ico 3 (p-2)) :
+    c j * c (p-j) / c p
+      ≤ (576/3125) / (((p-1 : Nat) : ℚ)) *
+          ((1:ℚ)/((p-2).choose (j-1))) := by
+  obtain ⟨hj3, hjlt⟩ := Finset.mem_Ico.mp hj
+  have hj1 : 1 ≤ j := by omega
+  have hpj1 : 1 ≤ p-j := by omega
+  have hcp_pos : 0 < c p := c_pos p (by omega : 1 ≤ p)
+  have hden_lb := c_lb p (by omega : 1 ≤ p)
+  have hden_lb_pos :
+      0 < (5/36) * (6^p * ((p-1).factorial : ℚ)) := by positivity
+  have hnum_le :
+      c j * c (p-j)
+        ≤ (4/25 * (6^j * ((j-1).factorial : ℚ))) *
+            (4/25 * (6^(p-j) * ((p-j-1).factorial : ℚ))) := by
+    exact mul_le_mul (c_ub j hj1) (c_ub (p-j) hpj1)
+      (c_nonneg (p-j)) (by positivity)
+  have hnum_bound_nonneg :
+      0 ≤ (4/25 * (6^j * ((j-1).factorial : ℚ))) *
+            (4/25 * (6^(p-j) * ((p-j-1).factorial : ℚ))) := by
+    positivity
+  have hchoose_ne : (((p-2).choose (j-1) : ℕ) : ℚ) ≠ 0 := by
+    exact_mod_cast (Nat.choose_pos (by omega : j-1 ≤ p-2)).ne'
+  have hp1_ne : (((p-1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-1 ≠ 0)
+  have hfac_j_ne : (((j-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_pj_ne : (((p-j-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_p2_ne : (((p-2).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hpow6 : (6:ℚ)^j * (6:ℚ)^(p-j) = 6^p := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have hchoose :
+      (((p-2).choose (j-1) : ℕ) : ℚ)
+          * (((j-1).factorial : Nat) : ℚ)
+          * (((p-j-1).factorial : Nat) : ℚ)
+        = (((p-2).factorial : Nat) : ℚ) := by
+    have h := Nat.choose_mul_factorial_mul_factorial
+      (show j-1 ≤ p-2 by omega)
+    rw [show p-2-(j-1) = p-j-1 by omega] at h
+    exact_mod_cast h
+  have hfacp :
+      (((p-1).factorial : Nat) : ℚ)
+        = (((p-1 : Nat) : ℚ)) * (((p-2).factorial : Nat) : ℚ) := by
+    rw [show p-1 = (p-2)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have halg :
+      ((4/25 * (6^j * ((j-1).factorial : ℚ))) *
+          (4/25 * (6^(p-j) * ((p-j-1).factorial : ℚ))))
+        / ((5/36) * (6^p * ((p-1).factorial : ℚ)))
+      =
+        (576/3125) / (((p-1 : Nat) : ℚ)) *
+          ((1:ℚ)/((p-2).choose (j-1))) := by
+    rw [hfacp, ← hchoose, ← hpow6]
+    field_simp [hp1_ne, hchoose_ne, hfac_j_ne, hfac_pj_ne, hfac_p2_ne]
+    ring
+  calc
+    c j * c (p-j) / c p
+      ≤ ((4/25 * (6^j * ((j-1).factorial : ℚ))) *
+          (4/25 * (6^(p-j) * ((p-j-1).factorial : ℚ)))) / c p := by
+        exact div_le_div_of_nonneg_right hnum_le hcp_pos.le
+    _ ≤
+        ((4/25 * (6^j * ((j-1).factorial : ℚ))) *
+          (4/25 * (6^(p-j) * ((p-j-1).factorial : ℚ))))
+        / ((5/36) * (6^p * ((p-1).factorial : ℚ))) := by
+        exact div_le_div_of_nonneg_left hnum_bound_nonneg hden_lb_pos hden_lb
+    _ = (576/3125) / (((p-1 : Nat) : ℚ)) *
+          ((1:ℚ)/((p-2).choose (j-1))) := halg
+
+/-- The exact middle two-block contribution is bounded by the P3b
+reciprocal-binomial majorant. -/
+theorem hpowTwoMiddle_div_c_le_twoNonEndpointMajorant
+    {p : Nat} (hp : 5 ≤ p) :
+    hpowTwoMiddle p / c p ≤ twoNonEndpointMajorant p := by
+  calc
+    hpowTwoMiddle p / c p
+        = ∑ j ∈ Finset.Ico 3 (p-2), c j * c (p-j) / c p := by
+            unfold hpowTwoMiddle
+            rw [Finset.sum_div]
+    _ ≤ ∑ j ∈ Finset.Ico 3 (p-2),
+          (576/3125) / (((p-1 : Nat) : ℚ)) *
+            ((1:ℚ)/((p-2).choose (j-1))) := by
+            exact Finset.sum_le_sum fun j hj =>
+              middle_twoBlock_term_div_c_le hp hj
+    _ =
+        (576/3125) / (((p-1 : Nat) : ℚ)) *
+          ∑ j ∈ Finset.Ico 3 (p-2), (1:ℚ)/((p-2).choose (j-1)) := by
+            rw [Finset.mul_sum]
+    _ = twoNonEndpointMajorant p := by
+            rw [twoNonEndpointMajorant_eq_middle_index hp]
+
+/-- Normalized absolute-value form of the P3b bridge for the exact middle
+two-block term left after endpoint cancellation. -/
+theorem abs_twoBlockMiddle_normalized_le_twoNonEndpointCorrectionBound
+    {N p : Nat} (hp : 5 ≤ p) :
+    |-((N : ℚ) * hpowTwoMiddle p) / (2 * c p)|
+      ≤ twoNonEndpointCorrectionBound N p := by
+  have hmajor := hpowTwoMiddle_div_c_le_twoNonEndpointMajorant (p := p) hp
+  have hcp_pos : 0 < c p := c_pos p (by omega : 1 ≤ p)
+  have hmiddle_nonneg : 0 ≤ hpowTwoMiddle p := hpowTwoMiddle_nonneg p
+  have hnonneg :
+      0 ≤ ((N : ℚ) * hpowTwoMiddle p) / (2 * c p) := by
+    exact div_nonneg
+      (mul_nonneg (by positivity : 0 ≤ (N : ℚ)) hmiddle_nonneg)
+      (mul_pos (by norm_num) hcp_pos).le
+  rw [show -((N : ℚ) * hpowTwoMiddle p) / (2 * c p)
+      = -(((N : ℚ) * hpowTwoMiddle p) / (2 * c p)) by ring]
+  rw [abs_neg, abs_of_nonneg hnonneg]
+  have hrewrite :
+      ((N : ℚ) * hpowTwoMiddle p) / (2 * c p)
+        = ((N : ℚ) / 2) * (hpowTwoMiddle p / c p) := by
+    field_simp [hcp_pos.ne']
+  rw [hrewrite]
+  unfold twoNonEndpointCorrectionBound
+  exact mul_le_mul_of_nonneg_left hmajor (by positivity)
+
+theorem abs_twoBlockMiddleNormalized_le_twoNonEndpointCorrectionBound
+    {N p : Nat} (hp : 5 ≤ p) :
+    |twoBlockMiddleNormalized N p| ≤ twoNonEndpointCorrectionBound N p := by
+  simpa [twoBlockMiddleNormalized] using
+    abs_twoBlockMiddle_normalized_le_twoNonEndpointCorrectionBound
+      (N := N) (p := p) hp
 
 theorem twoNonEndpointMajorant_le_large {p : Nat} (hp : 241 ≤ p) :
     twoNonEndpointMajorant p
@@ -3460,6 +3615,32 @@ this by the non-endpoint two-block and three-and-more-block majorants. -/
 def nonlinearRecenteringRemainder (N m s : Nat) : ℚ :=
   epsilonMinus N (m-s) + twoEndpointCorrection N (m-s)
 
+/-- Exact-piece version of the nonlinear recentering residual. -/
+theorem nonlinearRecenteringRemainder_eq_exactPieces
+    {N m s : Nat} (hN : 1 ≤ N) (hp : 5 ≤ m-s) :
+    nonlinearRecenteringRemainder N m s =
+      twoBlockMiddleNormalized N (m-s) + threeBlockExactTail N (m-s) := by
+  unfold nonlinearRecenteringRemainder
+  exact epsilonMinus_add_twoEndpointCorrection_eq_exactPieces hN hp
+
+/-- Once the exact `r ≥ 3` tail is bounded by the P3c majorant, the full
+nonlinear recentering hypothesis follows from the proved P3b bridge. -/
+theorem abs_nonlinearRecenteringRemainder_le_of_threeBlockExactTail
+    {N m s : Nat} (hN : 1 ≤ N) (hp : 5 ≤ m-s)
+    (htail : |threeBlockExactTail N (m-s)| ≤ threeBlockTailBound N (m-s)) :
+    |nonlinearRecenteringRemainder N m s|
+      ≤ twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s) := by
+  rw [nonlinearRecenteringRemainder_eq_exactPieces hN hp]
+  calc
+    |twoBlockMiddleNormalized N (m-s) + threeBlockExactTail N (m-s)|
+      ≤ |twoBlockMiddleNormalized N (m-s)| + |threeBlockExactTail N (m-s)| :=
+          abs_add_le _ _
+    _ ≤ twoNonEndpointCorrectionBound N (m-s) + threeBlockTailBound N (m-s) :=
+          add_le_add
+            (abs_twoBlockMiddleNormalized_le_twoNonEndpointCorrectionBound
+              (N := N) (p := m-s) hp)
+            htail
+
 /-- The P3 pointwise budget attached to the nonlinear recentering residual. -/
 def nonlinearRecenteringBudgetTerm (N m s : Nat) : ℚ :=
   |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
@@ -3651,6 +3832,25 @@ theorem signLock_near_error_budget_zetaMax_of_nonlinearRecentering
                   Finset.sum_add_distrib]
     _ ≤ 2214 / (m : ℚ)^2 :=
         signLock_near_component_budget_zetaMax (N := N) (m := m) hN hN40 hm
+
+/-- Near-range `w_s` audit with the P3b middle bridge discharged.  The only
+remaining exact coefficient bridge is the `r ≥ 3` tail estimate. -/
+theorem signLock_near_error_budget_zetaMax_of_threeBlockExactTail
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (htail : ∀ s, s ∈ Finset.range (m/3 + 1) →
+      |threeBlockExactTail N (m-s)| ≤ threeBlockTailBound N (m-s)) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+      ≤ 2214 / (m : ℚ)^2 := by
+  refine signLock_near_error_budget_zetaMax_of_nonlinearRecentering
+    (N := N) (m := m) hN hN40 hm ?_
+  intro s hs
+  have hs3 : 3*s ≤ m := by
+    have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+    exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+  exact abs_nonlinearRecenteringRemainder_le_of_threeBlockExactTail
+    (N := N) (m := m) (s := s) hN (by omega : 5 ≤ m-s) (htail s hs)
 
 /-! ## Final rational positivity margin -/
 

@@ -157,10 +157,12 @@ Status:
       extraction from the `E^-_p` block expansion is now formalized:
       `[t^p]H^2` is split into its two endpoint products plus the middle
       two-block sum, and `ε_p + twoEndpointCorrection` is rewritten as the
-      middle two-block normalized contribution plus the `r ≥ 3` tail.
-      Remaining: prove the absolute-value bridges from those two exact
-      pieces to the P3b/P3c majorants, discharge the conditional
-      recentering hypothesis, then add the `1/m²` far-tail allowance.
+      middle two-block normalized contribution plus the `r ≥ 3` tail.  The
+      middle two-block absolute-value bridge to the P3b majorant is now
+      proved, and a near-range `w_s` theorem consumes only the remaining
+      exact `r ≥ 3` tail hypothesis.  Remaining: prove that tail bridge to
+      the P3c majorant, discharge the conditional recentering hypothesis,
+      then add the `1/m²` far-tail allowance.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
