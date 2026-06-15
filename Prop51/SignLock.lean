@@ -1159,6 +1159,14 @@ def piResidualBridgeBound (m s : Nat) : ℚ :=
   ((1/2) * (146/125)^2 * (eOne s)^2 * (gammaTilt / zetaMax)^s
     + (3/4) * qTwo s) / (m : ℚ)^2
 
+/-- Intermediate P1 remainder bound coming directly from
+`exp(x)-1-x ≤ x² exp(x)/2` after replacing `exp(0.2237s)` by the rational
+tilt.  The next lemma converts this expression to `piResidualBridgeBound`
+using `piLogUpperBound ≤ 1.168e₁/m`. -/
+def piResidualExpRemainderBound (m s : Nat) : ℚ :=
+  (1/2) * (piLogUpperBound m s)^2 * (gammaTilt / zetaMax)^s
+    + (3/4) * qTwo s / (m : ℚ)^2
+
 theorem piResidualBridgeBound_nonneg (m s : Nat) :
     0 ≤ piResidualBridgeBound m s := by
   have htilt : 0 ≤ gammaTilt / zetaMax := by norm_num [gammaTilt, zetaMax]
@@ -1173,6 +1181,44 @@ theorem piResidualBridgeBound_nonneg (m s : Nat) :
         (pow_nonneg htilt s))
       (mul_nonneg (by norm_num) hq))
     (sq_nonneg (m : ℚ))
+
+theorem piResidualExpRemainderBound_le_bridgeBound
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    piResidualExpRemainderBound m s ≤ piResidualBridgeBound m s := by
+  have htilt : 0 ≤ (gammaTilt / zetaMax)^s := by
+    exact pow_nonneg (by norm_num [gammaTilt, zetaMax]) s
+  have hL_nonneg : 0 ≤ piLogUpperBound m s :=
+    piLogUpperBound_nonneg (m := m) (s := s) (by omega : 1 ≤ m)
+  have hL := piLogUpperBound_le_u_linear (m := m) (s := s) hm hs3
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hU_nonneg : 0 ≤ (146/125) * eOne s / (m : ℚ) := by
+    exact div_nonneg
+      (mul_nonneg (by norm_num) (eOne_nonneg s))
+      hmpos.le
+  have hL_lower : -((146/125) * eOne s / (m : ℚ)) ≤ piLogUpperBound m s := by
+    linarith
+  have hLsq :
+      (piLogUpperBound m s)^2
+        ≤ ((146/125) * eOne s / (m : ℚ))^2 := by
+    exact sq_le_sq' hL_lower hL
+  have hmain :
+      (1/2) * (piLogUpperBound m s)^2 * (gammaTilt / zetaMax)^s
+        ≤ (1/2) * ((146/125) * eOne s / (m : ℚ))^2 *
+            (gammaTilt / zetaMax)^s := by
+    exact mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hLsq (by norm_num)) htilt
+  unfold piResidualExpRemainderBound piResidualBridgeBound
+  calc
+    (1/2) * (piLogUpperBound m s)^2 * (gammaTilt / zetaMax)^s
+        + (3/4) * qTwo s / (m : ℚ)^2
+      ≤ (1/2) * ((146/125) * eOne s / (m : ℚ))^2 *
+            (gammaTilt / zetaMax)^s
+          + (3/4) * qTwo s / (m : ℚ)^2 := by
+          exact add_le_add hmain le_rfl
+    _ =
+        ((1/2) * (146/125)^2 * (eOne s)^2 * (gammaTilt / zetaMax)^s
+          + (3/4) * qTwo s) / (m : ℚ)^2 := by
+          ring
 
 private theorem weighted_piResidualBridgeBound_eq_gammaResidualBudgetTerm
     (m s : Nat) :
@@ -1216,6 +1262,18 @@ theorem weighted_piResidual_le_gammaResidualBudgetTerm
           mul_le_mul_of_nonneg_left hpi hweight
     _ = gammaResidualBudgetTerm m s :=
           weighted_piResidualBridgeBound_eq_gammaResidualBudgetTerm m s
+
+/-- Conditional P1 bridge in the form produced by the product/log proof:
+`π_s` is first bounded by the quadratic exponential remainder, then by the
+weighted P1 budget term. -/
+theorem weighted_piResidual_le_gammaResidualBudgetTerm_of_expRemainder
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) (hs : s < m)
+    (hpi : piResidual m s ≤ piResidualExpRemainderBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+      ≤ gammaResidualBudgetTerm m s :=
+  weighted_piResidual_le_gammaResidualBudgetTerm (m := m) (s := s) hs
+    (hpi.trans (piResidualExpRemainderBound_le_bridgeBound
+      (m := m) (s := s) hm hs3))
 
 theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     ∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s
@@ -2298,6 +2356,27 @@ theorem piUBridgeBound_nonneg {m s : Nat} (hm : 1 ≤ m) :
       (pow_nonneg htilt s))
     hmpos.le
 
+/-- Reduces the P4 `u_s` input to the natural product/log target
+`Π_s-1 ≤ L_s·r^s`, where `L_s = piLogUpperBound m s` and
+`r = gammaTilt/zetaMax`. -/
+theorem piUBridgeBound_of_piLogUpperProductBound
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hprod :
+      PiFactor m s - 1
+        ≤ piLogUpperBound m s * (gammaTilt / zetaMax)^s) :
+    PiFactor m s - 1 ≤ piUBridgeBound m s := by
+  have htilt : 0 ≤ (gammaTilt / zetaMax)^s := by
+    exact pow_nonneg (by norm_num [gammaTilt, zetaMax]) s
+  have hL := piLogUpperBound_le_u_linear (m := m) (s := s) hm hs3
+  calc
+    PiFactor m s - 1
+      ≤ piLogUpperBound m s * (gammaTilt / zetaMax)^s := hprod
+    _ ≤ ((146/125) * eOne s / (m : ℚ)) * (gammaTilt / zetaMax)^s :=
+        mul_le_mul_of_nonneg_right hL htilt
+    _ = piUBridgeBound m s := by
+        unfold piUBridgeBound
+        ring
+
 private theorem weighted_piUBridgeBound_epsBound_eq_crossDominant
     (m s : Nat) :
     (zetaMax^s / (s.factorial : ℚ)) *
@@ -2579,6 +2658,22 @@ theorem productCrossResidual_weighted_le_P4_budgetTerm_of_u_bound
       (N := N) (m := m) (s := s) hN hN40 hm hs3)
     (weighted_VEpsU_le_crossVEpsUBudgetTerm
       (N := N) (m := m) (s := s) hN hN40 hm hs3 hU)
+
+/-- P4 bridge in the form expected from the product/log estimate
+`Π_s-1 ≤ L_s·r^s`. -/
+theorem productCrossResidual_weighted_le_P4_budgetTerm_of_piLogUpperProductBound
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs3 : 3*s ≤ m)
+    (hprod :
+      PiFactor m s - 1
+        ≤ piLogUpperBound m s * (gammaTilt / zetaMax)^s) :
+    (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ crossDominantBudgetTerm m s + crossSmallBudgetTerm m s :=
+  productCrossResidual_weighted_le_P4_budgetTerm_of_u_bound
+    (N := N) (m := m) (s := s) hN hN40 hm hs3
+    (piUBridgeBound_of_piLogUpperProductBound
+      (m := m) (s := s) hm hs3 hprod)
 
 /-- The smaller P4 cross terms fit inside the `3/2·m⁻²` reserve used by
 `signLock_P4_numerical_budget_zetaMax`. -/
