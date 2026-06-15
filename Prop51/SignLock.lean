@@ -943,11 +943,149 @@ theorem signLock_P3a_budget_zetaMax {N m : Nat}
           field_simp [hmpos.ne']
           norm_num
 
-/-! ## P3b: non-endpoint two-block scalar budget -/
+/-! ## P3b: non-endpoint two-block budget -/
+
+/-- Rational majorant for the non-endpoint two-blocks
+`Σ₂^{(3+)}(p)`.  The index `i` is `j-1`, so the sum is over
+`2 ≤ i ≤ p-4`, i.e. `Ico 2 (p-3)`, with ambient binomial parameter `p-2`. -/
+def twoNonEndpointMajorant (p : Nat) : ℚ :=
+  (576/3125) / (((p-1 : Nat) : ℚ)) *
+    ∑ i ∈ Finset.Ico 2 (p-3), (1:ℚ)/((p-2).choose i)
+
+/-- The normalized P3b contribution controlled by the non-endpoint two-block
+majorant. -/
+def twoNonEndpointCorrectionBound (N p : Nat) : ℚ :=
+  ((N : ℚ) / 2) * twoNonEndpointMajorant p
+
+theorem twoNonEndpointMajorant_le_large {p : Nat} (hp : 241 ≤ p) :
+    twoNonEndpointMajorant p
+      ≤ (576/625) /
+          ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ)) * (((p-3 : Nat) : ℚ))) := by
+  have hsum := sum_choose_recip_inner_le_large (p-2) (by omega : 239 ≤ p-2)
+  rw [show p-2-1 = p-3 by omega] at hsum
+  have hsub : (((p-2 : Nat) : ℚ) - 1) = (((p-3 : Nat) : ℚ)) := by
+    rw [show p-2 = (p-3)+1 by omega]
+    push_cast
+    ring
+  rw [hsub] at hsum
+  have hcoef_nonneg : 0 ≤ (576/3125) / (((p-1 : Nat) : ℚ)) := by
+    positivity
+  have hp1 : (((p-1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-1 ≠ 0)
+  have hp2 : (((p-2 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-2 ≠ 0)
+  have hp3 : (((p-3 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-3 ≠ 0)
+  calc
+    twoNonEndpointMajorant p
+      ≤ (576/3125) / (((p-1 : Nat) : ℚ)) *
+          (5 / (((p-2 : Nat) : ℚ) * (((p-3 : Nat) : ℚ)))) := by
+        unfold twoNonEndpointMajorant
+        exact mul_le_mul_of_nonneg_left hsum hcoef_nonneg
+    _ = (576/625) /
+          ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ)) * (((p-3 : Nat) : ℚ))) := by
+        field_simp [hp1, hp2, hp3]
+        ring
+
+private theorem near_p_sub_three_three_fifths
+    {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (3/5) * (m : ℚ) ≤ (((m-s-3 : Nat) : ℚ)) := by
+  have hp3 : 3 ≤ m-s := by omega
+  rw [Nat.cast_sub hp3]
+  have hplower := near_p_lower (m := m) (s := s) hs
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  nlinarith
+
+private theorem near_three_denominator_product
+    {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (27/125) * (m : ℚ)^3
+      ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+          * (((m-s-3 : Nat) : ℚ)) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have h3 := near_p_sub_three_three_fifths (m := m) (s := s) hm hs
+  have h2 : (3/5) * (m : ℚ) ≤ (((m-s-2 : Nat) : ℚ)) := by
+    have hmono : (((m-s-3 : Nat) : ℚ)) ≤ (((m-s-2 : Nat) : ℚ)) := by
+      exact_mod_cast (by omega : m-s-3 ≤ m-s-2)
+    exact h3.trans hmono
+  have h1 : (3/5) * (m : ℚ) ≤ (((m-s-1 : Nat) : ℚ)) := by
+    have hmono : (((m-s-3 : Nat) : ℚ)) ≤ (((m-s-1 : Nat) : ℚ)) := by
+      exact_mod_cast (by omega : m-s-3 ≤ m-s-1)
+    exact h3.trans hmono
+  have hbase_nonneg : 0 ≤ (3/5) * (m : ℚ) := by positivity
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have h12 :
+      ((3/5) * (m : ℚ)) * ((3/5) * (m : ℚ))
+        ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) :=
+    mul_le_mul h1 h2 hbase_nonneg hp1pos.le
+  have h123 :
+      ((3/5) * (m : ℚ)) * ((3/5) * (m : ℚ)) * ((3/5) * (m : ℚ))
+        ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+            * (((m-s-3 : Nat) : ℚ)) :=
+    mul_le_mul h12 h3 hbase_nonneg
+      (mul_nonneg hp1pos.le hp2pos.le)
+  nlinarith
+
+theorem twoNonEndpointCorrectionBound_pointwise_P3b
+    {N m s : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    twoNonEndpointCorrectionBound N (m-s) ≤ (183/5) / (m : ℚ)^2 := by
+  have hp : 241 ≤ m-s := by omega
+  have hmaj := twoNonEndpointMajorant_le_large (p := m-s) hp
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hNhalf : (N : ℚ) / 2 ≤ (20/3) * (m : ℚ) := by
+    nlinarith
+  have hNhalf_nonneg : 0 ≤ (N : ℚ) / 2 := by positivity
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hp3pos : (0 : ℚ) < (((m-s-3 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-3)
+  have hupper_nonneg :
+      0 ≤ (576/625) /
+        ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) * (((m-s-3 : Nat) : ℚ))) := by
+    positivity
+  have hden := near_three_denominator_product (m := m) (s := s) hm hs
+  have hden_scaled :
+      20 * (m : ℚ)^3 * 576 * 5
+        ≤ 3 * 625 * 183 *
+          ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+            * (((m-s-3 : Nat) : ℚ))) := by
+    have hconst : (20 * 576 * 5 : ℚ) ≤ 3 * 625 * 183 * (27/125) := by
+      norm_num
+    have hm3_nonneg : 0 ≤ (m : ℚ)^3 := by positivity
+    calc
+      20 * (m : ℚ)^3 * 576 * 5
+          = (20 * 576 * 5 : ℚ) * (m : ℚ)^3 := by ring
+      _ ≤ (3 * 625 * 183 * (27/125)) * (m : ℚ)^3 :=
+          mul_le_mul_of_nonneg_right hconst hm3_nonneg
+      _ = 3 * 625 * 183 * ((27/125) * (m : ℚ)^3) := by ring
+      _ ≤ 3 * 625 * 183 *
+          ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+            * (((m-s-3 : Nat) : ℚ)) ) :=
+          mul_le_mul_of_nonneg_left hden (by norm_num)
+  calc
+    twoNonEndpointCorrectionBound N (m-s)
+      ≤ ((N : ℚ) / 2) *
+          ((576/625) /
+            ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+              * (((m-s-3 : Nat) : ℚ)))) := by
+        unfold twoNonEndpointCorrectionBound
+        exact mul_le_mul_of_nonneg_left hmaj hNhalf_nonneg
+    _ ≤ ((20/3) * (m : ℚ)) *
+          ((576/625) /
+            ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+              * (((m-s-3 : Nat) : ℚ)))) := by
+        exact mul_le_mul_of_nonneg_right hNhalf hupper_nonneg
+    _ ≤ (183/5) / (m : ℚ)^2 := by
+        field_simp [hmpos.ne', hp1pos.ne', hp2pos.ne', hp3pos.ne']
+        nlinarith [hden_scaled]
 
 /-- Scalar budget for the P3b pointwise bound
-`(183/5)/m² = 36.6/m²`.  The remaining P3b work is to connect the
-non-endpoint two-block contribution to this pointwise bound. -/
+`(183/5)/m² = 36.6/m²`. -/
 theorem signLock_P3b_scalar_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     ∑ s ∈ Finset.range (m/3 + 1),
         (zetaMax^s / (s.factorial : ℚ)) * ((183/5) / (m : ℚ)^2)
@@ -968,6 +1106,31 @@ theorem signLock_P3b_scalar_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     _ ≤ 234 / (m : ℚ)^2 := by
           field_simp [hmpos.ne']
           norm_num
+
+/-- Weighted P3b budget for the explicit non-endpoint two-block majorant. -/
+theorem signLock_P3b_budget_zetaMax {N m : Nat}
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          twoNonEndpointCorrectionBound N (m-s)
+      ≤ 234 / (m : ℚ)^2 := by
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          twoNonEndpointCorrectionBound N (m-s)
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * ((183/5) / (m : ℚ)^2) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hs3 : 3*s ≤ m := by
+      have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+      exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+    have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+      have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+      positivity
+    exact mul_le_mul_of_nonneg_left
+      (twoNonEndpointCorrectionBound_pointwise_P3b hN40 hm hs3) hweight
+  exact hpoint.trans (signLock_P3b_scalar_budget_zetaMax (by omega : 1 ≤ m))
 
 /-! ## Final rational positivity margin -/
 

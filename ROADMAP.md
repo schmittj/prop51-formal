@@ -126,10 +126,10 @@ Status:
       and second moment bounds are in place, including sharper zeroth/first
       caps for P3a; P2 (`d`-drift) is proved with budget `13/m²`.  P3a now
       has endpoint correction notation, `D_2` ratio-control, pointwise
-      recentering control, and weighted budget `184/m²`.  P3b has its
-      scalar weighted budget `36.6/m² -> 234/m²` checked, pending the
-      non-endpoint two-block pointwise bridge.  Remaining: prove P1, close
-      P3b bridge/P3c, P4, and tails.
+      recentering control, and weighted budget `184/m²`.  P3b now has the
+      sharpened large-`n` reciprocal-binomial estimate, the non-endpoint
+      two-block majorant bridge, the pointwise `36.6/m²` cap, and weighted
+      budget `234/m²`.  Remaining: prove P1, close P3c, P4, and tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
