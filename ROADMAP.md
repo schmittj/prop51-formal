@@ -170,10 +170,11 @@ Status:
       `2.04` first-omitted-term allowance, the finite-recurrence replacement
       for the TeX truncated saddle estimate `|E^-_p| ≤ 600(6m)^p` for
       `p ≤ 2m/3`, and the algebraic reduction from the actual coefficient
-      tail to the displayed saddle/Stirling scalar.  The near audit plus any
-      proved `1/m²` far-tail allowance is now also assembled as a `2215/m²`
-      error-budget wrapper.  Remaining: certify the resulting scalar is at
-      most `1/m²`.
+      tail to the displayed saddle/Stirling scalar.  The scalar is now
+      certified by an `N`-free envelope, exact endpoint checks at
+      `m = 361,362,363`, and a rational three-step contraction; consequently
+      the near audit plus the actual far tail is assembled unconditionally as
+      a `2215/m²` error-budget wrapper.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

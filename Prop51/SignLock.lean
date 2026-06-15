@@ -4431,6 +4431,359 @@ def signLockFarTailScalar (N m : Nat) : ℚ :=
     * farTailPoissonFactor
     * ((zetaQ N m)^(m/3 + 1) / (((m/3 + 1).factorial : Nat) : ℚ))
 
+/-- An `N`-free upper envelope for `signLockFarTailScalar`, using only
+`N ≥ 1` and `zetaQ N m ≤ zetaMax`. -/
+def farTailScalarEnvelope (m : Nat) : ℚ :=
+  ((36 * farTailExpUpper) / 5)
+    * ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ))
+    * farTailPoissonFactor
+    * (zetaMax^(m/3 + 1) / (((m/3 + 1).factorial : Nat) : ℚ))
+
+/-- The same far-tail scalar envelope, multiplied by `m²`; this is the
+quantity certified below to be at most `1`. -/
+def farTailScalarEnvelopeScaled (m : Nat) : ℚ :=
+  farTailScalarEnvelope m * (m : ℚ)^2
+
+/-- The displayed far-tail scalar is bounded by the `N`-free rational envelope.
+This is a small formal divergence from the TeX presentation: Lean first
+maximizes the scalar over the permitted `N` range, and then certifies the
+resulting one-variable envelope. -/
+theorem signLockFarTailScalar_le_envelope
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    signLockFarTailScalar N m ≤ farTailScalarEnvelope m := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hm1 : 1 ≤ m := by omega
+  have hz_nonneg : 0 ≤ zetaQ N m := zetaQ_nonneg N m
+  have hz_le : zetaQ N m ≤ zetaMax := by
+    exact zetaQ_le_zetaMax hm1 hN40
+  have hpow_le :
+      (zetaQ N m)^(m/3 + 1) ≤ zetaMax^(m/3 + 1) :=
+    pow_le_pow_left₀ hz_nonneg hz_le _
+  have hfac_pos : (0 : ℚ) < (((m/3 + 1).factorial : Nat) : ℚ) := by
+    exact_mod_cast (Nat.factorial_pos (m/3 + 1))
+  have hpois_arg :
+      (zetaQ N m)^(m/3 + 1)
+          / (((m/3 + 1).factorial : Nat) : ℚ)
+        ≤ zetaMax^(m/3 + 1)
+          / (((m/3 + 1).factorial : Nat) : ℚ) := by
+    exact div_le_div_of_nonneg_right hpow_le hfac_pos.le
+  have hcoef_env_nonneg :
+      0 ≤ (36 * farTailExpUpper) / 5 := by
+    norm_num [farTailExpUpper]
+  have hcoef :
+      (36 * farTailExpUpper) / (5 * (N : ℚ))
+        ≤ (36 * farTailExpUpper) / 5 := by
+    have hNq : (1 : ℚ) ≤ (N : ℚ) := by exact_mod_cast hN
+    have hinv : 1 / (N : ℚ) ≤ 1 := by
+      rw [div_le_iff₀ hNpos]
+      nlinarith
+    calc
+        (36 * farTailExpUpper) / (5 * (N : ℚ))
+            = ((36 * farTailExpUpper) / 5) * (1 / (N : ℚ)) := by
+              field_simp [hNpos.ne']
+          _ ≤ ((36 * farTailExpUpper) / 5) * 1 :=
+                mul_le_mul_of_nonneg_left hinv hcoef_env_nonneg
+          _ = (36 * farTailExpUpper) / 5 := by ring
+  have hmain_nonneg :
+      0 ≤ (m : ℚ)^m / (((m-1).factorial : Nat) : ℚ) := by
+    exact div_nonneg (pow_nonneg (by exact_mod_cast Nat.zero_le m) m)
+      (by exact_mod_cast Nat.zero_le ((m-1).factorial))
+  have hpois_arg_nonneg :
+      0 ≤ (zetaQ N m)^(m/3 + 1)
+          / (((m/3 + 1).factorial : Nat) : ℚ) := by
+    exact div_nonneg (pow_nonneg hz_nonneg _)
+      (by exact_mod_cast Nat.zero_le ((m/3 + 1).factorial))
+  have hpois_nonneg :
+      0 ≤ zetaMax^(m/3 + 1) / (((m/3 + 1).factorial : Nat) : ℚ) := by
+    exact div_nonneg (pow_nonneg (by norm_num [zetaMax]) _)
+      (by exact_mod_cast Nat.zero_le ((m/3 + 1).factorial))
+  unfold signLockFarTailScalar farTailScalarEnvelope
+  exact mul_le_mul
+    (mul_le_mul
+      (mul_le_mul hcoef le_rfl hmain_nonneg hcoef_env_nonneg)
+      le_rfl
+      (by norm_num [farTailPoissonFactor])
+      (mul_nonneg (by exact div_nonneg (by norm_num [farTailExpUpper]) (by norm_num))
+          hmain_nonneg))
+    hpois_arg
+    hpois_arg_nonneg
+    (mul_nonneg
+      (mul_nonneg (by exact div_nonneg (by norm_num [farTailExpUpper]) (by norm_num))
+        hmain_nonneg)
+      (by norm_num [farTailPoissonFactor]))
+
+private theorem farTailScalarEnvelopeScaled_362_le_one :
+    farTailScalarEnvelopeScaled 362 ≤ 1 := by
+  native_decide
+
+private theorem farTailScalarEnvelopeScaled_361_le_one :
+    farTailScalarEnvelopeScaled 361 ≤ 1 := by
+  native_decide
+
+private theorem farTailScalarEnvelopeScaled_363_le_one :
+    farTailScalarEnvelopeScaled 363 ≤ 1 := by
+  native_decide
+
+/-- Exact ratio for the scaled far-tail envelope under `m ↦ m+3`. -/
+def farTailThreeStepRatio (m : Nat) : ℚ :=
+  (((m+3 : Nat) : ℚ)^(m+5) * zetaMax) /
+    ((m : ℚ)^(m+2) * (m : ℚ) * ((m+1 : Nat) : ℚ)
+      * ((m+2 : Nat) : ℚ) * ((m/3+2 : Nat) : ℚ))
+
+private theorem farTailScalarEnvelopeScaled_add_three_eq
+    {m : Nat} (hm : 1 ≤ m) :
+    farTailScalarEnvelopeScaled (m+3)
+      = farTailScalarEnvelopeScaled m * farTailThreeStepRatio m := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmfac_ne : ((((m-1).factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  have hLfac_ne : ((((m/3+1).factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  have hLnext_ne : (((m/3+2 : Nat) : ℚ)) ≠ 0 := by positivity
+  have hfac_m :
+      (((m+2).factorial : Nat) : ℚ)
+        = ((m+2 : Nat) : ℚ) * ((m+1 : Nat) : ℚ) * (m : ℚ)
+            * (((m-1).factorial : Nat) : ℚ) := by
+    rw [show m+2 = (m+1)+1 by omega, Nat.factorial_succ,
+      show m+1 = m+1 by rfl, Nat.factorial_succ,
+      show m = (m-1)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hfac_L :
+      (((m/3+2).factorial : Nat) : ℚ)
+        = ((m/3+2 : Nat) : ℚ) * (((m/3+1).factorial : Nat) : ℚ) := by
+    rw [show m/3+2 = (m/3+1)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  unfold farTailScalarEnvelopeScaled farTailScalarEnvelope farTailThreeStepRatio
+  rw [show (m+3)/3 + 1 = m/3 + 2 by omega]
+  rw [show (m+3)-1 = m+2 by omega, hfac_m, hfac_L]
+  field_simp [hmpos.ne', hmfac_ne, hLfac_ne, hLnext_ne]
+  ring
+
+private theorem farTail_three_step_exp_factor_le
+    {m : Nat} (hm : 361 ≤ m) :
+    (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2)
+      ≤ (68/25 : ℚ)^3 * (121/120 : ℚ)^4 := by
+  let q : Nat := m/3
+  have hmpos : (0 : ℚ) < (m : ℚ) := by
+    exact_mod_cast (by omega : 0 < m)
+  have hq120 : 120 ≤ q := by
+    dsimp [q]
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 3)]
+    omega
+  have hq1 : 1 ≤ q := by omega
+  have hqpos : (0 : ℚ) < (q : ℚ) := by exact_mod_cast (by omega : 0 < q)
+  have hqbase_nonneg : 0 ≤ 1 + 1 / (q : ℚ) := by positivity
+  have hbase_le :
+      (((m+3 : Nat) : ℚ) / (m : ℚ)) ≤ 1 + 1 / (q : ℚ) := by
+    have hdiv : 3 * q ≤ m := by
+      dsimp [q]
+      simpa [Nat.mul_comm] using Nat.div_mul_le_self m 3
+    rw [show (((m+3 : Nat) : ℚ) / (m : ℚ)) = 1 + 3 / (m : ℚ) by
+      push_cast
+      field_simp [hmpos.ne']]
+    rw [add_le_add_iff_left]
+    rw [div_le_div_iff₀ hmpos hqpos]
+    norm_num
+    exact_mod_cast hdiv
+  have hpow_base :
+      (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2)
+        ≤ (1 + 1 / (q : ℚ))^(m+2) := by
+    exact pow_le_pow_left₀ (by positivity) hbase_le _
+  have hmod : m % 3 < 3 := Nat.mod_lt m (by norm_num : 0 < 3)
+  have hdecomp : m = 3 * q + m % 3 := by
+    dsimp [q]
+    simpa [Nat.mul_comm] using (Nat.div_add_mod m 3).symm
+  have hexp_le : m + 2 ≤ 3*q + 4 := by omega
+  have hbase_one : (1 : ℚ) ≤ 1 + 1 / (q : ℚ) := by
+    have hinv_nonneg : (0 : ℚ) ≤ 1 / (q : ℚ) := by positivity
+    linarith
+  have hpow_mono :
+      (1 + 1 / (q : ℚ))^(m+2)
+        ≤ (1 + 1 / (q : ℚ))^(3*q + 4) :=
+    pow_right_mono₀ hbase_one hexp_le
+  have hqpow : (1 + 1 / (q : ℚ))^q ≤ 68/25 :=
+    one_add_inv_pow_le q hq1
+  have hbase_120 : 1 + 1 / (q : ℚ) ≤ 121/120 := by
+    have hq120q : (120 : ℚ) ≤ (q : ℚ) := by exact_mod_cast hq120
+    rw [show (121/120 : ℚ) = 1 + 1/120 by norm_num]
+    simpa [add_comm] using add_le_add_left
+      (one_div_le_one_div_of_le (by norm_num : (0 : ℚ) < 120) hq120q)
+      1
+  have htail : (1 + 1 / (q : ℚ))^4 ≤ (121/120 : ℚ)^4 :=
+    pow_le_pow_left₀ hqbase_nonneg hbase_120 4
+  calc
+    (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2)
+        ≤ (1 + 1 / (q : ℚ))^(m+2) := hpow_base
+    _ ≤ (1 + 1 / (q : ℚ))^(3*q + 4) := hpow_mono
+    _ = ((1 + 1 / (q : ℚ))^q)^3 * (1 + 1 / (q : ℚ))^4 := by
+        rw [show 3*q + 4 = q*3 + 4 by omega, pow_add, pow_mul]
+    _ ≤ (68/25 : ℚ)^3 * (121/120 : ℚ)^4 := by
+        exact mul_le_mul
+          (pow_le_pow_left₀ (pow_nonneg hqbase_nonneg q) hqpow 3)
+          htail
+          (pow_nonneg hqbase_nonneg 4)
+          (pow_nonneg (by norm_num) 3)
+
+private theorem farTailThreeStepRatio_eq_factors
+    {m : Nat} (hm : 1 ≤ m) :
+    farTailThreeStepRatio m =
+      (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2)
+        * ((((m+3 : Nat) : ℚ)^3)
+            / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ)))
+        * (zetaMax / ((m/3+2 : Nat) : ℚ)) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by
+    exact_mod_cast (by omega : 0 < m)
+  have h1pos : (0 : ℚ) < ((m+1 : Nat) : ℚ) := by positivity
+  have h2pos : (0 : ℚ) < ((m+2 : Nat) : ℚ) := by positivity
+  have hLpos : (0 : ℚ) < ((m/3+2 : Nat) : ℚ) := by positivity
+  unfold farTailThreeStepRatio
+  rw [show m+5 = (m+2)+3 by omega, pow_add]
+  field_simp [hmpos.ne', h1pos.ne', h2pos.ne', hLpos.ne']
+  rw [div_pow]
+  field_simp [hmpos.ne']
+
+private theorem farTail_three_step_cubic_factor_le
+    {m : Nat} (hm : 361 ≤ m) :
+    ((((m+3 : Nat) : ℚ)^3)
+        / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ)))
+      ≤ 2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by
+    exact_mod_cast (by omega : 0 < m)
+  have hden :
+      (0 : ℚ) < (m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ) := by
+    positivity
+  have hm3_le : ((m+3 : Nat) : ℚ) ≤ (6/5) * (m : ℚ) := by
+    have hmq : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+    push_cast
+    nlinarith
+  have hnum_le : (((m+3 : Nat) : ℚ)^3) ≤ ((6/5) * (m : ℚ))^3 := by
+    exact pow_le_pow_left₀ (by positivity) hm3_le 3
+  have hden_lb :
+      (m : ℚ)^3 ≤ (m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ) := by
+    calc
+      (m : ℚ)^3 ≤ (m : ℚ)^3 + (m : ℚ) * (3 * (m : ℚ) + 2) := by
+        exact le_add_of_nonneg_right
+          (mul_nonneg hmpos.le (by nlinarith [hmpos]))
+      _ = (m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ) := by
+        push_cast
+        ring
+  calc
+    (((m+3 : Nat) : ℚ)^3)
+        / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ))
+      ≤ (((6/5) * (m : ℚ))^3)
+          / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ)) := by
+        exact div_le_div_of_nonneg_right hnum_le hden.le
+    _ ≤ (((6/5) * (m : ℚ))^3) / ((m : ℚ)^3) := by
+        exact div_le_div_of_nonneg_left (by positivity) (by positivity) hden_lb
+    _ = (216/125 : ℚ) := by
+        field_simp [hmpos.ne']
+        ring
+    _ ≤ 2 := by norm_num
+
+private theorem farTail_three_step_zeta_factor_le
+    {m : Nat} (hm : 361 ≤ m) :
+    zetaMax / ((m/3+2 : Nat) : ℚ) ≤ 50 / (27 * 122) := by
+  have hL122 : 122 ≤ m/3 + 2 := by
+    have hq120 : 120 ≤ m/3 := by
+      rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 3)]
+      omega
+    omega
+  have hLq : (122 : ℚ) ≤ ((m/3+2 : Nat) : ℚ) := by exact_mod_cast hL122
+  have hLpos : (0 : ℚ) < ((m/3+2 : Nat) : ℚ) := by positivity
+  rw [zetaMax]
+  rw [div_le_div_iff₀ hLpos (by norm_num : (0 : ℚ) < 27 * 122)]
+  nlinarith
+
+private theorem farTailThreeStepRatio_le_one
+    {m : Nat} (hm : 361 ≤ m) :
+    farTailThreeStepRatio m ≤ 1 := by
+  have hm1 : 1 ≤ m := by omega
+  rw [farTailThreeStepRatio_eq_factors (m := m) hm1]
+  have hA := farTail_three_step_exp_factor_le (m := m) hm
+  have hB := farTail_three_step_cubic_factor_le (m := m) hm
+  have hC := farTail_three_step_zeta_factor_le (m := m) hm
+  have hA_nonneg :
+      0 ≤ (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2) := by positivity
+  have hB_nonneg :
+      0 ≤ ((((m+3 : Nat) : ℚ)^3)
+        / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ))) := by
+    positivity
+  have hC_nonneg : 0 ≤ zetaMax / ((m/3+2 : Nat) : ℚ) := by
+    rw [zetaMax]
+    positivity
+  calc
+    (((m+3 : Nat) : ℚ) / (m : ℚ))^(m+2)
+        * ((((m+3 : Nat) : ℚ)^3)
+            / ((m : ℚ) * ((m+1 : Nat) : ℚ) * ((m+2 : Nat) : ℚ)))
+        * (zetaMax / ((m/3+2 : Nat) : ℚ))
+      ≤ ((68/25 : ℚ)^3 * (121/120 : ℚ)^4) * 2 * (50 / (27 * 122)) := by
+        exact mul_le_mul
+          (mul_le_mul hA hB hB_nonneg (by positivity))
+          hC
+          hC_nonneg
+          (mul_nonneg (by positivity) (by norm_num))
+      _ ≤ 1 := by norm_num
+
+private theorem farTailScalarEnvelopeScaled_nonneg (m : Nat) :
+    0 ≤ farTailScalarEnvelopeScaled m := by
+  unfold farTailScalarEnvelopeScaled farTailScalarEnvelope
+  norm_num [farTailExpUpper, farTailPoissonFactor, zetaMax]
+  positivity
+
+private theorem farTailScalarEnvelopeScaled_add_three_le
+    {m : Nat} (hm : 361 ≤ m) :
+    farTailScalarEnvelopeScaled (m+3) ≤ farTailScalarEnvelopeScaled m := by
+  have hm1 : 1 ≤ m := by omega
+  calc
+    farTailScalarEnvelopeScaled (m+3)
+        = farTailScalarEnvelopeScaled m * farTailThreeStepRatio m :=
+          farTailScalarEnvelopeScaled_add_three_eq (m := m) hm1
+    _ ≤ farTailScalarEnvelopeScaled m * 1 :=
+        mul_le_mul_of_nonneg_left
+          (farTailThreeStepRatio_le_one (m := m) hm)
+          (farTailScalarEnvelopeScaled_nonneg m)
+    _ = farTailScalarEnvelopeScaled m := by ring
+
+theorem farTailScalarEnvelopeScaled_le_one
+    {m : Nat} (hm : 361 ≤ m) :
+    farTailScalarEnvelopeScaled m ≤ 1 := by
+  induction m using Nat.strong_induction_on with
+  | h m ih =>
+      by_cases h361 : m = 361
+      · simpa [h361] using farTailScalarEnvelopeScaled_361_le_one
+      by_cases h362 : m = 362
+      · simpa [h362] using farTailScalarEnvelopeScaled_362_le_one
+      by_cases h363 : m = 363
+      · simpa [h363] using farTailScalarEnvelopeScaled_363_le_one
+      have hm364 : 364 ≤ m := by omega
+      have hm3_ge : 361 ≤ m - 3 := by omega
+      have hm3_lt : m - 3 < m := by omega
+      have hstep := farTailScalarEnvelopeScaled_add_three_le (m := m - 3) hm3_ge
+      have hprev := ih (m - 3) hm3_lt hm3_ge
+      have hrewrite : (m - 3) + 3 = m := by omega
+      calc
+        farTailScalarEnvelopeScaled m
+            = farTailScalarEnvelopeScaled ((m - 3) + 3) := by rw [hrewrite]
+        _ ≤ farTailScalarEnvelopeScaled (m - 3) := hstep
+        _ ≤ 1 := hprev
+
+theorem farTailScalarEnvelope_le_one_over_m_sq
+    {m : Nat} (hm : 361 ≤ m) :
+    farTailScalarEnvelope m ≤ 1 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ)^2 := by positivity
+  have hscaled := farTailScalarEnvelopeScaled_le_one (m := m) hm
+  unfold farTailScalarEnvelopeScaled at hscaled
+  exact (le_div_iff₀ hmpos).mpr (by simpa [mul_comm] using hscaled)
+
+theorem signLockFarTailScalar_le_one_over_m_sq
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    signLockFarTailScalar N m ≤ 1 / (m : ℚ)^2 :=
+  (signLockFarTailScalar_le_envelope
+    (N := N) (m := m) hN hN40 hm).trans
+      (farTailScalarEnvelope_le_one_over_m_sq (m := m) hm)
+
 /-- The finite factorial gas appearing in the far-tail coefficient recurrence:
 `k! / m^k`. -/
 def farTailFactorialGas (m k : Nat) : ℚ :=
@@ -5060,6 +5413,15 @@ theorem signLockFarTail_le_one_over_m_sq_of_saddleScalar
   (signLockFarTail_le_saddleScalar
     (N := N) (m := m) hN hN40 hm).trans hscalar
 
+theorem signLockFarTail_le_one_over_m_sq
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    signLockFarTail N m ≤ 1 / (m : ℚ)^2 :=
+  signLockFarTail_le_one_over_m_sq_of_saddleScalar
+    (N := N) (m := m) hN hN40 hm
+    (signLockFarTailScalar_le_one_over_m_sq
+      (N := N) (m := m) hN hN40 hm)
+
 /-- Near-range `w_s` audit plus the separate far-tail allowance gives the
 paper's `2215/m²` error budget. -/
 theorem signLock_error_budget_zetaMax_of_farTail
@@ -5094,6 +5456,18 @@ theorem signLock_error_budget_zetaMax_of_saddleScalar
     (N := N) (m := m) hN hN40 hm
     (signLockFarTail_le_one_over_m_sq_of_saddleScalar
       (N := N) (m := m) hN hN40 hm hscalar)
+
+theorem signLock_error_budget_zetaMax
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|)
+      + signLockFarTail N m
+      ≤ 2215 / (m : ℚ)^2 :=
+  signLock_error_budget_zetaMax_of_farTail
+    (N := N) (m := m) hN hN40 hm
+    (signLockFarTail_le_one_over_m_sq
+      (N := N) (m := m) hN hN40 hm)
 
 /-! ## Final rational positivity margin -/
 
