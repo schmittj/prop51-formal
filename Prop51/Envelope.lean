@@ -845,6 +845,103 @@ theorem DeltaRatFar_le_inv_m (p m : Nat) {N : ℚ}
   have hden_pos : (0:ℚ) < 1000 * (m:ℚ) := by positivity
   exact hstart.trans (one_div_le_one_div_of_le hden_pos hden_le)
 
+theorem DeltaNearGeomBound_le_final_range (p m : Nat)
+    (hm : 361 ≤ m) (hpm : 2*m ≤ 3*p) :
+    DeltaNearGeomBound p 20 ≤ (196416/15625) / (m:ℚ) := by
+  have hp241 : 241 ≤ p := by omega
+  have hpQ : (0:ℚ) < p := by exact_mod_cast (by omega : 0 < p)
+  have hmQ : (0:ℚ) < m := by exact_mod_cast (by omega : 0 < m)
+  have hp241Q : (241:ℚ) ≤ p := by exact_mod_cast hp241
+  have hpmQ : (2:ℚ) * m ≤ 3 * (p:ℚ) := by exact_mod_cast hpm
+  have hprod :
+      20 * (m:ℚ) * (p:ℚ) ≤ 31 * ((p:ℚ)-1) * ((p:ℚ)-2) := by
+    have hmle : (m:ℚ) ≤ (3/2) * (p:ℚ) := by nlinarith
+    have hleft : 20 * (m:ℚ) * (p:ℚ) ≤ 30 * (p:ℚ) * (p:ℚ) := by
+      have hcoeff : 20 * (m:ℚ) ≤ 30 * (p:ℚ) := by nlinarith
+      exact mul_le_mul_of_nonneg_right hcoeff (le_of_lt hpQ)
+    have hp93 : (93:ℚ) ≤ p := by nlinarith
+    have hpoly_nonneg : 0 ≤ (p:ℚ) * ((p:ℚ) - 93) := by
+      exact mul_nonneg (le_of_lt hpQ) (by linarith)
+    have hright : 30 * (p:ℚ) * (p:ℚ)
+        ≤ 31 * ((p:ℚ)-1) * ((p:ℚ)-2) := by
+      nlinarith
+    exact hleft.trans hright
+  have hpden :
+      (p:ℚ) / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+        ≤ 31 / (20 * (m:ℚ)) := by
+    have hden_pos :
+        (0:ℚ) < ((p:ℚ)-1) * ((p:ℚ)-2) := by
+      nlinarith
+    have hmden_pos : (0:ℚ) < 20 * (m:ℚ) := by positivity
+    rw [Nat.cast_sub (by omega : 1 ≤ p), Nat.cast_sub (by omega : 2 ≤ p)]
+    change (p:ℚ) / (((p:ℚ)-1) * ((p:ℚ)-2)) ≤ 31 / (20 * (m:ℚ))
+    rw [div_le_div_iff₀ hden_pos hmden_pos]
+    nlinarith
+  have htail :
+      1 / (1 - DeltaNearRatio p 20) ≤ 11/10 := by
+    have hqle : DeltaNearRatio p 20 ≤ 1/11 := by
+      unfold DeltaNearRatio
+      have hden_pos : (0:ℚ) < 75 * (p:ℚ) := by positivity
+      rw [div_le_iff₀ hden_pos]
+      nlinarith
+    have hlow : (10/11:ℚ) ≤ 1 - DeltaNearRatio p 20 := by linarith
+    calc
+      1 / (1 - DeltaNearRatio p 20) ≤ 1 / (10/11:ℚ) :=
+        one_div_le_one_div_of_le (by norm_num) hlow
+      _ = 11/10 := by norm_num
+  have htail_nonneg : 0 ≤ 1 / (1 - DeltaNearRatio p 20) := by
+    have hq1 := DeltaNearRatio_lt_one_of_le_20 p (R := (20:ℚ)) (by norm_num) (by omega)
+    have hpos : (0:ℚ) < 1 - DeltaNearRatio p 20 := by linarith
+    exact one_div_nonneg.mpr hpos.le
+  have hmain :
+      ((1152/3125) * (20:ℚ) * (p:ℚ)
+          / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ))))
+        ≤ ((1152/3125) * (20:ℚ)) * (31 / (20 * (m:ℚ))) := by
+    calc
+      ((1152/3125) * (20:ℚ) * (p:ℚ)
+          / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ))))
+          = ((1152/3125) * (20:ℚ))
+              * ((p:ℚ) / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))) := by ring
+      _ ≤ ((1152/3125) * (20:ℚ)) * (31 / (20 * (m:ℚ))) := by
+          exact mul_le_mul_of_nonneg_left hpden (by norm_num)
+  have hmain_nonneg :
+      0 ≤ ((1152/3125) * (20:ℚ)) * (31 / (20 * (m:ℚ))) := by
+    positivity
+  unfold DeltaNearGeomBound
+  calc
+    ((1152/3125) * (20:ℚ) * (p:ℚ)
+        / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+      * (1 / (1 - DeltaNearRatio p 20)))
+        ≤ (((1152/3125) * (20:ℚ)) * (31 / (20 * (m:ℚ)))) * (11/10) := by
+          exact mul_le_mul hmain htail htail_nonneg hmain_nonneg
+    _ = (196416/15625) / (m:ℚ) := by
+          field_simp [ne_of_gt hmQ]
+          ring
+
+theorem DeltaRat_le_final_envelope (p m : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN40 : N ≤ (40/3) * (m:ℚ))
+    (hm : 361 ≤ m) (hpm : 2*m ≤ 3*p) :
+    DeltaRat p N ≤ (66/5) / (m:ℚ) := by
+  have hp : 241 ≤ p := by omega
+  have hN20 : N ≤ 20 * (p:ℚ) := by
+    have hpmQ : (40/3:ℚ) * (m:ℚ) ≤ 20 * (p:ℚ) := by
+      have hpmQ' : (2:ℚ) * m ≤ 3 * (p:ℚ) := by exact_mod_cast hpm
+      nlinarith
+    exact hN40.trans hpmQ
+  have hsplit := DeltaRat_le_nearGeomBound_add_far p
+    hN (by norm_num : (0:ℚ) ≤ 20) hN20 (by omega : 8 ≤ p)
+    (DeltaNearRatio_lt_one_of_le_20 p (R := (20:ℚ)) (by norm_num) (by omega))
+  have hnear := DeltaNearGeomBound_le_final_range p m hm hpm
+  have hfar := DeltaRatFar_le_inv_m p m hN hN20 hm hpm
+  calc
+    DeltaRat p N ≤ DeltaNearGeomBound p 20 + DeltaRatFar p N := hsplit
+    _ ≤ (196416/15625) / (m:ℚ) + 1 / (1000 * (m:ℚ)) :=
+          add_le_add hnear hfar
+    _ ≤ (66/5) / (m:ℚ) := by
+          have hmQ : (0:ℚ) < m := by exact_mod_cast (by omega : 0 < m)
+          field_simp [ne_of_gt hmQ]
+          norm_num
+
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
 theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)
@@ -963,5 +1060,16 @@ theorem Eminus_normalized_residual_le_DeltaRat
     hres.trans hsum
   rw [div_le_iff₀ hdenpos]
   simpa [mul_comm, mul_left_comm, mul_assoc] using hmain
+
+/-- Final rationalized `Eminus` envelope in the sign-lock range:
+`66/5 = 13.2`. -/
+theorem Eminus_normalized_residual_le_final
+    {p m : Nat} {N : ℚ} (hN : 0 < N)
+    (hN40 : N ≤ (40/3) * (m:ℚ))
+    (hm : 361 ≤ m) (hpm : 2*m ≤ 3*p) :
+    |Eminus N p / (-N * c p) - 1| ≤ (66/5) / (m:ℚ) := by
+  have hp : 2 ≤ p := by omega
+  exact (Eminus_normalized_residual_le_DeltaRat hN hp).trans
+    (DeltaRat_le_final_envelope p m hN.le hN40 hm hpm)
 
 end Prop51

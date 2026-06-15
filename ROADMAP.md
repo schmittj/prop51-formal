@@ -107,16 +107,15 @@ Status:
       `DeltaRat` with coefficient `(36/5)(4/25)^r4^{r-1}`, block domination
       from `Gcomp_le` and `c_lb`, and the normalized bridge
       `|E⁻_p/(-Nc_p)-1| ≤ DeltaRat p N`.
-- [ ] the Δ-envelope numerics (Lemma 4.1, `Envelope.lean`): from
+- [x] the Δ-envelope numerics (Lemma 4.1, `Envelope.lean`): from
       `Eminus_residual_le`, the normalized bound `|ε_p| ≤ 13.2/m` for
       `p ≥ 2m/3`, `N ≤ 40m/3`, `m ≥ 361` — geometric domination by the
       `r = 2` block (ratio ≤ `(16N/25)/(3(p-2r)(p-2r+1)) ≤ 17.1/p`) plus
       the rational far tail `r > p/4` via `factorial_lb` and
       `(p-1)!/(p-2r+1)! ≥ (2r-1)!`.
-      The near-range half is now structured in Lean: `DeltaRat` splits at
-      `p/4`, the `r ≤ p/4` slice is bounded by `DeltaNearGeomBound`, and the
-      remaining obligation is the far-tail slice plus final numeric
-      simplification.
+      Lean now proves the split, the near-range geometric majorant, the
+      rational far-tail geometric bound, `DeltaRat_le_final_envelope`, and
+      `Eminus_normalized_residual_le_final`.
 - [ ] sign-lock §5: the exact finite decomposition
       `−X_m = Σ_s (−ζ)^s/s!·Π_s D_s (1+ε_{m-s}) ± boundary`, the P1–P4
       pieces (Poisson moments via partial-exp majorants), tails, and the

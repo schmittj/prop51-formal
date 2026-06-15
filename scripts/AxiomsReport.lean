@@ -86,4 +86,7 @@ import Prop51
 #print axioms Prop51.DeltaRatFarTermBound_le_inv_linear
 #print axioms Prop51.DeltaRatFar_le_inv_start
 #print axioms Prop51.DeltaRatFar_le_inv_m
+#print axioms Prop51.DeltaNearGeomBound_le_final_range
+#print axioms Prop51.DeltaRat_le_final_envelope
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat
+#print axioms Prop51.Eminus_normalized_residual_le_final
