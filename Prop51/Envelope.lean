@@ -765,6 +765,86 @@ theorem DeltaRatFar_le_two_first (p : Nat) {N : ℚ}
     DeltaRatFarTermBound_Icc_sum_le_two_first (p/4 + 1) (p/2) (by omega)
   exact hfar.trans hsum
 
+private theorem DeltaRatFarTermBound_61_le_inv_linear :
+    DeltaRatFarTermBound 61 ≤ 1 / (12000 * (61:ℚ)) := by
+  have h61 : ((25*(61:ℚ))/68)^61 ≤ ((61).factorial : ℚ) := factorial_lb 61
+  have h121 : ((25*(121:ℚ))/68)^121 ≤ ((121).factorial : ℚ) := factorial_lb 121
+  have hden_lb :
+      ((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121
+        ≤ ((61).factorial : ℚ) * ((121).factorial : ℚ) := by
+    exact mul_le_mul h61 h121 (by positivity) (by positivity)
+  have hden_pos :
+      (0:ℚ) < ((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121 := by
+    positivity
+  have hnum_nonneg :
+      0 ≤ (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60 := by
+    positivity
+  unfold DeltaRatFarTermBound
+  change (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+      / (((61).factorial : ℚ) * ((121).factorial : ℚ))
+    ≤ 1 / (12000 * (61:ℚ))
+  calc
+    (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+        / (((61).factorial : ℚ) * ((121).factorial : ℚ))
+        ≤ (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+            / (((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121) := by
+          exact div_le_div_of_nonneg_left hnum_nonneg hden_pos hden_lb
+    _ ≤ 1 / (12000 * (61:ℚ)) := by norm_num
+
+theorem DeltaRatFarTermBound_le_inv_linear (r : Nat) (hr : 61 ≤ r) :
+    DeltaRatFarTermBound r ≤ 1 / (12000 * (r:ℚ)) := by
+  suffices h : ∀ k : Nat,
+      DeltaRatFarTermBound (61+k) ≤ 1 / (12000 * ((61+k : Nat) : ℚ)) by
+    obtain ⟨k, rfl⟩ : ∃ k, r = 61 + k := ⟨r - 61, by omega⟩
+    exact h k
+  intro k
+  induction k with
+  | zero =>
+      simpa using DeltaRatFarTermBound_61_le_inv_linear
+  | succ k ih =>
+      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 61 ≤ 61+k)
+      have hden₁ : (0:ℚ) < 12000 * ((61+k : Nat) : ℚ) := by positivity
+      have hden₂ : (0:ℚ) < 12000 * ((61+(k+1) : Nat) : ℚ) := by positivity
+      calc
+        DeltaRatFarTermBound (61 + (k+1))
+            = DeltaRatFarTermBound ((61+k)+1) := by rw [Nat.add_assoc]
+        _ ≤ DeltaRatFarTermBound (61+k) * (1/2) := hstep
+        _ ≤ (1 / (12000 * ((61+k : Nat) : ℚ))) * (1/2) := by
+              exact mul_le_mul_of_nonneg_right ih (by norm_num)
+        _ ≤ 1 / (12000 * ((61+(k+1) : Nat) : ℚ)) := by
+              field_simp [ne_of_gt hden₁, ne_of_gt hden₂]
+              norm_num
+              have hk0 : (0:ℚ) ≤ k := by exact_mod_cast Nat.zero_le k
+              nlinarith
+
+theorem DeltaRatFar_le_inv_start (p : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 240 ≤ p) :
+    DeltaRatFar p N ≤ 1 / (6000 * ((p/4 + 1 : Nat) : ℚ)) := by
+  have htwo := DeltaRatFar_le_two_first p hN hN20 hp
+  have hfirst := DeltaRatFarTermBound_le_inv_linear (p/4 + 1) (by omega)
+  have hden : (0:ℚ) < 12000 * ((p/4 + 1 : Nat) : ℚ) := by positivity
+  calc
+    DeltaRatFar p N ≤ 2 * DeltaRatFarTermBound (p/4 + 1) := htwo
+    _ ≤ 2 * (1 / (12000 * ((p/4 + 1 : Nat) : ℚ))) := by
+          exact mul_le_mul_of_nonneg_left hfirst (by norm_num)
+    _ = 1 / (6000 * ((p/4 + 1 : Nat) : ℚ)) := by
+          field_simp [ne_of_gt hden]
+          ring
+
+theorem DeltaRatFar_le_inv_m (p m : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ))
+    (hm : 361 ≤ m) (hpm : 2*m ≤ 3*p) :
+    DeltaRatFar p N ≤ 1 / (1000 * (m:ℚ)) := by
+  have hp : 240 ≤ p := by omega
+  have hstart := DeltaRatFar_le_inv_start p hN hN20 hp
+  have hmle : m ≤ 6 * (p/4 + 1) := by omega
+  have hden_le :
+      1000 * (m:ℚ) ≤ 6000 * ((p/4 + 1 : Nat) : ℚ) := by
+    have hnat : 1000 * m ≤ 6000 * (p/4 + 1) := by omega
+    exact_mod_cast hnat
+  have hden_pos : (0:ℚ) < 1000 * (m:ℚ) := by positivity
+  exact hstart.trans (one_div_le_one_div_of_le hden_pos hden_le)
+
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
 theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)
