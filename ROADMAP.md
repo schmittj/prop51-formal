@@ -153,9 +153,14 @@ Status:
       `v_s|ε_p|` bridge input is closed.  The closed P1/P4 actual weighted
       bridges are now summed with P2/P3 into a `2214/m²` near-range component
       audit, and a conditional `w_s` near-range theorem records exactly the
-      remaining nonlinear recentering hypothesis.  Remaining: prove that
-      exact recentering bridge for `ε_p` from the `E^-_p` block expansion,
-      then add the `1/m²` far-tail allowance.
+      remaining nonlinear recentering hypothesis.  The exact endpoint
+      extraction from the `E^-_p` block expansion is now formalized:
+      `[t^p]H^2` is split into its two endpoint products plus the middle
+      two-block sum, and `ε_p + twoEndpointCorrection` is rewritten as the
+      middle two-block normalized contribution plus the `r ≥ 3` tail.
+      Remaining: prove the absolute-value bridges from those two exact
+      pieces to the P3b/P3c majorants, discharge the conditional
+      recentering hypothesis, then add the `1/m²` far-tail allowance.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

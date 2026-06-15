@@ -246,11 +246,82 @@ theorem abs_coeff_pow_le (L : Nat → ℚ) (M : ℚ)
 /-- The coefficients of the nonlinear part `H` of `log C`. -/
 def Hcoef : Nat → ℚ := fun r => if 2 ≤ r then c r else 0
 
+@[simp] theorem Hcoef_of_lt_two {r : Nat} (hr : r < 2) : Hcoef r = 0 := by
+  rw [Hcoef, if_neg (by omega)]
+
+theorem Hcoef_of_ge_two {r : Nat} (hr : 2 ≤ r) : Hcoef r = c r := by
+  rw [Hcoef, if_pos hr]
+
 /-- `hpow r p = [t^p] H(t)^r`. -/
 noncomputable def hpow (r p : Nat) : ℚ := coeff p ((mk Hcoef : ℚ⟦X⟧) ^ r)
 
+/-- The non-endpoint part of `[t^p]H(t)^2`, i.e. the terms with
+`3 ≤ j ≤ p-3`. -/
+def hpowTwoMiddle (p : Nat) : ℚ :=
+  ∑ j ∈ Finset.Ico 3 (p-2), c j * c (p-j)
+
+theorem hpowTwoMiddle_nonneg (p : Nat) : 0 ≤ hpowTwoMiddle p := by
+  unfold hpowTwoMiddle
+  exact Finset.sum_nonneg fun j _ =>
+    mul_nonneg (c_nonneg j) (c_nonneg (p-j))
+
 theorem hpow_one (p : Nat) (hp : 2 ≤ p) : hpow 1 p = c p := by
   rw [hpow, pow_one, coeff_mk, Hcoef, if_pos hp]
+
+/-- The two-block coefficient is the ordinary finite convolution of the
+coefficients of `H`. -/
+theorem hpow_two_eq_sum_range (p : Nat) :
+    hpow 2 p = ∑ j ∈ Finset.range (p+1), Hcoef j * Hcoef (p-j) := by
+  rw [hpow, pow_two, coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  simp only [coeff_mk]
+
+/-- Exact extraction of the two endpoint products in `[t^p]H(t)^2`.
+For `p ≥ 5`, the endpoint pairs are distinct and the middle sum is over
+`3 ≤ j ≤ p-3`, written as `Ico 3 (p-2)`.  This is the coefficient-level
+form of the endpoint extraction used in the sign-lock recentering. -/
+theorem hpow_two_eq_endpoints_add_middle (p : Nat) (hp : 5 ≤ p) :
+    hpow 2 p =
+      2 * c 2 * c (p-2) + hpowTwoMiddle p := by
+  rw [hpow_two_eq_sum_range]
+  have hdrop :
+      (∑ j ∈ Finset.range (p+1), Hcoef j * Hcoef (p-j))
+        = ∑ j ∈ Finset.Icc 2 (p-2), Hcoef j * Hcoef (p-j) := by
+    symm
+    apply Finset.sum_subset
+    · intro j hj
+      rw [Finset.mem_Icc] at hj
+      rw [Finset.mem_range]
+      omega
+    · intro j hj hnot
+      rw [Finset.mem_range] at hj
+      rw [Finset.mem_Icc] at hnot
+      by_cases hlt : j < 2
+      · rw [Hcoef_of_lt_two hlt, zero_mul]
+      · have htail : p - j < 2 := by omega
+        rw [Hcoef_of_lt_two htail, mul_zero]
+  rw [hdrop]
+  have hIccIco : Finset.Icc 2 (p-2) = Finset.Ico 2 (p-1) := by
+    ext j
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIccIco]
+  rw [Finset.sum_eq_sum_Ico_succ_bot (by omega : 2 < p-1)]
+  rw [show p-1 = (p-2)+1 by omega]
+  rw [Finset.sum_Ico_succ_top (by omega : 3 ≤ p-2)]
+  simp only [Hcoef_of_ge_two (by omega : 2 ≤ 2),
+    Hcoef_of_ge_two (by omega : 2 ≤ p-2)]
+  have hmiddle : ∀ j ∈ Finset.Ico 3 (p-2),
+      Hcoef j * Hcoef (p-j) = c j * c (p-j) := by
+    intro j hj
+    obtain ⟨hj3, hjlt⟩ := Finset.mem_Ico.mp hj
+    rw [Hcoef_of_ge_two (by omega : 2 ≤ j),
+      Hcoef_of_ge_two (by omega : 2 ≤ p-j)]
+  rw [Finset.sum_congr rfl hmiddle]
+  rw [show p - (p - 2) = 2 by omega]
+  rw [Hcoef_of_ge_two (by omega : 2 ≤ 2)]
+  unfold hpowTwoMiddle
+  ring_nf
 
 theorem abs_hpow_le (r p : Nat) :
     |hpow r p| ≤ (4/25)^r * 6^p * Gcomp r p := by

@@ -1881,6 +1881,108 @@ def twoEndpointCorrection (N p : Nat) : ℚ :=
 def twoEndpointTarget (N m : Nat) : ℚ :=
   (5 * (N : ℚ)) / (36 * (m : ℚ)^2)
 
+/-- Exact endpoint normalization for the two-block term.
+
+This is the Lean counterpart of extracting the two endpoint products
+`c₂ c_{p-2}` and `c_{p-2} c₂` from `[t^p]H(t)^2`: after the `2!` in the
+exponential coefficient, those two endpoint products contribute
+`N c₂ c_{p-2}/c_p`, which is exactly `twoEndpointCorrection`. -/
+theorem twoEndpointCorrection_eq_endpoint_ratio
+    {N p : Nat} (hp : 5 ≤ p) :
+    twoEndpointCorrection N p = (N : ℚ) * c 2 * c (p-2) / c p := by
+  have hdp : d p ≠ 0 := (d_pos p (by omega : 1 ≤ p)).ne'
+  have hcp : c p ≠ 0 := (c_pos p (by omega : 1 ≤ p)).ne'
+  have hdp2 : d (p-2) ≠ 0 := (d_pos (p-2) (by omega : 1 ≤ p-2)).ne'
+  have hp1 : (((p-1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-1 ≠ 0)
+  have hp2 : (((p-2 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : p-2 ≠ 0)
+  have hfacp : ((((p-1).factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  have hfacp2 : ((((p-3).factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  unfold twoEndpointCorrection DFactor
+  rw [c_two, c_eq_d p, c_eq_d (p-2)]
+  rw [show p-2-1 = p-3 by omega]
+  have hpow6 : (6 : ℚ)^p = (6 : ℚ)^2 * (6 : ℚ)^(p-2) := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have hfac :
+      (((p-1).factorial : Nat) : ℚ)
+        = (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ)) *
+            (((p-3).factorial : Nat) : ℚ) := by
+    rw [show p-1 = (p-2)+1 by omega, Nat.factorial_succ,
+      show p-2 = (p-3)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  rw [hpow6, hfac]
+  field_simp [hdp, hcp, hdp2, hp1, hp2, hfacp, hfacp2]
+  ring
+
+/-- Exact residual form of `ε_p` obtained from the finite `E^-` block split. -/
+private theorem epsilonMinus_eq_residual_sum
+    {N p : Nat} (hN : 1 ≤ N) (hp : 2 ≤ p) :
+    epsilonMinus N p =
+      -(∑ r ∈ Finset.Icc 2 p,
+          (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ))
+        / ((N : ℚ) * c p) := by
+  have hNq : ((N : ℚ) ≠ 0) := by exact_mod_cast (by omega : N ≠ 0)
+  have hcp : c p ≠ 0 := (c_pos p (by omega : 1 ≤ p)).ne'
+  unfold epsilonMinus EminusNorm
+  rw [Eminus_split (N : ℚ) p hp]
+  field_simp [hNq, hcp]
+  ring
+
+private theorem sum_Icc_two_eq_head_tail (F : Nat → ℚ) {p : Nat} (hp : 2 ≤ p) :
+    ∑ r ∈ Finset.Icc 2 p, F r = F 2 + ∑ r ∈ Finset.Icc 3 p, F r := by
+  have hIcc2 : Finset.Icc 2 p = Finset.Ico 2 (p+1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hIcc3 : Finset.Icc 3 p = Finset.Ico 3 (p+1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIcc2, Finset.sum_eq_sum_Ico_succ_bot (by omega : 2 < p+1), hIcc3]
+
+/-- Exact split of `ε_p` into the full two-block coefficient and the
+three-and-more-block tail. -/
+private theorem epsilonMinus_eq_twoBlock_tail
+    {N p : Nat} (hN : 1 ≤ N) (hp : 2 ≤ p) :
+    epsilonMinus N p =
+      -((N : ℚ) * hpow 2 p) / (2 * c p)
+        - (∑ r ∈ Finset.Icc 3 p,
+            (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ))
+          / ((N : ℚ) * c p) := by
+  have hNq : ((N : ℚ) ≠ 0) := by exact_mod_cast (by omega : N ≠ 0)
+  have hcp : c p ≠ 0 := (c_pos p (by omega : 1 ≤ p)).ne'
+  rw [epsilonMinus_eq_residual_sum hN hp]
+  rw [sum_Icc_two_eq_head_tail
+    (fun r => (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ)) hp]
+  norm_num [Nat.factorial]
+  field_simp [hNq, hcp]
+  ring
+
+/-- Exact nonlinear recentering identity after endpoint cancellation.
+
+This is the point where the formal proof mirrors the TeX endpoint extraction:
+`twoEndpointCorrection` cancels precisely the two endpoint products in the
+two-block coefficient, leaving the non-endpoint two-block middle sum and the
+three-and-more-block tail. -/
+theorem epsilonMinus_add_twoEndpointCorrection_eq_middle_tail
+    {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p) :
+    epsilonMinus N p + twoEndpointCorrection N p =
+      -((N : ℚ) * hpowTwoMiddle p) / (2 * c p)
+        - (∑ r ∈ Finset.Icc 3 p,
+            (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ))
+          / ((N : ℚ) * c p) := by
+  have hNq : ((N : ℚ) ≠ 0) := by exact_mod_cast (by omega : N ≠ 0)
+  have hcp : c p ≠ 0 := (c_pos p (by omega : 1 ≤ p)).ne'
+  rw [epsilonMinus_eq_twoBlock_tail hN (by omega : 2 ≤ p)]
+  rw [twoEndpointCorrection_eq_endpoint_ratio (N := N) (p := p) hp]
+  rw [hpow_two_eq_endpoints_add_middle p hp]
+  field_simp [hNq, hcp]
+  ring
+
 theorem DFactor_nonneg (m s : Nat) : 0 ≤ DFactor m s := by
   unfold DFactor
   exact div_nonneg (d_nonneg (m-s)) (d_nonneg m)
