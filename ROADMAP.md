@@ -134,21 +134,22 @@ Status:
       two-block majorant bridge, the pointwise `36.6/m²` cap, and weighted
       budget `234/m²`.  P3c now has an explicit three-and-more-block tail
       majorant, a pointwise `89/m²` cap, and weighted budget `573/m²`.
-      P1 now has the higher Poisson moment machinery and the weighted
+      P1 now has the higher Poisson moment machinery, the weighted
       `426/m²` numerical majorant budget for the explicit gamma-residual
-      terms.  P4 now has the dominant cross-term numerical reserve, and the
-      smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s` pieces are expanded
-      explicitly inside the `3/2·m⁻²` allowance, giving the `784/m²` budget;
+      terms, and a conditional bridge from the pointwise
+      `piResidualBridgeBound`.  P4 now has the dominant cross-term numerical
+      reserve, and the smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s`
+      pieces are expanded explicitly inside the `3/2·m⁻²` allowance, giving
+      the `784/m²` budget;
       the abstract product-cross inequality has also been bridged to those
       four weighted P4 budget terms.  The formalized near-range `d`-drift
       gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
       `v_s|ε_p|` bridge input is closed.  The remaining P4 inputs are now
       packaged as conditional bridge lemmas from the single pointwise majorant
       `Π_s-1 ≤ piUBridgeBound m s`, including a one-call product-cross theorem.
-      Remaining: connect the `PiFactor` product residual to the P1 majorant,
-      prove the pointwise `u_s` product estimate (likely via a sharper
-      product/log argument or rational certificates), and close the residual
-      near/far tails.
+      Remaining: prove the pointwise `Π_s` product estimates feeding the P1
+      and P4 bridge lemmas (likely via a sharper product/log argument or
+      rational certificates), and close the residual near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

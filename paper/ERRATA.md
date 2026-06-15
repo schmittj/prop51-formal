@@ -24,3 +24,28 @@ Found during formalization review; neither affects the conclusions.
    j ≥ 0.1a") would make the line auditable without recomputation.
    (Numerically verified: no violations of (B-tempered)/(Y-tempered)/the
    small-k bound against true recurrence values at both N edges, a = 401.)
+
+## Formalization notes
+
+These are intentional Lean-vs-TeX differences rather than errors in the
+mathematical argument.
+
+1. **§5 P2/P4 drift constant.**  The TeX uses the sharper decimal
+   `v_s = 1-D_s ≤ 1.095s/m²`.  The current Lean proof derives the coarser
+   rational bound `v_s ≤ (28/25)s/m² = 1.12s/m²` from the rationalized
+   `d`-ratio estimate.  The P4 small-term reserve has been recomputed with
+   `28/25`; the total `784/m²` P4 budget still checks.
+
+2. **§5 exponential tilts.**  The TeX writes the `Π_s` estimates with
+   `exp(0.2237s)`.  The Lean development remains in `ℚ`, using
+   `(gammaTilt/zetaMax)^s` as a rational surrogate and the identity
+   `zetaMax^s(gammaTilt/zetaMax)^s = gammaTilt^s` in weighted sums.
+   The remaining pointwise product/log estimates should either prove this
+   rational surrogate directly or introduce a small documented real-analysis
+   bridge.
+
+3. **§5 P1/P4 bridge structure.**  Lean currently packages the budget algebra
+   as conditional bridge lemmas from the pointwise `Π_s` estimates
+   (`piResidualBridgeBound` for P1 and `piUBridgeBound` for P4).  This matches
+   the TeX proof strategy but makes explicit that the remaining kernel-level
+   work is the product/log estimate for `Π_s`, not the Poisson budget algebra.

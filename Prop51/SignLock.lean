@@ -837,7 +837,13 @@ theorem poissonThird_zetaMax_le (T : Nat) :
     _ ≤ 118 := by
           norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
 
-/-! ## P1: gamma-product residual numerical budget -/
+/-! ## P1: gamma-product residual numerical budget
+
+Formalization note: the paper writes the product estimates with `exp(0.2237s)`.
+This file keeps the sign-lock audit in `ℚ`; the factor
+`(gammaTilt / zetaMax)^s` below is the rational surrogate for that exponential,
+chosen so that multiplying by the weight `zetaMax^s` gives `gammaTilt^s`.
+-/
 
 /-- `q₂(s)=s(s+1)(2s+1)/6`, the quadratic-sum correction in the
 gamma-product estimate. -/
@@ -846,6 +852,13 @@ def qTwo (s : Nat) : ℚ :=
 
 /-- Rational upper endpoint for `ζ·exp(0.2237)`, rounded up. -/
 def gammaTilt : ℚ := 11581/5000
+
+private theorem zetaMax_pow_mul_tilt_pow (s : Nat) :
+    zetaMax^s * (gammaTilt / zetaMax)^s = gammaTilt^s := by
+  rw [← mul_pow]
+  have hbase : zetaMax * (gammaTilt / zetaMax) = gammaTilt := by
+    norm_num [zetaMax, gammaTilt]
+  rw [hbase]
 
 theorem poissonFirst_gammaTilt_le (T : Nat) :
     ∑ s ∈ Finset.range T, (s : ℚ) * gammaTilt^s / (s.factorial : ℚ) ≤ 47/2 := by
@@ -1064,6 +1077,72 @@ def gammaResidualBudgetTerm (m s : Nat) : ℚ :=
   ((1/2) * (146/125)^2 * (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ)
     + (3/4) * qTwo s * zetaMax^s / (s.factorial : ℚ)) / (m : ℚ)^2
 
+/-- Rational pointwise majorant for the extracted `Π_s` residual
+`π_s = Π_s - 1 - e₁(s)/m`, matching the paper's
+`1/2·(1.168e₁/m)^2·exp(0.2237s) + 3q₂/(4m²)` after the exponential is replaced
+by `(gammaTilt/zetaMax)^s`. -/
+def piResidualBridgeBound (m s : Nat) : ℚ :=
+  ((1/2) * (146/125)^2 * (eOne s)^2 * (gammaTilt / zetaMax)^s
+    + (3/4) * qTwo s) / (m : ℚ)^2
+
+theorem piResidualBridgeBound_nonneg (m s : Nat) :
+    0 ≤ piResidualBridgeBound m s := by
+  have htilt : 0 ≤ gammaTilt / zetaMax := by norm_num [gammaTilt, zetaMax]
+  have hq : 0 ≤ qTwo s := by
+    unfold qTwo
+    positivity
+  unfold piResidualBridgeBound
+  exact div_nonneg
+    (add_nonneg
+      (mul_nonneg
+        (mul_nonneg (by norm_num) (sq_nonneg (eOne s)))
+        (pow_nonneg htilt s))
+      (mul_nonneg (by norm_num) hq))
+    (sq_nonneg (m : ℚ))
+
+private theorem weighted_piResidualBridgeBound_eq_gammaResidualBudgetTerm
+    (m s : Nat) :
+    (zetaMax^s / (s.factorial : ℚ)) * piResidualBridgeBound m s
+      = gammaResidualBudgetTerm m s := by
+  unfold piResidualBridgeBound gammaResidualBudgetTerm
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) *
+        (((1/2) * (146/125)^2 * (eOne s)^2 * (gammaTilt / zetaMax)^s
+          + (3/4) * qTwo s) / (m : ℚ)^2)
+      =
+        ((1/2) * (146/125)^2 * (eOne s)^2 *
+          (zetaMax^s * (gammaTilt / zetaMax)^s) / (s.factorial : ℚ)
+          + (3/4) * qTwo s * zetaMax^s / (s.factorial : ℚ)) /
+            (m : ℚ)^2 := by
+          ring
+    _ =
+        ((1/2) * (146/125)^2 * (eOne s)^2 *
+          gammaTilt^s / (s.factorial : ℚ)
+          + (3/4) * qTwo s * zetaMax^s / (s.factorial : ℚ)) /
+            (m : ℚ)^2 := by
+          rw [zetaMax_pow_mul_tilt_pow]
+
+/-- Conditional P1 bridge: once the product/log estimate supplies the
+pointwise `π_s` majorant, the weighted term is exactly the P1 budget term. -/
+theorem weighted_piResidual_le_gammaResidualBudgetTerm
+    {m s : Nat} (hs : s < m)
+    (hpi : piResidual m s ≤ piResidualBridgeBound m s) :
+    (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+      ≤ gammaResidualBudgetTerm m s := by
+  have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+    have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+    positivity
+  have hpi_nonneg : 0 ≤ piResidual m s :=
+    piResidual_nonneg (m := m) (s := s) hs
+  calc
+    (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+      = (zetaMax^s / (s.factorial : ℚ)) * piResidual m s := by
+          rw [abs_of_nonneg hpi_nonneg]
+    _ ≤ (zetaMax^s / (s.factorial : ℚ)) * piResidualBridgeBound m s :=
+          mul_le_mul_of_nonneg_left hpi hweight
+    _ = gammaResidualBudgetTerm m s :=
+          weighted_piResidualBridgeBound_eq_gammaResidualBudgetTerm m s
+
 theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     ∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s
       ≤ 426 / (m : ℚ)^2 := by
@@ -1099,7 +1178,14 @@ theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
           field_simp [hmpos.ne']
           norm_num
 
-/-! ## P2: `d`-drift budget -/
+/-! ## P2: `d`-drift budget
+
+Formalization note: the paper records the sharper decimal drift constant
+`1.095` for `v_s = 1-D_s`.  The rational `d`-normalization currently proves
+the slightly coarser `28/25 = 1.12` near-range bound below.  The P4 numerical
+reserve has been recomputed with this coarser constant, so this is a deliberate
+Lean-vs-TeX constant degradation, not an extra assumption.
+-/
 
 theorem one_sub_DFactor_le_quadratic
     {m s : Nat} (hm : 1 ≤ m) (hs : 3*s ≤ m) :
@@ -2137,13 +2223,6 @@ theorem piUBridgeBound_nonneg {m s : Nat} (hm : 1 ≤ m) :
       (mul_nonneg (by norm_num) (eOne_nonneg s))
       (pow_nonneg htilt s))
     hmpos.le
-
-private theorem zetaMax_pow_mul_tilt_pow (s : Nat) :
-    zetaMax^s * (gammaTilt / zetaMax)^s = gammaTilt^s := by
-  rw [← mul_pow]
-  have hbase : zetaMax * (gammaTilt / zetaMax) = gammaTilt := by
-    norm_num [zetaMax, gammaTilt]
-  rw [hbase]
 
 private theorem weighted_piUBridgeBound_epsBound_eq_crossDominant
     (m s : Nat) :
