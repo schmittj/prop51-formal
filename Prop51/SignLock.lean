@@ -4407,9 +4407,9 @@ theorem signLock_near_error_budget_zetaMax
 /-! ## Far-tail allowance for `s > m/3` -/
 
 /-- Rational replacement for the paper's `exp(6.37)` in the far-tail saddle
-bound.  The eventual analytic bridge should prove
-`|E^-_p(N)| ≤ farTailExpUpper * (6m)^p` for `p ≤ 2m/3`; this file records
-the downstream algebra without using real exponentials. -/
+bound.  Lean proves the needed coefficient estimate below from the finite
+`expCoeff` recurrence, instead of appealing to the analytic saddle phrasing in
+the TeX file. -/
 def farTailExpUpper : ℚ := 600
 
 /-- The paper's `2.04` tail multiplier, kept as an exact rational. -/
@@ -4430,6 +4430,371 @@ def signLockFarTailScalar (N m : Nat) : ℚ :=
     * ((m : ℚ)^m / (((m-1).factorial : Nat) : ℚ))
     * farTailPoissonFactor
     * ((zetaQ N m)^(m/3 + 1) / (((m/3 + 1).factorial : Nat) : ℚ))
+
+/-- The finite factorial gas appearing in the far-tail coefficient recurrence:
+`k! / m^k`. -/
+def farTailFactorialGas (m k : Nat) : ℚ :=
+  (k.factorial : ℚ) / (m : ℚ)^k
+
+private theorem farTailFactorialGas_nonneg (m k : Nat) :
+    0 ≤ farTailFactorialGas m k := by
+  unfold farTailFactorialGas
+  positivity
+
+private theorem farTailFactorialGas_succ
+    {m k : Nat} (hm : 1 ≤ m) :
+    farTailFactorialGas m (k+1)
+      = farTailFactorialGas m k * (((k+1 : Nat) : ℚ) / (m : ℚ)) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  unfold farTailFactorialGas
+  rw [show ((k+1).factorial : ℚ)
+      = ((k+1 : Nat) : ℚ) * (k.factorial : ℚ) by
+        push_cast [Nat.factorial_succ]
+        ring]
+  rw [pow_succ]
+  field_simp [hmpos.ne']
+
+private theorem farTailFactorialGas_succ_le_two_thirds
+    {m p k : Nat} (hm : 1 ≤ m) (hpm : 3*p ≤ 2*m) (hk : k+1 ≤ p) :
+    farTailFactorialGas m (k+1)
+      ≤ farTailFactorialGas m k * (2/3) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hratio : (((k+1 : Nat) : ℚ) / (m : ℚ)) ≤ 2/3 := by
+    rw [div_le_iff₀ hmpos]
+    have hkq : ((k+1 : Nat) : ℚ) ≤ (p : ℚ) := by exact_mod_cast hk
+    have hpmq : (3 : ℚ) * (p : ℚ) ≤ 2 * (m : ℚ) := by exact_mod_cast hpm
+    nlinarith
+  rw [farTailFactorialGas_succ (m := m) (k := k) hm]
+  exact mul_le_mul_of_nonneg_left hratio (farTailFactorialGas_nonneg m k)
+
+private theorem farTail_geom_chain_bound_from (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat} (hstep : ∀ j, j + 1 < K → F (a+j+1) ≤ F (a+j) * q) :
+    ∀ j, j < K → F (a+j) ≤ F a * q^j := by
+  intro j hj
+  induction j with
+  | zero =>
+      simp
+  | succ j ih =>
+      calc F (a + (j+1))
+          = F (a+j+1) := by rw [Nat.add_assoc]
+        _ ≤ F (a+j) * q := hstep j hj
+        _ ≤ (F a * q^j) * q := by
+            exact mul_le_mul_of_nonneg_right (ih (Nat.lt_of_succ_lt hj)) hq0
+        _ = F a * q^(j+1) := by
+            rw [pow_succ]
+            ring
+
+private theorem farTail_geom_chain_sum_from_le (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat} (hstep : ∀ j, j + 1 < K → F (a+j+1) ≤ F (a+j) * q) :
+    ∑ j ∈ Finset.range K, F (a+j)
+      ≤ F a * ∑ j ∈ Finset.range K, q^j := by
+  calc ∑ j ∈ Finset.range K, F (a+j)
+      ≤ ∑ j ∈ Finset.range K, F a * q^j := by
+          refine Finset.sum_le_sum fun j hj => ?_
+          exact farTail_geom_chain_bound_from F hq0 hstep j (Finset.mem_range.mp hj)
+    _ = F a * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
+private theorem farTail_sum_Icc_eq_shift_from (F : Nat → ℚ) (a b : Nat) :
+    ∑ r ∈ Finset.Icc a b, F r = ∑ j ∈ Finset.range (b+1-a), F (a+j) := by
+  have hIccIco : Finset.Icc a b = Finset.Ico a (b+1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIccIco, Finset.sum_Ico_eq_sum_range]
+
+/-- The truncated factorial gas is controlled by the first term and a
+geometric ratio `≤ 2/3` throughout `p ≤ 2m/3`. -/
+theorem farTailFactorialGas_sum_le
+    {m p : Nat} (hm : 361 ≤ m) (hp : 2 ≤ p) (hpm : 3*p ≤ 2*m) :
+    ∑ k ∈ Finset.Icc 2 p, farTailFactorialGas m k
+      ≤ 6 / (m : ℚ)^2 := by
+  have hm1 : 1 ≤ m := by omega
+  rw [farTail_sum_Icc_eq_shift_from (fun k => farTailFactorialGas m k) 2 p]
+  have hgeom :
+      ∑ j ∈ Finset.range (p + 1 - 2), farTailFactorialGas m (2+j)
+        ≤ farTailFactorialGas m 2
+            * ∑ j ∈ Finset.range (p + 1 - 2), (2/3 : ℚ)^j := by
+    refine farTail_geom_chain_sum_from_le (fun k => farTailFactorialGas m k)
+      (by norm_num : (0 : ℚ) ≤ 2/3) ?_
+    intro j hj
+    exact farTailFactorialGas_succ_le_two_thirds
+      (m := m) (p := p) (k := 2+j) hm1 hpm (by omega)
+  calc
+    ∑ j ∈ Finset.range (p + 1 - 2), farTailFactorialGas m (2+j)
+      ≤ farTailFactorialGas m 2
+          * ∑ j ∈ Finset.range (p + 1 - 2), (2/3 : ℚ)^j := hgeom
+    _ ≤ farTailFactorialGas m 2 * (1 / (1 - (2/3 : ℚ))) := by
+          exact mul_le_mul_of_nonneg_left
+            (geom_sum_le_inv_one_sub (2/3) (by norm_num) (by norm_num) _)
+            (farTailFactorialGas_nonneg m 2)
+    _ = 6 / (m : ℚ)^2 := by
+          unfold farTailFactorialGas
+          norm_num
+          ring_nf
+
+private theorem farTail_recurrence_majorant_rewrite
+    {N m p k : Nat} (hm : 1 ≤ m) (hk : 1 ≤ k) (hkp : k ≤ p) :
+    (k : ℚ) * ((N : ℚ) * ((4/25) * ((6:ℚ)^k * ((k-1).factorial : ℚ)))) *
+        (farTailExpUpper * (6 * (m : ℚ))^(p-k))
+      =
+    farTailExpUpper * (6 * (m : ℚ))^p *
+      ((4 * (N : ℚ) / 25) * farTailFactorialGas m k) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hfac : (k : ℚ) * ((k-1).factorial : ℚ) = (k.factorial : ℚ) := by
+    exact_mod_cast (Nat.mul_factorial_pred (by omega : k ≠ 0))
+  have hp_decomp : p = (p-k) + k := by omega
+  have hpow6 : (6 : ℚ)^p = (6 : ℚ)^(p-k) * (6 : ℚ)^k := by
+    calc
+      (6 : ℚ)^p = (6 : ℚ)^((p-k)+k) :=
+        congrArg (fun n : Nat => (6 : ℚ)^n) hp_decomp
+      _ = (6 : ℚ)^(p-k) * (6 : ℚ)^k := by rw [pow_add]
+  have hpowm : (m : ℚ)^p = (m : ℚ)^(p-k) * (m : ℚ)^k := by
+    calc
+      (m : ℚ)^p = (m : ℚ)^((p-k)+k) :=
+        congrArg (fun n : Nat => (m : ℚ)^n) hp_decomp
+      _ = (m : ℚ)^(p-k) * (m : ℚ)^k := by rw [pow_add]
+  unfold farTailFactorialGas farTailExpUpper
+  rw [mul_pow]
+  conv_rhs => rw [mul_pow, hpow6, hpowm]
+  rw [show (k : ℚ) * ((N : ℚ) * ((4/25) *
+          ((6:ℚ)^k * ((k-1).factorial : ℚ)))) *
+        (600 * ((6:ℚ)^(p-k) * (m:ℚ)^(p-k)))
+      = 600 * (6:ℚ)^(p-k) * (6:ℚ)^k * (m:ℚ)^(p-k) *
+          ((4 * (N:ℚ) / 25) * ((k:ℚ) * ((k-1).factorial : ℚ))) by ring]
+  rw [hfac]
+  field_simp [hmpos.ne']
+
+private theorem farTailFactorialGas_weighted_sum_le
+    {N m p : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hp : 2 ≤ p) (hpm : 3*p ≤ 2*m) :
+    (4 * (N : ℚ) / 25) *
+        (∑ k ∈ Finset.Icc 2 p, farTailFactorialGas m k)
+      ≤ (p : ℚ) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hcoef_nonneg : 0 ≤ 4 * (N : ℚ) / 25 := by positivity
+  have hsum := farTailFactorialGas_sum_le (m := m) (p := p) hm hp hpm
+  calc
+    (4 * (N : ℚ) / 25) *
+        (∑ k ∈ Finset.Icc 2 p, farTailFactorialGas m k)
+      ≤ (4 * (N : ℚ) / 25) * (6 / (m : ℚ)^2) :=
+          mul_le_mul_of_nonneg_left hsum hcoef_nonneg
+    _ ≤ (p : ℚ) := by
+          have hNbound : 4 * (N : ℚ) / 25
+              ≤ (32/15) * (m : ℚ) := by
+            calc
+              4 * (N : ℚ) / 25 ≤ 4 * ((40/3) * (m : ℚ)) / 25 := by
+                exact div_le_div_of_nonneg_right
+                  (mul_le_mul_of_nonneg_left hN40 (by norm_num))
+                  (by norm_num)
+              _ = (32/15) * (m : ℚ) := by ring
+          have hp2q : (2 : ℚ) ≤ (p : ℚ) := by exact_mod_cast hp
+          have hm361 : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+          calc
+            (4 * (N : ℚ) / 25) * (6 / (m : ℚ)^2)
+              ≤ ((32/15) * (m : ℚ)) * (6 / (m : ℚ)^2) :=
+                mul_le_mul_of_nonneg_right hNbound
+                  (by positivity : (0 : ℚ) ≤ 6 / (m : ℚ)^2)
+            _ = 64 / (5 * (m : ℚ)) := by
+                field_simp [hmpos.ne']
+                ring
+            _ ≤ 2 := by
+                rw [div_le_iff₀ (by positivity : (0 : ℚ) < 5 * (m : ℚ))]
+                nlinarith
+            _ ≤ (p : ℚ) := hp2q
+
+private theorem farTail_range_if_gas_sum_eq (m p : Nat) (hp : 1 ≤ p) :
+    ∑ t ∈ Finset.range p,
+        (if t = 0 then 0 else farTailFactorialGas m (t+1))
+      = ∑ k ∈ Finset.Icc 2 p, farTailFactorialGas m k := by
+  rw [Finset.range_eq_Ico,
+    Finset.sum_eq_sum_Ico_succ_bot (by omega : 0 < p)]
+  simp only [↓reduceIte, zero_add]
+  rw [Finset.sum_Ico_eq_sum_range]
+  rw [farTail_sum_Icc_eq_shift_from (fun k => farTailFactorialGas m k) 2 p]
+  have hlen : p - 1 = p + 1 - 2 := by omega
+  rw [hlen]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  rw [if_neg (by omega : ¬ 1 + j = 0)]
+  ring_nf
+
+private theorem farTail_recurrence_abs_term_le
+    {N m p t : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) (ht0 : t ≠ 0) (htp : t < p)
+    (hprev :
+      |Eminus (N : ℚ) (p-(t+1))|
+        ≤ farTailExpUpper * (6 * (m : ℚ))^(p-(t+1))) :
+    |((t+1 : Nat) : ℚ) * (-(N : ℚ) * Hcoef (t+1)) *
+        Eminus (N : ℚ) (p-(t+1))|
+      ≤ farTailExpUpper * (6 * (m : ℚ))^p *
+          ((4 * (N : ℚ) / 25) * farTailFactorialGas m (t+1)) := by
+  have hk2 : 2 ≤ t+1 := by omega
+  have hk1 : 1 ≤ t+1 := by omega
+  have hkp : t+1 ≤ p := by omega
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hterm_abs :
+      |((t+1 : Nat) : ℚ) * (-(N : ℚ) * Hcoef (t+1)) *
+          Eminus (N : ℚ) (p-(t+1))|
+        =
+      ((t+1 : Nat) : ℚ) * ((N : ℚ) * c (t+1)) *
+          |Eminus (N : ℚ) (p-(t+1))| := by
+    rw [Hcoef_of_ge_two hk2]
+    rw [abs_mul, abs_mul, abs_mul, abs_neg,
+      abs_of_nonneg (by positivity : 0 ≤ (((t+1 : Nat) : ℚ))),
+      abs_of_nonneg hNpos.le,
+      abs_of_nonneg (c_nonneg (t+1))]
+  have hcub := c_ub (t+1) hk1
+  have hNc :
+      (N : ℚ) * c (t+1)
+        ≤ (N : ℚ) * ((4/25) * ((6:ℚ)^(t+1) * ((t+1-1).factorial : ℚ))) :=
+    mul_le_mul_of_nonneg_left hcub hNpos.le
+  rw [hterm_abs]
+  calc
+    ((t+1 : Nat) : ℚ) * ((N : ℚ) * c (t+1)) *
+        |Eminus (N : ℚ) (p-(t+1))|
+      = ((t+1 : Nat) : ℚ) *
+          (((N : ℚ) * c (t+1)) * |Eminus (N : ℚ) (p-(t+1))|) := by
+        ring
+    _ ≤ ((t+1 : Nat) : ℚ) *
+          (((N : ℚ) * ((4/25) * ((6:ℚ)^(t+1) * ((t+1-1).factorial : ℚ)))) *
+            (farTailExpUpper * (6 * (m : ℚ))^(p-(t+1)))) := by
+        exact mul_le_mul_of_nonneg_left
+          (mul_le_mul hNc hprev (abs_nonneg _)
+            (by positivity : 0 ≤
+              (N : ℚ) * ((4/25) * ((6:ℚ)^(t+1) * ((t+1-1).factorial : ℚ)))))
+          (by exact_mod_cast (Nat.zero_le (t+1)) : 0 ≤ (((t+1 : Nat) : ℚ)))
+    _ =
+      ((t+1 : Nat) : ℚ) *
+          ((N : ℚ) * ((4/25) * ((6:ℚ)^(t+1) * ((t+1-1).factorial : ℚ)))) *
+          (farTailExpUpper * (6 * (m : ℚ))^(p-(t+1))) := by
+        ring
+    _ = farTailExpUpper * (6 * (m : ℚ))^p *
+          ((4 * (N : ℚ) / 25) * farTailFactorialGas m (t+1)) := by
+        rw [show t+1-1 = t by omega]
+        exact farTail_recurrence_majorant_rewrite
+          (N := N) (m := m) (p := p) (k := t+1) hm hk1 hkp
+
+/-- Far-tail coefficient bound for the nonlinear exponential coefficients.
+
+This is the Lean recurrence version of the TeX saddle estimate
+`|E^-_p(N)| ≤ exp(6.37)(6m)^p`, with the rational replacement
+`exp(6.37) ≤ 600`.  It intentionally uses only the finite recurrence for
+`expCoeff`, so no analytic convergence statement for `H` is involved. -/
+theorem abs_Eminus_le_farTailExpUpper_mul
+    {N m p : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hpm : 3*p ≤ 2*m) :
+    |Eminus (N : ℚ) p| ≤ farTailExpUpper * (6 * (m : ℚ))^p := by
+  induction p using Nat.strong_induction_on with
+  | h p ih =>
+      match p with
+      | 0 =>
+          norm_num [Eminus, farTailExpUpper]
+      | 1 =>
+          have hE1 : Eminus (N : ℚ) 1 = 0 := by
+            unfold Eminus
+            have h := expCoeff_succ_mul (fun r => -(N : ℚ) * Hcoef r) 0
+            norm_num [Hcoef] at h
+            simpa [Hcoef] using h
+          rw [hE1]
+          norm_num [farTailExpUpper]
+      | n+2 =>
+          let P : Nat := n+2
+          let common : ℚ := farTailExpUpper * (6 * (m : ℚ))^P
+          have hm1 : 1 ≤ m := by omega
+          have hP2 : 2 ≤ P := by dsimp [P]; omega
+          have hPpm : 3*P ≤ 2*m := by simpa [P] using hpm
+          have hPpos : (0 : ℚ) < (P : ℚ) := by positivity
+          let L : Nat → ℚ := fun r => -(N : ℚ) * Hcoef r
+          have hrec :=
+            expCoeff_succ_mul L (n+1)
+          have hrecE :
+              (P : ℚ) * expCoeff L P =
+                ∑ t ∈ Finset.range P,
+                  ((t+1 : Nat) : ℚ) * L (t+1) *
+                    Eminus (N : ℚ) (P-(t+1)) := by
+            dsimp [P, L]
+            rw [hrec]
+            refine Finset.sum_congr rfl fun t ht => ?_
+            rw [show n + 1 - t = n + 2 - (t + 1) by omega]
+            rfl
+          have hsum_abs :
+              ∑ t ∈ Finset.range P,
+                  |((t+1 : Nat) : ℚ) * L (t+1) *
+                    Eminus (N : ℚ) (P-(t+1))|
+                ≤ common * ((4 * (N : ℚ) / 25) *
+                    ∑ k ∈ Finset.Icc 2 P, farTailFactorialGas m k) := by
+            calc
+              ∑ t ∈ Finset.range P,
+                  |((t+1 : Nat) : ℚ) * L (t+1) *
+                    Eminus (N : ℚ) (P-(t+1))|
+                ≤ ∑ t ∈ Finset.range P,
+                    common * ((4 * (N : ℚ) / 25) *
+                      (if t = 0 then 0 else farTailFactorialGas m (t+1))) := by
+                  refine Finset.sum_le_sum fun t ht => ?_
+                  have htp : t < P := Finset.mem_range.mp ht
+                  by_cases ht0 : t = 0
+                  · subst ht0
+                    dsimp [L]
+                    simp [Hcoef, common]
+                  · have hprev :
+                        |Eminus (N : ℚ) (P-(t+1))|
+                          ≤ farTailExpUpper * (6 * (m : ℚ))^(P-(t+1)) := by
+                        exact ih (P-(t+1)) (by omega)
+                          (by omega : 3 * (P - (t + 1)) ≤ 2 * m)
+                    have hterm := farTail_recurrence_abs_term_le
+                      (N := N) (m := m) (p := P) (t := t)
+                      hN hm1 ht0 htp hprev
+                    dsimp [L] at hterm ⊢
+                    rw [if_neg ht0]
+                    exact hterm
+              _ = common * ∑ t ∈ Finset.range P,
+                    ((4 * (N : ℚ) / 25) *
+                      (if t = 0 then 0 else farTailFactorialGas m (t+1))) := by
+                    rw [Finset.mul_sum]
+                _ = common * ((4 * (N : ℚ) / 25) *
+                      ∑ t ∈ Finset.range P,
+                        (if t = 0 then 0 else farTailFactorialGas m (t+1))) := by
+                    rw [show (∑ t ∈ Finset.range P,
+                        ((4 * (N : ℚ) / 25) *
+                          (if t = 0 then 0 else farTailFactorialGas m (t+1))))
+                        = (4 * (N : ℚ) / 25) *
+                            ∑ t ∈ Finset.range P,
+                              (if t = 0 then 0 else farTailFactorialGas m (t+1)) by
+                      rw [Finset.mul_sum]]
+              _ = common * ((4 * (N : ℚ) / 25) *
+                    ∑ k ∈ Finset.Icc 2 P, farTailFactorialGas m k) := by
+                    rw [farTail_range_if_gas_sum_eq m P (by omega : 1 ≤ P)]
+          have hweighted :
+              (4 * (N : ℚ) / 25) *
+                  (∑ k ∈ Finset.Icc 2 P, farTailFactorialGas m k)
+                ≤ (P : ℚ) :=
+            farTailFactorialGas_weighted_sum_le
+              (N := N) (m := m) (p := P) hN40 hm hP2 hPpm
+          have hcommon_nonneg : 0 ≤ common := by
+            dsimp [common, farTailExpUpper]
+            positivity
+          have hmul :
+              (P : ℚ) * |expCoeff L P| ≤ (P : ℚ) * common := by
+            calc
+              (P : ℚ) * |expCoeff L P|
+                = |(P : ℚ) * expCoeff L P| := by
+                    rw [abs_mul, abs_of_pos hPpos]
+              _ = |∑ t ∈ Finset.range P,
+                    ((t+1 : Nat) : ℚ) * L (t+1) *
+                      Eminus (N : ℚ) (P-(t+1))| := by
+                    rw [hrecE]
+              _ ≤ ∑ t ∈ Finset.range P,
+                    |((t+1 : Nat) : ℚ) * L (t+1) *
+                      Eminus (N : ℚ) (P-(t+1))| :=
+                    Finset.abs_sum_le_sum_abs _ _
+              _ ≤ common * ((4 * (N : ℚ) / 25) *
+                    ∑ k ∈ Finset.Icc 2 P, farTailFactorialGas m k) := hsum_abs
+              _ ≤ common * (P : ℚ) :=
+                    mul_le_mul_of_nonneg_left hweighted hcommon_nonneg
+              _ = (P : ℚ) * common := by ring
+          have hmain : |expCoeff L P| ≤ common :=
+            le_of_mul_le_mul_left hmul hPpos
+          simpa [Eminus, L, P, common] using hmain
 
 private theorem exp_tail_term_from_le (y : ℚ) (hy : 0 ≤ y) (L j : Nat)
     (hL : 1 ≤ L) :
@@ -4583,9 +4948,11 @@ private theorem farTail_summand_saddle_rewrite
   ring
 
 /-- Algebraic reduction of the omitted actual tail to the displayed
-saddle/Stirling scalar.  The only serious analytic input left explicit is the
-coefficient bound for `E^-_p` in the range `p ≤ 2m/3`; the Poisson tail and
-normalization by `c_m` are discharged here. -/
+saddle/Stirling scalar, conditional on the coefficient bound for `E^-_p` in
+the range `p ≤ 2m/3`.  The unconditional wrapper
+`signLockFarTail_le_saddleScalar` supplies this coefficient input from the
+finite recurrence proof above; this conditional theorem isolates the Poisson
+tail and normalization algebra. -/
 theorem signLockFarTail_le_saddleScalar_of_Eminus_bound
     {N m : Nat} (hN : 1 ≤ N)
     (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
@@ -4659,24 +5026,39 @@ theorem signLockFarTail_le_saddleScalar_of_Eminus_bound
     _ = K * ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
           (zetaQ N m)^s / (s.factorial : ℚ) := by
         rw [Finset.mul_sum]
-    _ ≤ K * (farTailPoissonFactor
-          * ((zetaQ N m)^(m/3 + 1)
-              / (((m/3 + 1).factorial : Nat) : ℚ))) :=
-        mul_le_mul_of_nonneg_left hpois hK_nonneg
-    _ = signLockFarTailScalar N m := by
-        unfold signLockFarTailScalar
-        dsimp [K]
-        ring
+      _ ≤ K * (farTailPoissonFactor
+            * ((zetaQ N m)^(m/3 + 1)
+                / (((m/3 + 1).factorial : Nat) : ℚ))) :=
+          by
+            exact mul_le_mul_of_nonneg_left hpois hK_nonneg
+      _ = signLockFarTailScalar N m := by
+          unfold signLockFarTailScalar
+          dsimp [K]
+          ring
+
+/-- Unconditional far-tail reduction to the displayed saddle/Stirling scalar.
+
+This is the formal replacement for the TeX sentence invoking the truncated
+saddle inequality for `E^-_p`: rather than evaluating an analytic truncation,
+Lean uses `abs_Eminus_le_farTailExpUpper_mul`, proved from the finite
+coefficient recurrence and the rational factorial-gas estimate. -/
+theorem signLockFarTail_le_saddleScalar
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    signLockFarTail N m ≤ signLockFarTailScalar N m :=
+  signLockFarTail_le_saddleScalar_of_Eminus_bound
+    (N := N) (m := m) hN hN40 hm
+    (fun p hp =>
+      abs_Eminus_le_farTailExpUpper_mul
+        (N := N) (m := m) (p := p) hN hN40 hm hp)
 
 theorem signLockFarTail_le_one_over_m_sq_of_saddleScalar
     {N m : Nat} (hN : 1 ≤ N)
     (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
-    (hE : ∀ p, 3*p ≤ 2*m →
-      |Eminus (N : ℚ) p| ≤ farTailExpUpper * (6 * (m : ℚ))^p)
     (hscalar : signLockFarTailScalar N m ≤ 1 / (m : ℚ)^2) :
     signLockFarTail N m ≤ 1 / (m : ℚ)^2 :=
-  (signLockFarTail_le_saddleScalar_of_Eminus_bound
-    (N := N) (m := m) hN hN40 hm hE).trans hscalar
+  (signLockFarTail_le_saddleScalar
+    (N := N) (m := m) hN hN40 hm).trans hscalar
 
 /-- Near-range `w_s` audit plus the separate far-tail allowance gives the
 paper's `2215/m²` error budget. -/
@@ -4693,9 +5075,25 @@ theorem signLock_error_budget_zetaMax_of_farTail
   calc
     (∑ s ∈ Finset.range (m/3 + 1),
         (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|)
+        + signLockFarTail N m
+        ≤ 2214 / (m : ℚ)^2 + 1 / (m : ℚ)^2 := by
+          exact add_le_add hnear hfar
+      _ = 2215 / (m : ℚ)^2 := by ring_nf
+
+/-- Near-range audit plus the proved far-tail reduction, leaving only the
+explicit saddle/Stirling scalar certificate. -/
+theorem signLock_error_budget_zetaMax_of_saddleScalar
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hscalar : signLockFarTailScalar N m ≤ 1 / (m : ℚ)^2) :
+    (∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|)
       + signLockFarTail N m
-      ≤ 2214 / (m : ℚ)^2 + 1 / (m : ℚ)^2 := add_le_add hnear hfar
-    _ = 2215 / (m : ℚ)^2 := by ring_nf
+      ≤ 2215 / (m : ℚ)^2 :=
+  signLock_error_budget_zetaMax_of_farTail
+    (N := N) (m := m) hN hN40 hm
+    (signLockFarTail_le_one_over_m_sq_of_saddleScalar
+      (N := N) (m := m) hN hN40 hm hscalar)
 
 /-! ## Final rational positivity margin -/
 

@@ -167,12 +167,12 @@ Status:
       recentering hypothesis is discharged and the actual near-range `w_s`
       audit is proved with budget `2214/m²`.  The far-tail work now has the
       exact omitted-tail definition, a rational proof of the finite Poisson
-      `2.04` first-omitted-term allowance, and the algebraic reduction from
-      the actual coefficient tail to the displayed saddle/Stirling scalar
-      under the explicit `|E^-_p| ≤ 600(6m)^p` hypothesis for `p ≤ 2m/3`.
-      The near audit plus any proved `1/m²` far-tail allowance is now also
-      assembled as a `2215/m²` error-budget wrapper.  Remaining: prove that
-      saddle coefficient hypothesis and certify the resulting scalar is at
+      `2.04` first-omitted-term allowance, the finite-recurrence replacement
+      for the TeX truncated saddle estimate `|E^-_p| ≤ 600(6m)^p` for
+      `p ≤ 2m/3`, and the algebraic reduction from the actual coefficient
+      tail to the displayed saddle/Stirling scalar.  The near audit plus any
+      proved `1/m²` far-tail allowance is now also assembled as a `2215/m²`
+      error-budget wrapper.  Remaining: certify the resulting scalar is at
       most `1/m²`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
