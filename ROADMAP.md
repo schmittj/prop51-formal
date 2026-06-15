@@ -133,8 +133,11 @@ Status:
       majorant, a pointwise `89/m²` cap, and weighted budget `573/m²`.
       P1 now has the higher Poisson moment machinery and the weighted
       `426/m²` numerical majorant budget for the explicit gamma-residual
-      terms.  Remaining: connect the `PiFactor` product residual to that
-      P1 majorant, close P4, and tails.
+      terms.  P4 now has the dominant cross-term numerical reserve, including
+      the `3/2·m⁻²` allowance for smaller pieces, within the `784/m²` budget.
+      Remaining: connect the `PiFactor` product residual to the P1 majorant,
+      bridge the P4 product-residual cross terms to this numerical reserve,
+      and close the residual near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
