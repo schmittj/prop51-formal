@@ -439,6 +439,59 @@ theorem positiveEdgeMajorantSum_nonneg {a : Nat}
   exact Finset.sum_nonneg fun k hk =>
     positiveEdgeMajorantTerm_nonneg ha401 ha2000 hk
 
+/-! ## Reducer from pointwise saddle estimates to the corrected edge scan -/
+
+theorem positiveSmallMajorantTerm_le_edge {a k : Nat}
+    (hk : k ≤ posSmallCutoff a) :
+    positiveSmallMajorantTerm a k ≤ positiveEdgeMajorantTerm a k := by
+  unfold positiveEdgeMajorantTerm
+  rw [if_pos hk]
+  exact le_max_left _ _
+
+theorem positiveTemperedMajorantTerm_le_edge {a k : Nat}
+    (hk : posTemperedCutoff a < k) :
+    positiveTemperedMajorantTerm a k ≤ positiveEdgeMajorantTerm a k := by
+  unfold positiveEdgeMajorantTerm
+  rw [if_pos hk]
+  exact le_max_right _ _
+
+/-- Core corrected-edge reducer.  Later analytic work only needs to prove the
+two pointwise saddle estimates at the actual `N`: the small estimate below
+`ceilSqrt N`, and the tempered estimate above it.  The theorem transports
+those estimates to the two-edge `max` used by the executable finite scan. -/
+theorem term_le_positiveEdgeMajorantTerm_of_regime_bounds {a N k : Nat}
+    {T : ℚ} (hrect : positiveRectangle a N)
+    (hsmall : k ≤ ceilSqrt N → T ≤ positiveSmallMajorantTerm a k)
+    (htempered : ceilSqrt N < k → T ≤ positiveTemperedMajorantTerm a k) :
+    T ≤ positiveEdgeMajorantTerm a k := by
+  rcases le_or_gt k (ceilSqrt N) with hkSmall | hkTemp
+  · exact (hsmall hkSmall).trans
+      (positiveSmallMajorantTerm_le_edge
+        (smallRegime_of_rectangle hrect hkSmall))
+  · exact (htempered hkTemp).trans
+      (positiveTemperedMajorantTerm_le_edge
+        (temperedRegime_of_rectangle hrect hkTemp))
+
+theorem sum_le_positiveEdgeMajorantSum {a : Nat} {F : Nat → ℚ}
+    (hF : ∀ k, k ∈ positiveKRange a → F k ≤ positiveEdgeMajorantTerm a k) :
+    (∑ k ∈ positiveKRange a, F k) ≤ positiveEdgeMajorantSum a := by
+  unfold positiveEdgeMajorantSum
+  exact Finset.sum_le_sum hF
+
+/-- Summed form of `term_le_positiveEdgeMajorantTerm_of_regime_bounds`. -/
+theorem sum_le_positiveEdgeMajorantSum_of_regime_bounds {a N : Nat}
+    {F : Nat → ℚ} (hrect : positiveRectangle a N)
+    (hFsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N → F k ≤ positiveSmallMajorantTerm a k)
+    (hFtempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k → F k ≤ positiveTemperedMajorantTerm a k) :
+    (∑ k ∈ positiveKRange a, F k) ≤ positiveEdgeMajorantSum a :=
+  sum_le_positiveEdgeMajorantSum fun k hk =>
+    term_le_positiveEdgeMajorantTerm_of_regime_bounds hrect
+      (hFsmall k hk) (hFtempered k hk)
+
 /-! ## Numerical anchors for the first post-certificate row -/
 
 theorem posNlo_401 : posNlo 401 = 2399 := by
