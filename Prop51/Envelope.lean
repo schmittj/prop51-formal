@@ -196,6 +196,42 @@ theorem DeltaRatTerm_shifted_sum_le_inv_one_sub (p K : Nat) {N q : ℚ}
       (geom_sum_le_inv_one_sub q hq0 hq1 K)
       (DeltaRatTerm_nonneg p 2 hN))
 
+private theorem sum_Icc_two_eq_shift (F : Nat → ℚ) (M : Nat) (hM : 2 ≤ M) :
+    ∑ r ∈ Finset.Icc 2 M, F r = ∑ j ∈ Finset.range (M-1), F (j+2) := by
+  have hIccIco : Finset.Icc 2 M = Finset.Ico 2 (M+1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIccIco, Finset.sum_Ico_eq_sum_range,
+      show M + 1 - 2 = M - 1 by omega]
+  apply Finset.sum_congr rfl
+  intro j _hj
+  rw [Nat.add_comm]
+
+/-- `Icc 2 M` version of the finite near-range geometric bound. -/
+theorem DeltaRatTerm_Icc_sum_le_geom (p M : Nat) {N q : ℚ}
+    (hM : 2 ≤ M) (hN : 0 ≤ N) (hq0 : 0 ≤ q)
+    (hratio : ∀ r, 2 ≤ r → r < M → DeltaRatStepRatioBound p N r ≤ q)
+    (hpstep : ∀ r, 2 ≤ r → r < M → 2*(r+1) ≤ p) :
+    ∑ r ∈ Finset.Icc 2 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 2 * ∑ j ∈ Finset.range (M-1), q^j := by
+  rw [sum_Icc_two_eq_shift (fun r => DeltaRatTerm p N r) M hM]
+  exact DeltaRatTerm_shifted_sum_le_geom p (M-1) hN hq0
+    (fun j hj => hratio (j+2) (by omega) (by omega))
+    (fun j hj => hpstep (j+2) (by omega) (by omega))
+
+/-- Infinite-tail `Icc 2 M` version of the near-range geometric bound. -/
+theorem DeltaRatTerm_Icc_sum_le_inv_one_sub (p M : Nat) {N q : ℚ}
+    (hM : 2 ≤ M) (hN : 0 ≤ N) (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hratio : ∀ r, 2 ≤ r → r < M → DeltaRatStepRatioBound p N r ≤ q)
+    (hpstep : ∀ r, 2 ≤ r → r < M → 2*(r+1) ≤ p) :
+    ∑ r ∈ Finset.Icc 2 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 2 * (1/(1-q)) := by
+  rw [sum_Icc_two_eq_shift (fun r => DeltaRatTerm p N r) M hM]
+  exact DeltaRatTerm_shifted_sum_le_inv_one_sub p (M-1) hN hq0 hq1
+    (fun j hj => hratio (j+2) (by omega) (by omega))
+    (fun j hj => hpstep (j+2) (by omega) (by omega))
+
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
 theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)
