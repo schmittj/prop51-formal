@@ -160,13 +160,13 @@ Status:
       middle two-block normalized contribution plus the `r ≥ 3` tail.  The
       middle two-block absolute-value bridge to the P3b majorant is now
       proved, and the exact `r ≥ 3` tail is reduced to a rationalized
-      Δ-tail sum.  The near part of that Δ-tail is now controlled by a
-      `27/25` geometric multiplier from the `r=3` term, leaving the exact
-      reserve inequality `DeltaRatFar ≤ (4/575)·DeltaRatTerm₃` as the only
-      remaining P3c comparison needed for
-      `threeBlockDeltaTail ≤ threeBlockTailBound`.  Remaining: prove that
-      far-reserve comparison, discharge the conditional recentering
-      hypothesis, then add the `1/m²` far-tail allowance.
+      Δ-tail sum.  The P3c comparison is now closed: the near part of that
+      Δ-tail is controlled by a `27/25` geometric multiplier from the `r=3`
+      term, and the far slice is bounded by the exact reserve
+      `DeltaRatFar ≤ (4/575)·DeltaRatTerm₃`.  Consequently the nonlinear
+      recentering hypothesis is discharged and the actual near-range `w_s`
+      audit is proved with budget `2214/m²`.  Remaining: add the separate
+      `1/m²` sign-lock far-tail allowance.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.

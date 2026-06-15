@@ -2982,6 +2982,238 @@ theorem threeBlockDeltaTail_le_threeBlockTailBound_of_farReserve
             add_le_add hnear hfar
     _ = DeltaRatTerm p (N : ℚ) 3 * (25/23) := by ring
 
+private theorem DeltaRatFarTermBound_61_le_inv_fourth :
+    DeltaRatFarTermBound 61 ≤ 1 / (10^10 * (61:ℚ)^4) := by
+  have h61 : ((25*(61:ℚ))/68)^61 ≤ ((61).factorial : ℚ) := factorial_lb 61
+  have h121 : ((25*(121:ℚ))/68)^121 ≤ ((121).factorial : ℚ) := factorial_lb 121
+  have hden_lb :
+      ((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121
+        ≤ ((61).factorial : ℚ) * ((121).factorial : ℚ) := by
+    exact mul_le_mul h61 h121 (by positivity) (by positivity)
+  have hden_pos :
+      (0:ℚ) < ((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121 := by
+    positivity
+  have hnum_nonneg :
+      0 ≤ (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60 := by
+    positivity
+  unfold DeltaRatFarTermBound
+  change (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+      / (((61).factorial : ℚ) * ((121).factorial : ℚ))
+    ≤ 1 / (10^10 * (61:ℚ)^4)
+  calc
+    (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+        / (((61).factorial : ℚ) * ((121).factorial : ℚ))
+        ≤ (9/5:ℚ) * (16/25)^61 * (80*(61:ℚ))^60
+            / (((25*(61:ℚ))/68)^61 * ((25*(121:ℚ))/68)^121) := by
+          exact div_le_div_of_nonneg_left hnum_nonneg hden_pos hden_lb
+    _ ≤ 1 / (10^10 * (61:ℚ)^4) := by norm_num
+
+theorem DeltaRatFarTermBound_le_inv_fourth (r : Nat) (hr : 61 ≤ r) :
+    DeltaRatFarTermBound r ≤ 1 / (10^10 * (r:ℚ)^4) := by
+  suffices h : ∀ k : Nat,
+      DeltaRatFarTermBound (61+k)
+        ≤ 1 / (10^10 * ((61+k : Nat) : ℚ)^4) by
+    obtain ⟨k, rfl⟩ : ∃ k, r = 61 + k := ⟨r - 61, by omega⟩
+    exact h k
+  intro k
+  induction k with
+  | zero =>
+      simpa using DeltaRatFarTermBound_61_le_inv_fourth
+  | succ k ih =>
+      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 61 ≤ 61+k)
+      have hden₁ : (0:ℚ) < 10^10 * ((61+k : Nat) : ℚ)^4 := by positivity
+      have hden₂ : (0:ℚ) < 10^10 * ((61+(k+1) : Nat) : ℚ)^4 := by positivity
+      calc
+        DeltaRatFarTermBound (61 + (k+1))
+            = DeltaRatFarTermBound ((61+k)+1) := by rw [Nat.add_assoc]
+        _ ≤ DeltaRatFarTermBound (61+k) * (1/2) := hstep
+        _ ≤ (1 / (10^10 * ((61+k : Nat) : ℚ)^4)) * (1/2) := by
+              exact mul_le_mul_of_nonneg_right ih (by norm_num)
+        _ ≤ 1 / (10^10 * ((61+(k+1) : Nat) : ℚ)^4) := by
+              field_simp [ne_of_gt hden₁, ne_of_gt hden₂]
+              norm_num
+              have hk0 : (0:ℚ) ≤ k := by exact_mod_cast Nat.zero_le k
+              have hratio :
+                  (((61+(k+1) : Nat) : ℚ))
+                    ≤ (62/61) * (((61+k : Nat) : ℚ)) := by
+                field_simp
+                norm_num
+                nlinarith
+              have hpow := pow_le_pow_left₀
+                (by positivity : (0:ℚ) ≤ (((61+(k+1) : Nat) : ℚ))) hratio 4
+              have hconst : (62/61 : ℚ)^4 ≤ 2 := by norm_num
+              have hpow2 :
+                  (((61+(k+1 : Nat) : Nat) : ℚ))^4
+                    ≤ 2 * (((61+k : Nat) : ℚ))^4 := by
+                calc
+                  (((61+(k+1 : Nat) : Nat) : ℚ))^4
+                    ≤ ((62/61 : ℚ) * (((61+k : Nat) : ℚ)))^4 := hpow
+                  _ = (62/61 : ℚ)^4 * (((61+k : Nat) : ℚ))^4 := by
+                      rw [mul_pow]
+                  _ ≤ 2 * (((61+k : Nat) : ℚ))^4 := by
+                      exact mul_le_mul_of_nonneg_right hconst (by positivity)
+              have hpow2' :
+                  (61 + ((k : ℚ) + 1))^4 ≤ (61 + (k : ℚ))^4 * 2 := by
+                norm_num at hpow2 ⊢
+                simpa [mul_comm, add_comm, add_left_comm, add_assoc] using hpow2
+              linarith
+
+private theorem near_denominator_four_le_start_fourth {p : Nat} (hp : 5 ≤ p) :
+    (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+        * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ))
+      ≤ 256 * (((p/4 + 1 : Nat) : ℚ)^4) := by
+  let a : Nat := p/4 + 1
+  have hpaNat : p ≤ 4 * a := by
+    unfold a
+    omega
+  have hpa : (p : ℚ) ≤ 4 * (a : ℚ) := by exact_mod_cast hpaNat
+  have hp_nonneg : (0 : ℚ) ≤ p := by positivity
+  have ha_nonneg : (0 : ℚ) ≤ a := by positivity
+  have hp1le : (((p-1 : Nat) : ℚ)) ≤ (p : ℚ) := by
+    exact_mod_cast Nat.sub_le p 1
+  have hp2le : (((p-2 : Nat) : ℚ)) ≤ (p : ℚ) := by
+    exact_mod_cast Nat.sub_le p 2
+  have hp3le : (((p-3 : Nat) : ℚ)) ≤ (p : ℚ) := by
+    exact_mod_cast Nat.sub_le p 3
+  have hp4le : (((p-4 : Nat) : ℚ)) ≤ (p : ℚ) := by
+    exact_mod_cast Nat.sub_le p 4
+  have hp1_nonneg : (0 : ℚ) ≤ (((p-1 : Nat) : ℚ)) := by positivity
+  have hp2_nonneg : (0 : ℚ) ≤ (((p-2 : Nat) : ℚ)) := by positivity
+  have hp3_nonneg : (0 : ℚ) ≤ (((p-3 : Nat) : ℚ)) := by positivity
+  have hp4_nonneg : (0 : ℚ) ≤ (((p-4 : Nat) : ℚ)) := by positivity
+  have h12 :
+      (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ)) ≤ (p : ℚ) * (p : ℚ) :=
+    mul_le_mul hp1le hp2le hp2_nonneg hp_nonneg
+  have h123 :
+      (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+          * (((p-3 : Nat) : ℚ)) ≤ (p : ℚ)^3 := by
+    have hmul := mul_le_mul h12 hp3le hp3_nonneg
+      (mul_nonneg hp_nonneg hp_nonneg)
+    nlinarith
+  have h1234 :
+      (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+          * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)) ≤ (p : ℚ)^4 := by
+    have hmul := mul_le_mul h123 hp4le hp4_nonneg (by positivity : 0 ≤ (p : ℚ)^3)
+    nlinarith
+  have hp4a : (p : ℚ)^4 ≤ (4 * (a : ℚ))^4 :=
+    pow_le_pow_left₀ hp_nonneg hpa 4
+  calc
+    (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+        * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ))
+      ≤ (p : ℚ)^4 := h1234
+    _ ≤ (4 * (a : ℚ))^4 := hp4a
+    _ = 256 * ((a : ℚ)^4) := by ring
+
+theorem DeltaRatFar_le_delta_three_reserve
+    {N p : Nat} (hN : 1 ≤ N) (hN20 : (N : ℚ) ≤ 20 * (p : ℚ)) (hp : 241 ≤ p) :
+    DeltaRatFar p (N : ℚ) ≤ DeltaRatTerm p (N : ℚ) 3 * (4/575) := by
+  let a : Nat := p/4 + 1
+  have hfar := DeltaRatFar_le_two_first
+    (p := p) (N := (N : ℚ)) (by positivity : (0 : ℚ) ≤ (N : ℚ))
+    hN20 (by omega : 240 ≤ p)
+  have hfirst := DeltaRatFarTermBound_le_inv_fourth a (by
+    unfold a
+    omega)
+  have hfirst2 :
+      2 * DeltaRatFarTermBound a ≤ 2 / (10^10 * (a : ℚ)^4) := by
+    calc
+      2 * DeltaRatFarTermBound a
+        ≤ 2 * (1 / (10^10 * (a : ℚ)^4)) := by
+            exact mul_le_mul_of_nonneg_left hfirst (by norm_num)
+      _ = 2 / (10^10 * (a : ℚ)^4) := by ring
+  have hdenprod :=
+    near_denominator_four_le_start_fourth (p := p) (by omega : 5 ≤ p)
+  have hNsq : (1 : ℚ) ≤ (N : ℚ)^2 := by
+    have hNQ : (1 : ℚ) ≤ N := by exact_mod_cast hN
+    nlinarith
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    unfold a
+    positivity
+  have hden_pos :
+      (0 : ℚ) <
+        (((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+          * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)) := by
+    have hp1 : (0 : ℚ) < (((p-1 : Nat) : ℚ)) := by exact_mod_cast (by omega : 0 < p-1)
+    have hp2 : (0 : ℚ) < (((p-2 : Nat) : ℚ)) := by exact_mod_cast (by omega : 0 < p-2)
+    have hp3 : (0 : ℚ) < (((p-3 : Nat) : ℚ)) := by exact_mod_cast (by omega : 0 < p-3)
+    have hp4 : (0 : ℚ) < (((p-4 : Nat) : ℚ)) := by exact_mod_cast (by omega : 0 < p-4)
+    positivity
+  have hscaled :
+      2 / (10^10 * (a : ℚ)^4)
+        ≤ ((6144/78125) * (N : ℚ)^2 /
+              ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+                * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)))) * (4/575) := by
+    have hconst :
+        (2 : ℚ) / 10^10 ≤ ((6144/78125) * (4/575)) / 256 := by
+      norm_num
+    have ha4_pos : (0 : ℚ) < (a : ℚ)^4 := by positivity
+    have hstep1 :
+        2 / (10^10 * (a : ℚ)^4)
+          ≤ (((6144/78125) * (4/575)) / 256) / ((a : ℚ)^4) := by
+      field_simp [ha4_pos.ne']
+      nlinarith
+    have hstep2 :
+        (((6144/78125) * (4/575)) / 256) / ((a : ℚ)^4)
+          =
+        ((6144/78125) * (4/575)) / (256 * (a : ℚ)^4) := by ring
+    have hnum_nonneg : 0 ≤ (6144/78125 : ℚ) * (4/575) * (N : ℚ)^2 := by positivity
+    calc
+      2 / (10^10 * (a : ℚ)^4)
+        ≤ (((6144/78125) * (4/575)) / 256) / ((a : ℚ)^4) := hstep1
+      _ = ((6144/78125) * (4/575)) / (256 * (a : ℚ)^4) := hstep2
+      _ ≤ ((6144/78125) * (4/575) * (N : ℚ)^2)
+            / (256 * (a : ℚ)^4) := by
+            have hcoef_nonneg : 0 ≤ (6144/78125 : ℚ) * (4/575) := by norm_num
+            have hnum_le :
+                (6144/78125 : ℚ) * (4/575)
+                  ≤ (6144/78125 : ℚ) * (4/575) * (N : ℚ)^2 := by
+              simpa [mul_one] using
+                (mul_le_mul_of_nonneg_left hNsq hcoef_nonneg)
+            exact div_le_div_of_nonneg_right
+              hnum_le
+              (mul_pos (by norm_num) ha4_pos).le
+      _ ≤ ((6144/78125) * (4/575) * (N : ℚ)^2)
+            / ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+                * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ))) := by
+            exact div_le_div_of_nonneg_left hnum_nonneg hden_pos
+              (by simpa [a] using hdenprod)
+      _ = ((6144/78125) * (N : ℚ)^2 /
+              ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+                * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)))) * (4/575) := by
+            ring
+  calc
+    DeltaRatFar p (N : ℚ)
+      ≤ 2 * DeltaRatFarTermBound a := by
+          simpa [a] using hfar
+    _ ≤ 2 / (10^10 * (a : ℚ)^4) := hfirst2
+    _ ≤ DeltaRatTerm p (N : ℚ) 3 * (4/575) := by
+          rw [DeltaRatTerm_three_eq_tailBase p (N : ℚ) (by omega : 6 ≤ p)]
+          exact hscaled
+
+theorem threeBlockDeltaTail_le_threeBlockTailBound
+    {N p : Nat} (hN : 1 ≤ N) (hN20 : (N : ℚ) ≤ 20 * (p : ℚ)) (hp : 241 ≤ p) :
+    threeBlockDeltaTail N p ≤ threeBlockTailBound N p :=
+  threeBlockDeltaTail_le_threeBlockTailBound_of_farReserve
+    (N := N) (p := p) hN20 hp
+    (DeltaRatFar_le_delta_three_reserve
+      (N := N) (p := p) hN hN20 hp)
+
+theorem threeBlockDeltaTail_le_threeBlockTailBound_near
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    threeBlockDeltaTail N (m-s) ≤ threeBlockTailBound N (m-s) := by
+  have hp : 241 ≤ m-s := by omega
+  have hN20 : (N : ℚ) ≤ 20 * ((m-s : Nat) : ℚ) := by
+    have hp_lower0 := near_p_lower (m := m) (s := s) hs
+    have hp_lower : (2/3) * (m : ℚ) ≤ ((m-s : Nat) : ℚ) := by
+      nlinarith
+    have hscale : (40/3) * (m : ℚ) ≤ 20 * ((m-s : Nat) : ℚ) := by
+      nlinarith
+    exact hN40.trans hscale
+  exact threeBlockDeltaTail_le_threeBlockTailBound
+    (N := N) (p := m-s) hN hN20 hp
+
 /-- Tail bridge reduced to a pure rationalized-Δ estimate. -/
 theorem abs_threeBlockExactTail_le_threeBlockTailBound_of_DeltaTail
     {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p)
@@ -4134,6 +4366,24 @@ theorem signLock_near_error_budget_zetaMax_of_threeBlockDeltaTail
     exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
   exact abs_threeBlockExactTail_le_threeBlockTailBound_of_DeltaTail
     (N := N) (p := m-s) hN (by omega : 5 ≤ m-s) (hdelta s hs)
+
+/-- Closed near-range audit for the actual `w_s` errors: the exact
+nonlinear recentering bridge is fully discharged through the P3b/P3c
+majorants. -/
+theorem signLock_near_error_budget_zetaMax
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+      ≤ 2214 / (m : ℚ)^2 := by
+  refine signLock_near_error_budget_zetaMax_of_threeBlockDeltaTail
+    (N := N) (m := m) hN hN40 hm ?_
+  intro s hs
+  have hs3 : 3*s ≤ m := by
+    have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+    exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+  exact threeBlockDeltaTail_le_threeBlockTailBound_near
+    (N := N) (m := m) (s := s) hN hN40 hm hs3
 
 /-! ## Final rational positivity margin -/
 
