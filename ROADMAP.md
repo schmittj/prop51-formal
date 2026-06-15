@@ -140,10 +140,12 @@ Status:
       smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s` pieces are expanded
       explicitly inside the `3/2·m⁻²` allowance, giving the `784/m²` budget;
       the abstract product-cross inequality has also been bridged to those
-      four weighted P4 budget terms.
+      four weighted P4 budget terms.  The formalized near-range `d`-drift
+      gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
+      `v_s|ε_p|` bridge input is closed.
       Remaining: connect the `PiFactor` product residual to the P1 majorant,
-      prove the pointwise `u_s`/`v_s` estimates that feed the P4 bridge, and
-      close the residual near/far tails.
+      prove the pointwise `u_s` estimate that feeds the remaining P4 bridge
+      inputs, and close the residual near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
