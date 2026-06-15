@@ -376,6 +376,22 @@ theorem poissonSecond_sum_le_partialExpUpper
 /-- The endpoint `ζ` used throughout §5. -/
 def zetaMax : ℚ := 50/27
 
+theorem poissonZero_sum_le_partialExpUpper
+    (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    ∑ s ∈ Finset.range T, y^s / (s.factorial : ℚ)
+      ≤ partialExpUpper y T₀ :=
+  sum_exp_le y T₀ hy hyT T
+
+theorem poissonZero_zetaMax_le (T : Nat) :
+    ∑ s ∈ Finset.range T, zetaMax^s / (s.factorial : ℚ) ≤ 32/5 := by
+  calc
+    ∑ s ∈ Finset.range T, zetaMax^s / (s.factorial : ℚ)
+        ≤ partialExpUpper zetaMax 18 :=
+          poissonZero_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 32/5 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
 theorem poissonFirst_zetaMax_le (T : Nat) :
     ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ) ≤ 12 := by
   calc
@@ -384,6 +400,16 @@ theorem poissonFirst_zetaMax_le (T : Nat) :
           poissonFirst_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
             (by norm_num [zetaMax])
     _ ≤ 12 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonFirst_zetaMax_le_sharp (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ) ≤ 59/5 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ)
+        ≤ zetaMax * partialExpUpper zetaMax 18 :=
+          poissonFirst_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 59/5 := by
           norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
 
 theorem poissonSecond_zetaMax_le (T : Nat) :
@@ -506,6 +532,59 @@ theorem signLock_P2_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
           have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
           field_simp [hmpos.ne']
           nlinarith
+
+/-! ## P3a: leading two-block recentering -/
+
+/-- The endpoint part of the two-block nonlinear correction:
+`5N/(36(p-1)(p-2)) * d_{p-2}/d_p`. -/
+def twoEndpointCorrection (N p : Nat) : ℚ :=
+  (5 * (N : ℚ)) / (36 * (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+    * DFactor p 2
+
+/-- The extracted recentring term `5N/(36m²) = ζ/m`. -/
+def twoEndpointTarget (N m : Nat) : ℚ :=
+  (5 * (N : ℚ)) / (36 * (m : ℚ)^2)
+
+theorem DFactor_nonneg (m s : Nat) : 0 ≤ DFactor m s := by
+  unfold DFactor
+  exact div_nonneg (d_nonneg (m-s)) (d_nonneg m)
+
+theorem DFactor_le_one {m s : Nat} (hm : 1 ≤ m) :
+    DFactor m s ≤ 1 := by
+  have hdm : 0 < d m := d_pos m hm
+  unfold DFactor
+  rw [div_le_one₀ hdm]
+  exact d_mono (Nat.sub_le m s)
+
+theorem one_sub_DFactor_two_le {p : Nat} (hp : 3 ≤ p) :
+    1 - DFactor p 2
+      ≤ (2304/3125) * (2 / ((p : ℚ) * ((p-2 : Nat) : ℚ))) := by
+  have hratio := d_ratio_lb p 2 (by omega : 2 < p)
+  unfold DFactor
+  linarith
+
+private theorem abs_scaled_ratio_sub_le
+    {C A M D : ℚ} (hC : 0 ≤ C) (hA : 0 < A) (hM : 0 < M)
+    (hD1 : D ≤ 1) (hAM : A ≤ M) :
+    |C * (D / A - 1 / M)|
+      ≤ C * ((1 - D) / A + (M - A) / (A * M)) := by
+  rw [abs_mul, abs_of_nonneg hC]
+  apply mul_le_mul_of_nonneg_left ?_ hC
+  calc
+    |D / A - 1 / M|
+        = |(D / A - 1 / A) + (1 / A - 1 / M)| := by
+            congr 1
+            ring
+    _ ≤ |D / A - 1 / A| + |1 / A - 1 / M| := abs_add_le _ _
+    _ = (1 - D) / A + (M - A) / (A * M) := by
+        have h1D : 0 ≤ 1 - D := by linarith
+        have hMA : 0 ≤ M - A := by linarith
+        have hAMpos : 0 < A * M := mul_pos hA hM
+        rw [show D / A - 1 / A = -((1 - D) / A) by ring]
+        rw [abs_neg, abs_of_nonneg (div_nonneg h1D hA.le)]
+        rw [show 1 / A - 1 / M = (M - A) / (A * M) by
+          field_simp [hA.ne', hM.ne']]
+        rw [abs_of_nonneg (div_nonneg hMA hAMpos.le)]
 
 /-! ## Final rational positivity margin -/
 
