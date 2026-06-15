@@ -40,12 +40,13 @@ mathematical argument.
    `exp(0.2237s)`.  The Lean development remains in `ℚ`, using
    `(gammaTilt/zetaMax)^s` as a rational surrogate and the identity
    `zetaMax^s(gammaTilt/zetaMax)^s = gammaTilt^s` in weighted sums.
-   The remaining pointwise product/log estimates should either prove this
-   rational surrogate directly or introduce a small documented real-analysis
-   bridge.
+   The pointwise product/log estimates now introduce a small documented
+   real-analysis bridge: Lean proves `log Π_s ≤ L_s`, certifies
+   `exp(0.2237) ≤ gammaTilt/zetaMax` by Taylor remainder arithmetic, and then
+   converts back to the rational weighted budgets.
 
-3. **§5 P1/P4 bridge structure.**  Lean currently packages the budget algebra
-   as conditional bridge lemmas from the pointwise `Π_s` estimates
-   (`piResidualBridgeBound` for P1 and `piUBridgeBound` for P4).  This matches
-   the TeX proof strategy but makes explicit that the remaining kernel-level
-   work is the product/log estimate for `Π_s`, not the Poisson budget algebra.
+3. **§5 P1/P4 bridge structure.**  Lean packages the budget algebra through
+   named bridge lemmas (`piResidualBridgeBound` for P1 and `piUBridgeBound`
+   for P4), with closed near-range wrappers from the product/log estimate.
+   This matches the TeX proof strategy while keeping the Poisson budget
+   algebra separate from the analytic product estimate.

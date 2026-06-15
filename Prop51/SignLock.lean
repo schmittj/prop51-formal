@@ -12,6 +12,7 @@ The later error-budget files can estimate this finite decomposition without
 re-proving power-series algebra.
 -/
 
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Prop51.Envelope
 
 namespace Prop51
@@ -53,6 +54,132 @@ def piResidual (m s : Nat) : ℚ := PiFactor m s - 1 - eOne s / (m : ℚ)
 theorem eOne_nonneg (s : Nat) : 0 ≤ eOne s := by
   unfold eOne
   positivity
+
+/-! ## Real logarithm bridge for the `Π_s` product
+
+Most of this file keeps the numerical audit in `ℚ`.  The actual product
+estimate for `Π_s`, however, follows the TeX proof most directly through
+`log`/`exp`; the lemmas in this short section are the explicit real-analysis
+bridge that the later rational budget lemmas consume.
+-/
+
+/-- The logarithmic factor estimate used in the paper:
+`-log(1-x) ≤ x + 3x²/4` for `0 ≤ x ≤ 1/3`. -/
+theorem neg_log_one_sub_le_quadratic {x : ℝ} (h0 : 0 ≤ x) (h13 : x ≤ 1/3) :
+    -Real.log (1 - x) ≤ x + (3/4) * x^2 := by
+  let f : ℝ → ℝ := fun t => t + (3/4) * t^2 + Real.log (1 - t)
+  have hfcont : ContinuousOn f (Set.Icc (0 : ℝ) (1/3)) := by
+    unfold f
+    refine ContinuousOn.add (ContinuousOn.add continuousOn_id ?_) ?_
+    · exact ContinuousOn.mul continuousOn_const (ContinuousOn.pow continuousOn_id 2)
+    · exact (ContinuousOn.sub continuousOn_const continuousOn_id).log (fun t ht => by
+        have ht2 : t ≤ 1/3 := ht.2
+        simp only [id_eq]
+        linarith)
+  have hderiv : ∀ y ∈ interior (Set.Icc (0 : ℝ) (1/3)),
+      HasDerivWithinAt f (y * (1 - 3*y) / (2*(1-y)))
+        (interior (Set.Icc (0 : ℝ) (1/3))) y := by
+    intro y hy
+    simp only [interior_Icc, Set.mem_Ioo] at hy
+    have hy1 : 1 - y ≠ 0 := by linarith
+    unfold f
+    convert (((hasDerivAt_id y).add
+      (((hasDerivAt_const y (3/4)).mul ((hasDerivAt_id y).pow 2)))).add
+      (((hasDerivAt_const y (1)).sub (hasDerivAt_id y)).log hy1)).hasDerivWithinAt
+      using 1
+    simp only [id_eq, Pi.sub_apply]
+    field_simp [hy1]
+    ring_nf
+  have hderiv_nonneg : ∀ y ∈ interior (Set.Icc (0 : ℝ) (1/3)),
+      0 ≤ y * (1 - 3*y) / (2*(1-y)) := by
+    intro y hy
+    simp only [interior_Icc, Set.mem_Ioo] at hy
+    have hy_nonneg : 0 ≤ y := le_of_lt hy.1
+    have h13y : 0 ≤ 1 - 3*y := by linarith
+    have hden : 0 < 2*(1-y) := by nlinarith
+    positivity
+  have hmono : MonotoneOn f (Set.Icc (0 : ℝ) (1/3)) :=
+    monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc (0 : ℝ) (1/3))
+      hfcont hderiv hderiv_nonneg
+  have hxmem : x ∈ Set.Icc (0 : ℝ) (1/3) := ⟨h0, h13⟩
+  have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) (1/3) := by norm_num
+  have hfx := hmono h0mem hxmem h0
+  have hf0 : f 0 = 0 := by norm_num [f]
+  have hfx0 : 0 ≤ f x := by simpa [hf0] using hfx
+  unfold f at hfx0
+  linarith
+
+/-- Elementary exponential remainder estimate used to convert logarithmic
+product bounds into product bounds. -/
+theorem real_exp_sub_one_le_mul_exp (x : ℝ) :
+    Real.exp x - 1 ≤ x * Real.exp x := by
+  have h := Real.add_one_le_exp (-x)
+  have hmul := mul_le_mul_of_nonneg_right h (Real.exp_nonneg x)
+  rw [Real.exp_neg] at hmul
+  have hxpos : Real.exp x ≠ 0 := (Real.exp_pos x).ne'
+  field_simp [hxpos] at hmul
+  linarith
+
+/-- Second-order exponential remainder estimate used for the extracted
+gamma-product residual. -/
+theorem real_exp_sub_one_sub_id_le_half_sq_mul_exp {x : ℝ} (hx : 0 ≤ x) :
+    Real.exp x - 1 - x ≤ (1/2) * x^2 * Real.exp x := by
+  let g : ℝ → ℝ := fun t => (1/2) * t^2 * Real.exp t - Real.exp t + 1 + t
+  let gp : ℝ → ℝ := fun t => Real.exp t * ((1/2) * t^2 + t - 1) + 1
+  have hgpcont : ContinuousOn gp (Set.Icc (0 : ℝ) x) := by
+    unfold gp
+    fun_prop
+  have hgpderiv : ∀ y ∈ interior (Set.Icc (0 : ℝ) x),
+      HasDerivWithinAt gp (Real.exp y * ((1/2) * y^2 + 2*y))
+        (interior (Set.Icc (0 : ℝ) x)) y := by
+    intro y hy
+    unfold gp
+    convert (((Real.hasDerivAt_exp y).mul
+      ((((hasDerivAt_const y (1/2)).mul ((hasDerivAt_id y).pow 2)).add
+        (hasDerivAt_id y)).sub (hasDerivAt_const y 1))).add
+        (hasDerivAt_const y 1)).hasDerivWithinAt using 1
+    simp only [id_eq, Pi.add_apply, Pi.sub_apply, Pi.mul_apply, Pi.pow_apply]
+    ring_nf
+  have hgpderiv_nonneg : ∀ y ∈ interior (Set.Icc (0 : ℝ) x),
+      0 ≤ Real.exp y * ((1/2) * y^2 + 2*y) := by
+    intro y hy
+    simp only [interior_Icc, Set.mem_Ioo] at hy
+    have hpoly : 0 ≤ (1/2) * y^2 + 2*y := by
+      nlinarith [sq_nonneg y, le_of_lt hy.1]
+    exact mul_nonneg (Real.exp_nonneg y) hpoly
+  have hgpmono : MonotoneOn gp (Set.Icc (0 : ℝ) x) :=
+    monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc (0 : ℝ) x)
+      hgpcont hgpderiv hgpderiv_nonneg
+  have hgp_nonneg : ∀ y ∈ interior (Set.Icc (0 : ℝ) x), 0 ≤ gp y := by
+    intro y hy
+    simp only [interior_Icc, Set.mem_Ioo] at hy
+    have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) x := ⟨le_rfl, hx⟩
+    have hymem : y ∈ Set.Icc (0 : ℝ) x := ⟨hy.1.le, hy.2.le⟩
+    have h := hgpmono h0mem hymem hy.1.le
+    have hgp0 : gp 0 = 0 := by norm_num [gp]
+    simpa [hgp0] using h
+  have hgcont : ContinuousOn g (Set.Icc (0 : ℝ) x) := by
+    unfold g
+    fun_prop
+  have hgderiv : ∀ y ∈ interior (Set.Icc (0 : ℝ) x),
+      HasDerivWithinAt g (gp y) (interior (Set.Icc (0 : ℝ) x)) y := by
+    intro y hy
+    unfold g gp
+    convert ((((((hasDerivAt_const y (1/2)).mul ((hasDerivAt_id y).pow 2)).mul
+      (Real.hasDerivAt_exp y)).sub (Real.hasDerivAt_exp y)).add
+        (hasDerivAt_const y 1)).add (hasDerivAt_id y)).hasDerivWithinAt using 1
+    simp only [id_eq, Pi.mul_apply, Pi.pow_apply]
+    ring_nf
+  have hgmono : MonotoneOn g (Set.Icc (0 : ℝ) x) :=
+    monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc (0 : ℝ) x)
+      hgcont hgderiv hgp_nonneg
+  have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) x := ⟨le_rfl, hx⟩
+  have hxmem : x ∈ Set.Icc (0 : ℝ) x := ⟨hx, le_rfl⟩
+  have h := hgmono h0mem hxmem hx
+  have hg0 : g 0 = 0 := by norm_num [g]
+  have hgx_nonneg : 0 ≤ g x := by simpa [hg0] using h
+  unfold g at hgx_nonneg
+  linarith
 
 theorem PiFactor_zero (m : Nat) (hm : 1 ≤ m) : PiFactor m 0 = 1 := by
   unfold PiFactor
@@ -853,6 +980,45 @@ def qTwo (s : Nat) : ℚ :=
 /-- Rational upper endpoint for `ζ·exp(0.2237)`, rounded up. -/
 def gammaTilt : ℚ := 11581/5000
 
+/-- Taylor-certified scalar inequality behind the rational exponential tilt:
+`exp(0.2237) ≤ gammaTilt/zetaMax`. -/
+theorem real_exp_tilt_scalar_le :
+    Real.exp (2237/10000 : ℝ) ≤ ((gammaTilt / zetaMax : ℚ) : ℝ) := by
+  let x : ℝ := 2237/10000
+  let S : ℝ := ∑ k ∈ Finset.range 5, x^k / (k.factorial : ℝ)
+  let tail : ℝ := |x|^5 * ((6 : ℝ) / (((5 : Nat).factorial : ℝ) * 5))
+  have hxabs : |x| ≤ 1 := by
+    dsimp [x]
+    norm_num
+  have hb := Real.exp_bound (x := x) hxabs (n := 5) (by norm_num)
+  have hupper : Real.exp x ≤ S + tail := by
+    have hleabs : Real.exp x - S ≤ |Real.exp x - S| := le_abs_self _
+    dsimp [S, tail]
+    linarith
+  change Real.exp x ≤ ((gammaTilt / zetaMax : ℚ) : ℝ)
+  calc
+    Real.exp x ≤ S + tail := hupper
+    _ ≤ ((gammaTilt / zetaMax : ℚ) : ℝ) := by
+        dsimp [S, tail, x]
+        norm_num [gammaTilt, zetaMax, Finset.sum_range_succ, Nat.factorial]
+
+/-- Power form of the rational exponential tilt used in the weighted budgets. -/
+theorem real_exp_tilt_linear_le_pow (s : Nat) :
+    Real.exp ((2237/10000 : ℝ) * (s : ℝ))
+      ≤ (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ) := by
+  have hscalar := real_exp_tilt_scalar_le
+  have hpow :
+      (Real.exp (2237/10000 : ℝ))^s
+        ≤ (((gammaTilt / zetaMax : ℚ) : ℝ))^s :=
+    pow_le_pow_left₀ (Real.exp_nonneg _) hscalar s
+  calc
+    Real.exp ((2237/10000 : ℝ) * (s : ℝ))
+        = Real.exp ((s : ℝ) * (2237/10000 : ℝ)) := by ring_nf
+    _ = (Real.exp (2237/10000 : ℝ))^s := by
+        rw [Real.exp_nat_mul]
+    _ ≤ (((gammaTilt / zetaMax : ℚ) : ℝ))^s := hpow
+    _ = (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ) := by norm_num
+
 private theorem zetaMax_pow_mul_tilt_pow (s : Nat) :
     zetaMax^s * (gammaTilt / zetaMax)^s = gammaTilt^s := by
   rw [← mul_pow]
@@ -876,6 +1042,92 @@ theorem piLogUpperBound_nonneg {m s : Nat} (hm : 1 ≤ m) :
   exact add_nonneg
     (div_nonneg (eOne_nonneg s) hmpos.le)
     (div_nonneg (mul_nonneg (by norm_num) hq) (sq_nonneg (m : ℚ)))
+
+theorem piLogUpperBound_succ (m s : Nat) :
+    piLogUpperBound m (s+1)
+      = piLogUpperBound m s
+        + (((s+1 : Nat) : ℚ) / (m : ℚ)
+          + (3/4) * (((s+1 : Nat) : ℚ)^2 / (m : ℚ)^2)) := by
+  unfold piLogUpperBound eOne qTwo
+  norm_num [Nat.cast_add, Nat.cast_one, Nat.cast_succ]
+  ring_nf
+
+/-- The paper's logarithmic product estimate in the near range:
+`log Π_s ≤ e₁(s)/m + 3q₂(s)/(4m²)`. -/
+theorem real_log_PiFactor_le_piLogUpperBound
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    Real.log (PiFactor m s : ℝ) ≤ (piLogUpperBound m s : ℝ) := by
+  revert m
+  induction s with
+  | zero =>
+      intro m hm hs3
+      rw [PiFactor_zero m (by omega)]
+      norm_num [piLogUpperBound, eOne, qTwo]
+  | succ s ih =>
+      intro m hm hs3
+      have hmposQ : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+      have hmposR : (0 : ℝ) < (m : ℝ) := by exact_mod_cast (by omega : 0 < m)
+      have hslt : s < m := by omega
+      have hsucc_lt : s+1 < m := by omega
+      have hprev := ih hm (by omega : 3*s ≤ m)
+      have hsuccQ := PiFactor_succ (m := m) (s := s) hsucc_lt
+      have hsuccR :
+          (PiFactor m (s+1) : ℝ)
+            = (PiFactor m s : ℝ) * (m : ℝ) / (((m-s-1 : Nat) : ℝ)) := by
+        exact_mod_cast hsuccQ
+      have hPi_pos : 0 < (PiFactor m s : ℝ) := by
+        exact_mod_cast (PiFactor_pos (m := m) (s := s) hslt)
+      have hdenpos : (0 : ℝ) < (((m-s-1 : Nat) : ℝ)) := by
+        exact_mod_cast (by omega : 0 < m-s-1)
+      have hfac_pos : 0 < (m : ℝ) / (((m-s-1 : Nat) : ℝ)) := by positivity
+      have hden_cast :
+          (((m-s-1 : Nat) : ℝ)) = (m : ℝ) - ((s+1 : Nat) : ℝ) := by
+        rw [show m-s-1 = m-(s+1) by omega, Nat.cast_sub (by omega : s+1 ≤ m)]
+      have hfac :
+          Real.log ((m : ℝ) / (((m-s-1 : Nat) : ℝ)))
+            ≤ (((s+1 : Nat) : ℝ) / (m : ℝ))
+              + (3/4) * (((s+1 : Nat) : ℝ) / (m : ℝ))^2 := by
+        let x : ℝ := ((s+1 : Nat) : ℝ) / (m : ℝ)
+        have hx0 : 0 ≤ x := by
+          dsimp [x]
+          positivity
+        have hx13 : x ≤ 1/3 := by
+          dsimp [x]
+          rw [div_le_iff₀ hmposR]
+          have hsQ : (3 : ℝ) * (((s+1 : Nat) : ℝ)) ≤ (m : ℝ) := by
+            exact_mod_cast hs3
+          linarith
+        have hfactor :
+            (m : ℝ) / (((m-s-1 : Nat) : ℝ)) = (1 - x)⁻¹ := by
+          dsimp [x]
+          rw [hden_cast]
+          field_simp [hmposR.ne']
+        rw [hfactor, Real.log_inv]
+        exact neg_log_one_sub_le_quadratic hx0 hx13
+      have hLsuccQ := piLogUpperBound_succ m s
+      have hLsuccR :
+          (piLogUpperBound m (s+1) : ℝ)
+            =
+          (piLogUpperBound m s : ℝ)
+            + ((((s+1 : Nat) : ℚ) / (m : ℚ)
+              + (3/4) * (((s+1 : Nat) : ℚ)^2 / (m : ℚ)^2) : ℚ) : ℝ) := by
+        exact_mod_cast hLsuccQ
+      calc
+        Real.log (PiFactor m (s+1) : ℝ)
+            = Real.log ((PiFactor m s : ℝ) * ((m : ℝ) / (((m-s-1 : Nat) : ℝ)))) := by
+              rw [hsuccR]
+              ring
+        _ = Real.log (PiFactor m s : ℝ)
+              + Real.log ((m : ℝ) / (((m-s-1 : Nat) : ℝ))) := by
+              rw [Real.log_mul hPi_pos.ne' hfac_pos.ne']
+        _ ≤ (piLogUpperBound m s : ℝ)
+              + ((((s+1 : Nat) : ℝ) / (m : ℝ))
+                + (3/4) * (((s+1 : Nat) : ℝ) / (m : ℝ))^2) :=
+              add_le_add hprev hfac
+        _ = (piLogUpperBound m (s+1) : ℝ) := by
+              rw [hLsuccR]
+              norm_num
+              field_simp [hmposQ.ne']
 
 /-- Arithmetic part of the paper's `L_s ≤ 1.168 e₁(s)/m` estimate. -/
 theorem piLogUpperBound_le_u_linear
@@ -933,6 +1185,63 @@ theorem piLogUpperBound_le_tilt_linear
         add_le_add heOne hq
     _ ≤ (2237/10000) * (s : ℚ) := by
         nlinarith [hs_nonneg]
+
+/-- Exponential form of `L_s < 0.2237s`, with the rational tilt replacing
+the paper's decimal exponential. -/
+theorem real_exp_piLogUpperBound_le_tilt_pow
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    Real.exp (piLogUpperBound m s : ℝ)
+      ≤ (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ) := by
+  have hlinearQ := piLogUpperBound_le_tilt_linear (m := m) (s := s) hm hs3
+  have hlinearCast :
+      ((piLogUpperBound m s : ℚ) : ℝ)
+        ≤ (((2237/10000 : ℚ) * (s : ℚ) : ℚ) : ℝ) := by
+    exact_mod_cast hlinearQ
+  have hlinear :
+      (piLogUpperBound m s : ℝ)
+        ≤ (2237/10000 : ℝ) * (s : ℝ) := by
+    simpa using hlinearCast
+  exact (Real.exp_le_exp.mpr hlinear).trans (real_exp_tilt_linear_le_pow s)
+
+/-- Pointwise product estimate feeding the P4 bridge:
+`Π_s-1 ≤ L_s·(gammaTilt/zetaMax)^s`.  This is the Lean replacement for the
+paper's `exp(0.2237s)` factor, certified by `real_exp_tilt_scalar_le`. -/
+theorem PiFactor_sub_one_le_piLogUpperProductBound
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    PiFactor m s - 1
+      ≤ piLogUpperBound m s * (gammaTilt / zetaMax)^s := by
+  have hslt : s < m := by omega
+  have hPi_pos : 0 < (PiFactor m s : ℝ) := by
+    exact_mod_cast (PiFactor_pos (m := m) (s := s) hslt)
+  have hL_nonnegQ : 0 ≤ piLogUpperBound m s :=
+    piLogUpperBound_nonneg (m := m) (s := s) (by omega : 1 ≤ m)
+  have hL_nonneg : 0 ≤ (piLogUpperBound m s : ℝ) := by
+    exact_mod_cast hL_nonnegQ
+  have hlog := real_log_PiFactor_le_piLogUpperBound (m := m) (s := s) hm hs3
+  have hPi_le_expL :
+      (PiFactor m s : ℝ) ≤ Real.exp (piLogUpperBound m s : ℝ) :=
+    (Real.log_le_iff_le_exp hPi_pos).mp hlog
+  have hexp_tilt :
+      Real.exp (piLogUpperBound m s : ℝ)
+        ≤ (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ) :=
+    real_exp_piLogUpperBound_le_tilt_pow (m := m) (s := s) hm hs3
+  have hreal :
+      ((PiFactor m s - 1 : ℚ) : ℝ)
+        ≤ ((piLogUpperBound m s * (gammaTilt / zetaMax)^s : ℚ) : ℝ) := by
+    calc
+      ((PiFactor m s - 1 : ℚ) : ℝ)
+          = (PiFactor m s : ℝ) - 1 := by norm_num
+      _ ≤ Real.exp (piLogUpperBound m s : ℝ) - 1 :=
+          sub_le_sub_right hPi_le_expL 1
+      _ ≤ (piLogUpperBound m s : ℝ) *
+            Real.exp (piLogUpperBound m s : ℝ) :=
+          real_exp_sub_one_le_mul_exp _
+      _ ≤ (piLogUpperBound m s : ℝ) *
+            (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ) :=
+          mul_le_mul_of_nonneg_left hexp_tilt hL_nonneg
+      _ = ((piLogUpperBound m s * (gammaTilt / zetaMax)^s : ℚ) : ℝ) := by
+          norm_num
+  exact_mod_cast hreal
 
 theorem poissonFirst_gammaTilt_le (T : Nat) :
     ∑ s ∈ Finset.range T, (s : ℚ) * gammaTilt^s / (s.factorial : ℚ) ≤ 47/2 := by
@@ -1167,6 +1476,62 @@ def piResidualExpRemainderBound (m s : Nat) : ℚ :=
   (1/2) * (piLogUpperBound m s)^2 * (gammaTilt / zetaMax)^s
     + (3/4) * qTwo s / (m : ℚ)^2
 
+/-- Pointwise P1 gamma-product residual estimate:
+after extracting `e₁(s)/m`, the remaining product error is controlled by the
+quadratic exponential remainder plus the `q₂` logarithmic correction. -/
+theorem piResidual_le_piResidualExpRemainderBound
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    piResidual m s ≤ piResidualExpRemainderBound m s := by
+  have hslt : s < m := by omega
+  have hPi_pos : 0 < (PiFactor m s : ℝ) := by
+    exact_mod_cast (PiFactor_pos (m := m) (s := s) hslt)
+  have hL_nonnegQ : 0 ≤ piLogUpperBound m s :=
+    piLogUpperBound_nonneg (m := m) (s := s) (by omega : 1 ≤ m)
+  have hL_nonneg : 0 ≤ (piLogUpperBound m s : ℝ) := by
+    exact_mod_cast hL_nonnegQ
+  have hlog := real_log_PiFactor_le_piLogUpperBound (m := m) (s := s) hm hs3
+  have hPi_le_expL :
+      (PiFactor m s : ℝ) ≤ Real.exp (piLogUpperBound m s : ℝ) :=
+    (Real.log_le_iff_le_exp hPi_pos).mp hlog
+  let L : ℝ := (piLogUpperBound m s : ℝ)
+  let A : ℝ := ((eOne s / (m : ℚ) : ℚ) : ℝ)
+  let B : ℝ := (((3/4) * qTwo s / (m : ℚ)^2 : ℚ) : ℝ)
+  let R : ℝ := (((gammaTilt / zetaMax : ℚ)^s : ℚ) : ℝ)
+  have hLsplit : L = A + B := by
+    dsimp [L, A, B]
+    norm_num [piLogUpperBound]
+  have hexp_tilt : Real.exp L ≤ R := by
+    dsimp [L, R]
+    exact real_exp_piLogUpperBound_le_tilt_pow (m := m) (s := s) hm hs3
+  have hquad :
+      Real.exp L - 1 - L ≤ (1/2) * L^2 * R := by
+    calc
+      Real.exp L - 1 - L
+          ≤ (1/2) * L^2 * Real.exp L :=
+          real_exp_sub_one_sub_id_le_half_sq_mul_exp (by simpa [L] using hL_nonneg)
+      _ ≤ (1/2) * L^2 * R :=
+          mul_le_mul_of_nonneg_left hexp_tilt (by positivity)
+  have hreal :
+      ((piResidual m s : ℚ) : ℝ)
+        ≤ ((piResidualExpRemainderBound m s : ℚ) : ℝ) := by
+    calc
+      ((piResidual m s : ℚ) : ℝ)
+          = (PiFactor m s : ℝ) - 1 - A := by
+          dsimp [A]
+          norm_num [piResidual]
+      _ ≤ Real.exp L - 1 - A := by
+          dsimp [L]
+          linarith
+      _ = (Real.exp L - 1 - L) + B := by
+          rw [hLsplit]
+          ring
+      _ ≤ (1/2) * L^2 * R + B := by
+          exact add_le_add hquad le_rfl
+      _ = ((piResidualExpRemainderBound m s : ℚ) : ℝ) := by
+          dsimp [L, B, R]
+          norm_num [piResidualExpRemainderBound]
+  exact_mod_cast hreal
+
 theorem piResidualBridgeBound_nonneg (m s : Nat) :
     0 ≤ piResidualBridgeBound m s := by
   have htilt : 0 ≤ gammaTilt / zetaMax := by norm_num [gammaTilt, zetaMax]
@@ -1274,6 +1639,15 @@ theorem weighted_piResidual_le_gammaResidualBudgetTerm_of_expRemainder
   weighted_piResidual_le_gammaResidualBudgetTerm (m := m) (s := s) hs
     (hpi.trans (piResidualExpRemainderBound_le_bridgeBound
       (m := m) (s := s) hm hs3))
+
+/-- Closed P1 pointwise weighted bridge in the near range. -/
+theorem weighted_piResidual_le_gammaResidualBudgetTerm_near
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    (zetaMax^s / (s.factorial : ℚ)) * |piResidual m s|
+      ≤ gammaResidualBudgetTerm m s :=
+  weighted_piResidual_le_gammaResidualBudgetTerm_of_expRemainder
+    (m := m) (s := s) hm hs3 (by omega : s < m)
+    (piResidual_le_piResidualExpRemainderBound (m := m) (s := s) hm hs3)
 
 theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     ∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s
@@ -2674,6 +3048,17 @@ theorem productCrossResidual_weighted_le_P4_budgetTerm_of_piLogUpperProductBound
     (N := N) (m := m) (s := s) hN hN40 hm hs3
     (piUBridgeBound_of_piLogUpperProductBound
       (m := m) (s := s) hm hs3 hprod)
+
+/-- Closed P4 weighted product-cross bridge in the near range. -/
+theorem productCrossResidual_weighted_le_P4_budgetTerm_near
+    {N m s : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    (zetaMax^s / (s.factorial : ℚ)) * |productCrossResidual N m s|
+      ≤ crossDominantBudgetTerm m s + crossSmallBudgetTerm m s :=
+  productCrossResidual_weighted_le_P4_budgetTerm_of_piLogUpperProductBound
+    (N := N) (m := m) (s := s) hN hN40 hm hs3
+    (PiFactor_sub_one_le_piLogUpperProductBound (m := m) (s := s) hm hs3)
 
 /-- The smaller P4 cross terms fit inside the `3/2·m⁻²` reserve used by
 `signLock_P4_numerical_budget_zetaMax`. -/

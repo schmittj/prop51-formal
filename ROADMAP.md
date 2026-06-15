@@ -136,24 +136,23 @@ Status:
       majorant, a pointwise `89/m²` cap, and weighted budget `573/m²`.
       P1 now has the higher Poisson moment machinery, the weighted
       `426/m²` numerical majorant budget for the explicit gamma-residual
-      terms, and a conditional bridge from the pointwise
-      `piResidualBridgeBound`.  The rational arithmetic bounds behind the
-      paper's `L_s ≤ 1.168e₁(s)/m` and `L_s < 0.2237s` product estimates are
-      formalized, and the P1 bridge also accepts the standard quadratic
-      exponential-remainder target.  P4 now has the dominant cross-term
+      terms, plus a closed near-range bridge from the pointwise product/log
+      estimate through `piResidualBridgeBound`.  The rational arithmetic
+      bounds behind the paper's `L_s ≤ 1.168e₁(s)/m` and `L_s < 0.2237s`
+      product estimates are formalized.  The real logarithm bridge now proves
+      `log Π_s ≤ L_s`, Taylor-certifies
+      `exp(0.2237) ≤ gammaTilt/zetaMax`, and closes both the P1 quadratic
+      residual estimate and the P4 `Π_s-1 ≤ L_s·(gammaTilt/zetaMax)^s`
+      estimate in the near range.  P4 now has the dominant cross-term
       numerical reserve, and the smaller `u_s v_s`, `v_s|ε_p|`, and
       `v_s|ε_p|u_s` pieces are expanded explicitly inside the `3/2·m⁻²`
       allowance, giving the `784/m²` budget;
       the abstract product-cross inequality has also been bridged to those
       four weighted P4 budget terms.  The formalized near-range `d`-drift
       gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
-      `v_s|ε_p|` bridge input is closed.  The remaining P4 inputs are now
-      packaged as conditional bridge lemmas from the single pointwise majorant
-      `Π_s-1 ≤ piUBridgeBound m s`, and also directly from the product/log
-      target `Π_s-1 ≤ piLogUpperBound m s·(gammaTilt/zetaMax)^s`.
-      Remaining: prove the pointwise `Π_s` product estimates feeding the P1
-      and P4 bridge lemmas (likely via a sharper product/log argument or
-      rational certificates), and close the residual near/far tails.
+      `v_s|ε_p|` bridge input is closed.  Remaining: connect the closed
+      near-range weighted P1/P4 bridge lemmas into the global sign-lock sum,
+      and close the residual near/far tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
