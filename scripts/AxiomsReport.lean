@@ -77,4 +77,6 @@ import Prop51
 #print axioms Prop51.DeltaRatNear_le_geomBound
 #print axioms Prop51.DeltaRat_eq_near_add_far
 #print axioms Prop51.DeltaRat_le_nearGeomBound_add_far
+#print axioms Prop51.DeltaRatTerm_le_farTermBound
+#print axioms Prop51.DeltaRatFar_le_termBound
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat

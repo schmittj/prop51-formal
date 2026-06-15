@@ -74,6 +74,13 @@ def DeltaNearGeomBound (p : Nat) (R : ℚ) : ℚ :=
       / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
     * (1/(1 - DeltaNearRatio p R))
 
+/-- A `p`-independent far-range majorant for a single Δ block, valid once
+`N ≤ 20p` and `r > p/4`.  The factorials in the denominator are left in place;
+the next layer applies `factorial_lb` to this term. -/
+def DeltaRatFarTermBound (r : Nat) : ℚ :=
+  (9/5) * (16/25)^r * (80*(r:ℚ))^(r-1)
+    / ((r.factorial : ℚ) * (((2*r - 1 : Nat).factorial : ℚ)))
+
 theorem DeltaRatTerm_nonneg (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
     0 ≤ DeltaRatTerm p N r := by
   unfold DeltaRatTerm
@@ -439,6 +446,150 @@ theorem DeltaRat_le_nearGeomBound_add_far (p : Nat) {N R : ℚ}
           DeltaRat_eq_near_add_far p N (by omega)
     _ ≤ DeltaNearGeomBound p R + DeltaRatFar p N :=
           add_le_add hnear le_rfl
+
+/-! ## Far-range factorial compression -/
+
+private theorem factorial_mul_factorial_le_far {p r : Nat}
+    (hr : 1 ≤ r) (hrp : 2*r ≤ p) :
+    (p - 2*r + 1).factorial * (2*r - 1).factorial
+      ≤ (p-1).factorial := by
+  have hleft_len : 2*r - 2 ≤ 2*r - 1 := by omega
+  have hright_len : 2*r - 2 ≤ p - 1 := by omega
+  have hbase : 2*r - 1 ≤ p - 1 := by omega
+  have hdesc_le :
+      (2*r - 1).descFactorial (2*r - 2)
+        ≤ (p - 1).descFactorial (2*r - 2) :=
+    Nat.descFactorial_le (2*r - 2) hbase
+  have hleft_eq :
+      (2*r - 1).descFactorial (2*r - 2) = (2*r - 1).factorial := by
+    have hmul := Nat.factorial_mul_descFactorial hleft_len
+    have hdiff : (2*r - 1) - (2*r - 2) = 1 := by omega
+    rw [hdiff] at hmul
+    norm_num at hmul
+    exact hmul
+  have hright_eq :
+      (p - 2*r + 1).factorial * (p - 1).descFactorial (2*r - 2)
+        = (p - 1).factorial := by
+    have hmul := Nat.factorial_mul_descFactorial hright_len
+    have hdiff : (p - 1) - (2*r - 2) = p - 2*r + 1 := by omega
+    rw [hdiff] at hmul
+    exact hmul
+  calc
+    (p - 2*r + 1).factorial * (2*r - 1).factorial
+        = (p - 2*r + 1).factorial
+            * (2*r - 1).descFactorial (2*r - 2) := by rw [hleft_eq]
+    _ ≤ (p - 2*r + 1).factorial
+            * (p - 1).descFactorial (2*r - 2) :=
+          Nat.mul_le_mul_left _ hdesc_le
+    _ = (p-1).factorial := hright_eq
+
+private theorem far_factorial_ratio_le_inv (p r : Nat)
+    (hr : 1 ≤ r) (hrp : 2*r ≤ p) :
+    ((p - 2*r + 1).factorial : ℚ) / ((p-1).factorial : ℚ)
+      ≤ 1 / (((2*r - 1 : Nat).factorial : ℚ)) := by
+  have hNat := factorial_mul_factorial_le_far (p := p) (r := r) hr hrp
+  have hcast :
+      ((p - 2*r + 1).factorial : ℚ)
+        * (((2*r - 1 : Nat).factorial : ℚ))
+          ≤ ((p-1).factorial : ℚ) := by
+    exact_mod_cast hNat
+  have hFpos : (0:ℚ) < (((2*r - 1 : Nat).factorial : ℚ)) := by
+    exact_mod_cast (Nat.factorial_pos (2*r - 1))
+  have hPpos : (0:ℚ) < ((p-1).factorial : ℚ) := by
+    exact_mod_cast (Nat.factorial_pos (p-1))
+  have hdiv :
+      ((p - 2*r + 1).factorial : ℚ)
+        ≤ ((p-1).factorial : ℚ) / (((2*r - 1 : Nat).factorial : ℚ)) := by
+    rw [le_div_iff₀ hFpos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hcast
+  calc
+    ((p - 2*r + 1).factorial : ℚ) / ((p-1).factorial : ℚ)
+        ≤ (((p-1).factorial : ℚ) / (((2*r - 1 : Nat).factorial : ℚ)))
+            / ((p-1).factorial : ℚ) :=
+          div_le_div_of_nonneg_right hdiv hPpos.le
+    _ = 1 / (((2*r - 1 : Nat).factorial : ℚ)) := by
+          field_simp [ne_of_gt hFpos, ne_of_gt hPpos]
+
+private theorem DeltaRatTerm_far_coeff (r : Nat) (hr : 1 ≤ r) :
+    (36/5) * (4/25)^r * 4^(r-1) = (9/5) * (16/25)^r := by
+  obtain ⟨k, rfl⟩ : ∃ k, r = k + 1 := ⟨r-1, by omega⟩
+  norm_num
+
+theorem DeltaRatTerm_le_farTermBound (p r : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ))
+    (hrfar : p/4 < r) (hrp : 2*r ≤ p) :
+    DeltaRatTerm p N r ≤ DeltaRatFarTermBound r := by
+  have hr : 1 ≤ r := by omega
+  have hp_lt : p < 4*r := by omega
+  have hN80 : N ≤ 80 * (r:ℚ) := by
+    have hp_le : (p:ℚ) ≤ 4 * (r:ℚ) := by
+      exact_mod_cast (Nat.le_of_lt hp_lt)
+    nlinarith
+  have hpow :
+      N^(r-1) ≤ (80*(r:ℚ))^(r-1) :=
+    pow_le_pow_left₀ hN hN80 (r-1)
+  have hcoef_nonneg : 0 ≤ (9/5:ℚ) * (16/25)^r := by positivity
+  have hrf_pos : (0:ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  have hpf_pos : (0:ℚ) < ((p-1).factorial : ℚ) := by
+    exact_mod_cast (p-1).factorial_pos
+  have hfarf_pos : (0:ℚ) < (((2*r - 1 : Nat).factorial : ℚ)) := by
+    exact_mod_cast (2*r - 1).factorial_pos
+  have hratio_nonneg :
+      0 ≤ ((p - 2*r + 1).factorial : ℚ) / ((p-1).factorial : ℚ) := by
+    positivity
+  have hbase_nonneg :
+      0 ≤ ((9/5:ℚ) * (16/25)^r * (80*(r:ℚ))^(r-1)) / (r.factorial : ℚ) := by
+    positivity
+  have hpow_part :
+      ((9/5:ℚ) * (16/25)^r * N^(r-1)) / (r.factorial : ℚ)
+        ≤ ((9/5:ℚ) * (16/25)^r * (80*(r:ℚ))^(r-1))
+            / (r.factorial : ℚ) := by
+    have hnum :
+        (9/5:ℚ) * (16/25)^r * N^(r-1)
+          ≤ (9/5:ℚ) * (16/25)^r * (80*(r:ℚ))^(r-1) := by
+      exact mul_le_mul_of_nonneg_left hpow hcoef_nonneg
+    exact div_le_div_of_nonneg_right hnum hrf_pos.le
+  have hfact := far_factorial_ratio_le_inv p r hr hrp
+  have hterm_rewrite :
+      DeltaRatTerm p N r
+        =
+      ((9/5:ℚ) * (16/25)^r * N^(r-1)) / (r.factorial : ℚ)
+        * (((p - 2*r + 1).factorial : ℚ) / ((p-1).factorial : ℚ)) := by
+    have hcoef' :
+        (36:ℚ) * (4/25)^r * 4^(r-1) = 9 * (16/25)^r := by
+      obtain ⟨k, rfl⟩ : ∃ k, r = k + 1 := ⟨r-1, by omega⟩
+      norm_num
+      ring_nf
+      rw [← mul_pow]
+      norm_num
+    unfold DeltaRatTerm
+    field_simp [ne_of_gt hrf_pos, ne_of_gt hpf_pos]
+    rw [hcoef']
+    ring
+  have hbound_rewrite :
+      DeltaRatFarTermBound r
+        =
+      ((9/5:ℚ) * (16/25)^r * (80*(r:ℚ))^(r-1)) / (r.factorial : ℚ)
+        * (1 / (((2*r - 1 : Nat).factorial : ℚ))) := by
+    unfold DeltaRatFarTermBound
+    field_simp [ne_of_gt hrf_pos, ne_of_gt hfarf_pos]
+  rw [hterm_rewrite, hbound_rewrite]
+  exact mul_le_mul hpow_part hfact hratio_nonneg hbase_nonneg
+
+theorem DeltaRatFar_le_termBound (p : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) :
+    DeltaRatFar p N
+      ≤ ∑ r ∈ Finset.Icc (p/4 + 1) (p/2), DeltaRatFarTermBound r := by
+  unfold DeltaRatFar
+  refine Finset.sum_le_sum fun r hrmem => ?_
+  obtain ⟨hrlo, hrhi⟩ := Finset.mem_Icc.mp hrmem
+  have hrfar : p/4 < r := by omega
+  have hrp : 2*r ≤ p := by
+    have hInt : (r : ℤ) * 2 ≤ (p : ℤ) :=
+      Nat.le_div_two_iff_mul_two_le.mp hrhi
+    omega
+  exact DeltaRatTerm_le_farTermBound p r hN hN20 hrfar hrp
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
