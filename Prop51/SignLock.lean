@@ -860,6 +860,80 @@ private theorem zetaMax_pow_mul_tilt_pow (s : Nat) :
     norm_num [zetaMax, gammaTilt]
   rw [hbase]
 
+/-- Rational upper bound for the logarithmic product estimate:
+`e₁(s)/m + 3q₂(s)/(4m²)` in the paper.  This is not yet a logarithm in Lean;
+it is the rational arithmetic expression that will feed the product/log bridge. -/
+def piLogUpperBound (m s : Nat) : ℚ :=
+  eOne s / (m : ℚ) + (3/4) * qTwo s / (m : ℚ)^2
+
+theorem piLogUpperBound_nonneg {m s : Nat} (hm : 1 ≤ m) :
+    0 ≤ piLogUpperBound m s := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hq : 0 ≤ qTwo s := by
+    unfold qTwo
+    positivity
+  unfold piLogUpperBound
+  exact add_nonneg
+    (div_nonneg (eOne_nonneg s) hmpos.le)
+    (div_nonneg (mul_nonneg (by norm_num) hq) (sq_nonneg (m : ℚ)))
+
+/-- Arithmetic part of the paper's `L_s ≤ 1.168 e₁(s)/m` estimate. -/
+theorem piLogUpperBound_le_u_linear
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    piLogUpperBound m s ≤ (146/125) * eOne s / (m : ℚ) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  have hsQ : (3 : ℚ) * (s : ℚ) ≤ m := by exact_mod_cast hs3
+  unfold piLogUpperBound eOne qTwo
+  field_simp [hmpos.ne']
+  nlinarith
+
+/-- Arithmetic part of the paper's `L_s < 0.2237s` estimate, weakened to a
+closed rational inequality. -/
+theorem piLogUpperBound_le_tilt_linear
+    {m s : Nat} (hm : 361 ≤ m) (hs3 : 3*s ≤ m) :
+    piLogUpperBound m s ≤ (2237/10000) * (s : ℚ) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  have hsQ : (3 : ℚ) * (s : ℚ) ≤ m := by exact_mod_cast hs3
+  rcases (by omega : s = 0 ∨ s = 1 ∨ 2 ≤ s) with rfl | hsmall
+  · norm_num [piLogUpperBound, eOne, qTwo]
+  rcases hsmall with rfl | hsge2
+  · have hm2lower : (361 : ℚ)^2 ≤ (m : ℚ)^2 := by
+      nlinarith [hmQ, hmpos.le]
+    norm_num [piLogUpperBound, eOne, qTwo]
+    field_simp [hmpos.ne']
+    nlinarith [hmQ, hm2lower]
+  have hs_nonneg : (0 : ℚ) ≤ s := by positivity
+  have heOne :
+      eOne s / (m : ℚ) ≤ (1/6) * (s : ℚ) + (1/722) * (s : ℚ) := by
+    have hs2_bound : (s : ℚ)^2 ≤ (s : ℚ) * (m : ℚ) / 3 := by
+      nlinarith [mul_nonneg hs_nonneg (sub_nonneg.mpr hsQ)]
+    have hs1_bound : (s : ℚ) ≤ (s : ℚ) * (m : ℚ) / 361 := by
+      nlinarith [mul_nonneg hs_nonneg (sub_nonneg.mpr hmQ)]
+    unfold eOne
+    push_cast
+    field_simp [hmpos.ne']
+    nlinarith [hs2_bound, hs1_bound]
+  have hqpoly : (((s+1 : Nat) : ℚ)) * (2*(s : ℚ) + 1) ≤ 4*(s : ℚ)^2 := by
+    have hsge2Q : (2 : ℚ) ≤ s := by exact_mod_cast hsge2
+    push_cast
+    nlinarith
+  have hs_sq_bound : 9 * (s : ℚ)^2 ≤ (m : ℚ)^2 := by
+    nlinarith [hsQ, hs_nonneg, hmpos.le]
+  have hq :
+      (3/4) * qTwo s / (m : ℚ)^2 ≤ (1/18) * (s : ℚ) := by
+    unfold qTwo
+    field_simp [sq_pos_of_pos hmpos]
+    nlinarith [hqpoly, hs_sq_bound, hs_nonneg]
+  calc
+    piLogUpperBound m s
+      = eOne s / (m : ℚ) + (3/4) * qTwo s / (m : ℚ)^2 := rfl
+    _ ≤ ((1/6) * (s : ℚ) + (1/722) * (s : ℚ)) + (1/18) * (s : ℚ) :=
+        add_le_add heOne hq
+    _ ≤ (2237/10000) * (s : ℚ) := by
+        nlinarith [hs_nonneg]
+
 theorem poissonFirst_gammaTilt_le (T : Nat) :
     ∑ s ∈ Finset.range T, (s : ℚ) * gammaTilt^s / (s.factorial : ℚ) ≤ 47/2 := by
   calc

@@ -137,10 +137,11 @@ Status:
       P1 now has the higher Poisson moment machinery, the weighted
       `426/m²` numerical majorant budget for the explicit gamma-residual
       terms, and a conditional bridge from the pointwise
-      `piResidualBridgeBound`.  P4 now has the dominant cross-term numerical
-      reserve, and the smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s`
-      pieces are expanded explicitly inside the `3/2·m⁻²` allowance, giving
-      the `784/m²` budget;
+      `piResidualBridgeBound`.  The rational arithmetic bounds behind the
+      paper's `L_s ≤ 1.168e₁(s)/m` and `L_s < 0.2237s` product estimates are
+      formalized.  P4 now has the dominant cross-term numerical reserve, and
+      the smaller `u_s v_s`, `v_s|ε_p|`, and `v_s|ε_p|u_s` pieces are expanded
+      explicitly inside the `3/2·m⁻²` allowance, giving the `784/m²` budget;
       the abstract product-cross inequality has also been bridged to those
       four weighted P4 budget terms.  The formalized near-range `d`-drift
       gives the slightly coarser but sufficient `v_s ≤ (28/25)s/m²`, and the
