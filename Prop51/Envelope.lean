@@ -16,6 +16,7 @@ target `DeltaRat` directly.
 -/
 
 import Prop51.HPow
+import Prop51.ExpBounds
 
 namespace Prop51
 
@@ -132,6 +133,68 @@ theorem DeltaRatTerm_succ_le (p : Nat) {N : ℚ} (r : Nat)
   exact mul_le_mul_of_nonneg_left
     (DeltaRatStepRatio_le_bound p r hN hr hrp)
     (DeltaRatTerm_nonneg p r hN)
+
+/-! ## Finite geometric domination for the near range -/
+
+private theorem geom_chain_bound_upto (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {K : Nat} (hstep : ∀ j, j + 1 < K → F (j+3) ≤ F (j+2) * q) :
+    ∀ j, j < K → F (j+2) ≤ F 2 * q^j := by
+  intro j hj
+  induction j with
+  | zero =>
+      simp
+  | succ j ih =>
+      calc F (j.succ + 2)
+          = F (j + 3) := rfl
+        _ ≤ F (j+2) * q := hstep j (by omega)
+        _ ≤ (F 2 * q^j) * q := by
+            exact mul_le_mul_of_nonneg_right (ih (by omega)) hq0
+        _ = F 2 * q^(j.succ) := by
+            rw [pow_succ]
+            ring
+
+private theorem geom_chain_sum_le (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {K : Nat} (hstep : ∀ j, j + 1 < K → F (j+3) ≤ F (j+2) * q) :
+    ∑ j ∈ Finset.range K, F (j+2)
+      ≤ F 2 * ∑ j ∈ Finset.range K, q^j := by
+  calc ∑ j ∈ Finset.range K, F (j+2)
+      ≤ ∑ j ∈ Finset.range K, F 2 * q^j := by
+          refine Finset.sum_le_sum fun j hj => ?_
+          exact geom_chain_bound_upto F hq0 hstep j (Finset.mem_range.mp hj)
+    _ = F 2 * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
+/-- Shifted near-range Δ terms are bounded by the corresponding finite
+geometric progression whenever all successor ratios are bounded by `q`. -/
+theorem DeltaRatTerm_shifted_sum_le_geom (p K : Nat) {N q : ℚ}
+    (hN : 0 ≤ N) (hq0 : 0 ≤ q)
+    (hratio : ∀ j, j + 1 < K → DeltaRatStepRatioBound p N (j+2) ≤ q)
+    (hpstep : ∀ j, j + 1 < K → 2*((j+2)+1) ≤ p) :
+    ∑ j ∈ Finset.range K, DeltaRatTerm p N (j+2)
+      ≤ DeltaRatTerm p N 2 * ∑ j ∈ Finset.range K, q^j := by
+  refine geom_chain_sum_le (fun r => DeltaRatTerm p N r) hq0 ?_
+  intro j hj
+  calc DeltaRatTerm p N (j+3)
+      ≤ DeltaRatTerm p N (j+2) * DeltaRatStepRatioBound p N (j+2) := by
+          exact DeltaRatTerm_succ_le p (j+2) hN (by omega) (hpstep j hj)
+    _ ≤ DeltaRatTerm p N (j+2) * q := by
+          exact mul_le_mul_of_nonneg_left (hratio j hj)
+            (DeltaRatTerm_nonneg p (j+2) hN)
+
+/-- Infinite-tail version of `DeltaRatTerm_shifted_sum_le_geom`, using the
+rational geometric bound from `ExpBounds.lean`. -/
+theorem DeltaRatTerm_shifted_sum_le_inv_one_sub (p K : Nat) {N q : ℚ}
+    (hN : 0 ≤ N) (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hratio : ∀ j, j + 1 < K → DeltaRatStepRatioBound p N (j+2) ≤ q)
+    (hpstep : ∀ j, j + 1 < K → 2*((j+2)+1) ≤ p) :
+    ∑ j ∈ Finset.range K, DeltaRatTerm p N (j+2)
+      ≤ DeltaRatTerm p N 2 * (1/(1-q)) := by
+  have hgeom :=
+    DeltaRatTerm_shifted_sum_le_geom p K hN hq0 hratio hpstep
+  exact hgeom.trans
+    (mul_le_mul_of_nonneg_left
+      (geom_sum_le_inv_one_sub q hq0 hq1 K)
+      (DeltaRatTerm_nonneg p 2 hN))
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/

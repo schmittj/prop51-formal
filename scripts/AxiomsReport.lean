@@ -64,4 +64,6 @@ import Prop51
 #print axioms Prop51.DeltaRatTerm_succ
 #print axioms Prop51.DeltaRatStepRatio_le_bound
 #print axioms Prop51.DeltaRatTerm_succ_le
+#print axioms Prop51.DeltaRatTerm_shifted_sum_le_geom
+#print axioms Prop51.DeltaRatTerm_shifted_sum_le_inv_one_sub
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat
