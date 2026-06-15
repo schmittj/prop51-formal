@@ -2810,6 +2810,178 @@ def threeBlockTailBound (N p : Nat) : ℚ :=
         * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)))
     * (25/23)
 
+private theorem DeltaRatTerm_three_eq_tailBase (p : Nat) (N : ℚ) (hp : 6 ≤ p) :
+    DeltaRatTerm p N 3 =
+      (6144/78125) * N^2 /
+        ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
+          * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ))) := by
+  obtain ⟨k, rfl⟩ : ∃ k, p = k + 6 := ⟨p-6, by omega⟩
+  simp only [DeltaRatTerm]
+  norm_num [Nat.factorial_succ]
+  have hk2 : (2 + (k:ℚ)) ≠ 0 := by positivity
+  have hk3 : (3 + (k:ℚ)) ≠ 0 := by positivity
+  have hk4 : (4 + (k:ℚ)) ≠ 0 := by positivity
+  have hk5 : (5 + (k:ℚ)) ≠ 0 := by positivity
+  ring_nf
+  field_simp [hk2, hk3, hk4, hk5]
+  ring
+
+private theorem DeltaNearRatio_twenty_le_two_twentyseven {p : Nat} (hp : 231 ≤ p) :
+    DeltaNearRatio p (20 : ℚ) ≤ 2/27 := by
+  unfold DeltaNearRatio
+  have hpQ : (0:ℚ) < p := by exact_mod_cast (by omega : 0 < p)
+  have hp231 : (231:ℚ) ≤ p := by exact_mod_cast hp
+  field_simp [hpQ.ne']
+  nlinarith
+
+private theorem DeltaRatTerm_Icc_three_sum_le_geom (p M : Nat) {N q : ℚ}
+    (hM : 3 ≤ M) (hN : 0 ≤ N) (hq0 : 0 ≤ q)
+    (hratio : ∀ r, 3 ≤ r → r < M → DeltaRatStepRatioBound p N r ≤ q)
+    (hpstep : ∀ r, 3 ≤ r → r < M → 2*(r+1) ≤ p) :
+    ∑ r ∈ Finset.Icc 3 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 3 * ∑ j ∈ Finset.range (M-2), q^j := by
+  have hshift :
+      ∑ r ∈ Finset.Icc 3 M, DeltaRatTerm p N r
+        = ∑ j ∈ Finset.range (M-2), DeltaRatTerm p N (j+3) := by
+    have hIccIco : Finset.Icc 3 M = Finset.Ico 3 (M+1) := by
+      ext r
+      simp only [Finset.mem_Icc, Finset.mem_Ico]
+      omega
+    rw [hIccIco, Finset.sum_Ico_eq_sum_range,
+      show M + 1 - 3 = M - 2 by omega]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Nat.add_comm]
+  rw [hshift]
+  let F : Nat → ℚ := fun j => DeltaRatTerm p N (j+3)
+  have hchain : ∀ j, j < M-2 → F j ≤ F 0 * q^j := by
+    intro j hj
+    induction j with
+    | zero =>
+        simp [F]
+    | succ j ih =>
+        have hjprev : j < M - 2 := Nat.lt_of_succ_lt hj
+        have hstep :
+            F (j+1) ≤ F j * q := by
+          unfold F
+          calc
+            DeltaRatTerm p N (j+1+3)
+                = DeltaRatTerm p N ((j+3)+1) := by
+                    congr 1
+            _ ≤ DeltaRatTerm p N (j+3) * DeltaRatStepRatioBound p N (j+3) := by
+                    exact DeltaRatTerm_succ_le p (j+3) hN (by omega)
+                      (hpstep (j+3) (by omega) (by omega))
+            _ ≤ DeltaRatTerm p N (j+3) * q := by
+                    exact mul_le_mul_of_nonneg_left
+                      (hratio (j+3) (by omega) (by omega))
+                      (DeltaRatTerm_nonneg p (j+3) hN)
+        calc
+          F (j+1) ≤ F j * q := hstep
+          _ ≤ (F 0 * q^j) * q := by
+              exact mul_le_mul_of_nonneg_right (ih hjprev) hq0
+          _ = F 0 * q^(j+1) := by
+              rw [pow_succ]
+              ring
+  calc
+    ∑ j ∈ Finset.range (M-2), DeltaRatTerm p N (j+3)
+        = ∑ j ∈ Finset.range (M-2), F j := rfl
+    _ ≤ ∑ j ∈ Finset.range (M-2), F 0 * q^j := by
+        refine Finset.sum_le_sum fun j hj => ?_
+        exact hchain j (Finset.mem_range.mp hj)
+    _ = DeltaRatTerm p N 3 * ∑ j ∈ Finset.range (M-2), q^j := by
+        simp [F, Finset.mul_sum]
+
+private theorem DeltaRatTerm_Icc_three_sum_le_inv_one_sub (p M : Nat) {N q : ℚ}
+    (hM : 3 ≤ M) (hN : 0 ≤ N) (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hratio : ∀ r, 3 ≤ r → r < M → DeltaRatStepRatioBound p N r ≤ q)
+    (hpstep : ∀ r, 3 ≤ r → r < M → 2*(r+1) ≤ p) :
+    ∑ r ∈ Finset.Icc 3 M, DeltaRatTerm p N r
+      ≤ DeltaRatTerm p N 3 * (1/(1-q)) := by
+  have hgeom :=
+    DeltaRatTerm_Icc_three_sum_le_geom p M hM hN hq0 hratio hpstep
+  exact hgeom.trans
+    (mul_le_mul_of_nonneg_left
+      (geom_sum_le_inv_one_sub q hq0 hq1 (M-2))
+      (DeltaRatTerm_nonneg p 3 hN))
+
+/-- Near part of the rationalized P3c tail, with a sharper ratio than the
+global envelope.  The multiplier `27/25` leaves room for the separately
+handled far slice. -/
+theorem threeBlockDeltaTail_near_le
+    {N p : Nat} (hN20 : (N : ℚ) ≤ 20 * (p : ℚ)) (hp : 241 ≤ p) :
+    ∑ r ∈ Finset.Icc 3 (p/4), DeltaRatTerm p (N : ℚ) r
+      ≤ DeltaRatTerm p (N : ℚ) 3 * (27/25) := by
+  have hNnonneg : (0 : ℚ) ≤ N := by positivity
+  have hratio20 := DeltaNearRatio_twenty_le_two_twentyseven (p := p) (by omega)
+  have hslice := DeltaRatTerm_Icc_three_sum_le_inv_one_sub
+    p (p/4) (N := (N : ℚ)) (q := (2/27 : ℚ))
+    (by omega : 3 ≤ p/4) hNnonneg (by norm_num) (by norm_num) ?_ ?_
+  · calc
+      ∑ r ∈ Finset.Icc 3 (p/4), DeltaRatTerm p (N : ℚ) r
+        ≤ DeltaRatTerm p (N : ℚ) 3 * (1 / (1 - (2/27 : ℚ))) := hslice
+      _ = DeltaRatTerm p (N : ℚ) 3 * (27/25) := by ring
+  · intro r hr3 hrM
+    have hnear : 4*r ≤ p := by omega
+    exact (DeltaRatStepRatioBound_le_near p r
+      (N := (N : ℚ)) (R := (20 : ℚ)) (by norm_num) hN20
+      (by omega : 1 ≤ p) hnear).trans hratio20
+  · intro r hr3 hrM
+    have hnear : 4*r ≤ p := by omega
+    omega
+
+theorem threeBlockTailBound_eq_delta_three {N p : Nat} (hp : 6 ≤ p) :
+    threeBlockTailBound N p = DeltaRatTerm p (N : ℚ) 3 * (25/23) := by
+  unfold threeBlockTailBound
+  rw [DeltaRatTerm_three_eq_tailBase p (N : ℚ) hp]
+
+private theorem threeBlockDeltaTail_split_near_far {N p : Nat} (hp : 12 ≤ p) :
+    threeBlockDeltaTail N p =
+      (∑ r ∈ Finset.Icc 3 (p/4), DeltaRatTerm p (N : ℚ) r)
+        + DeltaRatFar p (N : ℚ) := by
+  unfold threeBlockDeltaTail DeltaRatFar
+  have hsplit :
+      Finset.Icc 3 (p/2)
+        = Finset.Icc 3 (p/4) ∪ Finset.Icc (p/4 + 1) (p/2) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_union]
+    constructor
+    · intro hr
+      by_cases hle : r ≤ p/4
+      · exact Or.inl ⟨hr.1, hle⟩
+      · exact Or.inr ⟨Nat.succ_le_of_lt (Nat.lt_of_not_ge hle), hr.2⟩
+    · intro hr
+      rcases hr with hnear | hfar
+      · exact ⟨hnear.1, by omega⟩
+      · exact ⟨by omega, hfar.2⟩
+  have hdisj :
+      Disjoint (Finset.Icc 3 (p/4)) (Finset.Icc (p/4 + 1) (p/2)) := by
+    rw [Finset.disjoint_left]
+    intro r hrnear hrfar
+    obtain ⟨_, hle⟩ := Finset.mem_Icc.mp hrnear
+    obtain ⟨hlt, _⟩ := Finset.mem_Icc.mp hrfar
+    omega
+  rw [hsplit, Finset.sum_union hdisj]
+
+/-- The full P3c Δ-tail comparison is reduced to a far-slice reserve.  The
+near slice uses the proved `27/25` geometric multiplier; the remaining
+`4/575` is exactly the slack to reach the target multiplier `25/23`. -/
+theorem threeBlockDeltaTail_le_threeBlockTailBound_of_farReserve
+    {N p : Nat} (hN20 : (N : ℚ) ≤ 20 * (p : ℚ)) (hp : 241 ≤ p)
+    (hfar :
+      DeltaRatFar p (N : ℚ) ≤ DeltaRatTerm p (N : ℚ) 3 * (4/575)) :
+    threeBlockDeltaTail N p ≤ threeBlockTailBound N p := by
+  have hnear := threeBlockDeltaTail_near_le (N := N) (p := p) hN20 hp
+  have hterm_nonneg : 0 ≤ DeltaRatTerm p (N : ℚ) 3 :=
+    DeltaRatTerm_nonneg p 3 (by positivity : (0 : ℚ) ≤ (N : ℚ))
+  rw [threeBlockDeltaTail_split_near_far (N := N) (p := p) (by omega : 12 ≤ p)]
+  rw [threeBlockTailBound_eq_delta_three (N := N) (p := p) (by omega : 6 ≤ p)]
+  calc
+    (∑ r ∈ Finset.Icc 3 (p/4), DeltaRatTerm p (N : ℚ) r)
+        + DeltaRatFar p (N : ℚ)
+      ≤ DeltaRatTerm p (N : ℚ) 3 * (27/25)
+          + DeltaRatTerm p (N : ℚ) 3 * (4/575) :=
+            add_le_add hnear hfar
+    _ = DeltaRatTerm p (N : ℚ) 3 * (25/23) := by ring
+
 /-- Tail bridge reduced to a pure rationalized-Δ estimate. -/
 theorem abs_threeBlockExactTail_le_threeBlockTailBound_of_DeltaTail
     {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p)
