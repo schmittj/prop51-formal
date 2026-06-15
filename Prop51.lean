@@ -14,6 +14,7 @@ import Prop51.ExpBounds
 import Prop51.HPow
 import Prop51.Envelope
 import Prop51.SignLock
+import Prop51.PositiveSaddle
 import Prop51.Dyadic
 import Prop51.IntervalCert
 import Prop51.CertificateInterval

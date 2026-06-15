@@ -116,7 +116,7 @@ Status:
       Lean now proves the split, the near-range geometric majorant, the
       rational far-tail geometric bound, `DeltaRat_le_final_envelope`, and
       `Eminus_normalized_residual_le_final`.
-- [ ] sign-lock §5 (`Prop51/SignLock.lean`): exact finite decomposition
+- [x] sign-lock §5 (`Prop51/SignLock.lean`): exact finite decomposition
       of `−X_m` and the non-boundary
       `(-ζ)^s/s!·Π_s D_s·(-E^-_{m-s}/(Nc_{m-s}))` summand factorization
       are done; this is also converted to `(1+ε_{m-s})`.  The `Π_s`
@@ -177,7 +177,9 @@ Status:
       a `2215/m²` error-budget wrapper.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
-      entropy tail for `a > 2000`.
+      entropy tail for `a > 2000`.  The corrected two-edge rectangle
+      bookkeeping and the retained range `1 ≤ k ≤ floor(0.9a)` are now
+      formalized in `Prop51/PositiveSaddle.lean`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 
