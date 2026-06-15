@@ -47,6 +47,120 @@ def epsilonMinus (N p : Nat) : ℚ := EminusNorm N p - 1
 /-- `e_1(s)=s(s+1)/2`, the first correction in the `Π_s` expansion. -/
 def eOne (s : Nat) : ℚ := (s : ℚ) * ((s+1 : Nat) : ℚ) / 2
 
+/-- The gamma-product residual after extracting the first-order term. -/
+def piResidual (m s : Nat) : ℚ := PiFactor m s - 1 - eOne s / (m : ℚ)
+
+theorem PiFactor_zero (m : Nat) (hm : 1 ≤ m) : PiFactor m 0 = 1 := by
+  unfold PiFactor
+  rw [show m-0-1 = m-1 by omega]
+  field_simp [show (((m-1).factorial : Nat) : ℚ) ≠ 0 by positivity]
+
+theorem PiFactor_succ {m s : Nat} (hs : s+1 < m) :
+    PiFactor m (s+1) =
+      PiFactor m s * (m : ℚ) / (((m-s-1 : Nat) : ℚ)) := by
+  have hfac :
+      (((m-s-1).factorial : Nat) : ℚ)
+        = (((m-s-1 : Nat) : ℚ)) * (((m-s-2).factorial : Nat) : ℚ) := by
+    rw [show m-s-1 = (m-s-2)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hden : (((m-s-1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : m-s-1 ≠ 0)
+  have hfac_m : (((m-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_prev : (((m-s-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_next : (((m-s-2).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  unfold PiFactor
+  rw [show m-(s+1)-1 = m-s-2 by omega, hfac]
+  field_simp [hden, hfac_m, hfac_prev, hfac_next]
+  ring
+
+theorem PiFactor_prod {m s : Nat} (hs : s < m) :
+    PiFactor m s =
+      ∏ i ∈ Finset.range s, (m : ℚ) / (((m-(i+1) : Nat) : ℚ)) := by
+  induction s with
+  | zero =>
+      rw [PiFactor_zero m (by omega)]
+      simp
+  | succ s ih =>
+      rw [PiFactor_succ (m := m) (s := s) hs]
+      rw [ih (by omega : s < m), Finset.prod_range_succ]
+      rw [show m-(s+1) = m-s-1 by omega]
+      ring
+
+theorem PiFactor_pos {m s : Nat} (hs : s < m) : 0 < PiFactor m s := by
+  unfold PiFactor
+  exact div_pos
+    (mul_pos (pow_pos (by exact_mod_cast (by omega : 0 < m)) s) (by positivity))
+    (by positivity)
+
+theorem one_le_PiFactor {m s : Nat} (hs : s < m) : 1 ≤ PiFactor m s := by
+  induction s with
+  | zero =>
+      rw [PiFactor_zero m (by omega)]
+  | succ s ih =>
+      have hs_prev : s < m := by omega
+      have hdenpos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+        exact_mod_cast (by omega : 0 < m-s-1)
+      have hdenle : (((m-s-1 : Nat) : ℚ)) ≤ (m : ℚ) := by
+        exact_mod_cast (by omega : m-s-1 ≤ m)
+      have hfactor : 1 ≤ (m : ℚ) / (((m-s-1 : Nat) : ℚ)) := by
+        rw [one_le_div₀ hdenpos]
+        exact hdenle
+      rw [PiFactor_succ (m := m) (s := s) hs]
+      rw [show PiFactor m s * (m : ℚ) / (((m-s-1 : Nat) : ℚ))
+          = PiFactor m s * ((m : ℚ) / (((m-s-1 : Nat) : ℚ))) by ring]
+      exact one_le_mul_of_one_le_of_one_le (ih hs_prev) hfactor
+
+theorem one_add_eOne_div_le_PiFactor {m s : Nat} (hs : s < m) :
+    1 + eOne s / (m : ℚ) ≤ PiFactor m s := by
+  induction s with
+  | zero =>
+      rw [PiFactor_zero m (by omega)]
+      norm_num [eOne]
+  | succ s ih =>
+      have hs_prev : s < m := by omega
+      have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+      have hdenpos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+        exact_mod_cast (by omega : 0 < m-s-1)
+      have hden_cast :
+          (((m-s-1 : Nat) : ℚ)) = (m : ℚ) - (s : ℚ) - 1 := by
+        rw [show m-s-1 = m-(s+1) by omega, Nat.cast_sub (by omega : s+1 ≤ m)]
+        push_cast
+        ring
+      have hdenlin_pos : (0 : ℚ) < (m : ℚ) - (s : ℚ) - 1 := by
+        rwa [← hden_cast]
+      have hfactor_nonneg : 0 ≤ (m : ℚ) / (((m-s-1 : Nat) : ℚ)) := by positivity
+      rw [PiFactor_succ (m := m) (s := s) hs]
+      calc
+        1 + eOne (s+1) / (m : ℚ)
+            ≤ (1 + eOne s / (m : ℚ)) *
+                ((m : ℚ) / (((m-s-1 : Nat) : ℚ))) := by
+              have hdiff :
+                  (1 + eOne s / (m : ℚ)) *
+                      ((m : ℚ) / (((m-s-1 : Nat) : ℚ)))
+                    - (1 + eOne (s+1) / (m : ℚ))
+                    =
+                  (((s+1 : Nat) : ℚ)^2 * (((s+2 : Nat) : ℚ))) /
+                    (2 * (m : ℚ) * (((m-s-1 : Nat) : ℚ))) := by
+                unfold eOne
+                rw [hden_cast]
+                field_simp [hmpos.ne', hdenlin_pos.ne']
+                push_cast
+                ring
+              have hnonneg :
+                  0 ≤ (((s+1 : Nat) : ℚ)^2 * (((s+2 : Nat) : ℚ))) /
+                    (2 * (m : ℚ) * (((m-s-1 : Nat) : ℚ))) := by
+                positivity
+              linarith
+        _ ≤ PiFactor m s * ((m : ℚ) / (((m-s-1 : Nat) : ℚ))) :=
+              mul_le_mul_of_nonneg_right (ih hs_prev) hfactor_nonneg
+        _ = PiFactor m s * (m : ℚ) / (((m-s-1 : Nat) : ℚ)) := by ring
+
+theorem piResidual_nonneg {m s : Nat} (hs : s < m) :
+    0 ≤ piResidual m s := by
+  unfold piResidual
+  linarith [one_add_eOne_div_le_PiFactor (m := m) (s := s) hs]
+
 /-- The pointwise sign-lock error `w_s` from paper §5. -/
 def signLockErrorW (N m s : Nat) : ℚ :=
   PiFactor m s * DFactor m s * (1 + epsilonMinus N (m-s))

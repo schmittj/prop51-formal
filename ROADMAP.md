@@ -119,8 +119,11 @@ Status:
 - [ ] sign-lock §5 (`Prop51/SignLock.lean`): exact finite decomposition
       of `−X_m` and the non-boundary
       `(-ζ)^s/s!·Π_s D_s·(-E^-_{m-s}/(Nc_{m-s}))` summand factorization
-      are done; this is also converted to `(1+ε_{m-s})`, with the completed
-      Δ-envelope exposed as `|ε_{m-s}| ≤ 66/(5m)` for `3s ≤ m`.  The final
+      are done; this is also converted to `(1+ε_{m-s})`.  The `Π_s`
+      product now has recurrence/product forms, positivity, `Π_s ≥ 1`,
+      and the nonnegative extracted residual
+      `Π_s - 1 - e₁(s)/m ≥ 0`.  The completed Δ-envelope is exposed as
+      `|ε_{m-s}| ≤ 66/(5m)` for `3s ≤ m`.  The final
       rational positivity margin against `2215` is done via a 10-term
       alternating surrogate at `50/27`.  Rational Poisson/partial-exp first
       and second moment bounds are in place, including sharper zeroth/first
