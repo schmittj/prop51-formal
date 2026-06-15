@@ -586,6 +586,353 @@ private theorem abs_scaled_ratio_sub_le
           field_simp [hA.ne', hM.ne']]
         rw [abs_of_nonneg (div_nonneg hMA hAMpos.le)]
 
+private theorem cast_sub_one (p : Nat) (hp : 1 ≤ p) :
+    (((p-1 : Nat) : ℚ)) = (p : ℚ) - 1 := by
+  rw [Nat.cast_sub hp]
+  norm_num
+
+private theorem cast_sub_two (p : Nat) (hp : 2 ≤ p) :
+    (((p-2 : Nat) : ℚ)) = (p : ℚ) - 2 := by
+  rw [Nat.cast_sub hp]
+  norm_num
+
+private theorem near_p_lower {m s : Nat} (hs : 3*s ≤ m) :
+    (2 : ℚ) * (m : ℚ) / 3 ≤ ((m-s : Nat) : ℚ) := by
+  rw [Nat.cast_sub (by omega : s ≤ m)]
+  have hsQ : (3 : ℚ) * (s : ℚ) ≤ (m : ℚ) := by exact_mod_cast hs
+  linarith
+
+private theorem near_p_sub_one_half {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (m : ℚ) / 2 ≤ (((m-s-1 : Nat) : ℚ)) := by
+  have hp : 1 ≤ m-s := by omega
+  rw [cast_sub_one (m-s) hp]
+  have hplower := near_p_lower (m := m) (s := s) hs
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  nlinarith
+
+private theorem near_p_sub_two_half {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (m : ℚ) / 2 ≤ (((m-s-2 : Nat) : ℚ)) := by
+  have hp : 2 ≤ m-s := by omega
+  rw [cast_sub_two (m-s) hp]
+  have hplower := near_p_lower (m := m) (s := s) hs
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  nlinarith
+
+private theorem near_endpoint_denominator_lower
+    {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (87/200) * (m : ℚ)^2
+      ≤ (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) := by
+  have hp1 : 1 ≤ m-s := by omega
+  have hp2 : 2 ≤ m-s := by omega
+  rw [cast_sub_one (m-s) hp1, cast_sub_two (m-s) hp2]
+  have hplower := near_p_lower (m := m) (s := s) hs
+  have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+  nlinarith
+
+private theorem near_endpoint_denominator_change
+    {m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (m : ℚ)^2 - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))
+      ≤ (2*(s : ℚ) + 3) * (m : ℚ) := by
+  have hp1 : 1 ≤ m-s := by omega
+  have hp2 : 2 ≤ m-s := by omega
+  rw [cast_sub_one (m-s) hp1, cast_sub_two (m-s) hp2,
+    Nat.cast_sub (by omega : s ≤ m)]
+  nlinarith [show (0 : ℚ) ≤ m by positivity]
+
+theorem twoEndpointCorrection_abs_le_split
+    {N m s : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤ (5 * (N : ℚ)) / 36 *
+          ((1 - DFactor (m-s) 2)
+              / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+            + (((m : ℚ)^2
+                - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+              / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2))) := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hApos : 0 < (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) :=
+    mul_pos hp1pos hp2pos
+  have hMpos : 0 < (m : ℚ)^2 := sq_pos_of_ne_zero hmpos.ne'
+  have hD1 : DFactor (m-s) 2 ≤ 1 :=
+    DFactor_le_one (m := m-s) (s := 2) (by omega)
+  have hAM :
+      (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) ≤ (m : ℚ)^2 := by
+    have hp1_le : (((m-s-1 : Nat) : ℚ)) ≤ (m : ℚ) := by
+      exact_mod_cast (by omega : m-s-1 ≤ m)
+    have hp2_le : (((m-s-2 : Nat) : ℚ)) ≤ (m : ℚ) := by
+      exact_mod_cast (by omega : m-s-2 ≤ m)
+    have hmul := mul_le_mul hp1_le hp2_le hp2pos.le hmpos.le
+    simpa [pow_two] using hmul
+  have hsplit := abs_scaled_ratio_sub_le
+    (C := (5 * (N : ℚ)) / 36)
+    (A := (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+    (M := (m : ℚ)^2)
+    (D := DFactor (m-s) 2)
+    (by positivity) hApos hMpos hD1 hAM
+  have hrewrite :
+      twoEndpointCorrection N (m-s) - twoEndpointTarget N m
+        =
+      (5 * (N : ℚ)) / 36 *
+        (DFactor (m-s) 2
+            / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+          - 1 / (m : ℚ)^2) := by
+    unfold twoEndpointCorrection twoEndpointTarget
+    field_simp [show (36 : ℚ) ≠ 0 by norm_num,
+      hApos.ne', hMpos.ne']
+  rw [hrewrite]
+  exact hsplit
+
+theorem twoEndpoint_denominator_change_P3a
+    {N m s : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    (5 * (N : ℚ)) / 36 *
+      ((((m : ℚ)^2
+          - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+        / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2)))
+      ≤ (213/50) * (2*(s : ℚ) + 3) / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hApos : 0 < (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) :=
+    mul_pos hp1pos hp2pos
+  have hMpos : 0 < (m : ℚ)^2 := sq_pos_of_ne_zero hmpos.ne'
+  have hC : (5 * (N : ℚ)) / 36 ≤ (50/27) * (m : ℚ) := by
+    nlinarith
+  have hden := near_endpoint_denominator_lower (m := m) (s := s) hm hs
+  have hchange := near_endpoint_denominator_change (m := m) (s := s) hm hs
+  have hnum_nonneg :
+      0 ≤ (m : ℚ)^2
+          - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) := by
+    have hp1_le : (((m-s-1 : Nat) : ℚ)) ≤ (m : ℚ) := by
+      exact_mod_cast (by omega : m-s-1 ≤ m)
+    have hp2_le : (((m-s-2 : Nat) : ℚ)) ≤ (m : ℚ) := by
+      exact_mod_cast (by omega : m-s-2 ≤ m)
+    have hmul := mul_le_mul hp1_le hp2_le hp2pos.le hmpos.le
+    nlinarith [show (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) ≤ (m : ℚ)^2 by
+      simpa [pow_two] using hmul]
+  calc
+    (5 * (N : ℚ)) / 36 *
+      ((((m : ℚ)^2
+          - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+        / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2)))
+      ≤ (50/27) * (m : ℚ) *
+        (((2*(s : ℚ) + 3) * (m : ℚ)) /
+          (((87/200) * (m : ℚ)^2) * (m : ℚ)^2)) := by
+        refine mul_le_mul hC ?_ (div_nonneg hnum_nonneg (mul_pos hApos hMpos).le)
+          (by positivity)
+        have hbound_nonneg : 0 ≤ (2*(s : ℚ) + 3) * (m : ℚ) := by positivity
+        have hden_actual_pos :
+            0 < ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2 :=
+          mul_pos hApos hMpos
+        have hden_lower_pos :
+            0 < (((87/200) * (m : ℚ)^2) * (m : ℚ)^2) :=
+          mul_pos (mul_pos (by norm_num) hMpos) hMpos
+        calc
+          (((m : ℚ)^2
+              - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+            / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2))
+            ≤ (((2*(s : ℚ) + 3) * (m : ℚ))
+                / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2)) :=
+                div_le_div_of_nonneg_right hchange hden_actual_pos.le
+          _ ≤ (((2*(s : ℚ) + 3) * (m : ℚ)) /
+                (((87/200) * (m : ℚ)^2) * (m : ℚ)^2)) := by
+                exact div_le_div_of_nonneg_left hbound_nonneg hden_lower_pos
+                  (mul_le_mul_of_nonneg_right hden hMpos.le)
+    _ ≤ (213/50) * (2*(s : ℚ) + 3) / (m : ℚ)^2 := by
+        field_simp [hmpos.ne']
+        nlinarith
+
+theorem twoEndpoint_drift_P3a
+    {N m s : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    ((5 * (N : ℚ)) / 36 *
+      ((1 - DFactor (m-s) 2)
+        / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))))
+      ≤ (1/4) / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hppos : (0 : ℚ) < ((m-s : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < m-s)
+  have hp2pos : (0 : ℚ) < (((m-s-2 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-2)
+  have hp1pos : (0 : ℚ) < (((m-s-1 : Nat) : ℚ)) := by
+    exact_mod_cast (by omega : 0 < m-s-1)
+  have hApos : 0 < (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)) :=
+    mul_pos hp1pos hp2pos
+  have hC : (5 * (N : ℚ)) / 36 ≤ (50/27) * (m : ℚ) := by
+    nlinarith
+  have hdrift := one_sub_DFactor_two_le (p := m-s) (by omega : 3 ≤ m-s)
+  have hstep :
+      ((1 - DFactor (m-s) 2)
+        / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))))
+      ≤ ((2304/3125) *
+            (2 / (((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ)))))
+          / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) := by
+    exact div_le_div_of_nonneg_right hdrift hApos.le
+  have hp_half : (m : ℚ) / 2 ≤ ((m-s : Nat) : ℚ) := by
+    have hplower := near_p_lower (m := m) (s := s) hs
+    linarith
+  have hp1_half := near_p_sub_one_half (m := m) (s := s) hm hs
+  have hp2_half := near_p_sub_two_half (m := m) (s := s) hm hs
+  have hdenprod :
+      (m : ℚ)^4 / 16
+        ≤ ((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ))
+            * ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) := by
+    have hprod :
+        ((m : ℚ)/2) * ((m : ℚ)/2) * (((m : ℚ)/2) * ((m : ℚ)/2))
+          ≤ ((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ))
+              * ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) := by
+      have hleft := mul_le_mul hp_half hp2_half (by positivity : 0 ≤ (m : ℚ)/2) hppos.le
+      have hright := mul_le_mul hp1_half hp2_half (by positivity : 0 ≤ (m : ℚ)/2) hp1pos.le
+      exact mul_le_mul hleft hright
+        (mul_nonneg (by positivity) (by positivity))
+        (mul_nonneg hppos.le hp2pos.le)
+    nlinarith
+  have hdenprod_nf :
+      (m : ℚ)^4 / 16
+        ≤ ((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ))^2
+            * (((m-s-1 : Nat) : ℚ)) := by
+    nlinarith [hdenprod]
+  have hstep_nonneg :
+      0 ≤ ((2304/3125) *
+            (2 / (((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ)))))
+          / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) := by
+    exact div_nonneg
+      (mul_nonneg (by norm_num)
+        (div_nonneg (by norm_num) (mul_pos hppos hp2pos).le))
+      hApos.le
+  have hleft_nonneg :
+      0 ≤ ((1 - DFactor (m-s) 2)
+        / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))) := by
+    have hD1 : DFactor (m-s) 2 ≤ 1 :=
+      DFactor_le_one (m := m-s) (s := 2) (by omega)
+    exact div_nonneg (sub_nonneg.mpr hD1) hApos.le
+  calc
+    (5 * (N : ℚ)) / 36 *
+      ((1 - DFactor (m-s) 2)
+        / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))))
+      ≤ (50/27) * (m : ℚ) *
+          (((2304/3125) *
+              (2 / (((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ)))))
+            / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))) := by
+          exact mul_le_mul hC hstep
+            hleft_nonneg
+            (by positivity)
+    _ ≤ (1/4) / (m : ℚ)^2 := by
+          have hmQ : (361 : ℚ) ≤ m := by exact_mod_cast hm
+          have hconst :
+              50 * (m : ℚ)^3 * 2304 * 2 * 4
+                ≤ 27 * 3125 * ((m : ℚ)^4 / 16) := by
+            have hlin : (50 * 2304 * 2 * 4 : ℚ) ≤ 27 * 3125 * ((m : ℚ) / 16) := by
+              nlinarith
+            have hm3 : 0 ≤ (m : ℚ)^3 := by positivity
+            calc
+              50 * (m : ℚ)^3 * 2304 * 2 * 4
+                  = (50 * 2304 * 2 * 4 : ℚ) * (m : ℚ)^3 := by ring
+              _ ≤ (27 * 3125 * ((m : ℚ) / 16)) * (m : ℚ)^3 :=
+                    mul_le_mul_of_nonneg_right hlin hm3
+              _ = 27 * 3125 * ((m : ℚ)^4 / 16) := by ring
+          have hden_scaled :
+              27 * 3125 * ((m : ℚ)^4 / 16)
+                ≤ 27 * 3125 *
+                  (((m-s : Nat) : ℚ) * (((m-s-2 : Nat) : ℚ))^2
+                    * (((m-s-1 : Nat) : ℚ))) := by
+            exact mul_le_mul_of_nonneg_left hdenprod_nf (by norm_num)
+          field_simp [hmpos.ne', hppos.ne', hp2pos.ne', hApos.ne']
+          nlinarith [hconst, hden_scaled]
+
+theorem twoEndpointCorrection_pointwise_P3a
+    {N m s : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hs : 3*s ≤ m) :
+    |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤ ((213/50) * (2*(s : ℚ) + 3) + 1/4) / (m : ℚ)^2 := by
+  have hsplit := twoEndpointCorrection_abs_le_split (N := N) (m := m) (s := s) hm hs
+  have hdrift := twoEndpoint_drift_P3a (N := N) (m := m) (s := s) hN40 hm hs
+  have hden := twoEndpoint_denominator_change_P3a (N := N) (m := m) (s := s) hN40 hm hs
+  calc
+    |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤ (5 * (N : ℚ)) / 36 *
+          ((1 - DFactor (m-s) 2)
+              / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+            + (((m : ℚ)^2
+                - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+              / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2))) := hsplit
+    _ =
+        (5 * (N : ℚ)) / 36 *
+          ((1 - DFactor (m-s) 2)
+            / ((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))))
+        + (5 * (N : ℚ)) / 36 *
+          ((((m : ℚ)^2
+              - (((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ)))
+            / (((((m-s-1 : Nat) : ℚ)) * (((m-s-2 : Nat) : ℚ))) * (m : ℚ)^2))) := by
+          ring
+    _ ≤ (1/4) / (m : ℚ)^2
+          + (213/50) * (2*(s : ℚ) + 3) / (m : ℚ)^2 :=
+          add_le_add hdrift hden
+    _ = ((213/50) * (2*(s : ℚ) + 3) + 1/4) / (m : ℚ)^2 := by
+          ring
+
+theorem signLock_P3a_budget_zetaMax {N m : Nat}
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤ 184 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          (((213/50) * (2*(s : ℚ) + 3) + 1/4) / (m : ℚ)^2) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hs3 : 3*s ≤ m := by
+      have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+      exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+    have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+      have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+      positivity
+    exact mul_le_mul_of_nonneg_left
+      (twoEndpointCorrection_pointwise_P3a hN40 hm hs3) hweight
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          |twoEndpointCorrection N (m-s) - twoEndpointTarget N m|
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) *
+          (((213/50) * (2*(s : ℚ) + 3) + 1/4) / (m : ℚ)^2) := hpoint
+    _ =
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (((213/50) * 2 / (m : ℚ)^2) *
+            ((s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+          + (((213/50) * 3 + 1/4) / (m : ℚ)^2) *
+            (zetaMax^s / (s.factorial : ℚ))) := by
+          refine Finset.sum_congr rfl fun s hs => ?_
+          ring
+    _ =
+      ((213/50) * 2 / (m : ℚ)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+        + (((213/50) * 3 + 1/4) / (m : ℚ)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            zetaMax^s / (s.factorial : ℚ)) := by
+          rw [Finset.sum_add_distrib, Finset.mul_sum, Finset.mul_sum]
+    _ ≤ ((213/50) * 2 / (m : ℚ)^2) * (59/5)
+        + (((213/50) * 3 + 1/4) / (m : ℚ)^2) * (32/5) := by
+          exact add_le_add
+            (mul_le_mul_of_nonneg_left (poissonFirst_zetaMax_le_sharp _) (by positivity))
+            (mul_le_mul_of_nonneg_left (poissonZero_zetaMax_le _) (by positivity))
+    _ ≤ 184 / (m : ℚ)^2 := by
+          field_simp [hmpos.ne']
+          norm_num
+
 /-! ## Final rational positivity margin -/
 
 /-- Alternating partial sum surrogate for `exp(-x)`. -/
