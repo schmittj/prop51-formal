@@ -968,6 +968,44 @@ theorem poissonEOne_gammaTilt_le (T : Nat) :
             (mul_le_mul_of_nonneg_left (poissonFirst_gammaTilt_le T) (by norm_num))
     _ = 203/4 := by norm_num
 
+theorem poissonEOneMulS_gammaTilt_le (T : Nat) :
+    ∑ s ∈ Finset.range T, eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)
+      ≤ 196 := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+        =
+      (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ)) := by
+    calc
+      (∑ s ∈ Finset.range T, eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+          =
+        ∑ s ∈ Finset.range T,
+          ((1/2) * ((s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+            + (1/2) * ((s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ))) := by
+            refine Finset.sum_congr rfl fun s hs => ?_
+            unfold eOne
+            push_cast
+            ring
+      _ =
+        (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ)) := by
+            rw [Finset.sum_add_distrib, Finset.mul_sum, Finset.mul_sum]
+  rw [hsplit]
+  calc
+    (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ))
+      ≤ (1/2) * (3131/10) + (1/2) * 78 := by
+          exact add_le_add
+            (mul_le_mul_of_nonneg_left (poissonThird_gammaTilt_le T) (by norm_num))
+            (mul_le_mul_of_nonneg_left (poissonSecond_gammaTilt_le T) (by norm_num))
+    _ ≤ 196 := by norm_num
+
 theorem poissonQTwo_zetaMax_le (T : Nat) :
     ∑ s ∈ Finset.range T, qTwo s * zetaMax^s / (s.factorial : ℚ) ≤ 59 := by
   have hsplit :
@@ -1963,6 +2001,148 @@ def crossDominantBudgetTerm (m s : Nat) : ℚ :=
   ((146/125) * (66/5) * eOne s * gammaTilt^s / (s.factorial : ℚ))
     / (m : ℚ)^2
 
+/-- P4 smaller cross term `u_s v_s`, using
+`u_s ≤ 1.168 e₁(s)e^{0.2237s}/m` and `v_s ≤ 1.095s/m²`. -/
+def crossUVBudgetTerm (m s : Nat) : ℚ :=
+  ((146/125) * (219/200) * eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+    / (m : ℚ)^3
+
+/-- P4 smaller cross term `v_s|ε_p|`. -/
+def crossVEpsBudgetTerm (m s : Nat) : ℚ :=
+  ((219/200) * (66/5) * (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+    / (m : ℚ)^3
+
+/-- P4 smaller cross term `v_s|ε_p|u_s`. -/
+def crossVEpsUBudgetTerm (m s : Nat) : ℚ :=
+  ((219/200) * (66/5) * (146/125) * eOne s * (s : ℚ) *
+      gammaTilt^s / (s.factorial : ℚ)) / (m : ℚ)^4
+
+/-- The explicitly budgeted smaller P4 cross terms. -/
+def crossSmallBudgetTerm (m s : Nat) : ℚ :=
+  crossUVBudgetTerm m s + crossVEpsBudgetTerm m s + crossVEpsUBudgetTerm m s
+
+/-- The smaller P4 cross terms fit inside the `3/2·m⁻²` reserve used by
+`signLock_P4_numerical_budget_zetaMax`. -/
+theorem signLock_P4_small_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1), crossSmallBudgetTerm m s
+      ≤ (3/2) / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+  have hUV :
+      (∑ s ∈ Finset.range (m/3 + 1), crossUVBudgetTerm m s)
+        =
+      ((146/125) * (219/200) / (m : ℚ)^3) *
+        (∑ s ∈ Finset.range (m/3 + 1),
+          eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)) := by
+    unfold crossUVBudgetTerm
+    rw [← Finset.sum_div]
+    calc
+      (∑ i ∈ Finset.range (m/3 + 1),
+          (146/125) * (219/200) * eOne i * (i : ℚ) *
+            gammaTilt^i / (i.factorial : ℚ)) / (m : ℚ)^3
+        =
+        ((146/125) * (219/200) *
+          (∑ i ∈ Finset.range (m/3 + 1),
+            eOne i * (i : ℚ) * gammaTilt^i / (i.factorial : ℚ))) / (m : ℚ)^3 := by
+          congr 1
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun i hi => ?_
+          ring
+      _ =
+        ((146/125) * (219/200) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)) := by
+          ring
+  have hVEps :
+      (∑ s ∈ Finset.range (m/3 + 1), crossVEpsBudgetTerm m s)
+        =
+      ((219/200) * (66/5) / (m : ℚ)^3) *
+        (∑ s ∈ Finset.range (m/3 + 1),
+          (s : ℚ) * zetaMax^s / (s.factorial : ℚ)) := by
+    unfold crossVEpsBudgetTerm
+    rw [← Finset.sum_div]
+    calc
+      (∑ i ∈ Finset.range (m/3 + 1),
+          (219/200) * (66/5) * (i : ℚ) * zetaMax^i / (i.factorial : ℚ)) /
+          (m : ℚ)^3
+        =
+        ((219/200) * (66/5) *
+          (∑ i ∈ Finset.range (m/3 + 1),
+            (i : ℚ) * zetaMax^i / (i.factorial : ℚ))) / (m : ℚ)^3 := by
+          congr 1
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun i hi => ?_
+          ring
+      _ =
+        ((219/200) * (66/5) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ) * zetaMax^s / (s.factorial : ℚ)) := by
+          ring
+  have hVEpsU :
+      (∑ s ∈ Finset.range (m/3 + 1), crossVEpsUBudgetTerm m s)
+        =
+      ((219/200) * (66/5) * (146/125) / (m : ℚ)^4) *
+        (∑ s ∈ Finset.range (m/3 + 1),
+          eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)) := by
+    unfold crossVEpsUBudgetTerm
+    rw [← Finset.sum_div]
+    calc
+      (∑ i ∈ Finset.range (m/3 + 1),
+          (219/200) * (66/5) * (146/125) * eOne i * (i : ℚ) *
+            gammaTilt^i / (i.factorial : ℚ)) / (m : ℚ)^4
+        =
+        ((219/200) * (66/5) * (146/125) *
+          (∑ i ∈ Finset.range (m/3 + 1),
+            eOne i * (i : ℚ) * gammaTilt^i / (i.factorial : ℚ))) / (m : ℚ)^4 := by
+          congr 1
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun i hi => ?_
+          ring
+      _ =
+        ((219/200) * (66/5) * (146/125) / (m : ℚ)^4) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)) := by
+          ring
+  have hsplit :
+      (∑ s ∈ Finset.range (m/3 + 1), crossSmallBudgetTerm m s)
+        =
+      ((146/125) * (219/200) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+        + ((219/200) * (66/5) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+        + ((219/200) * (66/5) * (146/125) / (m : ℚ)^4) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ)) := by
+    unfold crossSmallBudgetTerm
+    rw [Finset.sum_add_distrib, Finset.sum_add_distrib, hUV, hVEps, hVEpsU]
+  rw [hsplit]
+  calc
+    ((146/125) * (219/200) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+        + ((219/200) * (66/5) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+        + ((219/200) * (66/5) * (146/125) / (m : ℚ)^4) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            eOne s * (s : ℚ) * gammaTilt^s / (s.factorial : ℚ))
+      ≤ ((146/125) * (219/200) / (m : ℚ)^3) * 196
+          + ((219/200) * (66/5) / (m : ℚ)^3) * 12
+          + ((219/200) * (66/5) * (146/125) / (m : ℚ)^4) * 196 := by
+          exact add_le_add
+            (add_le_add
+              (mul_le_mul_of_nonneg_left (poissonEOneMulS_gammaTilt_le _)
+                (by positivity))
+              (mul_le_mul_of_nonneg_left (poissonFirst_zetaMax_le _)
+                (by positivity)))
+            (mul_le_mul_of_nonneg_left (poissonEOneMulS_gammaTilt_le _)
+              (by positivity))
+    _ ≤ (3/2) / (m : ℚ)^2 := by
+          field_simp [hmpos.ne']
+          nlinarith
+
 /-- P4 numerical reserve: the dominant cross term plus a `3/2·m⁻²`
 allowance for the smaller `u_s v_s` and `v_s |ε_p| (1+u_s)` pieces is within
 the paper's `784/m²` budget. -/
@@ -2007,6 +2187,20 @@ theorem signLock_P4_numerical_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
     _ ≤ 784 / (m : ℚ)^2 := by
           field_simp [hmpos.ne']
           norm_num
+
+/-- P4 numerical budget with the smaller cross terms expanded explicitly. -/
+theorem signLock_P4_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1), crossDominantBudgetTerm m s
+        + ∑ s ∈ Finset.range (m/3 + 1), crossSmallBudgetTerm m s
+      ≤ 784 / (m : ℚ)^2 := by
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1), crossDominantBudgetTerm m s
+        + ∑ s ∈ Finset.range (m/3 + 1), crossSmallBudgetTerm m s
+      ≤ ∑ s ∈ Finset.range (m/3 + 1), crossDominantBudgetTerm m s
+          + (3/2) / (m : ℚ)^2 := by
+          exact add_le_add le_rfl (signLock_P4_small_budget_zetaMax hm)
+    _ ≤ 784 / (m : ℚ)^2 :=
+          signLock_P4_numerical_budget_zetaMax (by omega : 1 ≤ m)
 
 /-! ## Final rational positivity margin -/
 
