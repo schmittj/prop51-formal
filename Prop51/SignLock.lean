@@ -268,6 +268,245 @@ theorem abs_epsilonMinus_le_final_of_three_mul_le
   apply abs_epsilonMinus_le_final hN hN40 hm
   omega
 
+/-! ## Rational Poisson moment bounds -/
+
+/-- Closed-form upper surrogate for finite exponential sums, using the
+partial-exp majorant from `ExpBounds.lean`. -/
+def partialExpUpper (y : ℚ) (T₀ : Nat) : ℚ :=
+  (∑ t ∈ Finset.range T₀, y^t / (t.factorial : ℚ))
+    + (y^T₀ / (T₀.factorial : ℚ)) * (1 / (1 - y/(T₀ : ℚ)))
+
+theorem poissonFirst_sum_range (y : ℚ) :
+    ∀ T : Nat,
+      (∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ))
+        = y * ∑ t ∈ Finset.range (T-1), y^t / (t.factorial : ℚ)
+  | 0 => by simp
+  | T+1 => by
+      cases T with
+      | zero =>
+          simp
+      | succ T =>
+          rw [Finset.sum_range_succ, poissonFirst_sum_range y (T+1)]
+          rw [show T+1+1-1 = T+1 by omega, Finset.sum_range_succ, mul_add]
+          congr 1
+          have hfac : ((((T+1).factorial : Nat) : ℚ))
+              = ((T+1 : Nat) : ℚ) * (T.factorial : ℚ) := by
+            norm_num [Nat.factorial_succ]
+          rw [hfac, pow_succ]
+          field_simp [show ((T+1 : Nat) : ℚ) ≠ 0 by positivity,
+            show ((T.factorial : Nat) : ℚ) ≠ 0 by positivity]
+
+theorem poissonFallingSecond_sum_range (y : ℚ) :
+    ∀ T : Nat,
+      (∑ s ∈ Finset.range T,
+          (s : ℚ) * ((s-1 : Nat) : ℚ) * y^s / (s.factorial : ℚ))
+        = y^2 * ∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ)
+  | 0 => by simp
+  | 1 => by simp
+  | T+2 => by
+      cases T with
+      | zero =>
+          norm_num [Finset.sum_range_succ]
+      | succ T =>
+          rw [Finset.sum_range_succ, poissonFallingSecond_sum_range y (T+2)]
+          rw [show T+1+2-2 = T+1 by omega, Finset.sum_range_succ, mul_add]
+          congr 1
+          have hfac1 : (((T+1+1).factorial : Nat) : ℚ)
+              = ((T+1+1 : Nat) : ℚ) * ((T+1).factorial : ℚ) := by
+            norm_num [Nat.factorial_succ]
+          have hfac2 : (((T+1).factorial : Nat) : ℚ)
+              = ((T+1 : Nat) : ℚ) * (T.factorial : ℚ) := by
+            norm_num [Nat.factorial_succ]
+          rw [hfac1, hfac2, pow_succ, pow_succ]
+          field_simp [show ((T+1+1 : Nat) : ℚ) ≠ 0 by positivity,
+            show ((T+1 : Nat) : ℚ) ≠ 0 by positivity,
+            show ((T.factorial : Nat) : ℚ) ≠ 0 by positivity]
+          rw [show T + 2 - 1 = T + 1 by omega]
+          ring
+
+private theorem sq_eq_falling_add (s : Nat) :
+    (s : ℚ)^2 = (s : ℚ) * ((s-1 : Nat) : ℚ) + (s : ℚ) := by
+  cases s with
+  | zero =>
+      norm_num
+  | succ s =>
+      simp
+      ring
+
+theorem poissonFirst_sum_le_partialExpUpper
+    (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ)
+      ≤ y * partialExpUpper y T₀ := by
+  rw [poissonFirst_sum_range]
+  exact mul_le_mul_of_nonneg_left
+    (sum_exp_le y T₀ hy hyT (T-1)) hy
+
+theorem poissonSecond_sum_le_partialExpUpper
+    (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^2 * y^s / (s.factorial : ℚ)
+      ≤ (y^2 + y) * partialExpUpper y T₀ := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, (s : ℚ)^2 * y^s / (s.factorial : ℚ))
+        =
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ) := by
+    rw [← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun s hs => ?_
+    rw [sq_eq_falling_add s]
+    ring
+  rw [hsplit]
+  have hfall :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        = y^2 * ∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingSecond_sum_range y T
+  rw [hfall, poissonFirst_sum_range]
+  have h2 := sum_exp_le y T₀ hy hyT (T-2)
+  have h1 := sum_exp_le y T₀ hy hyT (T-1)
+  calc
+    y^2 * (∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ))
+        + y * (∑ t ∈ Finset.range (T-1), y^t / (t.factorial : ℚ))
+      ≤ y^2 * partialExpUpper y T₀ + y * partialExpUpper y T₀ := by
+          exact add_le_add
+            (mul_le_mul_of_nonneg_left h2 (sq_nonneg y))
+            (mul_le_mul_of_nonneg_left h1 hy)
+    _ = (y^2 + y) * partialExpUpper y T₀ := by ring
+
+/-- The endpoint `ζ` used throughout §5. -/
+def zetaMax : ℚ := 50/27
+
+theorem poissonFirst_zetaMax_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ) ≤ 12 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ) * zetaMax^s / (s.factorial : ℚ)
+        ≤ zetaMax * partialExpUpper zetaMax 18 :=
+          poissonFirst_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 12 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonSecond_zetaMax_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ) ≤ 34 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ)
+        ≤ (zetaMax^2 + zetaMax) * partialExpUpper zetaMax 18 :=
+          poissonSecond_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 34 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+/-! ## P2: `d`-drift budget -/
+
+theorem one_sub_DFactor_le_quadratic
+    {m s : Nat} (hm : 1 ≤ m) (hs : 3*s ≤ m) :
+    1 - DFactor m s
+      ≤ (2304/3125) *
+          ((s : ℚ)/(m : ℚ)^2 + 2*(s : ℚ)^2/(m : ℚ)^3) := by
+  have hslt : s < m := by
+    rcases s with rfl | s
+    · omega
+    · omega
+  have hratio := d_ratio_lb m s hslt
+  have hfirst :
+      1 - DFactor m s
+        ≤ (2304/3125) * ((s:ℚ) / ((m:ℚ) * ((m-s : Nat):ℚ))) := by
+    unfold DFactor
+    linarith
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmspos : (0 : ℚ) < ((m-s : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < m-s)
+  have hquad :
+      (s:ℚ) / ((m:ℚ) * ((m-s : Nat):ℚ))
+        ≤ (s : ℚ)/(m : ℚ)^2 + 2*(s : ℚ)^2/(m : ℚ)^3 := by
+    have hms_cast : ((m-s : Nat) : ℚ) = (m : ℚ) - (s : ℚ) := by
+      rw [Nat.cast_sub hslt.le]
+    rw [hms_cast]
+    have hs_nonneg : (0 : ℚ) ≤ s := by positivity
+    have hm_two_s : (2 : ℚ) * s ≤ m := by exact_mod_cast (by omega : 2*s ≤ m)
+    have hsubpos : (0 : ℚ) < (m : ℚ) - (s : ℚ) := by
+      rw [← hms_cast]
+      exact hmspos
+    have hmain : (m : ℚ)^2 ≤ ((m : ℚ) + 2*(s : ℚ)) * ((m : ℚ) - (s : ℚ)) := by
+      nlinarith [mul_nonneg hs_nonneg (sub_nonneg.mpr hm_two_s)]
+    have hrecip :
+        (1 : ℚ) / ((m : ℚ) * ((m : ℚ) - (s : ℚ)))
+          ≤ ((m : ℚ) + 2*(s : ℚ)) / (m : ℚ)^3 := by
+      field_simp [hmpos.ne', hsubpos.ne']
+      nlinarith [hmain, mul_pos hmpos hmpos]
+    have hmul := mul_le_mul_of_nonneg_left hrecip hs_nonneg
+    convert hmul using 1
+    · ring_nf
+    · field_simp [hmpos.ne']
+  exact hfirst.trans (mul_le_mul_of_nonneg_left hquad (by norm_num))
+
+/-- P2 drift contribution with the rationalized `d` constants. -/
+theorem signLock_P2_budget_zetaMax {m : Nat} (hm : 361 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s)
+      ≤ 13 / (m : ℚ)^2 := by
+  have hm1 : 1 ≤ m := by omega
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hpoint :
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s)
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (((2304/3125) / (m : ℚ)^2) *
+            ((s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+          + ((2*(2304/3125)) / (m : ℚ)^3) *
+            ((s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hs3 : 3*s ≤ m := by
+      have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+      have hmul : 3*s ≤ 3*(m/3) := Nat.mul_le_mul_left 3 hsle
+      have hdiv : 3*(m/3) ≤ m := by
+        exact Nat.mul_div_le m 3
+      exact hmul.trans hdiv
+    have hquad := one_sub_DFactor_le_quadratic (m := m) (s := s) hm1 hs3
+    have hweight : 0 ≤ zetaMax^s / (s.factorial : ℚ) := by
+      have hz : 0 ≤ zetaMax := by norm_num [zetaMax]
+      positivity
+    calc
+      (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s)
+        ≤ (zetaMax^s / (s.factorial : ℚ)) *
+            ((2304/3125) *
+              ((s : ℚ)/(m : ℚ)^2 + 2*(s : ℚ)^2/(m : ℚ)^3)) :=
+              mul_le_mul_of_nonneg_left hquad hweight
+      _ =
+          ((2304/3125) / (m : ℚ)^2) *
+              ((s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+            + ((2*(2304/3125)) / (m : ℚ)^3) *
+              ((s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ)) := by
+              ring
+  calc
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * (1 - DFactor m s)
+      ≤
+      ∑ s ∈ Finset.range (m/3 + 1),
+        (((2304/3125) / (m : ℚ)^2) *
+            ((s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+          + ((2*(2304/3125)) / (m : ℚ)^3) *
+            ((s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))) := hpoint
+    _ =
+      ((2304/3125) / (m : ℚ)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+        + ((2*(2304/3125)) / (m : ℚ)^3) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ)) := by
+          rw [Finset.sum_add_distrib, Finset.mul_sum, Finset.mul_sum]
+    _ ≤
+      ((2304/3125) / (m : ℚ)^2) * 12
+        + ((2*(2304/3125)) / (m : ℚ)^3) * 34 := by
+          exact add_le_add
+            (mul_le_mul_of_nonneg_left (poissonFirst_zetaMax_le _) (by positivity))
+            (mul_le_mul_of_nonneg_left (poissonSecond_zetaMax_le _) (by positivity))
+    _ ≤ 13 / (m : ℚ)^2 := by
+          have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+          field_simp [hmpos.ne']
+          nlinarith
+
 /-! ## Final rational positivity margin -/
 
 /-- Alternating partial sum surrogate for `exp(-x)`. -/

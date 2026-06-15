@@ -122,8 +122,9 @@ Status:
       are done; this is also converted to `(1+ε_{m-s})`, with the completed
       Δ-envelope exposed as `|ε_{m-s}| ≤ 66/(5m)` for `3s ≤ m`.  The final
       rational positivity margin against `2215` is done via a 10-term
-      alternating surrogate at `50/27`.  Remaining: prove the P1–P4 pieces
-      (Poisson moments via partial-exp majorants) and tails.
+      alternating surrogate at `50/27`.  Rational Poisson/partial-exp first
+      and second moment bounds are in place, and P2 (`d`-drift) is proved
+      with budget `13/m²`.  Remaining: prove P1, P3, P4, and tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
