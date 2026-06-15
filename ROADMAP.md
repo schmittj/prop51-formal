@@ -103,6 +103,10 @@ Status:
       `p < 2r`; the exact block split
       `E⁻_p(N) = -N c_p + Σ_{r=2}^p (-N)^r [t^p]H^r/r!` and the residual
       bound `|E⁻_p + N c_p| ≤ Σ_{r≥2} (4N/25)^r 6^p Gcomp r p / r!`.
+- [x] Δ-envelope scaffold (`Prop51/Envelope.lean`): rationalized
+      `DeltaRat` with coefficient `(36/5)(4/25)^r4^{r-1}`, block domination
+      from `Gcomp_le` and `c_lb`, and the normalized bridge
+      `|E⁻_p/(-Nc_p)-1| ≤ DeltaRat p N`.
 - [ ] the Δ-envelope numerics (Lemma 4.1, `Envelope.lean`): from
       `Eminus_residual_le`, the normalized bound `|ε_p| ≤ 13.2/m` for
       `p ≥ 2m/3`, `N ≤ 40m/3`, `m ≥ 361` — geometric domination by the
