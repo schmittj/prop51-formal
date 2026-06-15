@@ -2002,6 +2002,90 @@ theorem epsilonMinus_add_twoEndpointCorrection_eq_exactPieces
   unfold twoBlockMiddleNormalized threeBlockExactTail
   ring
 
+/-- Rationalized Δ-tail corresponding to the exact `r ≥ 3` contribution. -/
+def threeBlockDeltaTail (N p : Nat) : ℚ :=
+  ∑ r ∈ Finset.Icc 3 (p/2), DeltaRatTerm p (N : ℚ) r
+
+private theorem abs_hpow_block_le_EminusResidualBlock
+    (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
+    |(-N)^r * hpow r p / (r.factorial : ℚ)|
+      ≤ EminusResidualBlock p N r := by
+  rw [abs_div, abs_mul, abs_pow, abs_neg, abs_of_nonneg hN,
+    abs_of_nonneg (by positivity : (0:ℚ) ≤ ((r.factorial : ℕ) : ℚ))]
+  have hfpos : (0:ℚ) < ((r.factorial : ℕ) : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  unfold EminusResidualBlock
+  apply div_le_div_of_nonneg_right ?_ hfpos.le
+  calc
+    N^r * |hpow r p| ≤ N^r * ((4/25)^r * 6^p * Gcomp r p) := by
+      exact mul_le_mul_of_nonneg_left (abs_hpow_le r p) (by positivity)
+    _ = (N*(4/25))^r * 6^p * Gcomp r p := by
+      rw [mul_pow]
+      ring
+
+/-- The exact `r ≥ 3` tail is dominated by the corresponding rationalized
+Δ-tail.  The comparison to the closed P3c term is the remaining pure
+Δ-tail estimate. -/
+theorem abs_threeBlockExactTail_le_threeBlockDeltaTail
+    {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p) :
+    |threeBlockExactTail N p| ≤ threeBlockDeltaTail N p := by
+  let T : Nat → ℚ :=
+    fun r => (-(N : ℚ))^r * hpow r p / (r.factorial : ℚ)
+  have hNq_pos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNq_nonneg : (0 : ℚ) ≤ (N : ℚ) := hNq_pos.le
+  have hcp_pos : 0 < c p := c_pos p (by omega : 1 ≤ p)
+  have hden_pos : 0 < (N : ℚ) * c p := mul_pos hNq_pos hcp_pos
+  have htrunc :
+      (∑ r ∈ Finset.Icc 3 p, T r)
+        = ∑ r ∈ Finset.Icc 3 (p/2), T r := by
+    symm
+    apply Finset.sum_subset
+    · intro r hr
+      obtain ⟨hr3, hrhalf⟩ := Finset.mem_Icc.mp hr
+      exact Finset.mem_Icc.mpr ⟨hr3, by omega⟩
+    · intro r hr hnot
+      obtain ⟨hr3, _hrp⟩ := Finset.mem_Icc.mp hr
+      have hhalf : p/2 < r := by
+        by_contra hle
+        exact hnot (Finset.mem_Icc.mpr ⟨hr3, Nat.le_of_not_gt hle⟩)
+      have hplt : p < 2*r := by
+        have hnotle : ¬ r ≤ p/2 := Nat.not_le.mpr hhalf
+        rw [Nat.le_div_two_iff_mul_two_le] at hnotle
+        omega
+      unfold T
+      rw [hpow_eq_zero (by omega : 1 ≤ r) hplt, mul_zero, zero_div]
+  unfold threeBlockExactTail threeBlockDeltaTail
+  change |-(∑ r ∈ Finset.Icc 3 p, T r) / ((N : ℚ) * c p)|
+      ≤ ∑ r ∈ Finset.Icc 3 (p/2), DeltaRatTerm p (N : ℚ) r
+  rw [htrunc]
+  calc
+    |-(∑ r ∈ Finset.Icc 3 (p/2), T r) / ((N : ℚ) * c p)|
+        = |∑ r ∈ Finset.Icc 3 (p/2), T r| / ((N : ℚ) * c p) := by
+          rw [abs_div, abs_neg, abs_of_pos hden_pos]
+    _ ≤ (∑ r ∈ Finset.Icc 3 (p/2), |T r|) / ((N : ℚ) * c p) := by
+          exact div_le_div_of_nonneg_right
+            (Finset.abs_sum_le_sum_abs _ _) hden_pos.le
+    _ = ∑ r ∈ Finset.Icc 3 (p/2), |T r| / ((N : ℚ) * c p) := by
+          rw [Finset.sum_div]
+    _ ≤ ∑ r ∈ Finset.Icc 3 (p/2), DeltaRatTerm p (N : ℚ) r := by
+          refine Finset.sum_le_sum fun r hr => ?_
+          obtain ⟨hr3, hrhalf⟩ := Finset.mem_Icc.mp hr
+          have hrp : 2*r ≤ p := by
+            have h := Nat.le_div_two_iff_mul_two_le.mp hrhalf
+            omega
+          have hblock := abs_hpow_block_le_EminusResidualBlock
+            p r (N := (N : ℚ)) hNq_nonneg
+          have hdelta := EminusResidualBlock_le_Nc_mul_DeltaRatTerm
+            (p := p) (r := r) (N := (N : ℚ)) hNq_nonneg
+            (by omega : 2 ≤ p) (by omega : 1 ≤ r) hrp
+          calc
+            |T r| / ((N : ℚ) * c p)
+              ≤ EminusResidualBlock p (N : ℚ) r / ((N : ℚ) * c p) := by
+                exact div_le_div_of_nonneg_right hblock hden_pos.le
+            _ ≤ DeltaRatTerm p (N : ℚ) r := by
+                rw [div_le_iff₀ hden_pos]
+                simpa [mul_comm, mul_left_comm, mul_assoc] using hdelta
+
 theorem DFactor_nonneg (m s : Nat) : 0 ≤ DFactor m s := by
   unfold DFactor
   exact div_nonneg (d_nonneg (m-s)) (d_nonneg m)
@@ -2725,6 +2809,14 @@ def threeBlockTailBound (N p : Nat) : ℚ :=
       ((((p-1 : Nat) : ℚ)) * (((p-2 : Nat) : ℚ))
         * (((p-3 : Nat) : ℚ)) * (((p-4 : Nat) : ℚ)))
     * (25/23)
+
+/-- Tail bridge reduced to a pure rationalized-Δ estimate. -/
+theorem abs_threeBlockExactTail_le_threeBlockTailBound_of_DeltaTail
+    {N p : Nat} (hN : 1 ≤ N) (hp : 5 ≤ p)
+    (hdelta : threeBlockDeltaTail N p ≤ threeBlockTailBound N p) :
+    |threeBlockExactTail N p| ≤ threeBlockTailBound N p :=
+  (abs_threeBlockExactTail_le_threeBlockDeltaTail
+    (N := N) (p := p) hN hp).trans hdelta
 
 private theorem near_p_sub_four_linear_lower
     {m s k : Nat} (hm : 361 ≤ m) (hs : 3*s ≤ m) (hk : 1 ≤ k) (hk4 : k ≤ 4) :
@@ -3851,6 +3943,25 @@ theorem signLock_near_error_budget_zetaMax_of_threeBlockExactTail
     exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
   exact abs_nonlinearRecenteringRemainder_le_of_threeBlockExactTail
     (N := N) (m := m) (s := s) hN (by omega : 5 ≤ m-s) (htail s hs)
+
+/-- Near-range `w_s` audit reduced to a pure rationalized-Δ P3c tail
+estimate. -/
+theorem signLock_near_error_budget_zetaMax_of_threeBlockDeltaTail
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hdelta : ∀ s, s ∈ Finset.range (m/3 + 1) →
+      threeBlockDeltaTail N (m-s) ≤ threeBlockTailBound N (m-s)) :
+    ∑ s ∈ Finset.range (m/3 + 1),
+        (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s|
+      ≤ 2214 / (m : ℚ)^2 := by
+  refine signLock_near_error_budget_zetaMax_of_threeBlockExactTail
+    (N := N) (m := m) hN hN40 hm ?_
+  intro s hs
+  have hs3 : 3*s ≤ m := by
+    have hsle : s ≤ m/3 := Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+    exact (Nat.mul_le_mul_left 3 hsle).trans (Nat.mul_div_le m 3)
+  exact abs_threeBlockExactTail_le_threeBlockTailBound_of_DeltaTail
+    (N := N) (p := m-s) hN (by omega : 5 ≤ m-s) (hdelta s hs)
 
 /-! ## Final rational positivity margin -/
 
