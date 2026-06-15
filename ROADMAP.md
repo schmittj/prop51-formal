@@ -116,8 +116,10 @@ Status:
       Lean now proves the split, the near-range geometric majorant, the
       rational far-tail geometric bound, `DeltaRat_le_final_envelope`, and
       `Eminus_normalized_residual_le_final`.
-- [ ] sign-lock §5: the exact finite decomposition
-      `−X_m = Σ_s (−ζ)^s/s!·Π_s D_s (1+ε_{m-s}) ± boundary`, the P1–P4
+- [ ] sign-lock §5 (`Prop51/SignLock.lean`): exact finite decomposition
+      of `−X_m` and the non-boundary
+      `(-ζ)^s/s!·Π_s D_s·(-E^-_{m-s}/(Nc_{m-s}))` summand factorization
+      are done.  Remaining: convert to `(1+ε_{m-s})`, prove the P1–P4
       pieces (Poisson moments via partial-exp majorants), tails, and the
       final positivity `m²e^{-ζ}(1-2/m) > 2215`-surrogate.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
