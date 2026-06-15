@@ -42,6 +42,19 @@ def DeltaRat (p : Nat) (N : ℚ) : ℚ :=
 def EminusResidualBlock (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
   (N*(4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ)
 
+/-- Exact ratio multiplying the `r`th Δ block to get the `(r+1)`st block. -/
+def DeltaRatStepRatio (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
+  ((16/25) * N)
+    / (((r+1 : Nat) : ℚ)
+      * ((p - 2*r : Nat) : ℚ)
+      * ((p - 2*r + 1 : Nat) : ℚ))
+
+/-- Geometric-ratio upper bound used for the near range `r ≥ 2`, replacing
+`r+1` by `3` in the denominator. -/
+def DeltaRatStepRatioBound (p : Nat) (N : ℚ) (r : Nat) : ℚ :=
+  ((16/25) * N)
+    / (3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ))
+
 theorem DeltaRatTerm_nonneg (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
     0 ≤ DeltaRatTerm p N r := by
   unfold DeltaRatTerm
@@ -79,19 +92,46 @@ theorem DeltaRatTerm_succ (p : Nat) (N : ℚ) (r : Nat)
     DeltaRatTerm p N (r+1)
       =
     DeltaRatTerm p N r
-      * (((16/25) * N)
-        / (((r+1 : Nat) : ℚ)
-          * ((p - 2*r : Nat) : ℚ)
-          * ((p - 2*r + 1 : Nat) : ℚ))) := by
+      * DeltaRatStepRatio p N r := by
   obtain ⟨s, rfl⟩ : ∃ s, r = s + 1 := ⟨r-1, by omega⟩
   obtain ⟨k, rfl⟩ : ∃ k, p = 2*((s+1)+1) + k := ⟨p - 2*((s+1)+1), by omega⟩
-  simp only [DeltaRatTerm]
+  simp only [DeltaRatTerm, DeltaRatStepRatio]
   rw [show 2 * ((s+1)+1) + k - 2 * ((s+1)+1) + 1 = k + 1 by omega,
       show 2 * ((s+1)+1) + k - 2 * (s+1) + 1 = k + 3 by omega,
       show 2 * ((s+1)+1) + k - 2 * (s+1) = k + 2 by omega]
   norm_num [Nat.factorial_succ]
   field_simp
   ring_nf
+
+theorem DeltaRatStepRatio_le_bound (p : Nat) {N : ℚ} (r : Nat)
+    (hN : 0 ≤ N) (hr : 2 ≤ r) (hrp : 2*(r+1) ≤ p) :
+    DeltaRatStepRatio p N r ≤ DeltaRatStepRatioBound p N r := by
+  unfold DeltaRatStepRatio DeltaRatStepRatioBound
+  have hnum : 0 ≤ (16/25) * N := by positivity
+  have hApos : (0:ℚ) < ((p - 2*r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < p - 2*r)
+  have hBpos : (0:ℚ) < ((p - 2*r + 1 : Nat) : ℚ) := by positivity
+  have hdenpos :
+      (0:ℚ) < 3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ) := by
+    positivity
+  have hrq : (3:ℚ) ≤ ((r+1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 3 ≤ r+1)
+  have hden_le :
+      3 * ((p - 2*r : Nat) : ℚ) * ((p - 2*r + 1 : Nat) : ℚ)
+        ≤ ((r+1 : Nat) : ℚ) * ((p - 2*r : Nat) : ℚ)
+          * ((p - 2*r + 1 : Nat) : ℚ) := by
+    exact mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_right hrq hApos.le) hBpos.le
+  exact div_le_div_of_nonneg_left hnum hdenpos hden_le
+
+theorem DeltaRatTerm_succ_le (p : Nat) {N : ℚ} (r : Nat)
+    (hN : 0 ≤ N) (hr : 2 ≤ r) (hrp : 2*(r+1) ≤ p) :
+    DeltaRatTerm p N (r+1)
+      ≤ DeltaRatTerm p N r * DeltaRatStepRatioBound p N r := by
+  rw [DeltaRatTerm_succ p N r (by omega : 1 ≤ r) hrp]
+  exact mul_le_mul_of_nonneg_left
+    (DeltaRatStepRatio_le_bound p r hN hr hrp)
+    (DeltaRatTerm_nonneg p r hN)
 
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
