@@ -324,6 +324,92 @@ theorem poissonFallingSecond_sum_range (y : ℚ) :
           rw [show T + 2 - 1 = T + 1 by omega]
           ring
 
+theorem poissonFallingThird_sum_range (y : ℚ) :
+    ∀ T : Nat,
+      (∑ s ∈ Finset.range T,
+          (s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+            y^s / (s.factorial : ℚ))
+        = y^3 * ∑ t ∈ Finset.range (T-3), y^t / (t.factorial : ℚ)
+  | 0 => by simp
+  | 1 => by simp
+  | 2 => by norm_num [Finset.sum_range_succ]
+  | T+3 => by
+      cases T with
+      | zero =>
+          norm_num [Finset.sum_range_succ]
+      | succ T =>
+          rw [Finset.sum_range_succ, poissonFallingThird_sum_range y (T+3)]
+          rw [show T+1+3-3 = T+1 by omega, Finset.sum_range_succ, mul_add]
+          congr 1
+          have hfac1 : (((T+3).factorial : Nat) : ℚ)
+              = ((T+3 : Nat) : ℚ) * ((T+2).factorial : ℚ) := by
+            rw [show T+3 = (T+2)+1 by omega, Nat.factorial_succ]
+            push_cast
+            ring
+          have hfac2 : (((T+2).factorial : Nat) : ℚ)
+              = ((T+2 : Nat) : ℚ) * ((T+1).factorial : ℚ) := by
+            rw [show T+2 = (T+1)+1 by omega, Nat.factorial_succ]
+            push_cast
+            ring
+          have hfac3 : (((T+1).factorial : Nat) : ℚ)
+              = ((T+1 : Nat) : ℚ) * (T.factorial : ℚ) := by
+            rw [show T+1 = T+1 by rfl, Nat.factorial_succ]
+            push_cast
+            ring
+          rw [hfac1, hfac2, hfac3, pow_succ, pow_succ, pow_succ]
+          push_cast
+          field_simp [show ((T : ℚ) + 2 + 1) ≠ 0 by positivity,
+            show ((T : ℚ) + 1 + 1) ≠ 0 by positivity,
+            show ((T : ℚ) + 1) ≠ 0 by positivity,
+            show ((T.factorial : Nat) : ℚ) ≠ 0 by positivity]
+
+theorem poissonFallingFourth_sum_range (y : ℚ) :
+    ∀ T : Nat,
+      (∑ s ∈ Finset.range T,
+          (s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+            ((s-3 : Nat) : ℚ) * y^s / (s.factorial : ℚ))
+        = y^4 * ∑ t ∈ Finset.range (T-4), y^t / (t.factorial : ℚ)
+  | 0 => by simp
+  | 1 => by simp
+  | 2 => by norm_num [Finset.sum_range_succ]
+  | 3 => by norm_num [Finset.sum_range_succ]
+  | T+4 => by
+      cases T with
+      | zero =>
+          norm_num [Finset.sum_range_succ]
+      | succ T =>
+          rw [Finset.sum_range_succ, poissonFallingFourth_sum_range y (T+4)]
+          rw [show T+1+4-4 = T+1 by omega, Finset.sum_range_succ, mul_add]
+          congr 1
+          have hfac1 : (((T+4).factorial : Nat) : ℚ)
+              = ((T+4 : Nat) : ℚ) * ((T+3).factorial : ℚ) := by
+            rw [show T+4 = (T+3)+1 by omega, Nat.factorial_succ]
+            push_cast
+            ring
+          have hfac2 : (((T+3).factorial : Nat) : ℚ)
+              = ((T+3 : Nat) : ℚ) * ((T+2).factorial : ℚ) := by
+            rw [show T+3 = (T+2)+1 by omega, Nat.factorial_succ]
+            push_cast
+            ring
+          have hfac3 : (((T+2).factorial : Nat) : ℚ)
+              = ((T+2 : Nat) : ℚ) * ((T+1).factorial : ℚ) := by
+            rw [show T+2 = (T+1)+1 by omega, Nat.factorial_succ]
+            push_cast
+            ring
+          have hfac4 : (((T+1).factorial : Nat) : ℚ)
+              = ((T+1 : Nat) : ℚ) * (T.factorial : ℚ) := by
+            rw [show T+1 = T+1 by rfl, Nat.factorial_succ]
+            push_cast
+            ring
+          rw [hfac1, hfac2, hfac3, hfac4, pow_succ, pow_succ, pow_succ,
+            pow_succ]
+          push_cast
+          field_simp [show ((T : ℚ) + 3 + 1) ≠ 0 by positivity,
+            show ((T : ℚ) + 2 + 1) ≠ 0 by positivity,
+            show ((T : ℚ) + 1 + 1) ≠ 0 by positivity,
+            show ((T : ℚ) + 1) ≠ 0 by positivity,
+            show ((T.factorial : Nat) : ℚ) ≠ 0 by positivity]
+
 private theorem sq_eq_falling_add (s : Nat) :
     (s : ℚ)^2 = (s : ℚ) * ((s-1 : Nat) : ℚ) + (s : ℚ) := by
   cases s with
@@ -332,6 +418,50 @@ private theorem sq_eq_falling_add (s : Nat) :
   | succ s =>
       simp
       ring
+
+private theorem cube_eq_falling_add (s : Nat) :
+    (s : ℚ)^3 =
+      (s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ)
+        + 3 * ((s : ℚ) * ((s-1 : Nat) : ℚ)) + (s : ℚ) := by
+  cases s with
+  | zero =>
+      norm_num
+  | succ s =>
+      cases s with
+      | zero =>
+          norm_num
+      | succ s =>
+          cases s with
+          | zero =>
+              norm_num
+          | succ s =>
+              simp
+              ring
+
+private theorem fourth_eq_falling_add (s : Nat) :
+    (s : ℚ)^4 =
+      (s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+          ((s-3 : Nat) : ℚ)
+        + 6 * ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+        + 7 * ((s : ℚ) * ((s-1 : Nat) : ℚ)) + (s : ℚ) := by
+  cases s with
+  | zero =>
+      norm_num
+  | succ s =>
+      cases s with
+      | zero =>
+          norm_num
+      | succ s =>
+          cases s with
+          | zero =>
+              norm_num
+          | succ s =>
+              cases s with
+              | zero =>
+                  norm_num
+              | succ s =>
+                  simp
+                  ring
 
 theorem poissonFirst_sum_le_partialExpUpper
     (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
@@ -372,6 +502,153 @@ theorem poissonSecond_sum_le_partialExpUpper
             (mul_le_mul_of_nonneg_left h2 (sq_nonneg y))
             (mul_le_mul_of_nonneg_left h1 hy)
     _ = (y^2 + y) * partialExpUpper y T₀ := by ring
+
+theorem poissonThird_sum_le_partialExpUpper
+    (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^3 * y^s / (s.factorial : ℚ)
+      ≤ (y^3 + 3*y^2 + y) * partialExpUpper y T₀ := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, (s : ℚ)^3 * y^s / (s.factorial : ℚ))
+        =
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        + 3 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ) := by
+    calc
+      (∑ s ∈ Finset.range T, (s : ℚ)^3 * y^s / (s.factorial : ℚ))
+          =
+        ∑ s ∈ Finset.range T,
+          (((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+              * y^s / (s.factorial : ℚ)
+            + 3 * (((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+            + (s : ℚ) * y^s / (s.factorial : ℚ)) := by
+            refine Finset.sum_congr rfl fun s hs => ?_
+            rw [cube_eq_falling_add s]
+            ring
+      _ =
+        (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        + 3 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ) := by
+            rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.mul_sum]
+  rw [hsplit]
+  have hfall3 :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        = y^3 * ∑ t ∈ Finset.range (T-3), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingThird_sum_range y T
+  have hfall2 :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        = y^2 * ∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingSecond_sum_range y T
+  rw [hfall3, hfall2, poissonFirst_sum_range]
+  have h3 := sum_exp_le y T₀ hy hyT (T-3)
+  have h2 := sum_exp_le y T₀ hy hyT (T-2)
+  have h1 := sum_exp_le y T₀ hy hyT (T-1)
+  calc
+    y^3 * (∑ t ∈ Finset.range (T-3), y^t / (t.factorial : ℚ))
+        + 3 * (y^2 * (∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ)))
+        + y * (∑ t ∈ Finset.range (T-1), y^t / (t.factorial : ℚ))
+      ≤ y^3 * partialExpUpper y T₀
+          + 3 * (y^2 * partialExpUpper y T₀)
+          + y * partialExpUpper y T₀ := by
+          exact add_le_add
+            (add_le_add
+              (mul_le_mul_of_nonneg_left h3 (by positivity))
+              (mul_le_mul_of_nonneg_left
+                (mul_le_mul_of_nonneg_left h2 (sq_nonneg y)) (by norm_num)))
+            (mul_le_mul_of_nonneg_left h1 hy)
+    _ = (y^3 + 3*y^2 + y) * partialExpUpper y T₀ := by ring
+
+theorem poissonFourth_sum_le_partialExpUpper
+    (y : ℚ) (T₀ T : Nat) (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^4 * y^s / (s.factorial : ℚ)
+      ≤ (y^4 + 6*y^3 + 7*y^2 + y) * partialExpUpper y T₀ := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, (s : ℚ)^4 * y^s / (s.factorial : ℚ))
+        =
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+              ((s-3 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + 6 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        + 7 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ) := by
+    calc
+      (∑ s ∈ Finset.range T, (s : ℚ)^4 * y^s / (s.factorial : ℚ))
+          =
+        ∑ s ∈ Finset.range T,
+          (((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+              ((s-3 : Nat) : ℚ)) * y^s / (s.factorial : ℚ)
+            + 6 * (((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+                * y^s / (s.factorial : ℚ))
+            + 7 * (((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+            + (s : ℚ) * y^s / (s.factorial : ℚ)) := by
+            refine Finset.sum_congr rfl fun s hs => ?_
+            rw [fourth_eq_falling_add s]
+            ring
+      _ =
+        (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+              ((s-3 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + 6 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        + 7 * (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        + ∑ s ∈ Finset.range T, (s : ℚ) * y^s / (s.factorial : ℚ) := by
+            rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
+              Finset.sum_add_distrib, Finset.mul_sum, Finset.mul_sum]
+  rw [hsplit]
+  have hfall4 :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ) *
+              ((s-3 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        = y^4 * ∑ t ∈ Finset.range (T-4), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingFourth_sum_range y T
+  have hfall3 :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ) * ((s-2 : Nat) : ℚ))
+            * y^s / (s.factorial : ℚ))
+        = y^3 * ∑ t ∈ Finset.range (T-3), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingThird_sum_range y T
+  have hfall2 :
+      (∑ s ∈ Finset.range T,
+          ((s : ℚ) * ((s-1 : Nat) : ℚ)) * y^s / (s.factorial : ℚ))
+        = y^2 * ∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ) := by
+    simpa [mul_assoc] using poissonFallingSecond_sum_range y T
+  rw [hfall4, hfall3, hfall2, poissonFirst_sum_range]
+  have h4 := sum_exp_le y T₀ hy hyT (T-4)
+  have h3 := sum_exp_le y T₀ hy hyT (T-3)
+  have h2 := sum_exp_le y T₀ hy hyT (T-2)
+  have h1 := sum_exp_le y T₀ hy hyT (T-1)
+  calc
+    y^4 * (∑ t ∈ Finset.range (T-4), y^t / (t.factorial : ℚ))
+        + 6 * (y^3 * (∑ t ∈ Finset.range (T-3), y^t / (t.factorial : ℚ)))
+        + 7 * (y^2 * (∑ t ∈ Finset.range (T-2), y^t / (t.factorial : ℚ)))
+        + y * (∑ t ∈ Finset.range (T-1), y^t / (t.factorial : ℚ))
+      ≤ y^4 * partialExpUpper y T₀
+          + 6 * (y^3 * partialExpUpper y T₀)
+          + 7 * (y^2 * partialExpUpper y T₀)
+          + y * partialExpUpper y T₀ := by
+          exact add_le_add
+            (add_le_add
+              (add_le_add
+                (mul_le_mul_of_nonneg_left h4 (by positivity))
+                (mul_le_mul_of_nonneg_left
+                  (mul_le_mul_of_nonneg_left h3 (by positivity)) (by norm_num)))
+              (mul_le_mul_of_nonneg_left
+                (mul_le_mul_of_nonneg_left h2 (sq_nonneg y)) (by norm_num)))
+            (mul_le_mul_of_nonneg_left h1 hy)
+    _ = (y^4 + 6*y^3 + 7*y^2 + y) * partialExpUpper y T₀ := by ring
 
 /-- The endpoint `ζ` used throughout §5. -/
 def zetaMax : ℚ := 50/27
@@ -431,6 +708,193 @@ theorem poissonSecond_zetaMax_le (T : Nat) :
             (by norm_num [zetaMax])
     _ ≤ 34 := by
           norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonThird_zetaMax_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ) ≤ 118 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ)
+        ≤ (zetaMax^3 + 3*zetaMax^2 + zetaMax) * partialExpUpper zetaMax 18 :=
+          poissonThird_sum_le_partialExpUpper zetaMax 18 T (by norm_num [zetaMax])
+            (by norm_num [zetaMax])
+    _ ≤ 118 := by
+          norm_num [zetaMax, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+/-! ## P1: gamma-product residual numerical budget -/
+
+/-- `q₂(s)=s(s+1)(2s+1)/6`, the quadratic-sum correction in the
+gamma-product estimate. -/
+def qTwo (s : Nat) : ℚ :=
+  (s : ℚ) * ((s+1 : Nat) : ℚ) * (2*(s : ℚ) + 1) / 6
+
+/-- Rational upper endpoint for `ζ·exp(0.2237)`, rounded up. -/
+def gammaTilt : ℚ := 2317/1000
+
+theorem poissonSecond_gammaTilt_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ) ≤ 78 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ)
+        ≤ (gammaTilt^2 + gammaTilt) * partialExpUpper gammaTilt 18 :=
+          poissonSecond_sum_le_partialExpUpper gammaTilt 18 T (by norm_num [gammaTilt])
+            (by norm_num [gammaTilt])
+    _ ≤ 78 := by
+          norm_num [gammaTilt, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonThird_gammaTilt_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ) ≤ 3131/10 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ)
+        ≤ (gammaTilt^3 + 3*gammaTilt^2 + gammaTilt) * partialExpUpper gammaTilt 18 :=
+          poissonThird_sum_le_partialExpUpper gammaTilt 18 T (by norm_num [gammaTilt])
+            (by norm_num [gammaTilt])
+    _ ≤ 3131/10 := by
+          norm_num [gammaTilt, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonFourth_gammaTilt_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ) ≤ 1455 := by
+  calc
+    ∑ s ∈ Finset.range T, (s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ)
+        ≤ (gammaTilt^4 + 6*gammaTilt^3 + 7*gammaTilt^2 + gammaTilt)
+            * partialExpUpper gammaTilt 18 :=
+          poissonFourth_sum_le_partialExpUpper gammaTilt 18 T (by norm_num [gammaTilt])
+            (by norm_num [gammaTilt])
+    _ ≤ 1455 := by
+          norm_num [gammaTilt, partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+
+theorem poissonEOneSq_gammaTilt_le (T : Nat) :
+    ∑ s ∈ Finset.range T, (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ) ≤ 540 := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ))
+        =
+      (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ)) := by
+    calc
+      (∑ s ∈ Finset.range T, (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ))
+          =
+        ∑ s ∈ Finset.range T,
+          ((1/4) * ((s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ))
+            + (1/2) * ((s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+            + (1/4) * ((s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ))) := by
+            refine Finset.sum_congr rfl fun s hs => ?_
+            unfold eOne
+            push_cast
+            ring
+      _ =
+        (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ)) := by
+            rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.mul_sum,
+              Finset.mul_sum, Finset.mul_sum]
+  rw [hsplit]
+  calc
+    (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^4 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * gammaTilt^s / (s.factorial : ℚ))
+        + (1/4) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * gammaTilt^s / (s.factorial : ℚ))
+      ≤ (1/4) * 1455 + (1/2) * (3131/10) + (1/4) * 78 := by
+          exact add_le_add
+            (add_le_add
+              (mul_le_mul_of_nonneg_left (poissonFourth_gammaTilt_le T) (by norm_num))
+              (mul_le_mul_of_nonneg_left (poissonThird_gammaTilt_le T) (by norm_num)))
+            (mul_le_mul_of_nonneg_left (poissonSecond_gammaTilt_le T) (by norm_num))
+    _ ≤ 540 := by norm_num
+
+theorem poissonQTwo_zetaMax_le (T : Nat) :
+    ∑ s ∈ Finset.range T, qTwo s * zetaMax^s / (s.factorial : ℚ) ≤ 59 := by
+  have hsplit :
+      (∑ s ∈ Finset.range T, qTwo s * zetaMax^s / (s.factorial : ℚ))
+        =
+      (1/3) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))
+        + (1/6) * (∑ s ∈ Finset.range T,
+          (s : ℚ) * zetaMax^s / (s.factorial : ℚ)) := by
+    calc
+      (∑ s ∈ Finset.range T, qTwo s * zetaMax^s / (s.factorial : ℚ))
+          =
+        ∑ s ∈ Finset.range T,
+          ((1/3) * ((s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ))
+            + (1/2) * ((s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))
+            + (1/6) * ((s : ℚ) * zetaMax^s / (s.factorial : ℚ))) := by
+            refine Finset.sum_congr rfl fun s hs => ?_
+            unfold qTwo
+            push_cast
+            ring
+      _ =
+        (1/3) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))
+        + (1/6) * (∑ s ∈ Finset.range T,
+          (s : ℚ) * zetaMax^s / (s.factorial : ℚ)) := by
+            rw [Finset.sum_add_distrib, Finset.sum_add_distrib, Finset.mul_sum,
+              Finset.mul_sum, Finset.mul_sum]
+  rw [hsplit]
+  calc
+    (1/3) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^3 * zetaMax^s / (s.factorial : ℚ))
+        + (1/2) * (∑ s ∈ Finset.range T,
+          (s : ℚ)^2 * zetaMax^s / (s.factorial : ℚ))
+        + (1/6) * (∑ s ∈ Finset.range T,
+          (s : ℚ) * zetaMax^s / (s.factorial : ℚ))
+      ≤ (1/3) * 118 + (1/2) * 34 + (1/6) * 12 := by
+          exact add_le_add
+            (add_le_add
+              (mul_le_mul_of_nonneg_left (poissonThird_zetaMax_le T) (by norm_num))
+              (mul_le_mul_of_nonneg_left (poissonSecond_zetaMax_le T) (by norm_num)))
+            (mul_le_mul_of_nonneg_left (poissonFirst_zetaMax_le T) (by norm_num))
+    _ ≤ 59 := by norm_num
+
+/-- Explicit P1 weighted majorant term:
+the first part is the tilted `e₁²` contribution, and the second is the
+`q₂` correction. -/
+def gammaResidualBudgetTerm (m s : Nat) : ℚ :=
+  ((1/2) * (146/125)^2 * (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ)
+    + (3/4) * qTwo s * zetaMax^s / (s.factorial : ℚ)) / (m : ℚ)^2
+
+theorem signLock_P1_budget_zetaMax {m : Nat} (hm : 1 ≤ m) :
+    ∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s
+      ≤ 426 / (m : ℚ)^2 := by
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hsplit :
+      (∑ s ∈ Finset.range (m/3 + 1), gammaResidualBudgetTerm m s)
+        =
+      (((1/2) * (146/125)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ))
+        + (3/4) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            qTwo s * zetaMax^s / (s.factorial : ℚ))) / (m : ℚ)^2 := by
+    unfold gammaResidualBudgetTerm
+    rw [← Finset.sum_div, Finset.sum_add_distrib, Finset.mul_sum, Finset.mul_sum]
+    ring_nf
+    simp [mul_comm, mul_left_comm]
+  rw [hsplit]
+  calc
+    (((1/2) * (146/125)^2) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            (eOne s)^2 * gammaTilt^s / (s.factorial : ℚ))
+        + (3/4) *
+          (∑ s ∈ Finset.range (m/3 + 1),
+            qTwo s * zetaMax^s / (s.factorial : ℚ))) / (m : ℚ)^2
+      ≤ (((1/2) * (146/125)^2) * 540 + (3/4) * 59) / (m : ℚ)^2 := by
+          exact div_le_div_of_nonneg_right
+            (add_le_add
+              (mul_le_mul_of_nonneg_left (poissonEOneSq_gammaTilt_le _) (by positivity))
+              (mul_le_mul_of_nonneg_left (poissonQTwo_zetaMax_le _) (by positivity)))
+            (sq_nonneg (m : ℚ))
+    _ ≤ 426 / (m : ℚ)^2 := by
+          field_simp [hmpos.ne']
+          norm_num
 
 /-! ## P2: `d`-drift budget -/
 

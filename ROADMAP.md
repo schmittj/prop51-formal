@@ -131,7 +131,10 @@ Status:
       two-block majorant bridge, the pointwise `36.6/m²` cap, and weighted
       budget `234/m²`.  P3c now has an explicit three-and-more-block tail
       majorant, a pointwise `89/m²` cap, and weighted budget `573/m²`.
-      Remaining: prove P1, close P4, and tails.
+      P1 now has the higher Poisson moment machinery and the weighted
+      `426/m²` numerical majorant budget for the explicit gamma-residual
+      terms.  Remaining: connect the `PiFactor` product residual to that
+      P1 majorant, close P4, and tails.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.
