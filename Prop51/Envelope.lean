@@ -59,6 +59,40 @@ theorem EminusResidualBlock_nonneg (p r : Nat) {N : ℚ} (hN : 0 ≤ N) :
   · exact mul_nonneg (mul_nonneg (by positivity) (by positivity)) (Gcomp_nonneg r p)
   · positivity
 
+/-! ## Exact Δ-block algebra -/
+
+/-- The leading two-block term of the rationalized Δ envelope. -/
+theorem DeltaRatTerm_two (p : Nat) (N : ℚ) (hp : 4 ≤ p) :
+    DeltaRatTerm p N 2
+      = (1152/3125) * N / (((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)) := by
+  obtain ⟨k, rfl⟩ : ∃ k, p = k + 4 := ⟨p-4, by omega⟩
+  simp only [DeltaRatTerm]
+  norm_num [Nat.factorial_succ]
+  have hk2 : (2 + (k:ℚ)) ≠ 0 := by positivity
+  ring_nf
+  field_simp [hk2]
+  ring
+
+/-- Exact ratio of consecutive rationalized Δ blocks. -/
+theorem DeltaRatTerm_succ (p : Nat) (N : ℚ) (r : Nat)
+    (hr : 1 ≤ r) (hrp : 2*(r+1) ≤ p) :
+    DeltaRatTerm p N (r+1)
+      =
+    DeltaRatTerm p N r
+      * (((16/25) * N)
+        / (((r+1 : Nat) : ℚ)
+          * ((p - 2*r : Nat) : ℚ)
+          * ((p - 2*r + 1 : Nat) : ℚ))) := by
+  obtain ⟨s, rfl⟩ : ∃ s, r = s + 1 := ⟨r-1, by omega⟩
+  obtain ⟨k, rfl⟩ : ∃ k, p = 2*((s+1)+1) + k := ⟨p - 2*((s+1)+1), by omega⟩
+  simp only [DeltaRatTerm]
+  rw [show 2 * ((s+1)+1) + k - 2 * ((s+1)+1) + 1 = k + 1 by omega,
+      show 2 * ((s+1)+1) + k - 2 * (s+1) + 1 = k + 3 by omega,
+      show 2 * ((s+1)+1) + k - 2 * (s+1) = k + 2 by omega]
+  norm_num [Nat.factorial_succ]
+  field_simp
+  ring_nf
+
 /-- If `r > p/2`, the corresponding residual block is zero: `p` cannot be
 written as a sum of `r` parts all at least two. -/
 theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)

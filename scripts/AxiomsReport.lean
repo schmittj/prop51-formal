@@ -60,4 +60,6 @@ import Prop51
 #print axioms Prop51.abs_hpow_le
 #print axioms Prop51.Eminus_split
 #print axioms Prop51.Eminus_residual_le
+#print axioms Prop51.DeltaRatTerm_two
+#print axioms Prop51.DeltaRatTerm_succ
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat
