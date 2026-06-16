@@ -259,23 +259,18 @@ Status:
       intermediate target is `PositiveSaddleCombinedProductBudgetCertificate`,
       which asks directly for combined `X_k(N) * Y_{a-k}(N)` bounds with the
       single executable exponent and converts to the scalar-budget certificate.
-      The actual-`N` version, `PositiveSaddleAtProductBudgetCertificate`,
-      separates the analytic small-regime product estimate from the remaining
-      upper-edge replacement `positiveSmallXYProductAtBound ≤
-      positiveSmallXYProductBound`.  This replacement is now further reduced to
-      the cancellable rational inequality `positiveSmallExpEdgeGap`; the
-      interface `PositiveSaddleAtExpBudgetCertificate` uses that smaller field
-      and converts to the actual-`N` product certificate.  Lean also exposes
+      A first actual-`N` split using `ceilSqrt N` is kept as an audit trail,
+      but it is not the viable final route: Lean records the failing top-plateau
+      cell as `positiveSmallExpEdgeGapAtCeil_topPlateau_not`.  The corrected
+      actual-`N` target is
+      `PositiveSaddleTangentProductBudgetCertificate`, which uses the rational
+      tangent-line square-root surrogate
+      `positiveSmallXYProductTangentBound` and the finite edge condition
+      `positiveSmallTangentExpEdgeGap`; it converts to
+      `PositiveSaddleCombinedProductBudgetCertificate`.  Lean also exposes
       `checkPositiveEdgeBudgetRow`/`checkPositiveEdgeBudgetRange` and soundness
       lemmas for the finite corrected-edge budget, intended for generated row
       chunks or a faster checker rather than one monolithic direct evaluation.
-      The small edge has an additional `ceilSqrt` plateau reduction:
-      `PositiveSaddleAtAnchorBudgetCertificate` asks only for
-      `positiveSmallExpEdgeGapAtCeil` at the anchor
-      `positiveSmallEdgeAnchor a s`, where
-      `s ∈ positiveSmallCeilRange a`.  The matching executable predicates
-      `checkPositiveSmallExpEdgeAnchorCell`/`Ceil`/`Row`/`Range` have soundness
-      lemmas down to the full finite-window certificate field.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

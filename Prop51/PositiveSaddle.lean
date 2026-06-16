@@ -347,6 +347,24 @@ def positiveSmallExponentWithCeil (a s k : Nat) : ℚ :=
     + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
     + 1
 
+/-- Rational tangent-line upper surrogate for `sqrt N`.
+
+For `s = ceilSqrt N`, the expression `(N+s^2)/(2s)` is the standard tangent
+upper bound for `sqrt N` at `s`.  Unlike `ceilSqrt N`, it still varies inside a
+fixed ceiling-square-root plateau, preserving the monotonic slack used by the
+paper's small-regime edge replacement. -/
+def positiveSqrtTangentUpper (N : Nat) : ℚ :=
+  if N = 0 then 0
+  else ((N : ℚ) + (ceilSqrt N : ℚ)^2) / (2 * (ceilSqrt N : ℚ))
+
+/-- Small-regime exponent with the rational tangent-line square-root surrogate
+at the actual value of `N`. -/
+def positiveSmallTangentExponentAt (a N k : Nat) : ℚ :=
+  (1139/1000) * positiveSqrtTangentUpper N
+    + (1/5) * (posJ a k : ℚ)
+    + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
+    + 1
+
 /-- Rational upper exponent for the tempered edge formula. -/
 def positiveTemperedExponentUpper (a k : Nat) : ℚ :=
   (1/5) * (a : ℚ)
@@ -430,6 +448,13 @@ def positiveSmallXYProductAtBound (a N k : Nat) : ℚ :=
   (2581/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
     partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff
 
+/-- Actual-`N` combined small-regime target using the rational tangent-line
+square-root surrogate.  This is the corrected replacement for the too-coarse
+`ceilSqrt N` target when doing the upper-edge comparison. -/
+def positiveSmallXYProductTangentBound (a N k : Nat) : ℚ :=
+  (2581/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
+    partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+
 /-- Direct combined tempered-regime target for `X_k(N) * Y_{a-k}(N)`. -/
 def positiveTemperedXYProductBound (a N k : Nat) : ℚ :=
   (2117/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
@@ -455,6 +480,15 @@ def positiveSmallExpEdgeGapAtCeil (a s k : Nat) : Prop :=
       partialExpUpper (positiveSmallExponentWithCeil a s k) positiveExpCutoff
     ≤
     (positiveSmallEdgeAnchor a s : ℚ) *
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- Corrected small-edge exponential gap for the tangent-line actual-`N`
+surrogate. -/
+def positiveSmallTangentExpEdgeGap (a N k : Nat) : Prop :=
+  (posNhi a : ℚ) *
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+    ≤
+    (N : ℚ) *
       partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
 
 /-! ### Displayed `X`/`Y` saddle-bound shapes -/
@@ -549,6 +583,38 @@ theorem positiveSmallExponentAt_eq_withCeil (a N k : Nat) :
       positiveSmallExponentWithCeil a (ceilSqrt N) k := by
   unfold positiveSmallExponentAt positiveSmallExponentWithCeil
   ring
+
+theorem positiveSqrtTangentUpper_nonneg (N : Nat) :
+    0 ≤ positiveSqrtTangentUpper N := by
+  unfold positiveSqrtTangentUpper
+  split
+  · norm_num
+  · positivity
+
+theorem positiveSqrtTangentUpper_le_ceilSqrt (N : Nat) :
+    positiveSqrtTangentUpper N ≤ (ceilSqrt N : ℚ) := by
+  by_cases hzero : N = 0
+  · simp [positiveSqrtTangentUpper, hzero]
+  · have hNpos : 1 ≤ N := Nat.succ_le_of_lt (Nat.pos_of_ne_zero hzero)
+    have hsposNat : 0 < ceilSqrt N := by
+      have hNsq : 1 ≤ ceilSqrt N * ceilSqrt N := hNpos.trans (le_ceilSqrt_sq N)
+      exact Nat.pos_of_ne_zero (by
+        intro hs
+        simp [hs] at hNsq)
+    have hspos : (0 : ℚ) < (ceilSqrt N : ℚ) := by exact_mod_cast hsposNat
+    have hNsqQ : (N : ℚ) ≤ (ceilSqrt N : ℚ)^2 := by
+      rw [pow_two]
+      exact_mod_cast le_ceilSqrt_sq N
+    unfold positiveSqrtTangentUpper
+    rw [if_neg hzero]
+    rw [div_le_iff₀ (by positivity : (0 : ℚ) < 2 * (ceilSqrt N : ℚ))]
+    nlinarith
+
+theorem positiveSmallTangentExponentAt_le_at (a N k : Nat) :
+    positiveSmallTangentExponentAt a N k ≤ positiveSmallExponentAt a N k := by
+  have hs := positiveSqrtTangentUpper_le_ceilSqrt N
+  unfold positiveSmallTangentExponentAt positiveSmallExponentAt
+  nlinarith
 
 theorem positiveSmallExponentUpper_eq_smallX_add_Y (a k : Nat) :
     positiveSmallExponentUpper a k =
@@ -897,6 +963,16 @@ theorem positiveSmallExpEdgeAnchor_401_2000_of_checkRange
   intro a s k ha h2000 hs hk hks
   exact positiveSmallExpEdgeGapAtCeil_of_checkRange
     (lo := 401) (len := 1600) h ha (by omega) hs hk hks
+
+/-- Audit witness for the failed `ceilSqrt N` small-edge replacement path.
+
+At the first row and the top ceiling-square-root plateau, the plateau-anchor
+gap is false: replacing the actual `N` denominator by `posNhi a` loses more
+than the stepwise `ceilSqrt` exponent surrogate gains.  This is why the
+corrected interface uses `positiveSmallTangentExponentAt` instead. -/
+theorem positiveSmallExpEdgeGapAtCeil_topPlateau_not :
+    ¬ positiveSmallExpEdgeGapAtCeil 401 70 1 := by
+  native_decide
 
 theorem positiveEnvelopeBound_le_target_of_budgets
     {a : Nat} {soloBound : ℚ}
@@ -1803,6 +1879,48 @@ theorem positiveSmallXYProductAtBound_le_bound_of_expGap {a N k : Nat}
           (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup := by
           field_simp [hNne, hhiNe]
 
+/-- Convert the corrected tangent-line small-regime exponential gap into the
+finite-edge replacement for the combined `X*Y` product target. -/
+theorem positiveSmallXYProductTangentBound_le_bound_of_expGap {a N k : Nat}
+    (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hgap : positiveSmallTangentExpEdgeGap a N k) :
+    positiveSmallXYProductTangentBound a N k ≤ positiveSmallXYProductBound a N k := by
+  let Eat := partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+  let Eup := partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNne : (N : ℚ) ≠ 0 := hNpos.ne'
+  have hhiPos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos ha
+  have hhiNe : (posNhi a : ℚ) ≠ 0 := hhiPos.ne'
+  have hgap' : (posNhi a : ℚ) * Eat ≤ (N : ℚ) * Eup := by
+    simpa [positiveSmallTangentExpEdgeGap, Eat, Eup] using hgap
+  have hfrac :
+      Eat / ((N : ℚ)^2) ≤ Eup / ((N : ℚ) * (posNhi a : ℚ)) := by
+    rw [div_le_div_iff₀ (by positivity : (0 : ℚ) < (N : ℚ)^2)
+      (by positivity : (0 : ℚ) < (N : ℚ) * (posNhi a : ℚ))]
+    have hmul := mul_le_mul_of_nonneg_left hgap' hNpos.le
+    nlinarith
+  have hcoef :
+      0 ≤ (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) := by
+    positivity
+  unfold positiveSmallXYProductTangentBound positiveSmallXYProductBound
+  change
+    (2581/20 : ℚ) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) * Eat
+      ≤
+    (2581/20 : ℚ) *
+      (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup
+  calc
+    (2581/20 : ℚ) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) * Eat
+        = (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            (Eat / ((N : ℚ)^2)) := by
+          field_simp [hNne]
+    _ ≤ (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            (Eup / ((N : ℚ) * (posNhi a : ℚ))) :=
+          mul_le_mul_of_nonneg_left hfrac hcoef
+    _ = (2581/20 : ℚ) *
+          (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup := by
+          field_simp [hNne, hhiNe]
+
 /-- A plateau-anchor check implies the actual small exponential-gap check at
 every `N` in that plateau. -/
 theorem positiveSmallExpEdgeGap_of_anchor {a N k : Nat}
@@ -2441,10 +2559,46 @@ structure PositiveSaddleCombinedProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Corrected actual-`N` combined-product certificate for the small regime.
+
+The small analytic field uses the rational tangent-line square-root surrogate
+`positiveSmallXYProductTangentBound`; the separate `smallTangentEdge` field is
+the finite comparison from that actual-`N` target to the executable upper-edge
+majorant.  This preserves the monotonic slack of the paper's
+`exp(1.139 sqrt N)/N` term, unlike the coarser `ceilSqrt N` target below. -/
+structure PositiveSaddleTangentProductBudgetCertificate : Prop where
+  smallXYTangent :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductTangentBound a N k
+  smallTangentEdge :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveSmallTangentExpEdgeGap a N k
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
-upper-edge bound used in the executable scan. -/
+upper-edge bound used in the executable scan.
+
+Audit note: with the current rational surrogate
+`positiveSmallExponentAt`, which uses `ceilSqrt N`, this replacement is too
+coarse on the top ceiling-square-root plateau.  The theorem
+`positiveSmallExpEdgeGapAtCeil_topPlateau_not` records a concrete failing
+finite cell.  The corrected actual-`N` interface is
+`PositiveSaddleTangentProductBudgetCertificate`. -/
 structure PositiveSaddleAtProductBudgetCertificate : Prop where
   smallXYAt :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
@@ -2467,13 +2621,14 @@ structure PositiveSaddleAtProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
-/-- Actual-`N` certificate with the small upper-edge replacement reduced to
-the cancellable exponential-gap inequality `positiveSmallExpEdgeGap`.
+/-- Audit/deprecated actual-`N` certificate with the small upper-edge
+replacement reduced to the cancellable exponential-gap inequality
+`positiveSmallExpEdgeGap`.
 
-This is the intended target for finite/generated checks of the small edge: the
-analytic estimate proves the actual `X*Y` product bound, while the edge checker
-only has to compare the two single `partialExpUpper` expressions with the
-linear `N`/`posNhi` factors. -/
+This records the natural but too-coarse `ceilSqrt N` attempt.  The concrete
+counterexample `positiveSmallExpEdgeGapAtCeil_topPlateau_not` shows why this
+is not the final certificate path; use
+`PositiveSaddleTangentProductBudgetCertificate` instead. -/
 structure PositiveSaddleAtExpBudgetCertificate : Prop where
   smallXYAt :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
@@ -2496,12 +2651,14 @@ structure PositiveSaddleAtExpBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
-/-- Plateau-anchor version of the actual-`N` positive-saddle certificate.
+/-- Audit/deprecated plateau-anchor version of the `ceilSqrt N`
+positive-saddle certificate.
 
 The `smallExpEdgeAnchor` field ranges over the possible values
-`s = ceilSqrt N`, not over every `N` in the rectangle.  This records the
-monotonicity reduction that the worst point in each `ceilSqrt` plateau is the
-anchor `positiveSmallEdgeAnchor a s`. -/
+`s = ceilSqrt N`, not over every `N` in the rectangle.  That reduction is
+sound as a conditional theorem, but the associated finite condition is false
+for the current `ceilSqrt` surrogate on the top plateau; see
+`positiveSmallExpEdgeGapAtCeil_topPlateau_not`. -/
 structure PositiveSaddleAtAnchorBudgetCertificate : Prop where
   smallXYAt :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
@@ -2565,6 +2722,20 @@ theorem PositiveSaddleCombinedProductBudgetCertificate.toScalarBudgetCertificate
     exact positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
       (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 2 ≤ a)
       hk hB (cert.temperedXY ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleTangentProductBudgetCertificate.toCombinedProductBudgetCertificate
+    (cert : PositiveSaddleTangentProductBudgetCertificate) :
+    PositiveSaddleCombinedProductBudgetCertificate where
+  smallXY := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    exact (cert.smallXYTangent ha ha2000 hrect hk hsmall hB).trans
+      (positiveSmallXYProductTangentBound_le_bound_of_expGap
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
+        (cert.smallTangentEdge ha ha2000 hrect hk hsmall))
+  temperedXY := cert.temperedXY
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
@@ -2745,6 +2916,11 @@ theorem PositiveSaddleCombinedProductBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toScalarBudgetCertificate.toCertificate
 
+theorem PositiveSaddleTangentProductBudgetCertificate.toCertificate
+    (cert : PositiveSaddleTangentProductBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toCombinedProductBudgetCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -2815,6 +2991,11 @@ theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleCombinedProductBudgetCertificate
     (cert : PositiveSaddleCombinedProductBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
+    (cert : PositiveSaddleTangentProductBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
