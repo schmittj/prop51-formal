@@ -808,6 +808,29 @@ def positiveCustomTemperedBranchSum
   ∑ k ∈ positiveKRange a,
     if posTemperedCutoff a < k then temperedTerm a k else 0
 
+theorem positiveCustomSmallBranchSum_eq_Icc
+    (smallTerm : Nat → Nat → ℚ) (a : Nat) :
+    positiveCustomSmallBranchSum smallTerm a =
+      ∑ k ∈ Finset.Icc 1 (min (posKmax a) (posSmallCutoff a)),
+        smallTerm a k := by
+  unfold positiveCustomSmallBranchSum positiveKRange
+  rw [← Finset.sum_filter]
+  congr 1
+  ext k
+  simp [posKmax, and_assoc]
+
+theorem positiveCustomTemperedBranchSum_eq_Icc
+    (temperedTerm : Nat → Nat → ℚ) (a : Nat) :
+    positiveCustomTemperedBranchSum temperedTerm a =
+      ∑ k ∈ Finset.Icc (max 1 (posTemperedCutoff a + 1)) (posKmax a),
+        temperedTerm a k := by
+  unfold positiveCustomTemperedBranchSum positiveKRange
+  rw [← Finset.sum_filter]
+  congr 1
+  ext k
+  simp [posKmax]
+  omega
+
 @[simp] theorem positiveCustomEdgeMajorantTerm_finite (a k : Nat) :
     positiveCustomEdgeMajorantTerm positiveSmallMajorantTerm positiveTemperedMajorantTerm a k
       = positiveEdgeMajorantTerm a k := rfl
@@ -2831,6 +2854,18 @@ def positiveEntropyShadowExpTemperedBranchSum
     positiveEntropyShadowTemperedBranchSum a =
       positiveCustomTemperedBranchSum positiveTemperedEntropyShadowMajorantTerm a := rfl
 
+theorem positiveEntropyShadowSmallBranchSum_eq_Icc (a : Nat) :
+    positiveEntropyShadowSmallBranchSum a =
+      ∑ k ∈ Finset.Icc 1 (min (posKmax a) (posSmallCutoff a)),
+        positiveSmallEntropyShadowMajorantTerm a k :=
+  positiveCustomSmallBranchSum_eq_Icc positiveSmallEntropyShadowMajorantTerm a
+
+theorem positiveEntropyShadowTemperedBranchSum_eq_Icc (a : Nat) :
+    positiveEntropyShadowTemperedBranchSum a =
+      ∑ k ∈ Finset.Icc (max 1 (posTemperedCutoff a + 1)) (posKmax a),
+        positiveTemperedEntropyShadowMajorantTerm a k :=
+  positiveCustomTemperedBranchSum_eq_Icc positiveTemperedEntropyShadowMajorantTerm a
+
 @[simp] theorem positiveEntropyShadowExpEdgeMajorantTerm_eq
     (smallExp temperedExp : Nat → Nat → ℚ) (a k : Nat) :
     positiveEntropyShadowExpEdgeMajorantTerm smallExp temperedExp a k =
@@ -2856,6 +2891,22 @@ def positiveEntropyShadowExpTemperedBranchSum
     positiveEntropyShadowExpTemperedBranchSum temperedExp a =
       positiveCustomTemperedBranchSum
         (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a := rfl
+
+theorem positiveEntropyShadowExpSmallBranchSum_eq_Icc
+    (smallExp : Nat → Nat → ℚ) (a : Nat) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a =
+      ∑ k ∈ Finset.Icc 1 (min (posKmax a) (posSmallCutoff a)),
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a k :=
+  positiveCustomSmallBranchSum_eq_Icc
+    (positiveSmallEntropyShadowExpMajorantTerm smallExp) a
+
+theorem positiveEntropyShadowExpTemperedBranchSum_eq_Icc
+    (temperedExp : Nat → Nat → ℚ) (a : Nat) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a =
+      ∑ k ∈ Finset.Icc (max 1 (posTemperedCutoff a + 1)) (posKmax a),
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k :=
+  positiveCustomTemperedBranchSum_eq_Icc
+    (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope

@@ -268,7 +268,10 @@ Status:
       Public geometric-chain helpers
       `geom_chain_Icc_sum_le_geom` and
       `geom_chain_Icc_sum_le_inv_one_sub` are available for reducing these
-      branch budgets to first-term and successor-ratio checks.
+      branch budgets to first-term and successor-ratio checks; the branch
+      sums have exact active-range rewrites such as
+      `positiveEntropyShadowExpSmallBranchSum_eq_Icc` and
+      `positiveEntropyShadowExpTemperedBranchSum_eq_Icc`.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to
