@@ -385,6 +385,13 @@ Status:
       probing showed single tangent cells are practical for `native_decide`,
       while product cells, solo cells, and edge rows remain too slow for that
       direct approach.
+      A denominator-cleared variant,
+      `PositiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      keeps the finite solo/edge checks executable but states them as
+      `200000000 * bound ≤ 1`, matching the unit-scaled large-tail reserve
+      style.
       The preferred practical audit route is now
       `PositiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       with final assembly theorem

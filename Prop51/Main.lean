@@ -272,6 +272,14 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeRowsCert
     (unorm_tail_of_positiveSaddleXplusGcompTangentCellEdgeRowsCertificate cert)
 
 /-- Final assembly from the `Xplus`/`Gcomp` finite-window certificate with
+cell-level tangent-edge checks and unit-cleared finite solo/edge row checks. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate cert)
+
+/-- Final assembly from the `Xplus`/`Gcomp` finite-window certificate with
 cell-level tangent-edge checks and semantic finite solo/edge budgets. -/
 theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
     (cert : PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate) :
@@ -674,6 +682,22 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeEntropyLargeExpCan
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeRowsCertificate
     cert.toXplusGcompTangentCellEdgeRowsCertificate
+
+/-- Final assembly from the unit-budget audit shape with cell-level tangent
+edge checks and unit-cleared finite solo/edge chunks. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate
+    (positiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+      cert.smallXplusYProductGcompChunks
+      cert.temperedXplusYProductGcompChunks
+      cert.smallTangentExpEdgeCells
+      cert.soloGcompUnitChunks
+      cert.edgeBudgetUnitChunks
+      cert.productPointwiseYRawUnitSolo
+      cert.candidateSplitTemperedRawClearedUnitReserve)
 
 /-- Final assembly from the unit-budget large-tail audit shape with cell-level
 tangent edge checks and semantic finite solo/edge budgets. -/

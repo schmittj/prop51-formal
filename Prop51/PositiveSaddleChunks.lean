@@ -1450,6 +1450,95 @@ theorem PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawCle
     cert.candidateSplitTemperedRawClearedUnitReserve
 
 /-- Default finite-window constructor using cell-level tangent-edge checks and
+unit-scaled solo/edge chunk checks. -/
+theorem positiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          checkPositiveSmallTangentExpEdgeCell a N k = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompUnitRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetUnitRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+      hsmall (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+      htempered (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  smallTangentEdgeCells := htangent
+  soloGcompUnitRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompUnitRow_of_checkUnitRangeChunks
+      hsolo (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  edgeBudgetUnitRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRangeChunks
+      hedge (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  entropyTail :=
+    (pointwise.toProductPointwiseYRawCertificate
+      |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+        bounds.toRawClearedBoundsCertificate).entropyTail
+
+/-- Unit-cleared finite budget audit target with cell-level tangent-edge
+checks.
+
+Compared with
+`PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+the finite solo and edge chunk predicates clear the common denominator
+`positiveSoloBudget = positiveEdgeBudget = 1 / 200000000`. -/
+structure PositiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate :
+    Prop where
+  smallXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentExpEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloGcompUnitChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloGcompUnitRange chunk.1 chunk.2 = true
+  edgeBudgetUnitChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveEdgeBudgetUnitRange chunk.1 chunk.2 = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
+theorem PositiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeUnitBudgetRowsCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeUnitBudgetRowsCertificate :=
+  positiveSaddleDefaultCellEdgeUnitBudgetRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    cert.smallXplusYProductGcompChunks
+    cert.temperedXplusYProductGcompChunks
+    cert.smallTangentExpEdgeCells
+    cert.soloGcompUnitChunks
+    cert.edgeBudgetUnitChunks
+    cert.productPointwiseYRawUnitSolo
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
+/-- Default finite-window constructor using cell-level tangent-edge checks and
 semantic finite solo/edge budget fields.
 
 This is the practical audit endpoint while the corresponding executable
