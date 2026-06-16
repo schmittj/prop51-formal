@@ -219,7 +219,9 @@ Status:
       TeX split between the retained positive summands and the separate
       `2^{-a-1}Y_a(N)` saddle estimate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
-      the final `CoefficientNegativity`.
+      the final `CoefficientNegativity`.  The combination step itself is now
+      formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
+      assembly input is exactly the large-`a` rectangle theorem for `Unorm`.
 
 ## Infrastructure
 

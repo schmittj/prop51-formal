@@ -137,4 +137,40 @@ theorem coefficientNegativity_of_g_le_1199 :
     exact unorm_neg_61_400 (g/3 + 1) (by omega) (by omega)
       ((μ.map (· + 1)).sum) (by omega) (by omega)
 
+/-- Conditional large-genus capstone: once Layer C proves `Unorm a N < 0`
+throughout the post-certificate rectangle `a ≥ 401`, the Chen–Larson
+coefficient is negative for every relevant `g ≥ 1200`. -/
+theorem coefficientNegativity_of_g_ge_1200_of_unorm_tail
+    (htail :
+      ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0) :
+    ∀ g, 1200 ≤ g → g % 3 ≠ 1 →
+      ∀ μ : List Nat, IsPartitionOf μ (2*g - 2) →
+        bCoeff μ (g/3 + 1) < 0 := by
+  intro g hg1200 hres μ hμp
+  obtain ⟨hsum, hpos⟩ := hμp
+  have hmap := sum_map_add_one μ
+  have hlen := length_le_sum μ hpos
+  have hne : 1 ≤ μ.length := by
+    rcases μ with - | ⟨x, l⟩
+    · exfalso; simp at hsum; omega
+    · simp
+  have hNval : (μ.map (· + 1)).sum = (2*g - 2) + μ.length := by
+    rw [hmap, hsum]
+  refine bCoeff_neg_of_unorm μ (g/3 + 1) ((μ.map (· + 1)).sum)
+    hpos rfl (by omega) (by omega) ?_
+  exact htail (g/3 + 1) (by omega) ((μ.map (· + 1)).sum)
+    (by omega) (by omega)
+
+/-- Conditional final theorem: the only remaining input is the large-`a`
+majorant negativity statement. -/
+theorem coefficientNegativity_of_unorm_tail
+    (htail :
+      ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0) :
+    CoefficientNegativity := by
+  intro g h2 hres μ hμp
+  rcases Nat.lt_or_ge g 1200 with hg | hg
+  · exact coefficientNegativity_of_g_le_1199 g h2 (by omega) hres μ hμp
+  · exact coefficientNegativity_of_g_ge_1200_of_unorm_tail htail
+      g hg hres μ hμp
+
 end Prop51
