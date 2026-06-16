@@ -120,7 +120,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate`
   also splits product by a uniform product `N`-chunk index; use
   `--strategy product-n-chunked-tangent` when product row-range checks are
-  still too coarse.  When
+  still too coarse.  The same script can emit one concrete cacheable chunk
+  theorem at a time with `--emit-single-chunk`, which is the practical mode
+  for large generated finite witnesses.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

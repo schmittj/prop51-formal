@@ -560,7 +560,9 @@ Status:
       `--strategy chunked-tangent`.  The finer generated sibling
       `PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate`
       also splits product by a uniform product `N`-chunk index and is emitted
-      with `--strategy product-n-chunked-tangent`.
+      with `--strategy product-n-chunked-tangent`.  For proof production,
+      the same script can emit one cacheable chunk theorem at a time with
+      `--emit-single-chunk`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
