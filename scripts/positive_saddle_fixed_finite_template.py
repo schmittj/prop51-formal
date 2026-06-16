@@ -162,6 +162,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                 parser.error("--tangent-k-len is required for tangent single chunks")
             if args.k_index is None:
                 parser.error("--k-index is required for tangent single chunks")
+        validate_single_chunk_indices(parser, args)
     else:
         if args.strategy != "cell-tangent" and args.tangent_row_len is None:
             parser.error("--tangent-row-len is required unless --strategy cell-tangent")
@@ -186,6 +187,53 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                 "positiveSaddleGeneratedFixedFiniteWindowProductNChunkedTangentCertificate"
             )
     return args
+
+
+def validate_lt(
+    parser: argparse.ArgumentParser,
+    option: str,
+    value: int,
+    bound: int,
+) -> None:
+    if value >= bound:
+        parser.error(f"{option} must be < {bound}, got {value}")
+
+
+def validate_single_chunk_indices(
+    parser: argparse.ArgumentParser, args: argparse.Namespace
+) -> None:
+    field = args.emit_single_chunk
+    if field in ("product-small", "product-tempered"):
+        validate_lt(parser, "--row-index", args.row_index, row_count(args.product_row_len))
+        validate_lt(
+            parser,
+            "--n-index",
+            args.n_index,
+            product_n_index_count(args.product_row_len, args.n_len),
+        )
+        validate_lt(parser, "--k-index", args.k_index, 90)
+    elif field == "tangent":
+        validate_lt(parser, "--row-index", args.row_index, row_count(args.tangent_row_len))
+        validate_lt(parser, "--k-index", args.k_index, tangent_k_count(args.tangent_k_len))
+    elif field == "solo-saddle":
+        validate_lt(
+            parser,
+            "--row-index",
+            args.row_index,
+            row_count(args.solo_saddle_row_len),
+        )
+    elif field == "solo-budget":
+        validate_lt(
+            parser,
+            "--row-index",
+            args.row_index,
+            row_count(args.solo_budget_row_len),
+        )
+    elif field == "edge":
+        validate_lt(parser, "--row-index", args.row_index, row_count(args.edge_row_len))
+        validate_lt(parser, "--k-index", args.k_index, 90)
+    else:
+        raise AssertionError(f"unhandled single chunk field {field!r}")
 
 
 def single_chunk_default_name(args: argparse.Namespace) -> str:
