@@ -375,6 +375,16 @@ theorem Xnorm_nonpos_of_signLockMargin_bound
   have hmargin := signLockMargin_pos_of_ge_361 hm
   linarith
 
+theorem Xnorm_le_neg_signLockMargin_of_signLockNearBase
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hbase :
+      expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockNearBase N m) :
+    Xnorm N m ≤ -signLockMargin m := by
+  unfold signLockMargin
+  exact Xnorm_le_neg_final_margin_of_signLockNearBase
+    (N := N) (m := m) hN hN40 hm hbase
+
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
 def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
@@ -873,6 +883,34 @@ theorem Unorm_neg_of_uniform_signLockMargin_and_positiveEnvelope
     exact Xnorm_nonpos_of_signLockMargin_bound hk361 (hXbound k hk361 hNk)
   · exact hXbound a (by omega : 361 ≤ a)
       (rectangle_N_le_signLock_range_self (a := a) (N := N) hrect)
+
+/-- Large-`a` assembly from the remaining alternating-base lower bound in §5.
+
+This is the current top-level bridge between the completed sign-lock error
+audit and the positive-part reduction: once the alternating base sum is bounded
+below uniformly in the sign-lock range, the `Unorm < 0` conclusion follows
+from the same positive saddle obligations. -/
+theorem Unorm_neg_of_uniform_signLockNearBase_and_positiveEnvelope
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hbase : ∀ m : Nat, 361 ≤ m →
+      (N : ℚ) ≤ (40/3) * (m : ℚ) →
+        expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockNearBase N m)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hpositive : positiveEnvelope a N ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  refine Unorm_neg_of_uniform_signLockMargin_and_positiveEnvelope
+    (a := a) (N := N) ha hrect ?hXbound hsmall htempered hpositive
+  intro m hm hNm
+  exact Xnorm_le_neg_signLockMargin_of_signLockNearBase
+    (N := N) (m := m) hN hNm hm (hbase m hm hNm)
 
 /-! ## Numerical anchors for the first post-certificate row -/
 

@@ -174,7 +174,11 @@ Status:
       certified by an `N`-free envelope, exact endpoint checks at
       `m = 361,362,363`, and a rational three-step contraction; consequently
       the near audit plus the actual far tail is assembled unconditionally as
-      a `2215/m²` error-budget wrapper.
+      a `2215/m²` error-budget wrapper.  The final sign-lock decomposition is
+      now split as near alternating base + near signed error + far signed tail,
+      and the completed error audit is connected to `Xnorm ≤ -margin`; the
+      remaining §5 input is the alternating-base lower bound for
+      `signLockNearBase`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
@@ -199,7 +203,9 @@ Status:
       estimates, and positive-envelope certificate.  Lean also records the
       main translation interface from §5 to §6: a single uniform theorem
       `Xnorm N m ≤ -signLockMargin m` supplies both the main `m = a`
-      negative term and the large-`k` sign-lock exclusion.
+      negative term and the large-`k` sign-lock exclusion.  A second bridge now
+      consumes the remaining `signLockNearBase` lower-bound obligation
+      directly and produces the same large-`a` `Unorm < 0` conclusion.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

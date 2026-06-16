@@ -5469,6 +5469,154 @@ theorem signLock_error_budget_zetaMax
     (signLockFarTail_le_one_over_m_sq
       (N := N) (m := m) hN hN40 hm)
 
+/-! ## Final sign-lock assembly interface -/
+
+def signLockActualSummand (N m s : Nat) : ℚ :=
+  ((-(N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+    (-(Eminus (N : ℚ) (m-s)) / ((N : ℚ) * c m))
+
+def signLockBaseSummand (N m s : Nat) : ℚ :=
+  ((-zetaQ N m)^s / (s.factorial : ℚ)) *
+    (1 + eOne s / (m : ℚ) - zetaQ N m / (m : ℚ))
+
+def signLockNearActual (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (m/3 + 1), signLockActualSummand N m s
+
+def signLockNearBase (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (m/3 + 1), signLockBaseSummand N m s
+
+def signLockNearError (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (m/3 + 1),
+    ((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s
+
+def signLockFarSignedTail (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.Ico (m/3 + 1) (m+1), signLockActualSummand N m s
+
+theorem signLockActualSummand_eq_base_add_error
+    {N m s : Nat} (hN : 1 ≤ N) (hs : s < m) :
+    signLockActualSummand N m s =
+      signLockBaseSummand N m s
+        + ((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s := by
+  unfold signLockActualSummand signLockBaseSummand signLockErrorW
+  rw [signLock_summand_factor_epsilon N m s hN hs]
+  ring
+
+theorem signLockNearActual_eq_base_add_error
+    {N m : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) :
+    signLockNearActual N m = signLockNearBase N m + signLockNearError N m := by
+  unfold signLockNearActual signLockNearBase signLockNearError
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun s hs => ?_
+  have hs3 : 3*s ≤ m := three_mul_le_of_mem_near hs
+  exact signLockActualSummand_eq_base_add_error
+    (N := N) (m := m) (s := s) hN (by omega : s < m)
+
+theorem neg_Xnorm_eq_signLockNearBase_add_errors
+    {N m : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) :
+    -Xnorm N m =
+      signLockNearBase N m + signLockNearError N m + signLockFarSignedTail N m := by
+  rw [neg_Xnorm_eq_linear_Eminus_sum]
+  change
+    (∑ s ∈ Finset.range (m+1), signLockActualSummand N m s) =
+      signLockNearBase N m + signLockNearError N m + signLockFarSignedTail N m
+  calc
+    (∑ s ∈ Finset.range (m+1), signLockActualSummand N m s)
+        =
+      signLockNearActual N m + signLockFarSignedTail N m := by
+        unfold signLockNearActual signLockFarSignedTail
+        rw [Finset.range_eq_Ico,
+          ← Finset.sum_Ico_consecutive _ (Nat.zero_le (m/3 + 1))
+            (by omega : m/3 + 1 ≤ m + 1),
+          ← Finset.range_eq_Ico]
+    _ = signLockNearBase N m + signLockNearError N m
+          + signLockFarSignedTail N m := by
+        rw [signLockNearActual_eq_base_add_error (N := N) (m := m) hN hm]
+
+theorem abs_signLockNearError_le_zetaMax_budget
+    {N m : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    |signLockNearError N m|
+      ≤ ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s| := by
+  unfold signLockNearError
+  calc
+    |∑ s ∈ Finset.range (m/3 + 1),
+        ((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s|
+      ≤ ∑ s ∈ Finset.range (m/3 + 1),
+          |((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s| :=
+        Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ s ∈ Finset.range (m/3 + 1),
+          (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s| := by
+        refine Finset.sum_le_sum fun s hs => ?_
+        have hz0 : 0 ≤ zetaQ N m := zetaQ_nonneg N m
+        have hzle : zetaQ N m ≤ zetaMax :=
+          zetaQ_le_zetaMax (by omega : 1 ≤ m) hN40
+        have hfacpos : (0 : ℚ) < (s.factorial : ℚ) := by positivity
+        have hpow : (zetaQ N m)^s ≤ zetaMax^s :=
+          pow_le_pow_left₀ hz0 hzle s
+        have hdiv :
+            (zetaQ N m)^s / (s.factorial : ℚ)
+              ≤ zetaMax^s / (s.factorial : ℚ) :=
+          div_le_div_of_nonneg_right hpow hfacpos.le
+        calc
+          |((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s|
+              =
+            ((zetaQ N m)^s / (s.factorial : ℚ)) * |signLockErrorW N m s| := by
+              rw [abs_mul, abs_div, abs_pow, abs_neg, abs_of_nonneg hz0,
+                abs_of_pos hfacpos]
+          _ ≤ (zetaMax^s / (s.factorial : ℚ)) * |signLockErrorW N m s| :=
+            mul_le_mul_of_nonneg_right hdiv (abs_nonneg _)
+
+theorem abs_signLockFarSignedTail_le_farTail
+    {N m : Nat} (hN : 1 ≤ N) (hm : 361 ≤ m) :
+    |signLockFarSignedTail N m| ≤ signLockFarTail N m := by
+  unfold signLockFarSignedTail signLockFarTail
+  calc
+    |∑ s ∈ Finset.Ico (m/3 + 1) (m+1), signLockActualSummand N m s|
+      ≤ ∑ s ∈ Finset.Ico (m/3 + 1) (m+1), |signLockActualSummand N m s| :=
+        Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ s ∈ Finset.Ico (m/3 + 1) (m+1),
+          (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+            * |Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m) := by
+        refine Finset.sum_le_sum fun s hs => ?_
+        have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+        have hc1pos : (0 : ℚ) < c 1 := by norm_num [c_one]
+        have hcmpos : (0 : ℚ) < c m := c_pos m (by omega : 1 ≤ m)
+        have hNc1_nonneg : 0 ≤ (N : ℚ) * c 1 :=
+          (mul_pos hNpos hc1pos).le
+        have hNcmpos : (0 : ℚ) < (N : ℚ) * c m :=
+          mul_pos hNpos hcmpos
+        have hfacpos : (0 : ℚ) < (s.factorial : ℚ) := by positivity
+        rw [signLockActualSummand]
+        calc
+          |((-(N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+              (-(Eminus (N : ℚ) (m-s)) / ((N : ℚ) * c m))|
+              =
+            (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+              * (|Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m)) := by
+              rw [show (-(N : ℚ) * c 1) = -((N : ℚ) * c 1) by ring]
+              rw [abs_mul, abs_div, abs_pow, abs_neg,
+                abs_of_nonneg hNc1_nonneg, abs_of_pos hfacpos,
+                abs_div, abs_neg, abs_of_pos hNcmpos]
+          _ =
+            (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+              * |Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m) := by ring_nf
+          _ ≤
+            (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+              * |Eminus (N : ℚ) (m-s)| / ((N : ℚ) * c m) := le_rfl
+
+theorem signLock_abs_error_budget
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    |signLockNearError N m| + |signLockFarSignedTail N m|
+      ≤ 2215 / (m : ℚ)^2 := by
+  have hnear := abs_signLockNearError_le_zetaMax_budget
+    (N := N) (m := m) hN40 hm
+  have hfar := abs_signLockFarSignedTail_le_farTail
+    (N := N) (m := m) hN hm
+  have hbudget := signLock_error_budget_zetaMax
+    (N := N) (m := m) hN hN40 hm
+  exact (add_le_add hnear hfar).trans hbudget
+
 /-! ## Final rational positivity margin -/
 
 /-- Alternating partial sum surrogate for `exp(-x)`. -/
@@ -5522,5 +5670,33 @@ theorem signLock_final_margin_of_ge_361 {m : Nat} (hm : 361 ≤ m) :
     rw [h361, hmrew]
     exact mul_le_mul_of_nonneg_left hpoly expNegLower50_pos.le
   exact lt_of_lt_of_le signLock_final_margin_endpoint hmono
+
+/-- Final §5 assembly, conditional only on the alternating-base lower bound.
+
+The TeX proof compresses this last step into the sign-lock discussion.  In
+Lean the alternating base estimate is kept as a separate input so the already
+formalized `2215/m²` error audit can be reused directly. -/
+theorem Xnorm_le_neg_final_margin_of_signLockNearBase
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hbase :
+      expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockNearBase N m) :
+    Xnorm N m
+      ≤ -(expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2) := by
+  have hsplit := neg_Xnorm_eq_signLockNearBase_add_errors
+    (N := N) (m := m) hN (by omega : 1 ≤ m)
+  have herr := signLock_abs_error_budget (N := N) (m := m) hN hN40 hm
+  have herr_signed :
+      -( |signLockNearError N m| + |signLockFarSignedTail N m| )
+        ≤ signLockNearError N m + signLockFarSignedTail N m := by
+    have hnear : -|signLockNearError N m| ≤ signLockNearError N m := neg_abs_le _
+    have hfar : -|signLockFarSignedTail N m| ≤ signLockFarSignedTail N m := neg_abs_le _
+    linarith
+  have hlower :
+      expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2
+        ≤ -Xnorm N m := by
+    rw [hsplit]
+    linarith
+  linarith
 
 end Prop51
