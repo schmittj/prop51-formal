@@ -788,9 +788,18 @@ def positiveSmallCeilRangeList (a : Nat) : List Nat :=
   List.range' (posTemperedCutoff a)
     (posSmallCutoff a + 1 - posTemperedCutoff a)
 
+/-- Executable list form of the positive rectangle's `N`-range at fixed `a`. -/
+def positiveNRangeList (a : Nat) : List Nat :=
+  List.range' (posNlo a) (posNhi a + 1 - posNlo a)
+
 instance decidablePositiveSmallExpEdgeGapAtCeil (a s k : Nat) :
     Decidable (positiveSmallExpEdgeGapAtCeil a s k) := by
   unfold positiveSmallExpEdgeGapAtCeil
+  infer_instance
+
+instance decidablePositiveSmallTangentExpEdgeGap (a N k : Nat) :
+    Decidable (positiveSmallTangentExpEdgeGap a N k) := by
+  unfold positiveSmallTangentExpEdgeGap
   infer_instance
 
 /-- Boolean check for one plateau-anchor small-edge exponential gap. -/
@@ -811,6 +820,25 @@ def checkPositiveSmallExpEdgeAnchorRow (a : Nat) : Bool :=
 `a ∈ [lo, lo+len)`. -/
 def checkPositiveSmallExpEdgeAnchorRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveSmallExpEdgeAnchorRow
+
+/-- Boolean check for one corrected tangent small-edge exponential gap. -/
+def checkPositiveSmallTangentExpEdgeCell (a N k : Nat) : Bool :=
+  decide (positiveSmallTangentExpEdgeGap a N k)
+
+/-- Boolean check for all retained small-regime `k` at one `(a,N)`. -/
+def checkPositiveSmallTangentExpEdgeAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then checkPositiveSmallTangentExpEdgeCell a N k else true
+
+/-- Boolean check for every `N` in one row's positive rectangle. -/
+def checkPositiveSmallTangentExpEdgeRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallTangentExpEdgeAtN a N
+
+/-- Boolean range check for corrected tangent small-edge gaps over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveSmallTangentExpEdgeRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallTangentExpEdgeRow
 
 /-- The rational sign-lock margin left after the `2215/m²` error budget. -/
 def signLockMargin (m : Nat) : ℚ :=
@@ -903,6 +931,18 @@ theorem mem_positiveSmallCeilRangeList_of_mem {a s : Nat}
   exact (List.mem_range'_1).mpr (by
     exact ⟨hslo, by omega⟩)
 
+/-- Membership bridge from the rectangle predicate to its executable `N` list. -/
+theorem mem_positiveNRangeList_of_rectangle {a N : Nat}
+    (hrect : positiveRectangle a N) :
+    N ∈ positiveNRangeList a := by
+  have hlohi : posNlo a ≤ posNhi a + 1 := hrect.1.trans (Nat.le_succ_of_le hrect.2)
+  have hlen : posNlo a + (posNhi a + 1 - posNlo a) = posNhi a + 1 :=
+    Nat.add_sub_of_le hlohi
+  have hlt_hi : N < posNhi a + 1 := Nat.lt_succ_of_le hrect.2
+  have hlt_list : N < posNlo a + (posNhi a + 1 - posNlo a) := by
+    rwa [hlen]
+  exact (List.mem_range'_1).mpr ⟨hrect.1, hlt_list⟩
+
 /-- Soundness of one executable plateau-anchor small-edge check. -/
 theorem positiveSmallExpEdgeGapAtCeil_of_checkCell {a s k : Nat}
     (h : checkPositiveSmallExpEdgeAnchorCell a s k = true) :
@@ -973,6 +1013,69 @@ corrected interface uses `positiveSmallTangentExponentAt` instead. -/
 theorem positiveSmallExpEdgeGapAtCeil_topPlateau_not :
     ¬ positiveSmallExpEdgeGapAtCeil 401 70 1 := by
   native_decide
+
+/-- Soundness of one executable corrected tangent small-edge check. -/
+theorem positiveSmallTangentExpEdgeGap_of_checkCell {a N k : Nat}
+    (h : checkPositiveSmallTangentExpEdgeCell a N k = true) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  exact of_decide_eq_true h
+
+/-- Soundness of the executable corrected tangent small-edge check at one
+`(a,N)`. -/
+theorem positiveSmallTangentExpEdgeGap_of_checkAtN {a N k : Nat}
+    (h : checkPositiveSmallTangentExpEdgeAtN a N = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  apply positiveSmallTangentExpEdgeGap_of_checkCell
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if x ≤ ceilSqrt N then checkPositiveSmallTangentExpEdgeCell a N x else true)
+          = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeAtN] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [hsmall] using hx
+
+/-- Soundness of one executable row check for the corrected tangent small edge. -/
+theorem positiveSmallTangentExpEdgeGap_of_checkRow {a N k : Nat}
+    (h : checkPositiveSmallTangentExpEdgeRow a = true)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallTangentExpEdgeAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeRow] using h)
+  exact positiveSmallTangentExpEdgeGap_of_checkAtN
+    (hall N (mem_positiveNRangeList_of_rectangle hrect)) hk hsmall
+
+/-- Soundness of an executable range check for the corrected tangent small edge. -/
+theorem positiveSmallTangentExpEdgeGap_of_checkRange
+    {lo len a N k : Nat}
+    (h : checkPositiveSmallTangentExpEdgeRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeRange] using h)
+  exact positiveSmallTangentExpEdgeGap_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect hk hsmall
+
+/-- The full finite-window corrected `smallTangentEdge` certificate field
+follows from a range check over `401 ≤ a ≤ 2000`. -/
+theorem positiveSmallTangentEdge_401_2000_of_checkRange
+    (h : checkPositiveSmallTangentExpEdgeRange 401 1600 = true) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveSmallTangentExpEdgeGap a N k := by
+  intro a N k ha h2000 hrect hk hsmall
+  exact positiveSmallTangentExpEdgeGap_of_checkRange
+    (lo := 401) (len := 1600) h ha (by omega) hrect hk hsmall
 
 theorem positiveEnvelopeBound_le_target_of_budgets
     {a : Nat} {soloBound : ℚ}

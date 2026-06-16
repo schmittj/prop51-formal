@@ -268,6 +268,9 @@ Status:
       `positiveSmallXYProductTangentBound` and the finite edge condition
       `positiveSmallTangentExpEdgeGap`; it converts to
       `PositiveSaddleCombinedProductBudgetCertificate`.  Lean also exposes
+      `checkPositiveSmallTangentExpEdgeCell`/`AtN`/`Row`/`Range` with soundness
+      down to this finite-window tangent edge field.  For the separate corrected
+      edge budget, Lean exposes
       `checkPositiveEdgeBudgetRow`/`checkPositiveEdgeBudgetRange` and soundness
       lemmas for the finite corrected-edge budget, intended for generated row
       chunks or a faster checker rather than one monolithic direct evaluation.
