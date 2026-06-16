@@ -4202,6 +4202,72 @@ theorem positiveTemperedMajorantTerm_le_entropyShadowMajorantTerm_of_mem_large
   · exact positiveDyadicDecay_nonneg (posJ a k)
   · exact positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large ha hkRange
 
+/-- Replace the finite `partialExpUpper` shell in the small entropy-shadow
+majorant by any externally supplied exponential factor which dominates it.
+
+This is a technical bridge for the large-`a` proof: the TeX estimates use the
+same entropy/binomial shadow, but the exponential factor may be supplied by a
+separate rational certificate rather than by `partialExpUpper`. -/
+theorem positiveSmallEntropyShadowMajorantTerm_le_expMajorantTerm
+    {smallExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExpLe :
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+        ≤ smallExp a k) :
+    positiveSmallEntropyShadowMajorantTerm a k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k := by
+  rw [← positiveSmallEntropyShadowExpMajorantTerm_partialExp a k]
+  rw [positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul,
+    positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul]
+  exact mul_le_mul_of_nonneg_left hExpLe
+    (positiveSmallEntropyShadowBaseTerm_pos ha hkRange).le
+
+/-- Tempered analogue of
+`positiveSmallEntropyShadowMajorantTerm_le_expMajorantTerm`. -/
+theorem positiveTemperedEntropyShadowMajorantTerm_le_expMajorantTerm
+    {temperedExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExpLe :
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+        ≤ temperedExp a k) :
+    positiveTemperedEntropyShadowMajorantTerm a k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k := by
+  rw [← positiveTemperedEntropyShadowExpMajorantTerm_partialExp a k]
+  rw [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul,
+    positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
+  exact mul_le_mul_of_nonneg_left hExpLe
+    (positiveTemperedEntropyShadowBaseTerm_pos ha hkRange).le
+
+theorem positiveSmallMajorantTerm_le_entropyShadowExpMajorantTerm_of_mem_large
+    {smallExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hPartialNonneg :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff)
+    (hExpLe :
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+        ≤ smallExp a k) :
+    positiveSmallMajorantTerm a k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k :=
+  (positiveSmallMajorantTerm_le_entropyShadowMajorantTerm_of_mem_large
+      ha hkRange hPartialNonneg).trans
+    (positiveSmallEntropyShadowMajorantTerm_le_expMajorantTerm
+      ha hkRange hExpLe)
+
+theorem positiveTemperedMajorantTerm_le_entropyShadowExpMajorantTerm_of_mem_large
+    {temperedExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hPartialNonneg :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff)
+    (hExpLe :
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+        ≤ temperedExp a k) :
+    positiveTemperedMajorantTerm a k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k :=
+  (positiveTemperedMajorantTerm_le_entropyShadowMajorantTerm_of_mem_large
+      ha hkRange hPartialNonneg).trans
+    (positiveTemperedEntropyShadowMajorantTerm_le_expMajorantTerm
+      ha hkRange hExpLe)
+
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.
 The paper records the sharper `9/(5π²)` constant; Lean uses the rational
