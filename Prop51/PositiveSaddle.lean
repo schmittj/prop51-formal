@@ -1811,6 +1811,21 @@ theorem positiveSmallExponentAt_le_upper_of_rectangle {a N k : Nat}
   unfold positiveSmallExponentAt positiveSmallExponentUpper
   nlinarith
 
+theorem positiveSmallTangentExponentAt_nonneg {a N k : Nat}
+    (hj : 0 < posJ a k) :
+    0 ≤ positiveSmallTangentExponentAt a N k := by
+  unfold positiveSmallTangentExponentAt
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hj
+  have htangent : 0 ≤ positiveSqrtTangentUpper N :=
+    positiveSqrtTangentUpper_nonneg N
+  positivity
+
+theorem positiveSmallTangentExponentAt_le_upper_of_rectangle {a N k : Nat}
+    (hrect : positiveRectangle a N) :
+    positiveSmallTangentExponentAt a N k ≤ positiveSmallExponentUpper a k :=
+  (positiveSmallTangentExponentAt_le_at a N k).trans
+    (positiveSmallExponentAt_le_upper_of_rectangle hrect)
+
 theorem positiveTemperedExponentUpper_nonneg {a k : Nat}
     (hk : 1 ≤ k) (hj : 0 < posJ a k) :
     0 ≤ positiveTemperedExponentUpper a k := by
@@ -1878,6 +1893,26 @@ theorem positiveSmallExponentAt_lt_expCutoff
   exact (positiveSmallExponentAt_le_upper_of_rectangle hrect).trans_lt
     (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
 
+theorem partialExpUpper_smallTangentExponentAt_le_upper
+    {a N k : Nat} (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a) :
+    partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+      ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k := posJ_pos_of_le_posKmax ha1 hkmax
+  exact partialExpUpper_mono_of_nonneg_le_lt
+    (positiveSmallTangentExponentAt_nonneg hjpos)
+    (positiveSmallTangentExponentAt_le_upper_of_rectangle hrect)
+    (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
+
+theorem positiveSmallTangentExponentAt_lt_expCutoff
+    {a N k : Nat} (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a) :
+    positiveSmallTangentExponentAt a N k < (positiveExpCutoff : ℚ) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  exact (positiveSmallTangentExponentAt_le_upper_of_rectangle hrect).trans_lt
+    (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
+
 theorem positiveTemperedExponentUpper_lt_expCutoff {a k : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
     (hkmax : k ≤ posKmax a) (htempered : posTemperedCutoff a < k) :
@@ -1934,6 +1969,22 @@ theorem positiveSmallXYProductAtBound_nonneg {a N k : Nat}
       (positiveSmallExponentAt_nonneg hjpos)
       (positiveSmallExponentAt_lt_expCutoff (by omega : 1 ≤ a) ha2000 hrect hk)
   unfold positiveSmallXYProductAtBound
+  positivity
+
+theorem positiveSmallXYProductTangentBound_nonneg {a N k : Nat}
+    (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a) :
+    0 ≤ positiveSmallXYProductTangentBound a N k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hExp :
+      0 ≤ partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveSmallTangentExponentAt_nonneg hjpos)
+      (positiveSmallTangentExponentAt_lt_expCutoff (by omega : 1 ≤ a) ha2000 hrect hk)
+  unfold positiveSmallXYProductTangentBound
   positivity
 
 /-- Convert the pure small-regime exponential gap into the actual finite-edge
