@@ -1366,6 +1366,17 @@ theorem positiveSoloBudget_nonneg : 0 ≤ positiveSoloBudget := by
 theorem positiveEdgeBudget_nonneg : 0 ≤ positiveEdgeBudget := by
   norm_num [positiveEdgeBudget, positiveTarget]
 
+theorem positiveEdgeBudget_div_four_eq_inv_800000000 :
+    positiveEdgeBudget / 4 = (1 : ℚ) / 800000000 := by
+  norm_num [positiveEdgeBudget, positiveTarget]
+
+theorem le_positiveEdgeBudget_div_four_of_mul_800000000_le_one
+    {x : ℚ} (h : (800000000 : ℚ) * x ≤ 1) :
+    x ≤ positiveEdgeBudget / 4 := by
+  rw [positiveEdgeBudget_div_four_eq_inv_800000000]
+  rw [le_div_iff₀ (by norm_num : (0 : ℚ) < 800000000)]
+  simpa [mul_comm] using h
+
 theorem positiveSoloBudget_add_edgeBudget :
     positiveSoloBudget + positiveEdgeBudget = positiveTarget := by
   norm_num [positiveSoloBudget, positiveEdgeBudget, positiveTarget]
@@ -8319,6 +8330,81 @@ structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBou
             positiveTemperedLargeExp a (posKmax a)
         ≤ positiveEdgeBudget / 4
 
+/-- Unit-scaled reserve variant of the raw-cleared candidate split-tempered
+audit target.
+
+The adjacent-step fields are identical to
+`PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate`.
+The three reserve fields clear the constant
+`positiveEdgeBudget / 4 = 1 / 800000000`, so generated audits can prove
+`800000000 * term ≤ 1` directly. -/
+structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate :
+    Prop where
+  smallRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+            positiveSmallLargeExp a (r + 1))
+          ≤ positiveSmallLargeExp a r *
+            positiveEntropyShadowBaseStepRawDenominator a r
+  smallFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ 1
+  temperedLowerRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a r *
+              positiveTemperedLargeExp a (r + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveTemperedLargeExp a r *
+              positiveEntropyShadowBaseStepRawDenominator a r
+  temperedLowerFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1)))
+        ≤ 1
+  temperedUpperReverseRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1) *
+            positiveEntropyShadowBaseStepRawDenominator a (r - 1)
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedUpperLastReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (posKmax a))
+        ≤ 1
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toRawClearedBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate where
+  smallRawStepCleared := cert.smallRawStepCleared
+  smallFirstReserveQuarter := by
+    intro a ha
+    exact le_positiveEdgeBudget_div_four_of_mul_800000000_le_one
+      (cert.smallFirstReserveUnit ha)
+  temperedLowerRawStepCleared := cert.temperedLowerRawStepCleared
+  temperedLowerFirstReserveLinear := by
+    intro a ha
+    exact le_positiveEdgeBudget_div_four_of_mul_800000000_le_one
+      (cert.temperedLowerFirstReserveUnit ha)
+  temperedUpperReverseRawStepCleared := cert.temperedUpperReverseRawStepCleared
+  temperedUpperLastReserveLinear := by
+    intro a ha
+    exact le_positiveEdgeBudget_div_four_of_mul_800000000_le_one
+      (cert.temperedUpperLastReserveUnit ha)
+
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toLinearBoundsCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
@@ -8482,6 +8568,18 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBound
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate :=
   cert.toLinearBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
 
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toLinearBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate :=
+  cert.toRawClearedBoundsCertificate.toLinearBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate :=
+  cert.toRawClearedBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
@@ -8490,6 +8588,15 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBound
       positiveLargeExpTemperedLowerRatio
       positiveLargeExpTemperedUpperReverseRatio :=
   cert.toLinearBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toRawClearedBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toBoundsCertificate
     (cert :
@@ -8508,6 +8615,15 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBound
       positiveLargeExpTemperedLowerRatio
       positiveLargeExpTemperedUpperReverseRatio :=
   cert.toLinearBoundsCertificate.toBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toRawClearedBoundsCertificate.toBoundsCertificate
 
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and

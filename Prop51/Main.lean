@@ -630,6 +630,16 @@ theorem coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeEx
   coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
     cert.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
 
+/-- Final assembly from the unit-scaled version of the current generated-audit
+shape.  The reserve inequalities in the candidate tail are stated as
+`800000000 * term ≤ 1`. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitReserveAuditCertificate
+    (cert :
+      PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitReserveAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    cert.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
