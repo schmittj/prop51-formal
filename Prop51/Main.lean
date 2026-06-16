@@ -491,6 +491,19 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntr
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserveCertificate cert)
 
+/-- Final assembly from generated chunk range checks plus the concrete
+variable-cutoff mixed raw-quotient reserve certificate for the large-`a`
+entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+        chunks smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate cert)
+
 /-- Final assembly from the default generated chunk cover. -/
 theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate
     (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate) :
@@ -565,6 +578,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRa
     CoefficientNegativity :=
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserveCertificate cert)
+
+/-- Final assembly from the default generated chunk cover plus the concrete
+variable-cutoff mixed raw-quotient reserve certificate for the large-`a`
+entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate cert)
 
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/

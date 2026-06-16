@@ -182,6 +182,13 @@ abbrev PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyMixedRawQuotient
   PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserveCertificate
     positiveSaddleDefaultChunks smallExp temperedExp smallRatio temperedReverseRatio
 
+/-- Concrete variable-cutoff mixed raw-quotient reserve entropy-tail
+certificate specialized to the default finite-window chunks. -/
+abbrev PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop :=
+  PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    positiveSaddleDefaultChunks smallRatio temperedReverseRatio
+
 theorem positiveSaddleDefaultChunkedRangeCertificate
     (hsmall :
       ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
@@ -373,5 +380,32 @@ theorem positiveSaddleDefaultChunkedRangeEntropyMixedRawQuotientReserveCertifica
     positiveSaddleDefaultFiniteWindowChunks
       hsmall htempered htangent hsolo hedge
   entropyMixedRawQuotientReserve := entropyMixedRawQuotientReserve
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (entropyLargeMixedRawQuotientReserve :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+      smallRatio temperedReverseRatio where
+  finiteChunks :=
+    positiveSaddleDefaultFiniteWindowChunks
+      hsmall htempered htangent hsolo hedge
+  entropyLargeMixedRawQuotientReserve := entropyLargeMixedRawQuotientReserve
 
 end Prop51

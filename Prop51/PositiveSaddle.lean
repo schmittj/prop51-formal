@@ -7455,6 +7455,17 @@ structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientRese
     PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedReverseRatio
 
+/-- Chunked finite-window certificate plus the concrete variable-cutoff
+mixed raw-quotient reserve certificate for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    (chunks : List (Nat × Nat))
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyLargeMixedRawQuotientReserve :
+    PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+      smallRatio temperedReverseRatio
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -8343,6 +8354,16 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserv
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+        chunks smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.finiteChunks.toXplusGcompTangentFullyCheckedRowsCertificate
+    cert.entropyLargeMixedRawQuotientReserve.entropyTail
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCombinedProductBudgetCertificate where
@@ -8705,6 +8726,15 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserv
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+        chunks smallRatio temperedReverseRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -8961,6 +8991,15 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRaw
     {smallRatio temperedReverseRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedReverseRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+        chunks smallRatio temperedReverseRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
