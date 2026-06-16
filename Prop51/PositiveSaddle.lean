@@ -2908,6 +2908,42 @@ theorem positiveEntropyShadowExpTemperedBranchSum_eq_Icc
   positiveCustomTemperedBranchSum_eq_Icc
     (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
 
+theorem positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio
+    {smallExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (hlohi : 1 ≤ min (posKmax a) (posSmallCutoff a))
+    (hF0 : 0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1)
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, 1 ≤ r → r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 *
+        (1 / (1 - q)) := by
+  rw [positiveEntropyShadowExpSmallBranchSum_eq_Icc]
+  exact geom_chain_Icc_sum_le_inv_one_sub
+    (fun k => positiveSmallEntropyShadowExpMajorantTerm smallExp a k)
+    hlohi hF0 hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (hlohi : max 1 (posTemperedCutoff a + 1) ≤ posKmax a)
+    (hF0 :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - q)) := by
+  rw [positiveEntropyShadowExpTemperedBranchSum_eq_Icc]
+  exact geom_chain_Icc_sum_le_inv_one_sub
+    (fun k => positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k)
+    hlohi hF0 hq0 hq1 hstep
+
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
     positiveSmallEntropyShadowMajorantTerm
