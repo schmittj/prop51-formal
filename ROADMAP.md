@@ -218,8 +218,10 @@ Status:
       interface now also has a parameterized solo-term bound, matching the
       TeX split between the retained positive summands and the separate
       `2^{-a-1}Y_a(N)` saddle estimate.  These remaining obligations are
-      now bundled as `PositiveSaddleCertificate`, and `Main.lean` exposes the
-      direct capstone `coefficientNegativity_of_positiveSaddleCertificate`.
+      now bundled as `PositiveSaddleCertificate`, split into the finite
+      window `401 ≤ a ≤ 2000` and the `a > 2000` entropy tail, and
+      `Main.lean` exposes the direct capstone
+      `coefficientNegativity_of_positiveSaddleCertificate`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
