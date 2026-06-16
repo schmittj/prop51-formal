@@ -933,6 +933,69 @@ theorem positiveCustomEdgeMajorantSum_le_edgeBudget_of_branch_budgets
     _ ≤ smallBudget + temperedBudget := add_le_add hsmall htempered
     _ ≤ edgeBudget := hbudget
 
+/-! ### Geometric branch-sum helpers -/
+
+theorem sum_Icc_eq_sum_range_shift (F : Nat → ℚ) {lo hi : Nat}
+    (_hlohi : lo ≤ hi) :
+    ∑ r ∈ Finset.Icc lo hi, F r =
+      ∑ j ∈ Finset.range (hi + 1 - lo), F (lo + j) := by
+  have hIccIco : Finset.Icc lo hi = Finset.Ico lo (hi + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  rw [hIccIco, Finset.sum_Ico_eq_sum_range]
+
+private theorem positiveGeom_chain_bound_from_upto
+    (F : Nat → ℚ) {lo K : Nat} {q : ℚ} (hq0 : 0 ≤ q)
+    (hstep : ∀ j, j + 1 < K → F (lo + j + 1) ≤ F (lo + j) * q) :
+    ∀ j, j < K → F (lo + j) ≤ F lo * q^j
+  | 0, _ => by simp
+  | j + 1, hj => by
+      have hprev : j < K := by omega
+      have hrec := positiveGeom_chain_bound_from_upto F hq0 hstep j hprev
+      calc
+        F (lo + (j + 1)) = F (lo + j + 1) := rfl
+        _ ≤ F (lo + j) * q := hstep j hj
+        _ ≤ (F lo * q^j) * q := mul_le_mul_of_nonneg_right hrec hq0
+        _ = F lo * q^(j + 1) := by
+          rw [pow_succ]
+          ring
+
+/-- Finite interval version of geometric domination.  If every successor in
+`[lo, hi]` is at most `q` times the preceding term, the interval sum is bounded
+by the first term times the corresponding finite geometric sum. -/
+theorem geom_chain_Icc_sum_le_geom (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
+    (hlohi : lo ≤ hi) (hq0 : 0 ≤ q)
+    (hstep : ∀ r, lo ≤ r → r < hi → F (r + 1) ≤ F r * q) :
+    ∑ r ∈ Finset.Icc lo hi, F r
+      ≤ F lo * ∑ j ∈ Finset.range (hi + 1 - lo), q^j := by
+  rw [sum_Icc_eq_sum_range_shift F hlohi]
+  let K := hi + 1 - lo
+  have hstepShift :
+      ∀ j, j + 1 < K → F (lo + j + 1) ≤ F (lo + j) * q := by
+    intro j hj
+    exact hstep (lo + j) (by omega) (by omega)
+  calc
+    ∑ j ∈ Finset.range K, F (lo + j)
+        ≤ ∑ j ∈ Finset.range K, F lo * q^j := by
+          exact Finset.sum_le_sum fun j hj =>
+            positiveGeom_chain_bound_from_upto F hq0 hstepShift j
+              (Finset.mem_range.mp hj)
+    _ = F lo * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
+/-- Closed geometric-tail version of `geom_chain_Icc_sum_le_geom`. -/
+theorem geom_chain_Icc_sum_le_inv_one_sub
+    (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
+    (hlohi : lo ≤ hi) (hF0 : 0 ≤ F lo) (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep : ∀ r, lo ≤ r → r < hi → F (r + 1) ≤ F r * q) :
+    ∑ r ∈ Finset.Icc lo hi, F r
+      ≤ F lo * (1 / (1 - q)) := by
+  have hgeom := geom_chain_Icc_sum_le_geom F hlohi hq0 hstep
+  exact hgeom.trans
+    (mul_le_mul_of_nonneg_left
+      (geom_sum_le_inv_one_sub q hq0 hq1 (hi + 1 - lo)) hF0)
+
 /-! ## Large-`a` final margins -/
 
 /-- The positive-part target from paper §6. -/
