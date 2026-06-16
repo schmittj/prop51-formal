@@ -847,6 +847,10 @@ def positiveEdgeMajorantTerm (a k : Nat) : ℚ :=
 def positiveEdgeMajorantSum (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
 
+/-- The edge summand padded by zero away from the retained `k`-range. -/
+def positiveEdgeMajorantKChunkPaddedTerm (a k : Nat) : ℚ :=
+  if k ∈ positiveKRange a then positiveEdgeMajorantTerm a k else 0
+
 /-- Partial corrected edge sum over a half-open `k`-chunk.
 
 This is an executable helper for generated finite audits: whole-row edge
@@ -855,7 +859,12 @@ seconds.  Terms outside `positiveKRange a` are padded by zero, so fixed
 `k`-chunks can be reused uniformly for all `a` in the finite window. -/
 def positiveEdgeMajorantKChunkSum (a lo len : Nat) : ℚ :=
   ∑ k ∈ Finset.Ico lo (lo + len),
-    if k ∈ positiveKRange a then positiveEdgeMajorantTerm a k else 0
+    positiveEdgeMajorantKChunkPaddedTerm a k
+
+/-- Union of the half-open intervals represented by edge `k`-chunks. -/
+def positiveEdgeMajorantKChunkUnion
+    (chunks : Finset (Nat × Nat)) : Finset Nat :=
+  chunks.biUnion fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2)
 
 /-- Sum of several edge `k`-chunks.  The chunks may overlap; the monotonicity
 lemmas below only use nonnegativity, so overlapping chunks are harmless but may
@@ -6218,15 +6227,21 @@ theorem positiveEdgeMajorantSum_nonneg {a : Nat}
   exact Finset.sum_nonneg fun k hk =>
     positiveEdgeMajorantTerm_nonneg ha401 ha2000 hk
 
-theorem positiveEdgeMajorantKChunkSum_nonneg {a lo len : Nat}
-    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
-    0 ≤ positiveEdgeMajorantKChunkSum a lo len := by
-  unfold positiveEdgeMajorantKChunkSum
-  refine Finset.sum_nonneg fun k _hk => ?_
+theorem positiveEdgeMajorantKChunkPaddedTerm_nonneg
+    {a k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    0 ≤ positiveEdgeMajorantKChunkPaddedTerm a k := by
+  unfold positiveEdgeMajorantKChunkPaddedTerm
   by_cases hkRange : k ∈ positiveKRange a
   · simpa [hkRange] using
       positiveEdgeMajorantTerm_nonneg ha401 ha2000 hkRange
   · simp [hkRange]
+
+theorem positiveEdgeMajorantKChunkSum_nonneg {a lo len : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    0 ≤ positiveEdgeMajorantKChunkSum a lo len := by
+  unfold positiveEdgeMajorantKChunkSum
+  exact Finset.sum_nonneg fun k _hk =>
+    positiveEdgeMajorantKChunkPaddedTerm_nonneg ha401 ha2000
 
 theorem positiveEdgeMajorantKChunksSum_nonneg
     {a : Nat} {chunks : Finset (Nat × Nat)}
@@ -6248,10 +6263,10 @@ theorem positiveEdgeMajorantTerm_le_KChunkSum_of_mem
   calc
     positiveEdgeMajorantTerm a k
         = ∑ x ∈ ({k} : Finset Nat),
-            if x ∈ positiveKRange a then positiveEdgeMajorantTerm a x else 0 := by
-          simp [hkRange]
+            positiveEdgeMajorantKChunkPaddedTerm a x := by
+          simp [positiveEdgeMajorantKChunkPaddedTerm, hkRange]
     _ ≤ ∑ x ∈ Finset.Ico lo (lo + len),
-          if x ∈ positiveKRange a then positiveEdgeMajorantTerm a x else 0 :=
+          positiveEdgeMajorantKChunkPaddedTerm a x :=
         Finset.sum_le_sum_of_subset_of_nonneg
           (by
             intro x hx
@@ -6260,10 +6275,8 @@ theorem positiveEdgeMajorantTerm_le_KChunkSum_of_mem
             exact hkChunk)
           (by
             intro x _hx _hxnot
-            by_cases hxRange : x ∈ positiveKRange a
-            · simpa [hxRange] using
-                positiveEdgeMajorantTerm_nonneg ha401 ha2000 hxRange
-            · simp [hxRange])
+            exact positiveEdgeMajorantKChunkPaddedTerm_nonneg
+              (a := a) (k := x) ha401 ha2000)
 
 theorem positiveEdgeMajorantKChunkSum_le_KChunksSum_of_mem
     {a lo len : Nat} {chunks : Finset (Nat × Nat)}
@@ -6289,6 +6302,65 @@ theorem positiveEdgeMajorantKChunkSum_le_KChunksSum_of_mem
             intro chunk _hchunk _hnot
             exact positiveEdgeMajorantKChunkSum_nonneg
               (a := a) (lo := chunk.1) (len := chunk.2) ha401 ha2000)
+
+theorem positiveEdgeMajorantKChunkUnion_sum_eq_KChunksSum
+    {a : Nat} {chunks : Finset (Nat × Nat)}
+    (hdisj :
+      (chunks : Set (Nat × Nat)).PairwiseDisjoint
+        fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2)) :
+    (∑ k ∈ positiveEdgeMajorantKChunkUnion chunks,
+        positiveEdgeMajorantKChunkPaddedTerm a k)
+      = positiveEdgeMajorantKChunksSum a chunks := by
+  unfold positiveEdgeMajorantKChunkUnion positiveEdgeMajorantKChunksSum
+    positiveEdgeMajorantKChunkSum
+  exact Finset.sum_biUnion hdisj
+
+theorem positiveEdgeMajorantSum_le_KChunksSum_of_union_cover
+    {a : Nat} {chunks : Finset (Nat × Nat)}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hdisj :
+      (chunks : Set (Nat × Nat)).PairwiseDisjoint
+        fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        k ∈ positiveEdgeMajorantKChunkUnion chunks) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeMajorantKChunksSum a chunks := by
+  unfold positiveEdgeMajorantSum
+  calc
+    ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
+        = ∑ k ∈ positiveKRange a,
+            positiveEdgeMajorantKChunkPaddedTerm a k := by
+          simp [positiveEdgeMajorantKChunkPaddedTerm]
+    _ ≤ ∑ k ∈ positiveEdgeMajorantKChunkUnion chunks,
+          positiveEdgeMajorantKChunkPaddedTerm a k :=
+        Finset.sum_le_sum_of_subset_of_nonneg
+          (by
+            intro k hk
+            exact hcover hk)
+          (by
+            intro k _hk _hnot
+            exact positiveEdgeMajorantKChunkPaddedTerm_nonneg
+              (a := a) (k := k) ha401 ha2000)
+    _ ≤ positiveEdgeMajorantKChunksSum a chunks :=
+          le_of_eq (positiveEdgeMajorantKChunkUnion_sum_eq_KChunksSum
+            (a := a) (chunks := chunks) hdisj)
+
+theorem positiveEdgeMajorantSum_le_KChunksSum_of_cover
+    {a : Nat} {chunks : Finset (Nat × Nat)}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hdisj :
+      (chunks : Set (Nat × Nat)).PairwiseDisjoint
+        fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        ∃ chunk : Nat × Nat,
+          chunk ∈ chunks ∧ k ∈ Finset.Ico chunk.1 (chunk.1 + chunk.2)) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeMajorantKChunksSum a chunks :=
+  positiveEdgeMajorantSum_le_KChunksSum_of_union_cover
+    ha401 ha2000 hdisj (by
+      intro k hk
+      rcases hcover hk with ⟨chunk, hchunk, hkChunk⟩
+      exact Finset.mem_biUnion.mpr ⟨chunk, hchunk, hkChunk⟩)
 
 theorem positiveEdgeMajorantSum_le_KChunkSum_of_cover
     {a lo len : Nat}
@@ -6332,6 +6404,61 @@ theorem positiveEdgeBudget_of_KChunkBound
     (hchunk : positiveEdgeMajorantKChunkSum a lo len ≤ positiveEdgeBudget) :
     positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
   exact (positiveEdgeMajorantSum_le_KChunkSum_of_cover hcover).trans hchunk
+
+theorem positiveEdgeBudget_of_KChunksBounds
+    {a : Nat} {chunks : Finset (Nat × Nat)} {budget : Nat × Nat → ℚ}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hdisj :
+      (chunks : Set (Nat × Nat)).PairwiseDisjoint
+        fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        ∃ chunk : Nat × Nat,
+          chunk ∈ chunks ∧ k ∈ Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        positiveEdgeMajorantKChunkSum a chunk.1 chunk.2 ≤ budget chunk)
+    (hbudget : ∑ chunk ∈ chunks, budget chunk ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  calc
+    positiveEdgeMajorantSum a
+        ≤ positiveEdgeMajorantKChunksSum a chunks :=
+          positiveEdgeMajorantSum_le_KChunksSum_of_cover
+            ha401 ha2000 hdisj hcover
+    _ ≤ ∑ chunk ∈ chunks, budget chunk := by
+          unfold positiveEdgeMajorantKChunksSum
+          exact Finset.sum_le_sum fun chunk hmem =>
+            hchunks (chunk := chunk) hmem
+    _ ≤ positiveEdgeBudget := hbudget
+
+theorem positiveEdgeBudget_of_KChunksUnitChecks
+    {a : Nat} {chunks : Finset (Nat × Nat)} {scale : Nat × Nat → Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hdisj :
+      (chunks : Set (Nat × Nat)).PairwiseDisjoint
+        fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        ∃ chunk : Nat × Nat,
+          chunk ∈ chunks ∧ k ∈ Finset.Ico chunk.1 (chunk.1 + chunk.2))
+    (hscale : ∀ {chunk : Nat × Nat}, chunk ∈ chunks → 0 < scale chunk)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 (scale chunk) = true)
+    (hbudget :
+      ∑ chunk ∈ chunks, (1 : ℚ) / (scale chunk : ℚ) ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  exact positiveEdgeBudget_of_KChunksBounds
+    (a := a) (chunks := chunks)
+    (budget := fun chunk => (1 : ℚ) / (scale chunk : ℚ))
+    ha401 ha2000 hdisj hcover
+    (by
+      intro chunk hmem
+      exact positiveEdgeMajorantKChunkSum_le_inv_of_checkUnit
+        (hscale (chunk := chunk) hmem)
+        (hchunks (chunk := chunk) hmem))
+    hbudget
 
 /-! ## Reducer from pointwise saddle estimates to the corrected edge scan -/
 
