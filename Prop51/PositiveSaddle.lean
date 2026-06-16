@@ -1470,6 +1470,39 @@ theorem positiveTemperedExponentUpper_lt_expCutoff {a k : Nat}
     _ < (positiveExpCutoff : ℚ) := by
           norm_num [positiveExpCutoff]
 
+theorem positiveSmallXYProductBound_nonneg {a N k : Nat}
+    (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    0 ≤ positiveSmallXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhiQ : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hExp : 0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveSmallExponentUpper_nonneg hjpos)
+      (positiveSmallExponentUpper_lt_expCutoff (by omega : 1 ≤ a) ha2000 hkmax)
+  unfold positiveSmallXYProductBound
+  positivity
+
+theorem positiveTemperedXYProductBound_nonneg {a N k : Nat}
+    (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
+    0 ≤ positiveTemperedXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hExp :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveTemperedExponentUpper_nonneg hk1 hjpos)
+      (positiveTemperedExponentUpper_lt_expCutoff ha401 ha2000 hkmax htempered)
+  unfold positiveTemperedXYProductBound
+  positivity
+
 theorem positivePrefactor_nonneg {C : ℚ} {a N k : Nat}
     (hC : 0 ≤ C) (hN : 1 ≤ N) (ha : 2 ≤ a) (hk1 : 1 ≤ k)
     (hkmax : k ≤ posKmax a) :
