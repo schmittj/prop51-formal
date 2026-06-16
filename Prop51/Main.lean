@@ -32,6 +32,7 @@ import Prop51.CertificateExact
 import Prop51.PartitionsComplete
 import Prop51.Majorant
 import Prop51.CertificateInterval
+import Prop51.PositiveSaddle
 
 namespace Prop51
 
@@ -172,5 +173,12 @@ theorem coefficientNegativity_of_unorm_tail
   · exact coefficientNegativity_of_g_le_1199 g h2 (by omega) hres μ hμp
   · exact coefficientNegativity_of_g_ge_1200_of_unorm_tail htail
       g hg hres μ hμp
+
+/-- Final assembly from the packaged §6 positive-saddle certificate. -/
+theorem coefficientNegativity_of_positiveSaddleCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleCertificate cert)
 
 end Prop51

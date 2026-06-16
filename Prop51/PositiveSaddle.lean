@@ -1045,6 +1045,56 @@ theorem Unorm_neg_of_signLock_and_positiveEnvelopeBound
     ((positiveEnvelope_le_bound_of_solo
       (a := a) (N := N) (soloBound := soloBound) hsolo).trans hpositive)
 
+/-! ## Packaged remaining §6 certificate interface -/
+
+/-- The remaining positive-saddle obligations after the completed sign-lock
+argument.  The four fields match the current proof split:
+
+* small-regime pointwise saddle bound;
+* tempered-regime pointwise saddle bound;
+* solo `Q_a` bound;
+* positive-envelope certificate after inserting the solo bound.
+
+The `soloBound` parameter lets a later certificate use either the TeX-style
+`exp(-0.49a)` surrogate or a sharper executable bound without changing the
+assembly layer. -/
+structure PositiveSaddleCertificate (soloBound : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 401 ≤ a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 401 ≤ a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k
+  solo :
+    ∀ {a N : Nat}, 401 ≤ a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 401 ≤ a →
+      positiveEnvelopeBound a (soloBound a) ≤ positiveTarget
+
+theorem Unorm_neg_of_positiveSaddleCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound)
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N) :
+    Unorm a N < 0 :=
+  Unorm_neg_of_signLock_and_positiveEnvelopeBound
+    (a := a) (N := N) (soloBound := soloBound a)
+    ha hrect
+    (fun _ hk hsmall => cert.small ha hrect hk hsmall)
+    (fun _ hk htemp => cert.tempered ha hrect hk htemp)
+    (cert.solo ha hrect)
+    (cert.envelope ha)
+
+/-- Rectangle form of the large-`a` tail theorem supplied by a completed
+positive-saddle certificate. -/
+theorem unorm_tail_of_positiveSaddleCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 := by
+  intro a ha N hlo hhi
+  exact Unorm_neg_of_positiveSaddleCertificate
+    (soloBound := soloBound) cert ha ⟨hlo, hhi⟩
+
 /-! ## Numerical anchors for the first post-certificate row -/
 
 theorem posNlo_401 : posNlo 401 = 2399 := by
