@@ -257,6 +257,11 @@ def positiveExpCutoff : Nat := 800
 `\binom{a-2}{k-1}`. -/
 def positiveBinomDen (a k : Nat) : Nat := Nat.choose (a-2) (k-1)
 
+/-- The reciprocal binomial prefactor in paper §6:
+`1 / ((a-1) * \binom{a-2}{k-1})`. -/
+def positiveBinomRatio (a k : Nat) : ℚ :=
+  1 / (((a-1 : Nat) : ℚ) * (positiveBinomDen a k : ℚ))
+
 /-- Rational `2^{-j}`. -/
 def positiveDyadicDecay (j : Nat) : ℚ := 1 / (2 : ℚ)^j
 
@@ -509,6 +514,14 @@ theorem positiveCRatio_pos {a k : Nat} (ha : 1 ≤ a) (hk : 1 ≤ k)
   unfold positiveCRatio
   exact div_pos (mul_pos (c_pos k hk) (c_pos (posJ a k) hj)) (c_pos a ha)
 
+theorem positiveDyadicDecay_nonneg (j : Nat) : 0 ≤ positiveDyadicDecay j := by
+  unfold positiveDyadicDecay
+  positivity
+
+theorem positiveDyadicDecay_pos (j : Nat) : 0 < positiveDyadicDecay j := by
+  unfold positiveDyadicDecay
+  positivity
+
 theorem Qq_eq_yfactor_mul_Ynorm {N j : Nat} (hN : 1 ≤ N) (hj : 1 ≤ j) :
     Qq N j = ((N : ℚ) / 2) * c j / (2 : ℚ)^j * Ynorm N j := by
   have hden :
@@ -627,6 +640,36 @@ theorem not_Bq_pos_of_Xnorm_nonpos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k)
   intro hB
   have hXpos := (Bq_pos_iff_Xnorm_pos hN hk).mp hB
   linarith
+
+/-- Monotonicity bridge for the factorized positive summand: once `B_k(N)>0`,
+independent upper bounds for the coefficient ratio, `X_k(N)`, and
+`Y_{a-k}(N)` multiply to an upper bound for the factorized summand. -/
+theorem positiveFactorizedRawTerm_le_of_bounds
+    {a N k : Nat} {R X Y : ℚ} (hN : 1 ≤ N) (hk : 1 ≤ k)
+    (hB : 0 < Bq N k)
+    (hR : positiveCRatio a k ≤ R)
+    (hX : Xnorm N k ≤ X)
+    (hY : Ynorm N (posJ a k) ≤ Y) :
+    positiveFactorizedRawTerm a N k ≤
+      ((N : ℚ) / 2) * R * positiveDyadicDecay (posJ a k) * X * Y := by
+  have hNhalf : 0 ≤ (N : ℚ) / 2 := by positivity
+  have hR0 : 0 ≤ positiveCRatio a k := positiveCRatio_nonneg a k
+  have hX0 : 0 ≤ Xnorm N k := ((Bq_pos_iff_Xnorm_pos hN hk).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) := Ynorm_nonneg N (posJ a k)
+  have hRtarget : 0 ≤ R := hR0.trans hR
+  have hXtarget : 0 ≤ X := hX0.trans hX
+  have hYtarget : 0 ≤ Y := hY0.trans hY
+  unfold positiveFactorizedRawTerm
+  gcongr
+  · exact mul_nonneg
+      (mul_nonneg
+        (mul_nonneg hNhalf hRtarget)
+        (positiveDyadicDecay_nonneg (posJ a k)))
+      hXtarget
+  · exact mul_nonneg
+      (mul_nonneg hNhalf hRtarget)
+      (positiveDyadicDecay_nonneg (posJ a k))
+  · exact positiveDyadicDecay_nonneg (posJ a k)
 
 theorem normalizedPositiveIfTerm_eq_guard_div (a N k : Nat) :
     normalizedPositiveIfTerm a N k
@@ -748,6 +791,124 @@ theorem positiveBinomDen_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
   unfold positiveBinomDen
   have hka : k < a := lt_self_of_le_posKmax (by omega : 1 ≤ a) hkmax
   exact Nat.choose_pos (by omega : k - 1 ≤ a - 2)
+
+theorem positiveBinomRatio_nonneg {a k : Nat} :
+    0 ≤ positiveBinomRatio a k := by
+  unfold positiveBinomRatio
+  positivity
+
+theorem positiveBinomRatio_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
+    (hkmax : k ≤ posKmax a) :
+    0 < positiveBinomRatio a k := by
+  have ha1 : (0 : ℚ) < ((a-1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a-1)
+  have hchoose : (0 : ℚ) < (positiveBinomDen a k : ℚ) := by
+    exact_mod_cast positiveBinomDen_pos ha hk1 hkmax
+  unfold positiveBinomRatio
+  positivity
+
+/-- Coefficient-ratio bound obtained from the already formalized
+`c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.
+The paper records the sharper `9/(5π²)` constant; Lean uses the rational
+`576/3125 < 1`, which is enough for the displayed majorants. -/
+theorem positiveCRatio_le_dnorm_binomRatio {a k : Nat}
+    (ha : 2 ≤ a) (hk1 : 1 ≤ k) (hkmax : k ≤ posKmax a) :
+    positiveCRatio a k ≤ (576/3125) * positiveBinomRatio a k := by
+  have ha1 : 1 ≤ a := by omega
+  have hka : k < a := lt_self_of_le_posKmax ha1 hkmax
+  have hj1 : 1 ≤ posJ a k := by
+    exact Nat.succ_le_of_lt (posJ_pos_of_le_posKmax ha1 hkmax)
+  have hca_pos : 0 < c a := c_pos a (by omega : 1 ≤ a)
+  have hden_lb := c_lb a (by omega : 1 ≤ a)
+  have hden_lb_pos :
+      0 < (5/36) * (6^a * ((a-1).factorial : ℚ)) := by
+    positivity
+  have hnum_le :
+      c k * c (posJ a k)
+        ≤ (4/25 * (6^k * ((k-1).factorial : ℚ))) *
+            (4/25 * (6^(posJ a k) * ((posJ a k-1).factorial : ℚ))) := by
+    exact mul_le_mul (c_ub k hk1) (c_ub (posJ a k) hj1)
+      (c_nonneg (posJ a k)) (by positivity)
+  have hnum_bound_nonneg :
+      0 ≤ (4/25 * (6^k * ((k-1).factorial : ℚ))) *
+            (4/25 * (6^(posJ a k) * ((posJ a k-1).factorial : ℚ))) := by
+    positivity
+  have hchoose_ne : (((positiveBinomDen a k : ℕ) : ℚ)) ≠ 0 := by
+    exact_mod_cast (positiveBinomDen_pos ha hk1 hkmax).ne'
+  have ha1_ne : (((a-1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : a-1 ≠ 0)
+  have hfac_k_ne : (((k-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_j_ne : (((posJ a k-1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_a2_ne : (((a-2).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hpow6 : (6:ℚ)^k * (6:ℚ)^(posJ a k) = 6^a := by
+    rw [← pow_add]
+    congr 1
+    unfold posJ
+    omega
+  have hchoose :
+      (((positiveBinomDen a k : ℕ) : ℚ))
+          * (((k-1).factorial : Nat) : ℚ)
+          * (((posJ a k-1).factorial : Nat) : ℚ)
+        = (((a-2).factorial : Nat) : ℚ) := by
+    unfold positiveBinomDen posJ
+    have h := Nat.choose_mul_factorial_mul_factorial
+      (show k-1 ≤ a-2 by omega)
+    rw [show a-2-(k-1) = a-k-1 by omega] at h
+    exact_mod_cast h
+  have hfaca :
+      (((a-1).factorial : Nat) : ℚ)
+        = (((a-1 : Nat) : ℚ)) * (((a-2).factorial : Nat) : ℚ) := by
+    rw [show a-1 = (a-2)+1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have halg :
+      ((4/25 * (6^k * ((k-1).factorial : ℚ))) *
+          (4/25 * (6^(posJ a k) * ((posJ a k-1).factorial : ℚ))))
+        / ((5/36) * (6^a * ((a-1).factorial : ℚ)))
+      =
+        (576/3125) * positiveBinomRatio a k := by
+    rw [hfaca, ← hchoose, ← hpow6]
+    unfold positiveBinomRatio
+    field_simp [ha1_ne, hchoose_ne, hfac_k_ne, hfac_j_ne, hfac_a2_ne]
+    ring
+  calc
+    positiveCRatio a k
+        = c k * c (posJ a k) / c a := by
+            rfl
+    _ ≤ ((4/25 * (6^k * ((k-1).factorial : ℚ))) *
+          (4/25 * (6^(posJ a k) * ((posJ a k-1).factorial : ℚ)))) / c a := by
+        exact div_le_div_of_nonneg_right hnum_le hca_pos.le
+    _ ≤
+        ((4/25 * (6^k * ((k-1).factorial : ℚ))) *
+          (4/25 * (6^(posJ a k) * ((posJ a k-1).factorial : ℚ))))
+        / ((5/36) * (6^a * ((a-1).factorial : ℚ))) := by
+        exact div_le_div_of_nonneg_left hnum_bound_nonneg hden_lb_pos hden_lb
+    _ = (576/3125) * positiveBinomRatio a k := halg
+
+theorem positiveCRatio_le_binomRatio {a k : Nat}
+    (ha : 2 ≤ a) (hk1 : 1 ≤ k) (hkmax : k ≤ posKmax a) :
+    positiveCRatio a k ≤ positiveBinomRatio a k := by
+  have hratio_nonneg : 0 ≤ positiveBinomRatio a k :=
+    positiveBinomRatio_nonneg
+  have hconstant : (576/3125 : ℚ) * positiveBinomRatio a k
+      ≤ positiveBinomRatio a k := by
+    nlinarith
+  exact (positiveCRatio_le_dnorm_binomRatio ha hk1 hkmax).trans hconstant
+
+/-- TeX-style product bridge after inserting the reciprocal-binomial bound
+for `R_{k,a}`.  The remaining inputs are only pointwise bounds for `X_k(N)`
+and `Y_{a-k}(N)`. -/
+theorem positiveFactorizedRawTerm_le_of_XY_bounds
+    {a N k : Nat} {X Y : ℚ} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
+    (hX : Xnorm N k ≤ X)
+    (hY : Ynorm N (posJ a k) ≤ Y) :
+    positiveFactorizedRawTerm a N k ≤
+      ((N : ℚ) / 2) * positiveBinomRatio a k *
+        positiveDyadicDecay (posJ a k) * X * Y := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  exact positiveFactorizedRawTerm_le_of_bounds hN hk1 hB
+    (positiveCRatio_le_binomRatio ha hk1 hkmax) hX hY
 
 theorem partialExpUpper_nonneg_of_nonneg_lt {y : ℚ} {T₀ : Nat}
     (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
