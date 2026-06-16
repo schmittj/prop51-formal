@@ -54,12 +54,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksProductTangentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — the current most practical large-`a` conditional capstone: table-backed
   exact finite product chunks using a fixed-width row-dependent `N` cover and
-  independent product and tangent row covers, the default 20-wide retained-`k`
-  chunks, displayed-solo finite chunks, fixed-scale
-  unit-cleared edge row chunks, and the raw-cleared large-tail reserve
+  independent row covers for product, tangent, displayed-solo saddle,
+  displayed-solo budget, and edge `k`-chunk checks, the default 20-wide
+  retained-`k` chunks, a fixed edge scale, and the raw-cleared large-tail reserve
   certificate imply full
   `CoefficientNegativity`.  The intermediate
   `RawProductTableSingletonNChunksUniformLargeScale...` sibling keeps
@@ -94,7 +94,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `RawProductTableFixedNChunksProductTangentRowChunksFixedScale...` capstone
   packages row-range product checks using `Prop51.positiveProductFixedNChunks`
   and lets the corrected tangent-edge range checks use a separate row cover.
-  Its final `N` chunk may harmlessly overrun the positive rectangle.  When
+  The fully independent
+  `RawProductTableFixedNChunksIndependentRowChunksFixedScale...` capstone
+  additionally lets the displayed-solo saddle, displayed-solo budget, and edge
+  finite range checks use their own row covers.  The final `N` chunk may
+  harmlessly overrun the positive rectangle.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

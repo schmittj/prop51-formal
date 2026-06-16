@@ -918,6 +918,19 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawPr
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate
 
+/-- Final assembly from the fixed-width `N`-chunk table-product route with
+independent row covers for all finite range-check families. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {productRowChunks tangentRowChunks soloSaddleRowChunks
+      soloBudgetRowChunks edgeRowChunks : List (Nat × Nat)} {nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productRowChunks tangentRowChunks soloSaddleRowChunks
+        soloBudgetRowChunks edgeRowChunks nLen) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    cert.toTangentProductBudgetCertificate
+
 /-- Final assembly from the fully fixed-width product chunk route.  Product
 checks use fixed-width row chunks and fixed-width `N` chunks, while tangent,
 displayed-solo, and edge checks use the default fixed-scale chunk interfaces. -/
