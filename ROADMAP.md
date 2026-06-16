@@ -596,6 +596,14 @@ Status:
       it only avoids proving separate small and tempered product atoms for
       the same `(a,N)` tables.  In the same sample, one combined atom compiles
       in about 15 seconds, replacing two separate 13-15 second atoms.
+      Edge proof production now has the semantic finer-`k` cover
+      `positiveEdgeFixedKChunks` with scale `positiveEdgeFixedKScale`: a
+      1600-row default 20-wide edge atom timed out, row lengths 2/5/10/20
+      took roughly 8/21/39/82 seconds, and one-wide retained-`k` edge atoms
+      with `positiveEdgeFixedKScale 1` compile in about 1-6 seconds.  The
+      next finite wrapper should consume these fine edge chunks directly
+      through `positiveEdgeBudget_of_fixedKChunksUniformUnitChecks`, rather
+      than reconstructing the old default edge booleans.
       The large-tail side now also has
       `PositiveSaddleLargeTailPartsAuditCertificate`, which decomposes the
       two non-finite certificate fields into product-small, product-tempered,

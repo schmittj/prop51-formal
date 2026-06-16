@@ -1207,6 +1207,159 @@ theorem positiveEdgeDefaultKChunks_cover
     dsimp [i]
     constructor <;> omega
 
+/-- Finer edge `k`-chunks covering `1 ≤ k ≤ 1800`.
+
+These are used only for proof production.  The semantic edge-budget reducer in
+`PositiveSaddle.lean` accepts any disjoint chunk cover, so generated edge atoms
+can be much narrower than the default 20-wide chunks. -/
+def positiveEdgeFixedKChunks (kLen : Nat) : Finset (Nat × Nat) :=
+  if kLen = 0 then ∅
+  else
+    (Finset.range ((1800 + kLen - 1) / kLen)).image fun i =>
+      (1 + kLen * i, kLen)
+
+theorem mem_positiveEdgeFixedKChunks_iff
+    {kLen : Nat} (hkLen : 0 < kLen) {chunk : Nat × Nat} :
+    chunk ∈ positiveEdgeFixedKChunks kLen ↔
+      ∃ i, i < (1800 + kLen - 1) / kLen ∧
+        chunk = (1 + kLen * i, kLen) := by
+  unfold positiveEdgeFixedKChunks
+  rw [if_neg hkLen.ne']
+  constructor
+  · intro h
+    rcases Finset.mem_image.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, Finset.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact Finset.mem_image.mpr ⟨i, Finset.mem_range.mpr hi, rfl⟩
+
+theorem positiveEdgeFixedKChunks_card
+    {kLen : Nat} (hkLen : 0 < kLen) :
+    (positiveEdgeFixedKChunks kLen).card =
+      (1800 + kLen - 1) / kLen := by
+  unfold positiveEdgeFixedKChunks
+  rw [if_neg hkLen.ne']
+  rw [Finset.card_image_of_injective]
+  · simp
+  · intro i j h
+    simp at h
+    omega
+
+theorem positiveEdgeFixedKChunks_disjoint
+    {kLen : Nat} (hkLen : 0 < kLen) :
+    (positiveEdgeFixedKChunks kLen : Set (Nat × Nat)).PairwiseDisjoint
+      fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2) := by
+  intro chunk hchunk chunk' hchunk' hne
+  have hchunkFin : chunk ∈ positiveEdgeFixedKChunks kLen := by
+    simpa using hchunk
+  have hchunkFin' : chunk' ∈ positiveEdgeFixedKChunks kLen := by
+    simpa using hchunk'
+  rcases (mem_positiveEdgeFixedKChunks_iff hkLen).1 hchunkFin with
+    ⟨i, _hi, rfl⟩
+  rcases (mem_positiveEdgeFixedKChunks_iff hkLen).1 hchunkFin' with
+    ⟨j, _hj, rfl⟩
+  have hij : i ≠ j := by
+    intro h
+    apply hne
+    simp [h]
+  rcases lt_or_gt_of_ne hij with hijlt | hjilt
+  · have hsep : 1 + kLen * i + kLen ≤ 1 + kLen * j := by
+      have hij_succ : i + 1 ≤ j := Nat.succ_le_of_lt hijlt
+      calc
+        1 + kLen * i + kLen = 1 + kLen * (i + 1) := by ring
+        _ ≤ 1 + kLen * j :=
+          Nat.add_le_add_left (Nat.mul_le_mul_left kLen hij_succ) 1
+    simp [Finset.disjoint_left, Finset.mem_Ico]
+    intro x hxi hxj
+    omega
+  · have hsep : 1 + kLen * j + kLen ≤ 1 + kLen * i := by
+      have hji_succ : j + 1 ≤ i := Nat.succ_le_of_lt hjilt
+      calc
+        1 + kLen * j + kLen = 1 + kLen * (j + 1) := by ring
+        _ ≤ 1 + kLen * i :=
+          Nat.add_le_add_left (Nat.mul_le_mul_left kLen hji_succ) 1
+    simp [Finset.disjoint_left, Finset.mem_Ico]
+    intro x hxi hxj
+    omega
+
+theorem positiveEdgeFixedKChunks_cover_of_le_1800
+    {kLen k : Nat} (hkLen : 0 < kLen) (hk1 : 1 ≤ k)
+    (hk1800 : k ≤ 1800) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveEdgeFixedKChunks kLen ∧
+        k ∈ Finset.Ico chunk.1 (chunk.1 + chunk.2) := by
+  rcases positiveProductFixedKChunks_cover_of_le_1800
+      hkLen hk1 hk1800 with
+    ⟨chunk, hchunk, hkChunk⟩
+  rcases (mem_positiveProductFixedKChunks_iff hkLen).1 hchunk with
+    ⟨i, hi, rfl⟩
+  refine ⟨(1 + kLen * i, kLen), ?_, ?_⟩
+  · exact (mem_positiveEdgeFixedKChunks_iff hkLen).2 ⟨i, hi, rfl⟩
+  · exact Finset.mem_Ico.mpr ((List.mem_range'_1).mp hkChunk)
+
+/-- Uniform scale for the finer edge chunks.
+
+For `c = ceil(1800 / kLen)` chunks, each generated atom proves a bound by
+`1 / (c * 200000000)`, so summing over all chunks fits exactly into
+`positiveEdgeBudget = 1 / 200000000`. -/
+def positiveEdgeFixedKScale (kLen : Nat) : Nat :=
+  ((1800 + kLen - 1) / kLen) * 200000000
+
+theorem positiveEdgeFixedKScale_pos
+    {kLen : Nat} (hkLen : 0 < kLen) :
+    0 < positiveEdgeFixedKScale kLen := by
+  unfold positiveEdgeFixedKScale
+  have hcount : 0 < (1800 + kLen - 1) / kLen := by
+    exact Nat.div_pos (by omega) hkLen
+  omega
+
+theorem positiveEdgeFixedKChunks_uniformBudget
+    {kLen : Nat} (hkLen : 0 < kLen) :
+    ∑ _chunk ∈ positiveEdgeFixedKChunks kLen,
+      (1 : ℚ) / (positiveEdgeFixedKScale kLen : ℚ) ≤
+        positiveEdgeBudget := by
+  rw [Finset.sum_const, positiveEdgeFixedKChunks_card hkLen, nsmul_eq_mul]
+  rw [positiveEdgeBudget_eq_inv_200000000]
+  let count := (1800 + kLen - 1) / kLen
+  have hcount_pos : 0 < count := by
+    exact Nat.div_pos (by omega) hkLen
+  have hcount_ne : (count : ℚ) ≠ 0 := by
+    exact_mod_cast hcount_pos.ne'
+  have hcast :
+      (((count * 200000000 : Nat) : ℚ)) =
+        (count : ℚ) * 200000000 := by
+    norm_num
+  change (count : ℚ) *
+      (1 / (((count * 200000000 : Nat) : ℚ))) ≤
+        (1 : ℚ) / 200000000
+  rw [hcast]
+  apply le_of_eq
+  field_simp [hcount_ne]
+
+set_option maxHeartbeats 800000 in
+theorem positiveEdgeBudget_of_fixedKChunksUniformUnitChecks
+    {a kLen : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hkLen : 0 < kLen)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeFixedKChunks kLen →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 (positiveEdgeFixedKScale kLen) = true) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  exact positiveEdgeBudget_of_KChunksUnitChecks
+    (a := a) (chunks := positiveEdgeFixedKChunks kLen)
+    (scale := fun _ => positiveEdgeFixedKScale kLen)
+    ha401 ha2000
+    (positiveEdgeFixedKChunks_disjoint hkLen)
+    (by
+      intro k hk
+      rcases mem_positiveKRange.mp hk with ⟨hk1, hkmax⟩
+      have hk1800 : k ≤ 1800 := by
+        unfold posKmax at hkmax
+        omega
+      exact positiveEdgeFixedKChunks_cover_of_le_1800 hkLen hk1 hk1800)
+    (fun {_chunk} _hchunk => positiveEdgeFixedKScale_pos hkLen)
+    (fun {chunk} hchunk => hchunks (chunk := chunk) hchunk)
+    (positiveEdgeFixedKChunks_uniformBudget hkLen)
+
 theorem checkPositiveSmallXYProductRawClearedTableNRangeKChunk_of_productKChunks
     {productKLen a nLo nLen : Nat} {edgeChunk : Nat × Nat}
     (hproductKLen : 0 < productKLen)

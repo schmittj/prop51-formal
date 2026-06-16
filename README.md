@@ -142,7 +142,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   obligations.  In local profiling, one-row product atoms with
   `--n-len 10 --product-k-len 1` compile in roughly 13-15 seconds at
   `a = 401`, whereas the 20-wide product atom at `--n-len 10` did not finish
-  in the earlier timeout.  The further
+  in the earlier timeout.  Edge atoms now have the reusable semantic cover
+  `Prop51.positiveEdgeFixedKChunks`: local profiling showed a 1600-row
+  default 20-wide edge atom timing out, row lengths 2/5/10/20 taking roughly
+  8/21/39/82 seconds, and one-wide retained-`k` edge atoms with
+  `Prop51.positiveEdgeFixedKScale 1` compiling in about 1-6 seconds.  The
+  further
   `PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate`
   wrapper shares each table-backed `(a,N)` product pass between the small and
   tempered regimes; emit it with
