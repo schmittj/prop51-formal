@@ -247,7 +247,11 @@ Status:
       proof use entropy-tail-specific rational summand bounds instead of the
       finite-window `partialExpUpper` scan terms.  The entropy-shadow
       specialization is named
-      `PositiveSaddleEntropyShadowTailCertificate.entropyTail`.
+      `PositiveSaddleEntropyShadowTailCertificate.entropyTail`, with the
+      budgeted half-target split exposed as
+      `PositiveSaddleEntropyShadowBudgetCertificate.entropyTail`.  This
+      records the Lean-side loose solo/edge budget; it is weaker than the
+      TeX solo estimate but follows the same final positivity margin.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to

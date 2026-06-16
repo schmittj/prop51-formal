@@ -3840,6 +3840,96 @@ theorem PositiveSaddleEntropyShadowTailCertificate.entropyTail
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toCustomTailCertificate.entropyTail
 
+/-- Generic budget splitter for custom large-`a` positive envelopes. -/
+theorem positiveCustomEnvelopeBound_le_target_of_budgets
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a : Nat}
+    {soloBound soloBudget edgeBudget : ℚ}
+    (hsolo : soloBound ≤ soloBudget)
+    (hedge : positiveCustomEdgeMajorantSum smallTerm temperedTerm a ≤ edgeBudget)
+    (hbudget : soloBudget + edgeBudget ≤ positiveTarget) :
+    positiveCustomEnvelopeBound smallTerm temperedTerm a soloBound ≤ positiveTarget := by
+  unfold positiveCustomEnvelopeBound
+  calc
+    soloBound + positiveCustomEdgeMajorantSum smallTerm temperedTerm a
+        ≤ soloBudget + edgeBudget := add_le_add hsolo hedge
+    _ ≤ positiveTarget := hbudget
+
+theorem positiveEntropyShadowEnvelopeBound_eq_solo_add_edge
+    (a : Nat) (soloBound : ℚ) :
+    positiveEntropyShadowEnvelopeBound a soloBound =
+      soloBound + positiveEntropyShadowEdgeMajorantSum a := rfl
+
+theorem positiveEntropyShadowEnvelope_le_bound_of_solo
+    {a N : Nat} {soloBound : ℚ}
+    (hsolo : normalizedSoloTerm a N ≤ soloBound) :
+    positiveEntropyShadowEnvelope a N
+      ≤ positiveEntropyShadowEnvelopeBound a soloBound :=
+  positiveCustomEnvelope_le_bound_of_solo
+    (smallTerm := positiveSmallEntropyShadowMajorantTerm)
+    (temperedTerm := positiveTemperedEntropyShadowMajorantTerm)
+    hsolo
+
+/-- Entropy-shadow envelope budget after splitting the solo and retained-edge
+allowances.  This is the same Lean bookkeeping split used on the finite
+window; the TeX proof's sharper solo estimate can be inserted by proving
+`soloBound ≤ positiveSoloBudget`. -/
+theorem positiveEntropyShadowEnvelopeBound_le_target_of_budgets
+    {a : Nat} {soloBound soloBudget edgeBudget : ℚ}
+    (hsolo : soloBound ≤ soloBudget)
+    (hedge : positiveEntropyShadowEdgeMajorantSum a ≤ edgeBudget)
+    (hbudget : soloBudget + edgeBudget ≤ positiveTarget) :
+    positiveEntropyShadowEnvelopeBound a soloBound ≤ positiveTarget :=
+  positiveCustomEnvelopeBound_le_target_of_budgets
+    (smallTerm := positiveSmallEntropyShadowMajorantTerm)
+    (temperedTerm := positiveTemperedEntropyShadowMajorantTerm)
+    hsolo hedge hbudget
+
+theorem positiveEntropyShadowEnvelopeBound_le_target_of_standard_budgets
+    {a : Nat} {soloBound : ℚ}
+    (hsolo : soloBound ≤ positiveSoloBudget)
+    (hedge : positiveEntropyShadowEdgeMajorantSum a ≤ positiveEdgeBudget) :
+    positiveEntropyShadowEnvelopeBound a soloBound ≤ positiveTarget := by
+  refine positiveEntropyShadowEnvelopeBound_le_target_of_budgets hsolo hedge ?_
+  rw [positiveSoloBudget_add_edgeBudget]
+
+/-- Budgeted entropy-shadow tail interface.
+
+This is the large-`a` analogue of the finite-window budget certificates: the
+analytic work proves pointwise small/tempered bounds, the solo term is placed
+under the standard `positiveSoloBudget`, and the retained edge sum is placed
+under `positiveEdgeBudget`. -/
+structure PositiveSaddleEntropyShadowBudgetCertificate : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallEntropyShadowMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedEntropyShadowMajorantTerm a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowEdgeMajorantSum a ≤ positiveEdgeBudget
+
+theorem PositiveSaddleEntropyShadowBudgetCertificate.toTailCertificate
+    (cert : PositiveSaddleEntropyShadowBudgetCertificate) :
+    PositiveSaddleEntropyShadowTailCertificate (fun _ => positiveSoloBudget) where
+  small := cert.small
+  tempered := cert.tempered
+  solo := cert.soloBudget
+  envelope := by
+    intro a ha
+    exact positiveEntropyShadowEnvelopeBound_le_target_of_standard_budgets
+      (soloBound := positiveSoloBudget) le_rfl (cert.edgeBudget ha)
+
+theorem PositiveSaddleEntropyShadowBudgetCertificate.entropyTail
+    (cert : PositiveSaddleEntropyShadowBudgetCertificate) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toTailCertificate.entropyTail
+
 /-! ## Packaged remaining §6 certificate interface -/
 
 /-- The remaining positive-saddle obligations after the completed sign-lock
