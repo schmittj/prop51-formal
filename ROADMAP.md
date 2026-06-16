@@ -378,8 +378,15 @@ Status:
       The helper `positiveProductSingletonNChunks` gives a canonical
       singleton `N`-cover and
       `positiveSaddleRawProductTableSingletonNChunkedTangentCellEdgeBudgetCertificate_of_parts`
-      fills the cover field for that shape; larger generated `N` chunks can
-      use the parameterized certificate directly.
+      fills the cover field for that shape.  The concrete generated-audit
+      capstone
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      combines the singleton table product chunks with the displayed-solo
+      chunk fields, the uniform large-scale edge `k`-chunk budget, and the
+      raw-cleared large-tail reserve certificates.  Larger generated `N`
+      chunks can use the parameterized certificate directly.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
@@ -468,6 +475,11 @@ Status:
       `PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`,
       where the product side is split by row-dependent `N` chunks and default
       `k` chunks instead of asking Lean to evaluate a whole product row.  The
+      concrete singleton-`N` generated-audit wrapper
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      is now the preferred finite-window endpoint when no larger `N` chunks
+      have been generated.
+      The
       fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
