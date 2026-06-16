@@ -1270,6 +1270,16 @@ theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetRange
       simpa [checkPositiveEdgeBudgetRange] using h)
   exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
 
+theorem checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRange
+    {lo len a : Nat} (h : checkPositiveEdgeBudgetRange lo len = true)
+    (hlo : lo ≤ a) (hhi : a < lo + len) :
+    checkPositiveEdgeBudgetRow a = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len, checkPositiveEdgeBudgetRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
+
 /-- The full finite-window edge-budget field follows from a single range check
 over `401 ≤ a ≤ 2000`.  In practice this theorem is meant to be used with
 smaller generated chunk theorems or a faster checker rather than one enormous
@@ -1434,6 +1444,18 @@ theorem positiveSmallTangentExpEdgeGap_of_checkRange
       simpa [checkPositiveSmallTangentExpEdgeRange] using h)
   exact positiveSmallTangentExpEdgeGap_of_checkRow
     (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect hk hsmall
+
+theorem checkPositiveSmallTangentExpEdgeRow_of_checkRange
+    {lo len a : Nat}
+    (h : checkPositiveSmallTangentExpEdgeRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len) :
+    checkPositiveSmallTangentExpEdgeRow a = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
 
 /-- The full finite-window corrected `smallTangentEdge` certificate field
 follows from a range check over `401 ≤ a ≤ 2000`. -/
@@ -1775,6 +1797,18 @@ theorem positiveSoloGcompBound_of_checkRange
   exact positiveSoloGcompBound_of_checkRow
     (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
 
+theorem checkPositiveSoloGcompRow_of_checkRange
+    {lo len a : Nat}
+    (h : checkPositiveSoloGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len) :
+    checkPositiveSoloGcompRow a = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSoloGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloGcompRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
+
 /-- The finite-window solo certificate field follows from a single range
 check over `401 ≤ a ≤ 2000`. -/
 theorem dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRange
@@ -1937,6 +1971,16 @@ def checkPositiveTemperedXplusYProductGcompRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
     checkPositiveTemperedXplusYProductGcompAtN a N
 
+/-- Range check for the small-regime explicit `Xplus*Y` product bound over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveSmallXplusYProductGcompRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallXplusYProductGcompRow
+
+/-- Range check for the tempered-regime explicit `Xplus*Y` product bound over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveTemperedXplusYProductGcompRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveTemperedXplusYProductGcompRow
+
 /-- Soundness of one small-regime explicit `Xplus*Y` product check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkCell {a N k : Nat}
     (h : checkPositiveSmallXplusYProductGcompCell a N k = true) :
@@ -2016,6 +2060,88 @@ theorem positiveTemperedXplusYProductGcompBound_of_checkRow
       simpa [checkPositiveTemperedXplusYProductGcompRow] using h)
   exact positiveTemperedXplusYProductGcompBound_of_checkAtN
     (hall N (mem_positiveNRangeList_of_rectangle hrect)) hk htempered
+
+/-- Soundness of a small-regime product range check. -/
+theorem positiveSmallXplusYProductGcompBound_of_checkRange
+    {lo len a N k : Nat}
+    (h : checkPositiveSmallXplusYProductGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallXplusYProductGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompRange] using h)
+  exact positiveSmallXplusYProductGcompBound_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect hk hsmall
+
+theorem checkPositiveSmallXplusYProductGcompRow_of_checkRange
+    {lo len a : Nat}
+    (h : checkPositiveSmallXplusYProductGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len) :
+    checkPositiveSmallXplusYProductGcompRow a = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallXplusYProductGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
+
+/-- Soundness of a tempered-regime product range check. -/
+theorem positiveTemperedXplusYProductGcompBound_of_checkRange
+    {lo len a N k : Nat}
+    (h : checkPositiveTemperedXplusYProductGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveTemperedXplusYProductGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompRange] using h)
+  exact positiveTemperedXplusYProductGcompBound_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect hk htempered
+
+theorem checkPositiveTemperedXplusYProductGcompRow_of_checkRange
+    {lo len a : Nat}
+    (h : checkPositiveTemperedXplusYProductGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len) :
+    checkPositiveTemperedXplusYProductGcompRow a = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveTemperedXplusYProductGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
+
+/-- The full finite-window small-regime `Xplus*Y` product field follows from a
+range check over `401 ≤ a ≤ 2000`. -/
+theorem positiveSmallXplusYProductGcomp_401_2000_of_checkRange
+    (h : checkPositiveSmallXplusYProductGcompRange 401 1600 = true) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveXplusYProductGcompBound a N k ≤
+          positiveSmallXYProductTangentBound a N k := by
+  intro a N k ha h2000 hrect hk hsmall
+  exact positiveSmallXplusYProductGcompBound_of_checkRange
+    (lo := 401) (len := 1600) h ha (by omega) hrect hk hsmall
+
+/-- The full finite-window tempered-regime `Xplus*Y` product field follows from
+a range check over `401 ≤ a ≤ 2000`. -/
+theorem positiveTemperedXplusYProductGcomp_401_2000_of_checkRange
+    (h : checkPositiveTemperedXplusYProductGcompRange 401 1600 = true) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveXplusYProductGcompBound a N k ≤
+          positiveTemperedXYProductBound a N k := by
+  intro a N k ha h2000 hrect hk htempered
+  exact positiveTemperedXplusYProductGcompBound_of_checkRange
+    (lo := 401) (len := 1600) h ha (by omega) hrect hk htempered
 
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
@@ -5656,6 +5782,83 @@ structure PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
     PositiveSaddleEntropyShadowExpQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Fully range-checked `Xplus`/`Gcomp` positive-saddle interface.
+
+This is the range-check analogue of
+`PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate`: the finite window
+`401 ≤ a ≤ 2000` is represented by five executable range booleans, while the
+non-finite `a > 2000` entropy tail remains a mathematical field. -/
+structure PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+/-- Range-checked finite-window certificate plus the geometric entropy-tail
+certificate for `a > 2000`. -/
+structure PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyGeometric :
+    PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
+/-- Range-checked finite-window certificate plus the reserve form of the
+geometric entropy-tail certificate. -/
+structure PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyGeometricReserve :
+    PositiveSaddleEntropyShadowExpGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
+/-- Range-checked finite-window certificate plus quotient-ratio reserve checks
+for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyQuotientReserve :
+    PositiveSaddleEntropyShadowExpQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -5939,6 +6142,141 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate.toX
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
+theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRange
+      cert.smallXplusGcompRange ha (by omega)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRange
+      cert.temperedXplusGcompRange ha (by omega)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRange
+      cert.smallTangentEdgeRange ha (by omega)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRange
+      cert.soloGcompRange ha (by omega)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRange
+      cert.edgeBudgetRange ha (by omega)
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRange
+      cert.smallXplusGcompRange ha (by omega)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRange
+      cert.temperedXplusGcompRange ha (by omega)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRange
+      cert.smallTangentEdgeRange ha (by omega)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRange
+      cert.soloGcompRange ha (by omega)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRange
+      cert.edgeBudgetRange ha (by omega)
+  entropyGeometric := cert.entropyGeometric
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate.toRangeEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRange := cert.smallXplusGcompRange
+  temperedXplusGcompRange := cert.temperedXplusGcompRange
+  smallTangentEdgeRange := cert.smallTangentEdgeRange
+  soloGcompRange := cert.soloGcompRange
+  edgeBudgetRange := cert.edgeBudgetRange
+  entropyGeometric :=
+    cert.entropyGeometricReserve.toGeometricBudgetCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate.toRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.toRangeEntropyGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRange := cert.smallXplusGcompRange
+  temperedXplusGcompRange := cert.temperedXplusGcompRange
+  smallTangentEdgeRange := cert.smallTangentEdgeRange
+  soloGcompRange := cert.soloGcompRange
+  edgeBudgetRange := cert.edgeBudgetRange
+  entropyGeometricReserve :=
+    cert.entropyQuotientReserve.toGeometricReserveCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.toRangeEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toRangeEntropyGeometricReserveCertificate.toRangeEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCombinedProductBudgetCertificate where
@@ -6164,6 +6502,35 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate.toC
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -6282,6 +6649,35 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyQuotientReserveC
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRangeCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
