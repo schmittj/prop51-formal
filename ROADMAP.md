@@ -397,7 +397,11 @@ Status:
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       directly; `positiveProductFixedNChunks` supplies a reusable fixed-width
       row-dependent cover when generated checks choose a common `N` chunk
-      length.
+      length.  The fixed-width row-range product wrapper
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      packages those row-range product checks directly.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
@@ -490,9 +494,12 @@ Status:
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       has a still more concrete fixed-scale/chunked-edge sibling,
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
-      which is now the preferred finite-window endpoint when no larger `N`
-      chunks have been generated.  If product chunks are generated in larger
-      row-dependent `N` intervals, use the parameterized
+      and a fixed-width row-range product sibling,
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      The fixed-width endpoint is now the preferred generated finite-window
+      target when product chunks use a common positive `N` length.  If product
+      chunks are generated in custom larger row-dependent `N` intervals, use
+      the parameterized
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       endpoint instead.  The helper `positiveProductFixedNChunks` proves the
       corresponding cover for fixed-width `N` chunks.

@@ -54,10 +54,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — the current most practical large-`a` conditional capstone: table-backed
-  exact finite product chunks using the built-in singleton `N` cover and the
-  default 20-wide retained-`k` chunks, tangent-edge row chunks,
+  exact finite product chunks using a fixed-width row-dependent `N` cover and
+  the default 20-wide retained-`k` chunks, tangent-edge row chunks,
   displayed-solo finite chunks, fixed-scale unit-cleared edge row chunks, and
   the raw-cleared large-tail reserve certificate imply full
   `CoefficientNegativity`.  The intermediate
@@ -89,14 +89,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   is the practical target: it shares `c`, `B`, and `Q` tables at each
   `(a,N)` and splits product checks by a row-dependent `N`-chunk cover and
   the default 20-wide retained-`k` chunks.  `Prop51.positiveProductSingletonNChunks`
-  provides a built-in singleton `N`-cover, and the concrete
-  `RawProductTableSingletonNChunksTangentEdgeChunksFixedScale...` capstone
-  combines that product cover with the tangent-edge, displayed-solo, edge,
-  and large-tail chunk fields.  Larger generated `N` chunks can instantiate
-  the parameterized
-  `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone directly;
-  `Prop51.positiveProductFixedNChunks` provides a reusable fixed-width cover
-  whose final chunk may harmlessly overrun the positive rectangle.
+  provides a built-in singleton `N`-cover.  For generated audits, the
+  `RawProductTableFixedNChunksTangentEdgeChunksFixedScale...` capstone
+  packages row-range product checks using `Prop51.positiveProductFixedNChunks`;
+  its final `N` chunk may harmlessly overrun the positive rectangle.  The
+  fully parameterized `RawProductTableNChunksTangentEdgeChunksFixedScale...`
+  capstone is available for custom row-dependent `N` chunk families.
   The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but
