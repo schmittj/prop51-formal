@@ -375,6 +375,11 @@ Status:
       `PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`,
       exposed by
       `coefficientNegativity_of_positiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`.
+      The helper `positiveProductSingletonNChunks` gives a canonical
+      singleton `N`-cover and
+      `positiveSaddleRawProductTableSingletonNChunkedTangentCellEdgeBudgetCertificate_of_parts`
+      fills the cover field for that shape; larger generated `N` chunks can
+      use the parameterized certificate directly.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing

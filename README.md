@@ -82,7 +82,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`
   is the practical target: it shares `c`, `B`, and `Q` tables at each
   `(a,N)` and splits product checks by a row-dependent `N`-chunk cover and
-  the default 20-wide retained-`k` chunks.  The older
+  the default 20-wide retained-`k` chunks.  `Prop51.positiveProductSingletonNChunks`
+  provides a built-in singleton `N`-cover; larger generated `N` chunks can
+  instantiate the same parameterized certificate directly.  The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but
   that route is too strong for the finite window: direct checks already fail

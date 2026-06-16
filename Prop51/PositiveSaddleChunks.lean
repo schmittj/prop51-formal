@@ -110,6 +110,29 @@ theorem positiveSaddleDefaultChunks_lo_ge_401
   rcases hchunk with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> norm_num
 
+/-! ## Row-dependent product `N`-chunks -/
+
+/-- Canonical singleton `N`-chunks for the positive rectangle at a fixed row
+`a`.
+
+This is not necessarily the most efficient generated-certificate shape, but
+it gives a simple built-in cover for the fine-grained table-backed raw product
+interface.  Larger generated `N` chunks can still use the parameterized
+certificate directly. -/
+def positiveProductSingletonNChunks (a : Nat) : List (Nat × Nat) :=
+  (positiveNRangeList a).map fun N => (N, 1)
+
+theorem positiveProductSingletonNChunks_cover
+    {a N : Nat} (hrect : positiveRectangle a N) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveProductSingletonNChunks a ∧
+        N ∈ List.range' chunk.1 chunk.2 := by
+  refine ⟨(N, 1), ?_, ?_⟩
+  · unfold positiveProductSingletonNChunks
+    exact List.mem_map.mpr
+      ⟨N, mem_positiveNRangeList_of_rectangle hrect, rfl⟩
+  · exact (List.mem_range'_1).mpr ⟨le_rfl, by omega⟩
+
 /-! ## Default edge `k`-chunks
 
 The corrected finite edge budget is expensive as a single row check.  These
@@ -2340,6 +2363,43 @@ structure PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
       positiveEdgeMajorantSum a ≤ positiveEdgeBudget
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem positiveSaddleRawProductTableSingletonNChunkedTangentCellEdgeBudgetCertificate_of_parts
+    (hsmall :
+      ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+        nChunk ∈ positiveProductSingletonNChunks a →
+        kChunk ∈ positiveEdgeDefaultKChunks →
+          checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+            a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true)
+    (htempered :
+      ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+        nChunk ∈ positiveProductSingletonNChunks a →
+        kChunk ∈ positiveEdgeDefaultKChunks →
+          checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+            a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true)
+    (htangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          checkPositiveSmallTangentExpEdgeCell a N k = true)
+    (hsolo :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (hedge :
+      ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+        positiveEdgeMajorantSum a ≤ positiveEdgeBudget)
+    (hentropy :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0) :
+    PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+      positiveProductSingletonNChunks where
+  productNChunksCover := by
+    intro _a _N _ha _ha2000 hrect
+    exact positiveProductSingletonNChunks_cover hrect
+  smallXYTableChunks := hsmall
+  temperedXYTableChunks := htempered
+  smallTangentEdgeCells := htangent
+  soloY := hsolo
+  edgeBudget := hedge
+  entropyTail := hentropy
 
 theorem PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate.toTangentProductBudgetCertificate
     {productNChunks : Nat → List (Nat × Nat)}
