@@ -375,7 +375,16 @@ Status:
       remaining proof-producing work is therefore: generate or prove the five
       finite chunk families, prove the two raw product inequalities plus the
       unit solo bound for all `a > 2000`, and prove the six one-dimensional
-      candidate split-tempered step/reserve inequalities.
+      candidate split-tempered step/reserve inequalities.  Lean also exposes
+      the alternate endpoint
+      `PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      whose final assembly theorem is
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      This keeps product/solo/edge as chunked row booleans but supplies the
+      corrected tangent-edge finite proof by individual cell booleans; local
+      probing showed single tangent cells are practical for `native_decide`,
+      while product cells, solo cells, and edge rows remain too slow for that
+      direct approach.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
