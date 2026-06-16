@@ -259,7 +259,12 @@ Status:
       matching the paper's small/tempered entropy-tail decomposition.
       Lean also has retained-range positivity hooks for the rational
       entropy-shadow reciprocal and for the small/tempered summands once the
-      final exponential surrogate supplies nonnegativity.
+      final exponential surrogate supplies nonnegativity.  To avoid tying the
+      true `a > 2000` tail to the finite-window `partialExpUpper` shell, Lean
+      also exposes parameterized exponential factors via
+      `positiveSmallEntropyShadowExpMajorantTerm`,
+      `positiveTemperedEntropyShadowExpMajorantTerm`, and
+      `PositiveSaddleEntropyShadowExpSplitBudgetCertificate.entropyTail`.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to

@@ -2613,11 +2613,42 @@ def positiveTemperedEntropyShadowMajorantTerm (a k : Nat) : ℚ :=
     positiveDyadicDecay (posJ a k) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
-theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
-    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
-    (hExp :
-      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff) :
-    0 ≤ positiveSmallEntropyShadowMajorantTerm a k := by
+/- The preceding two entropy-shadow terms keep the finite-window
+`partialExpUpper` exponential shell for audit continuity.  The actual
+large-`a` tail may use sharper rational exponential majorants; the following
+parameterized forms expose that replacement without changing the binomial and
+dyadic bookkeeping. -/
+def positiveSmallEntropyShadowExpMajorantTerm
+    (smallExp : Nat → Nat → ℚ) (a k : Nat) : ℚ :=
+  (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k) *
+    smallExp a k
+
+def positiveTemperedEntropyShadowExpMajorantTerm
+    (temperedExp : Nat → Nat → ℚ) (a k : Nat) : ℚ :=
+  (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k) *
+    temperedExp a k
+
+@[simp] theorem positiveSmallEntropyShadowExpMajorantTerm_partialExp (a k : Nat) :
+    positiveSmallEntropyShadowExpMajorantTerm
+        (fun a k => partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff)
+        a k =
+      positiveSmallEntropyShadowMajorantTerm a k := rfl
+
+@[simp] theorem positiveTemperedEntropyShadowExpMajorantTerm_partialExp (a k : Nat) :
+    positiveTemperedEntropyShadowExpMajorantTerm
+        (fun a k => partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff)
+        a k =
+      positiveTemperedEntropyShadowMajorantTerm a k := rfl
+
+theorem positiveSmallEntropyShadowExpMajorantTerm_nonneg
+    {smallExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp : 0 ≤ smallExp a k) :
+    0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k := by
   have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
     exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
   have hkQ : (0 : ℚ) ≤ (k : ℚ) := by positivity
@@ -2630,16 +2661,16 @@ theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
     mul_nonneg hkQ hjQ
   have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
     positiveDyadicDecay_nonneg (posJ a k)
-  unfold positiveSmallEntropyShadowMajorantTerm
+  unfold positiveSmallEntropyShadowExpMajorantTerm
   exact mul_nonneg
     (mul_nonneg (mul_nonneg (mul_nonneg hcoef hkj) hbinom) hdecay)
     hExp
 
-theorem positiveTemperedEntropyShadowMajorantTerm_nonneg_of_exp
-    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
-    (hExp :
-      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff) :
-    0 ≤ positiveTemperedEntropyShadowMajorantTerm a k := by
+theorem positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+    {temperedExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp : 0 ≤ temperedExp a k) :
+    0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k := by
   have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
     exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
   have hkQ : (0 : ℚ) ≤ (k : ℚ) := by positivity
@@ -2652,10 +2683,32 @@ theorem positiveTemperedEntropyShadowMajorantTerm_nonneg_of_exp
     mul_nonneg hkQ hjQ
   have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
     positiveDyadicDecay_nonneg (posJ a k)
-  unfold positiveTemperedEntropyShadowMajorantTerm
+  unfold positiveTemperedEntropyShadowExpMajorantTerm
   exact mul_nonneg
     (mul_nonneg (mul_nonneg (mul_nonneg hcoef hkj) hbinom) hdecay)
     hExp
+
+theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff) :
+    0 ≤ positiveSmallEntropyShadowMajorantTerm a k := by
+  simpa using
+    positiveSmallEntropyShadowExpMajorantTerm_nonneg
+      (smallExp := fun a k =>
+        partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff)
+      ha hkRange hExp
+
+theorem positiveTemperedEntropyShadowMajorantTerm_nonneg_of_exp
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff) :
+    0 ≤ positiveTemperedEntropyShadowMajorantTerm a k := by
+  simpa using
+    positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+      (temperedExp := fun a k =>
+        partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff)
+      ha hkRange hExp
 
 def positiveEntropyShadowEdgeMajorantTerm (a k : Nat) : ℚ :=
   positiveCustomEdgeMajorantTerm
@@ -2672,6 +2725,28 @@ def positiveEntropyShadowSmallBranchSum (a : Nat) : ℚ :=
 
 def positiveEntropyShadowTemperedBranchSum (a : Nat) : ℚ :=
   positiveCustomTemperedBranchSum positiveTemperedEntropyShadowMajorantTerm a
+
+def positiveEntropyShadowExpEdgeMajorantTerm
+    (smallExp temperedExp : Nat → Nat → ℚ) (a k : Nat) : ℚ :=
+  positiveCustomEdgeMajorantTerm
+    (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+    (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a k
+
+def positiveEntropyShadowExpEdgeMajorantSum
+    (smallExp temperedExp : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  positiveCustomEdgeMajorantSum
+    (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+    (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
+
+def positiveEntropyShadowExpSmallBranchSum
+    (smallExp : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  positiveCustomSmallBranchSum
+    (positiveSmallEntropyShadowExpMajorantTerm smallExp) a
+
+def positiveEntropyShadowExpTemperedBranchSum
+    (temperedExp : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  positiveCustomTemperedBranchSum
+    (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
 
 @[simp] theorem positiveEntropyShadowEdgeMajorantTerm_eq (a k : Nat) :
     positiveEntropyShadowEdgeMajorantTerm a k =
@@ -2692,6 +2767,32 @@ def positiveEntropyShadowTemperedBranchSum (a : Nat) : ℚ :=
 @[simp] theorem positiveEntropyShadowTemperedBranchSum_eq (a : Nat) :
     positiveEntropyShadowTemperedBranchSum a =
       positiveCustomTemperedBranchSum positiveTemperedEntropyShadowMajorantTerm a := rfl
+
+@[simp] theorem positiveEntropyShadowExpEdgeMajorantTerm_eq
+    (smallExp temperedExp : Nat → Nat → ℚ) (a k : Nat) :
+    positiveEntropyShadowExpEdgeMajorantTerm smallExp temperedExp a k =
+      positiveCustomEdgeMajorantTerm
+        (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+        (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a k := rfl
+
+@[simp] theorem positiveEntropyShadowExpEdgeMajorantSum_eq
+    (smallExp temperedExp : Nat → Nat → ℚ) (a : Nat) :
+    positiveEntropyShadowExpEdgeMajorantSum smallExp temperedExp a =
+      positiveCustomEdgeMajorantSum
+        (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+        (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a := rfl
+
+@[simp] theorem positiveEntropyShadowExpSmallBranchSum_eq
+    (smallExp : Nat → Nat → ℚ) (a : Nat) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a =
+      positiveCustomSmallBranchSum
+        (positiveSmallEntropyShadowExpMajorantTerm smallExp) a := rfl
+
+@[simp] theorem positiveEntropyShadowExpTemperedBranchSum_eq
+    (temperedExp : Nat → Nat → ℚ) (a : Nat) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a =
+      positiveCustomTemperedBranchSum
+        (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a := rfl
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
@@ -4167,6 +4268,86 @@ theorem PositiveSaddleEntropyShadowSplitBudgetCertificate.entropyTail
     (cert : PositiveSaddleEntropyShadowSplitBudgetCertificate) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toBudgetCertificate.entropyTail
+
+/-- Entropy-shadow split-budget interface with externally supplied rational
+exponential majorants.
+
+Use this for the final `a > 2000` proof if the finite-window
+`partialExpUpper` shell is replaced by a large-tail-specific exponential
+bound.  The binomial entropy shadow and dyadic decay remain fixed; only the
+last exponential factor is parameterized. -/
+structure PositiveSaddleEntropyShadowExpSplitBudgetCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  temperedNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  smallEdgeBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowExpSmallBranchSum smallExp a ≤ positiveEdgeBudget / 2
+  temperedEdgeBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2
+
+theorem PositiveSaddleEntropyShadowExpSplitBudgetCertificate.toCustomTailCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpSplitBudgetCertificate
+      smallExp temperedExp) :
+    PositiveSaddleCustomTailCertificate
+      (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+      (positiveTemperedEntropyShadowExpMajorantTerm temperedExp)
+      (fun _ => positiveSoloBudget) where
+  small := cert.small
+  tempered := cert.tempered
+  solo := cert.soloBudget
+  envelope := by
+    intro a ha
+    have hedge :
+        positiveCustomEdgeMajorantSum
+            (positiveSmallEntropyShadowExpMajorantTerm smallExp)
+            (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
+          ≤ positiveEdgeBudget := by
+      refine positiveCustomEdgeMajorantSum_le_edgeBudget_of_branch_budgets
+        (smallTerm := positiveSmallEntropyShadowExpMajorantTerm smallExp)
+        (temperedTerm := positiveTemperedEntropyShadowExpMajorantTerm temperedExp)
+        (smallBudget := positiveEdgeBudget / 2)
+        (temperedBudget := positiveEdgeBudget / 2)
+        (edgeBudget := positiveEdgeBudget)
+        ?hsmall0 ?htempered0 (cert.smallEdgeBudget ha)
+        (cert.temperedEdgeBudget ha) ?hbudget
+      · intro k hk
+        exact cert.smallNonneg (a := a) ha hk
+      · intro k hk
+        exact cert.temperedNonneg (a := a) ha hk
+      · norm_num [positiveEdgeBudget, positiveTarget]
+    refine positiveCustomEnvelopeBound_le_target_of_budgets
+      (smallTerm := positiveSmallEntropyShadowExpMajorantTerm smallExp)
+      (temperedTerm := positiveTemperedEntropyShadowExpMajorantTerm temperedExp)
+      (soloBound := positiveSoloBudget)
+      le_rfl hedge ?_
+    rw [positiveSoloBudget_add_edgeBudget]
+
+theorem PositiveSaddleEntropyShadowExpSplitBudgetCertificate.entropyTail
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpSplitBudgetCertificate
+      smallExp temperedExp) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toCustomTailCertificate.entropyTail
 
 /-! ## Packaged remaining §6 certificate interface -/
 
