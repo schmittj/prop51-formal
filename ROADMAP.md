@@ -385,6 +385,16 @@ Status:
       probing showed single tangent cells are practical for `native_decide`,
       while product cells, solo cells, and edge rows remain too slow for that
       direct approach.
+      The preferred practical audit route is now
+      `PositiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      This keeps the default product chunks and tangent cell checks, but
+      supplies the finite solo and edge budgets as explicit Lean inequalities
+      instead of executable row booleans.  This is a technical Lean staging
+      divergence from the TeX-style finite audit, recorded in the code; the
+      mathematical inequalities consumed downstream are the same
+      `positiveSoloBudget` and `positiveEdgeBudget` bounds.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

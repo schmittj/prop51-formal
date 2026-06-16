@@ -271,6 +271,14 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeRowsCert
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentCellEdgeRowsCertificate cert)
 
+/-- Final assembly from the `Xplus`/`Gcomp` finite-window certificate with
+cell-level tangent-edge checks and semantic finite solo/edge budgets. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
+    (cert : PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate cert)
+
 /-- Final assembly from the row-checked `Xplus`/`Gcomp` finite-window
 certificate together with the geometric entropy-shadow tail certificate for
 `a > 2000`. -/
@@ -666,6 +674,16 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeEntropyLargeExpCan
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeRowsCertificate
     cert.toXplusGcompTangentCellEdgeRowsCertificate
+
+/-- Final assembly from the unit-budget large-tail audit shape with cell-level
+tangent edge checks and semantic finite solo/edge budgets. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
+    (PositiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+      cert)
 
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
