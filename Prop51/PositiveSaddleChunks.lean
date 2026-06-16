@@ -408,4 +408,31 @@ theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveC
       hsmall htempered htangent hsolo hedge
   entropyLargeMixedRawQuotientReserve := entropyLargeMixedRawQuotientReserve
 
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate_of_parts
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+      smallRatio temperedReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
+    hsmall htempered htangent hsolo hedge
+    (pointwise.toLargeExpMixedRawQuotientReserveCertificate bounds)
+
 end Prop51

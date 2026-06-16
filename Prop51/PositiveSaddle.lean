@@ -6507,6 +6507,68 @@ theorem PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate.toMixed
       (cert.temperedReverseRawStepQuotient ha hrlo hrhi)
   temperedLastReserve := cert.temperedLastReserve
 
+/-- Pointwise analytic fields for the concrete variable-cutoff large-`a`
+entropy-shadow tail.
+
+These are deliberately separated from the adjacent quotient/reserve checks:
+the former are saddle estimates for individual summands and the solo term,
+while the latter are one-dimensional rational audits of the resulting
+majorant sequences. -/
+structure PositiveSaddleEntropyShadowLargeExpPointwiseCertificate : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+
+/-- Numerical ratio and reserve fields for the concrete variable-cutoff
+mixed raw-quotient entropy-shadow tail.
+
+This is the part expected to come from generated or hand-checked rational
+one-variable inequalities after the pointwise saddle estimates have supplied
+the large-exp majorant terms. -/
+structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertificate
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedReverseRatio a
+  temperedReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedReverseRatio a < 1
+  temperedReverseRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1)))
+          ≤ temperedReverseRatio a
+  temperedLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
+
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
 `positiveTemperedLargeExp`.
@@ -6563,6 +6625,26 @@ structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
       positiveTemperedEntropyShadowExpMajorantTerm
           positiveTemperedLargeExp a (posKmax a)
         ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpMixedRawQuotientReserveCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+      smallRatio temperedReverseRatio where
+  small := pointwise.small
+  tempered := pointwise.tempered
+  soloBudget := pointwise.soloBudget
+  smallRatioNonneg := bounds.smallRatioNonneg
+  smallRatioLtOne := bounds.smallRatioLtOne
+  smallRawStepQuotient := bounds.smallRawStepQuotient
+  smallFirstReserve := bounds.smallFirstReserve
+  temperedReverseRatioNonneg := bounds.temperedReverseRatioNonneg
+  temperedReverseRatioLtOne := bounds.temperedReverseRatioLtOne
+  temperedReverseRawStepQuotient := bounds.temperedReverseRawStepQuotient
+  temperedLastReserve := bounds.temperedLastReserve
 
 theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
     {smallRatio temperedReverseRatio : Nat → ℚ}
