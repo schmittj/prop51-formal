@@ -32,7 +32,7 @@ import Prop51.CertificateExact
 import Prop51.PartitionsComplete
 import Prop51.Majorant
 import Prop51.CertificateInterval
-import Prop51.PositiveSaddle
+import Prop51.PositiveSaddleChunks
 
 namespace Prop51
 
@@ -380,6 +380,46 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntr
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate cert)
+
+/-- Final assembly from the default generated chunk cover. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate
+    (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeCertificate cert)
+
+/-- Final assembly from the default generated chunk cover plus the geometric
+entropy-shadow tail certificate for `a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate cert)
+
+/-- Final assembly from the default generated chunk cover plus the reserve
+form of the geometric entropy-shadow tail certificate for `a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate cert)
+
+/-- Final assembly from the default generated chunk cover plus quotient-ratio
+reserve checks for the large-`a` entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
     CoefficientNegativity :=
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate cert)
