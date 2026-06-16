@@ -311,6 +311,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyRawQu
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate cert)
 
+/-- Final assembly from the row-checked `Xplus`/`Gcomp` finite-window
+certificate together with a mixed-direction geometric reserve certificate for
+the large-`a` entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate cert)
+
 /-- Final assembly from the range-checked `Xplus`/`Gcomp` finite-window
 certificate. -/
 theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentFullyCheckedRangeCertificate
@@ -362,6 +374,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRangeEntropyRawQ
     CoefficientNegativity :=
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate cert)
+
+/-- Final assembly from range booleans for the finite window plus a
+mixed-direction geometric reserve certificate for the large-`a`
+entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate cert)
 
 /-- Final assembly from generated chunk range checks for the finite window. -/
 theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeCertificate
@@ -419,6 +443,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntr
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate cert)
 
+/-- Final assembly from generated chunk range checks plus a mixed-direction
+geometric reserve certificate for the large-`a` entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate cert)
+
 /-- Final assembly from the default generated chunk cover. -/
 theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate
     (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeCertificate) :
@@ -469,6 +505,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRa
     CoefficientNegativity :=
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate cert)
+
+/-- Final assembly from the default generated chunk cover plus a
+mixed-direction geometric reserve certificate for the large-`a`
+entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate cert)
 
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/

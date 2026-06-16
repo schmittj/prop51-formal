@@ -1036,6 +1036,19 @@ theorem sum_Icc_eq_sum_range_shift (F : Nat → ℚ) {lo hi : Nat}
     omega
   rw [hIccIco, Finset.sum_Ico_eq_sum_range]
 
+theorem sum_Icc_eq_sum_range_reverse (F : Nat → ℚ) {lo hi : Nat}
+    (hlohi : lo ≤ hi) :
+    ∑ r ∈ Finset.Icc lo hi, F r =
+      ∑ j ∈ Finset.range (hi + 1 - lo), F (hi - j) := by
+  rw [sum_Icc_eq_sum_range_shift F hlohi]
+  let K := hi + 1 - lo
+  rw [← Finset.sum_range_reflect (fun j => F (lo + j)) K]
+  apply Finset.sum_congr rfl
+  intro j hj
+  congr 1
+  have hjK : j < K := Finset.mem_range.mp hj
+  omega
+
 private theorem positiveGeom_chain_bound_from_upto
     (F : Nat → ℚ) {lo K : Nat} {q : ℚ} (hq0 : 0 ≤ q)
     (hstep : ∀ j, j + 1 < K → F (lo + j + 1) ≤ F (lo + j) * q) :
@@ -1049,6 +1062,21 @@ private theorem positiveGeom_chain_bound_from_upto
         _ ≤ F (lo + j) * q := hstep j hj
         _ ≤ (F lo * q^j) * q := mul_le_mul_of_nonneg_right hrec hq0
         _ = F lo * q^(j + 1) := by
+          rw [pow_succ]
+          ring
+
+private theorem positiveGeom_reverse_chain_bound_from_upto
+    (F : Nat → ℚ) {hi K : Nat} {q : ℚ} (hq0 : 0 ≤ q)
+    (hstep : ∀ j, j + 1 < K → F (hi - (j + 1)) ≤ F (hi - j) * q) :
+    ∀ j, j < K → F (hi - j) ≤ F hi * q^j
+  | 0, _ => by simp
+  | j + 1, hj => by
+      have hprev : j < K := by omega
+      have hrec := positiveGeom_reverse_chain_bound_from_upto F hq0 hstep j hprev
+      calc
+        F (hi - (j + 1)) ≤ F (hi - j) * q := hstep j hj
+        _ ≤ (F hi * q^j) * q := mul_le_mul_of_nonneg_right hrec hq0
+        _ = F hi * q^(j + 1) := by
           rw [pow_succ]
           ring
 
@@ -1075,6 +1103,32 @@ theorem geom_chain_Icc_sum_le_geom (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
     _ = F lo * ∑ j ∈ Finset.range K, q^j := by
           rw [Finset.mul_sum]
 
+/-- Reverse finite interval version of geometric domination.  If every
+predecessor in `[lo, hi]` is at most `q` times the following term, the interval
+sum is bounded by the last term times the corresponding finite geometric sum. -/
+theorem geom_reverse_chain_Icc_sum_le_geom
+    (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
+    (hlohi : lo ≤ hi) (hq0 : 0 ≤ q)
+    (hstep : ∀ r, lo < r → r ≤ hi → F (r - 1) ≤ F r * q) :
+    ∑ r ∈ Finset.Icc lo hi, F r
+      ≤ F hi * ∑ j ∈ Finset.range (hi + 1 - lo), q^j := by
+  rw [sum_Icc_eq_sum_range_reverse F hlohi]
+  let K := hi + 1 - lo
+  have hstepShift :
+      ∀ j, j + 1 < K → F (hi - (j + 1)) ≤ F (hi - j) * q := by
+    intro j hj
+    have h := hstep (hi - j) (by omega) (by omega)
+    have hsub : hi - j - 1 = hi - (j + 1) := by omega
+    simpa [hsub] using h
+  calc
+    ∑ j ∈ Finset.range K, F (hi - j)
+        ≤ ∑ j ∈ Finset.range K, F hi * q^j := by
+          exact Finset.sum_le_sum fun j hj =>
+            positiveGeom_reverse_chain_bound_from_upto F hq0 hstepShift j
+              (Finset.mem_range.mp hj)
+    _ = F hi * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
 /-- Closed geometric-tail version of `geom_chain_Icc_sum_le_geom`. -/
 theorem geom_chain_Icc_sum_le_inv_one_sub
     (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
@@ -1086,6 +1140,19 @@ theorem geom_chain_Icc_sum_le_inv_one_sub
   exact hgeom.trans
     (mul_le_mul_of_nonneg_left
       (geom_sum_le_inv_one_sub q hq0 hq1 (hi + 1 - lo)) hF0)
+
+/-- Closed reverse geometric-tail version of
+`geom_reverse_chain_Icc_sum_le_geom`. -/
+theorem geom_reverse_chain_Icc_sum_le_inv_one_sub
+    (F : Nat → ℚ) {lo hi : Nat} {q : ℚ}
+    (hlohi : lo ≤ hi) (hFhi : 0 ≤ F hi) (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep : ∀ r, lo < r → r ≤ hi → F (r - 1) ≤ F r * q) :
+    ∑ r ∈ Finset.Icc lo hi, F r
+      ≤ F hi * (1 / (1 - q)) := by
+  have hgeom := geom_reverse_chain_Icc_sum_le_geom F hlohi hq0 hstep
+  exact hgeom.trans
+    (mul_le_mul_of_nonneg_left
+      (geom_sum_le_inv_one_sub q hq0 hq1 (hi + 1 - lo)) hFhi)
 
 theorem mul_inv_one_sub_le_of_le_mul_one_sub {x B q : ℚ}
     (hq1 : q < 1) (h : x ≤ B * (1 - q)) :
@@ -3924,6 +3991,82 @@ theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_res
     ha hF0 hq0 hq1 hstep
     (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hfirst)
 
+theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_reverse_ratio
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (hlohi : max 1 (posTemperedCutoff a + 1) ≤ posKmax a)
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) * (1 / (1 - q)) := by
+  rw [positiveEntropyShadowExpTemperedBranchSum_eq_Icc]
+  exact geom_reverse_chain_Icc_sum_le_inv_one_sub
+    (fun k => positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k)
+    hlohi hFhi hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_reverse_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) * (1 / (1 - q)) :=
+  positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_reverse_ratio
+    (positiveTemperedBranch_start_le_posKmax_of_large ha)
+    hFhi hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_reverse_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q)
+    (hbudget :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a) * (1 / (1 - q))
+          ≤ positiveEdgeBudget / 2) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2 :=
+  (positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_reverse_ratio_large
+    ha hFhi hq0 hq1 hstep).trans hbudget
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_reverse_ratio_reserve_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q)
+    (hlast :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a)
+          ≤ (positiveEdgeBudget / 2) * (1 - q)) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2 :=
+  positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_reverse_ratio_large
+    ha hFhi hq0 hq1 hstep
+    (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hlast)
+
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
     positiveSmallEntropyShadowMajorantTerm
@@ -5850,6 +5993,64 @@ theorem PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate.toGeometricB
       smallExp temperedExp smallRatio temperedRatio :=
   cert.toGeometricReserveCertificate.toGeometricBudgetCertificate
 
+/-- Mixed-direction geometric reserve certificate for the entropy-shadow tail.
+
+The small branch is controlled by forward successor ratios from `k = 1`.
+The tempered branch is controlled by reverse ratios from the upper retained
+endpoint `k = posKmax a`.  This matches the entropy-shadow shape more closely:
+with the displayed tempered exponent, the full tempered branch need not be
+forward-decreasing up to the `0.9a` cutoff. -/
+structure PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ smallExp a k
+  temperedExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ temperedExp a k
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallStep :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r *
+            smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedReverseRatio a
+  temperedReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedReverseRatio a < 1
+  temperedReverseStep :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            temperedReverseRatio a
+  temperedLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
+
 theorem one_mem_positiveKRange_of_large {a : Nat} (ha : 2 ≤ a) :
     1 ∈ positiveKRange a :=
   mem_positiveKRange.mpr ⟨le_rfl, one_le_posKmax ha⟩
@@ -5921,6 +6122,61 @@ theorem PositiveSaddleEntropyShadowExpGeometricReserveCertificate.entropyTail
       smallExp temperedExp smallRatio temperedRatio) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toGeometricBudgetCertificate.entropyTail
+
+theorem PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate.toExpSplitBudgetCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate smallExp temperedExp where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallNonneg := by
+    intro a k ha hk
+    exact positiveSmallEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.smallExpNonneg ha hk)
+  temperedNonneg := by
+    intro a k ha hk
+    exact positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.temperedExpNonneg ha hk)
+  smallEdgeBudget := by
+    intro a ha
+    have hF0 :
+        0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 :=
+      positiveSmallEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a)
+        (one_mem_positiveKRange_of_large (by omega : 2 ≤ a))
+        (cert.smallExpNonneg ha
+          (one_mem_positiveKRange_of_large (by omega : 2 ≤ a)))
+    exact positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_reserve_large
+      ha hF0 (cert.smallRatioNonneg ha) (cert.smallRatioLtOne ha)
+      (fun r hr1 hrhi => cert.smallStep ha hr1 hrhi)
+      (cert.smallFirstReserve ha)
+  temperedEdgeBudget := by
+    intro a ha
+    have hK :
+        posKmax a ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨one_le_posKmax (by omega : 2 ≤ a), le_rfl⟩
+    have hFhi :
+        0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) :=
+      positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a) hK (cert.temperedExpNonneg ha hK)
+    exact positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_reverse_ratio_reserve_large
+      ha hFhi (cert.temperedReverseRatioNonneg ha)
+      (cert.temperedReverseRatioLtOne ha)
+      (fun r hrlo hrhi => cert.temperedReverseStep ha hrlo hrhi)
+      (cert.temperedLastReserve ha)
+
+theorem PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate.entropyTail
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toExpSplitBudgetCertificate.entropyTail
 
 theorem PositiveSaddleEntropyShadowExpQuotientReserveCertificate.entropyTail
     {smallExp temperedExp : Nat → Nat → ℚ}
@@ -6316,6 +6572,30 @@ structure PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificat
     PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Row-checked finite-window certificate plus the mixed-direction geometric
+reserve certificate for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallXplusYProductGcompRow a = true
+  temperedXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveTemperedXplusYProductGcompRow a = true
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyMixedGeometricReserve :
+    PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio
+
 /-- Fully range-checked `Xplus`/`Gcomp` positive-saddle interface.
 
 This is the range-check analogue of
@@ -6412,6 +6692,25 @@ structure PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertifica
     PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Range-checked finite-window certificate plus the mixed-direction geometric
+reserve certificate for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyMixedGeometricReserve :
+    PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio
+
 /-- Generated finite-window chunks for the most concrete §6 finite path.
 
 Each chunk is a half-open interval `(lo, len)`.  The `cover` field records
@@ -6492,6 +6791,18 @@ structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCe
   entropyRawQuotientReserve :
     PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
+
+/-- Chunked finite-window certificate plus the mixed-direction geometric
+reserve certificate for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+    (chunks : List (Nat × Nat))
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyMixedGeometricReserve :
+    PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio
 
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
@@ -6808,6 +7119,19 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
+theorem PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate where
+  smallXplusGcompRows := cert.smallXplusGcompRows
+  temperedXplusGcompRows := cert.temperedXplusGcompRows
+  smallTangentEdgeRows := cert.smallTangentEdgeRows
+  soloGcompRows := cert.soloGcompRows
+  edgeBudgetRows := cert.edgeBudgetRows
+  entropyTail := cert.entropyMixedGeometricReserve.entropyTail
+
 theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate where
@@ -6974,6 +7298,43 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate.toRowsEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRange
+      cert.smallXplusGcompRange ha (by omega)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRange
+      cert.temperedXplusGcompRange ha (by omega)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRange
+      cert.smallTangentEdgeRange ha (by omega)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRange
+      cert.soloGcompRange ha (by omega)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRange
+      cert.edgeBudgetRange ha (by omega)
+  entropyMixedGeometricReserve := cert.entropyMixedGeometricReserve
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
 theorem PositiveSaddleXplusGcompTangentFiniteWindowChunks.toXplusGcompTangentFullyCheckedRowsCertificate
     {chunks : List (Nat × Nat)}
@@ -7163,6 +7524,50 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCert
       chunks smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate.toRowsEntropyMixedGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+      cert.finiteChunks.smallXplusGcompChunks
+      (cert.finiteChunks.cover (a := a) ha h2000)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+      cert.finiteChunks.temperedXplusGcompChunks
+      (cert.finiteChunks.cover (a := a) ha h2000)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRangeChunks
+      cert.finiteChunks.smallTangentEdgeChunks
+      (cert.finiteChunks.cover (a := a) ha h2000)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRangeChunks
+      cert.finiteChunks.soloGcompChunks
+      (cert.finiteChunks.cover (a := a) ha h2000)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRangeChunks
+      cert.finiteChunks.edgeBudgetChunks
+      (cert.finiteChunks.cover (a := a) ha h2000)
+  entropyMixedGeometricReserve := cert.entropyMixedGeometricReserve
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyMixedGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
@@ -7397,6 +7802,14 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -7431,6 +7844,14 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
@@ -7473,6 +7894,15 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCert
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedReverseRatio) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
@@ -7606,6 +8036,14 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyRawQuotientReser
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
 theorem unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRangeCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
@@ -7640,6 +8078,14 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyRawQuotientRese
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyMixedGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedReverseRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
@@ -7682,6 +8128,15 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuoti
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyMixedGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedReverseRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
