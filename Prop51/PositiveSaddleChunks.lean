@@ -114,6 +114,15 @@ reducers in `PositiveSaddle.lean`. -/
 def positiveEdgeDefaultKChunks : Finset (Nat × Nat) :=
   (Finset.range 90).image fun i => (1 + 20 * i, 20)
 
+theorem positiveEdgeDefaultKChunks_card :
+    positiveEdgeDefaultKChunks.card = 90 := by
+  unfold positiveEdgeDefaultKChunks
+  rw [Finset.card_image_of_injective]
+  · simp
+  · intro i j h
+    simp at h
+    omega
+
 theorem positiveEdgeDefaultKChunks_disjoint :
     (positiveEdgeDefaultKChunks : Set (Nat × Nat)).PairwiseDisjoint
       fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2) := by
@@ -189,6 +198,30 @@ theorem positiveEdgeBudget_of_defaultKChunksUnitChecks
     positiveEdgeDefaultKChunks_disjoint
     (fun hk => positiveEdgeDefaultKChunks_cover ha2000 hk)
     hscale hchunks hbudget
+
+theorem positiveEdgeDefaultKChunks_uniformBudget
+    {scale : Nat} (hbudget : (90 : ℚ) / (scale : ℚ) ≤ positiveEdgeBudget) :
+    ∑ _chunk ∈ positiveEdgeDefaultKChunks,
+      (1 : ℚ) / (scale : ℚ) ≤ positiveEdgeBudget := by
+  rw [Finset.sum_const, positiveEdgeDefaultKChunks_card, nsmul_eq_mul]
+  change (90 : ℚ) * (1 / (scale : ℚ)) ≤ positiveEdgeBudget
+  rw [show (90 : ℚ) * (1 / (scale : ℚ)) = (90 : ℚ) / (scale : ℚ) by ring]
+  exact hbudget
+
+theorem positiveEdgeBudget_of_defaultKChunksUniformUnitChecks
+    {a scale : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) (hscale : 0 < scale)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 scale = true)
+    (hbudget : (90 : ℚ) / (scale : ℚ) ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget :=
+  positiveEdgeBudget_of_defaultKChunksUnitChecks
+    (a := a) (scale := fun _ => scale) ha401 ha2000
+    (fun {_chunk} _hchunk => hscale)
+    hchunks
+    (positiveEdgeDefaultKChunks_uniformBudget hbudget)
 
 /-- Constructor for the default chunk cover, leaving only the five families of
 Boolean chunk checks to generated certificates. -/
