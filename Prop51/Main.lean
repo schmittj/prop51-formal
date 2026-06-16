@@ -620,6 +620,16 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRa
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate cert)
 
+/-- Final assembly from the current most concrete generated-audit shape:
+default finite-window chunks, raw product-level large-exp estimates, and
+raw-cleared candidate split-tempered entropy-tail bounds. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedAuditCertificate
+    (cert :
+      PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    cert.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate

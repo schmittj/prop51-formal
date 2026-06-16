@@ -1175,4 +1175,49 @@ theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRa
     hsmall htempered htangent hsolo hedge
     pointwise.toProductPointwiseRawCertificate bounds
 
+/-- Current most concrete generated-audit target for the default finite-window
+positive-saddle path.
+
+This packages exactly the artifacts still expected from computation or
+rational audits: the five finite-window chunk families, the raw `X+Y`/`Gcomp`
+large-exp product estimates with the `Y_a(N)` solo form, and the raw-cleared
+candidate split-tempered entropy-tail bounds. -/
+structure PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedAuditCertificate :
+    Prop where
+  smallXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentExpEdgeChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true
+  soloGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloGcompRange chunk.1 chunk.2 = true
+  edgeBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true
+  productPointwiseYRaw :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate
+  candidateSplitTemperedRawCleared :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate
+
+theorem PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedAuditCertificate.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    (cert :
+      PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedAuditCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_rawProductY_parts
+    cert.smallXplusYProductGcompChunks
+    cert.temperedXplusYProductGcompChunks
+    cert.smallTangentExpEdgeChunks
+    cert.soloGcompChunks
+    cert.edgeBudgetChunks
+    cert.productPointwiseYRaw
+    cert.candidateSplitTemperedRawCleared
+
 end Prop51
