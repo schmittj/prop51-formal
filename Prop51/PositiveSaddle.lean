@@ -2793,6 +2793,36 @@ def positiveTemperedEntropyShadowExpMajorantTerm
     positiveDyadicDecay (posJ a k) *
     temperedExp a k
 
+/-- Small-regime entropy-shadow summand with the exponential factor removed. -/
+def positiveSmallEntropyShadowBaseTerm (a k : Nat) : ℚ :=
+  (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k)
+
+/-- Tempered-regime entropy-shadow summand with the exponential factor removed. -/
+def positiveTemperedEntropyShadowBaseTerm (a k : Nat) : ℚ :=
+  (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k)
+
+def positiveSmallEntropyShadowBaseStepQuotient (a r : Nat) : ℚ :=
+  positiveSmallEntropyShadowBaseTerm a (r + 1) /
+    positiveSmallEntropyShadowBaseTerm a r
+
+def positiveTemperedEntropyShadowBaseStepQuotient (a r : Nat) : ℚ :=
+  positiveTemperedEntropyShadowBaseTerm a (r + 1) /
+    positiveTemperedEntropyShadowBaseTerm a r
+
+theorem positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul
+    (smallExp : Nat → Nat → ℚ) (a k : Nat) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a k =
+      positiveSmallEntropyShadowBaseTerm a k * smallExp a k := rfl
+
+theorem positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul
+    (temperedExp : Nat → Nat → ℚ) (a k : Nat) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k =
+      positiveTemperedEntropyShadowBaseTerm a k * temperedExp a k := rfl
+
 @[simp] theorem positiveSmallEntropyShadowExpMajorantTerm_partialExp (a k : Nat) :
     positiveSmallEntropyShadowExpMajorantTerm
         (fun a k => partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff)
@@ -2902,6 +2932,20 @@ theorem positiveTemperedEntropyShadowExpMajorantTerm_pos
   exact mul_pos
     (mul_pos (mul_pos (mul_pos hcoef hkj) hbinom) hdecay)
     hExp
+
+theorem positiveSmallEntropyShadowBaseTerm_pos
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a) :
+    0 < positiveSmallEntropyShadowBaseTerm a k := by
+  have h := positiveSmallEntropyShadowExpMajorantTerm_pos
+    (smallExp := fun _ _ => (1 : ℚ)) ha hkRange (by norm_num)
+  simpa [positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul] using h
+
+theorem positiveTemperedEntropyShadowBaseTerm_pos
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a) :
+    0 < positiveTemperedEntropyShadowBaseTerm a k := by
+  have h := positiveTemperedEntropyShadowExpMajorantTerm_pos
+    (temperedExp := fun _ _ => (1 : ℚ)) ha hkRange (by norm_num)
+  simpa [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul] using h
 
 theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
     {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
@@ -3098,6 +3142,101 @@ theorem positiveTemperedEntropyShadowExp_step_of_div_step
     positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
       ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q :=
   le_mul_of_div_le_pos hpos hquot
+
+theorem positiveSmallEntropyShadowExp_quotient_eq_base_mul_exp
+    {smallExp : Nat → Nat → ℚ} {a r : Nat}
+    (hbase : positiveSmallEntropyShadowBaseTerm a r ≠ 0)
+    (hExp : smallExp a r ≠ 0) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1) /
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a r =
+      positiveSmallEntropyShadowBaseStepQuotient a r *
+        (smallExp a (r + 1) / smallExp a r) := by
+  rw [positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul,
+    positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul]
+  unfold positiveSmallEntropyShadowBaseStepQuotient
+  field_simp [hbase, hExp]
+
+theorem positiveTemperedEntropyShadowExp_quotient_eq_base_mul_exp
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat}
+    (hbase : positiveTemperedEntropyShadowBaseTerm a r ≠ 0)
+    (hExp : temperedExp a r ≠ 0) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1) /
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r =
+      positiveTemperedEntropyShadowBaseStepQuotient a r *
+        (temperedExp a (r + 1) / temperedExp a r) := by
+  rw [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul,
+    positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
+  unfold positiveTemperedEntropyShadowBaseStepQuotient
+  field_simp [hbase, hExp]
+
+theorem positiveSmallEntropyShadowExp_step_of_base_exp_quotient
+    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (hbase : 0 < positiveSmallEntropyShadowBaseTerm a r)
+    (hExp : 0 < smallExp a r)
+    (hquot :
+      positiveSmallEntropyShadowBaseStepQuotient a r *
+          (smallExp a (r + 1) / smallExp a r) ≤ q) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q := by
+  have hterm :
+      0 < positiveSmallEntropyShadowExpMajorantTerm smallExp a r := by
+    rw [positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul]
+    exact mul_pos hbase hExp
+  refine positiveSmallEntropyShadowExp_step_of_div_step hterm ?_
+  rw [positiveSmallEntropyShadowExp_quotient_eq_base_mul_exp
+    hbase.ne' hExp.ne']
+  exact hquot
+
+theorem positiveTemperedEntropyShadowExp_step_of_base_exp_quotient
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (hbase : 0 < positiveTemperedEntropyShadowBaseTerm a r)
+    (hExp : 0 < temperedExp a r)
+    (hquot :
+      positiveTemperedEntropyShadowBaseStepQuotient a r *
+          (temperedExp a (r + 1) / temperedExp a r) ≤ q) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q := by
+  have hterm :
+      0 < positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r := by
+    rw [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
+    exact mul_pos hbase hExp
+  refine positiveTemperedEntropyShadowExp_step_of_div_step hterm ?_
+  rw [positiveTemperedEntropyShadowExp_quotient_eq_base_mul_exp
+    hbase.ne' hExp.ne']
+  exact hquot
+
+theorem positiveSmallEntropyShadowExp_step_of_branch_base_exp_quotient
+    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hExp : 0 < smallExp a r)
+    (hquot :
+      positiveSmallEntropyShadowBaseStepQuotient a r *
+          (smallExp a (r + 1) / smallExp a r) ≤ q) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q :=
+  positiveSmallEntropyShadowExp_step_of_base_exp_quotient
+    (positiveSmallEntropyShadowBaseTerm_pos
+      (by omega : 20 ≤ a)
+      (mem_positiveKRange_of_small_branch_step hr1 hrhi))
+    hExp hquot
+
+theorem positiveTemperedEntropyShadowExp_step_of_branch_base_exp_quotient
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a)
+    (hExp : 0 < temperedExp a r)
+    (hquot :
+      positiveTemperedEntropyShadowBaseStepQuotient a r *
+          (temperedExp a (r + 1) / temperedExp a r) ≤ q) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q :=
+  positiveTemperedEntropyShadowExp_step_of_base_exp_quotient
+    (positiveTemperedEntropyShadowBaseTerm_pos
+      (by omega : 20 ≤ a)
+      (mem_positiveKRange_of_tempered_branch_step hrlo hrhi))
+    hExp hquot
 
 theorem positiveSmallEntropyShadowExp_step_of_exp_pos_div_step
     {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
