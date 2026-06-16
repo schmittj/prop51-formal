@@ -1957,6 +1957,20 @@ theorem positiveYgcompBound_nonneg (N j : Nat) :
       (by positivity)
   exact div_nonneg (QqEplusGcompBound_nonneg N j) hden
 
+theorem positiveSoloGcompBound_eq_dyadic_YgcompBound
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    positiveSoloGcompBound a N =
+      positiveDyadicDecay a / 2 * positiveYgcompBound N a := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  have hca : c a ≠ 0 := (c_pos a ha).ne'
+  have hYden :
+      ((N : ℚ) / 2) * c a / (2 : ℚ)^a ≠ 0 := by
+    have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hcapos : 0 < c a := c_pos a ha
+    positivity
+  unfold positiveSoloGcompBound positiveYgcompBound positiveDyadicDecay
+  field_simp [hNQ, hca, hYden]
+
 theorem BplusNonlinearGcompBound_nonneg (N p : Nat) :
     0 ≤ BplusNonlinearGcompBound N p := by
   unfold BplusNonlinearGcompBound
@@ -6769,6 +6783,35 @@ structure PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate : Prop 
   soloGcomp :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
       positiveSoloGcompBound a N ≤ positiveSoloBudget
+
+/-- Product-level large-exp pointwise certificate with the solo estimate stated
+as a `Y_a(N)` `Gcomp` bound.  This matches the paper's solo term discussion
+more closely than the normalized `positiveSoloGcompBound` field. -/
+structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate : Prop where
+  smallProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k
+  temperedProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k
+  soloY :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * positiveYgcompBound N a ≤ positiveSoloBudget
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toProductPointwiseCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate where
+  smallProduct := cert.smallProduct
+  temperedProduct := cert.temperedProduct
+  soloGcomp := by
+    intro a N ha hrect
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    rw [positiveSoloGcompBound_eq_dyadic_YgcompBound hN (by omega : 1 ≤ a)]
+    exact cert.soloY ha hrect
 
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toGcompPointwiseCertificate
     (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate) :
