@@ -245,6 +245,24 @@ theorem rectangle_N_le_signLock_range_self {a N : Nat}
     exact_mod_cast h3N_a
   nlinarith
 
+theorem div_natCast_le_div_posNlo_of_rectangle {a N : Nat} {C : ℚ}
+    (hC : 0 ≤ C) (ha : 2 ≤ a) (hrect : positiveRectangle a N) :
+    C / (N : ℚ) ≤ C / (posNlo a : ℚ) := by
+  have hlo_pos : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos ha
+  have hlo_le_N : (posNlo a : ℚ) ≤ (N : ℚ) := by
+    exact_mod_cast hrect.1
+  exact div_le_div_of_nonneg_left hC hlo_pos hlo_le_N
+
+theorem div_posNhi_le_div_natCast_of_rectangle {a N : Nat} {C : ℚ}
+    (hC : 0 ≤ C) (ha : 2 ≤ a) (hrect : positiveRectangle a N) :
+    C / (posNhi a : ℚ) ≤ C / (N : ℚ) := by
+  have hN_pos : (0 : ℚ) < (N : ℚ) := by
+    exact_mod_cast positiveRectangle_N_pos ha hrect
+  have hN_le_hi : (N : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hrect.2
+  exact div_le_div_of_nonneg_left hC hN_pos hN_le_hi
+
 /-! ## Executable rational summand majorants -/
 
 /-- The finite-window partial-exp cutoff for the §6 scan.  On

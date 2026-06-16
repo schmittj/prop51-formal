@@ -238,7 +238,8 @@ Status:
       normal forms, matching the scalar shape produced by this bridge.
       Lean now also proves monotonicity of the rational `partialExpUpper`
       surrogate and uses it to move the small-regime exponent from the actual
-      `N` to the upper rectangle edge.
+      `N` to the upper rectangle edge; the lower/upper edge denominator
+      comparisons are packaged separately.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
