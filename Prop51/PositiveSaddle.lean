@@ -2142,25 +2142,26 @@ theorem Ynorm_le_positiveYgcompBound (N j : Nat) :
 theorem EplusGcompBound_nonneg (N p : Nat) :
     0 ≤ EplusGcompBound N p := by
   unfold EplusGcompBound
-  refine Finset.sum_nonneg fun r _ => ?_
-  exact div_nonneg
-    (mul_nonneg
-      (mul_nonneg
-        (pow_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) r)
-        (by positivity))
-      (Gcomp_nonneg r p))
-    (Nat.cast_nonneg _)
+  refine expCoeff_nonneg ?_ p
+  intro j
+  by_cases hj : j < 2
+  · simp [hj]
+  · simp [hj]
+    positivity
 
 theorem QqEplusGcompBound_nonneg (N j : Nat) :
     0 ≤ QqEplusGcompBound N j := by
   unfold QqEplusGcompBound
-  refine Finset.sum_nonneg fun s _ => ?_
-  have hbase : 0 ≤ (N : ℚ) / 2 * c 1 / 2 := by
-    norm_num [c_one]
-    positivity
-  exact mul_nonneg
-    (div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _))
-    (EplusGcompBound_nonneg N (j-s))
+  refine expCoeff_nonneg ?_ j
+  intro r
+  by_cases h0 : r = 0
+  · simp [h0]
+  · by_cases h1 : r = 1
+    · subst r
+      norm_num [c_one]
+      positivity
+    · simp [h0, h1]
+      positivity
 
 theorem positiveYgcompBound_nonneg (N j : Nat) :
     0 ≤ positiveYgcompBound N j := by
@@ -2188,24 +2189,25 @@ theorem positiveSoloGcompBound_eq_dyadic_YgcompBound
 theorem BplusNonlinearGcompBound_nonneg (N p : Nat) :
     0 ≤ BplusNonlinearGcompBound N p := by
   unfold BplusNonlinearGcompBound
-  refine Finset.sum_nonneg fun r _ => ?_
-  exact div_nonneg
-    (mul_nonneg
-      (mul_nonneg
-        (pow_nonneg (mul_nonneg (Nat.cast_nonneg N) (by norm_num)) r)
-        (by positivity))
-      (Gcomp_nonneg r p))
-    (Nat.cast_nonneg _)
+  refine expCoeff_nonneg ?_ p
+  intro j
+  by_cases hj : j < 2
+  · simp [hj]
+  · simp [hj]
+    positivity
 
 theorem BplusqGcompBound_nonneg (N k : Nat) :
     0 ≤ BplusqGcompBound N k := by
   unfold BplusqGcompBound
-  refine Finset.sum_nonneg fun s _ => ?_
-  have hbase : 0 ≤ (N : ℚ) * c 1 :=
-    mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1)
-  exact mul_nonneg
-    (div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _))
-    (BplusNonlinearGcompBound_nonneg N (k-s))
+  refine expCoeff_nonneg ?_ k
+  intro r
+  by_cases h0 : r = 0
+  · simp [h0]
+  · by_cases h1 : r = 1
+    · subst r
+      norm_num [c_one]
+    · simp [h0, h1]
+      positivity
 
 theorem positiveXplusGcompBound_nonneg (N k : Nat) :
     0 ≤ positiveXplusGcompBound N k := by

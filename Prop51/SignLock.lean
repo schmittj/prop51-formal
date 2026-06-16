@@ -178,15 +178,36 @@ theorem Eplus_nat_le_Gcomp_sum (N p : Nat) :
   Eplus_le_Gcomp_sum (Nat.cast_nonneg N) p
 
 /-- Explicit `Gcomp` upper bound for the positive-side nonlinear coefficient
-`Eplus (N : ℚ) p`. -/
+`Eplus (N : ℚ) p`.
+
+For finite audits Lean evaluates the equivalent `expCoeff` recurrence for the
+positive majorant sequence rather than the paper's displayed `Gcomp` block sum.
+This is an implementation change only: the proof below still uses exactly the
+same per-log-coefficient bound that gives the `Gcomp` majorant. -/
 def EplusGcompBound (N p : Nat) : ℚ :=
-  ∑ r ∈ Finset.range (p+1),
-    ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ)
+  expCoeff
+    (fun j => if j < 2 then 0
+      else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ)) p
 
 theorem Eplus_nat_le_GcompBound (N p : Nat) :
     Eplus (N : ℚ) p ≤ EplusGcompBound N p := by
-  unfold EplusGcompBound
-  exact Eplus_nat_le_Gcomp_sum N p
+  unfold Eplus EplusGcompBound
+  exact (le_abs_self _).trans
+    (abs_expCoeff_le_of_abs_le
+      (fun j => by
+        by_cases hj : j < 2
+        · simp [hj]
+        · simp [hj]
+          positivity)
+      (fun j => by
+        by_cases hj : j < 2
+        · have hH : Hcoef j = 0 := Hcoef_of_lt_two hj
+          rw [hH]
+          simp [hj]
+        · have h2 : 2 ≤ j := by omega
+          simpa [hj, mul_assoc] using
+            (abs_EplusLogCoeff_le (N := (N : ℚ)) (Nat.cast_nonneg N)
+              (j := j) h2)) p)
 
 /-- Nonlinear part of the positive `B` majorant:
 `[X^p] exp(N H(X))`, where `H(X)=log C(X)-c_1X`. -/
@@ -252,15 +273,35 @@ theorem BplusNonlinear_nat_le_Gcomp_sum (N p : Nat) :
   BplusNonlinear_le_Gcomp_sum (Nat.cast_nonneg N) p
 
 /-- Explicit `Gcomp` upper bound for the nonlinear coefficient
-`BplusNonlinear (N : ℚ) p`. -/
+`BplusNonlinear (N : ℚ) p`.
+
+As above, the executable definition uses the equivalent recurrence-level
+positive majorant rather than expanding the `Gcomp` block sum during finite
+audits. -/
 def BplusNonlinearGcompBound (N p : Nat) : ℚ :=
-  ∑ r ∈ Finset.range (p+1),
-    ((N : ℚ) * (4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ)
+  expCoeff
+    (fun j => if j < 2 then 0
+      else ((N : ℚ) * (4/25)) * 6^j * ((j - 1).factorial : ℚ)) p
 
 theorem BplusNonlinear_nat_le_GcompBound (N p : Nat) :
     BplusNonlinear (N : ℚ) p ≤ BplusNonlinearGcompBound N p := by
-  unfold BplusNonlinearGcompBound
-  exact BplusNonlinear_nat_le_Gcomp_sum N p
+  unfold BplusNonlinear BplusNonlinearGcompBound
+  exact (le_abs_self _).trans
+    (abs_expCoeff_le_of_abs_le
+      (fun j => by
+        by_cases hj : j < 2
+        · simp [hj]
+        · simp [hj]
+          positivity)
+      (fun j => by
+        by_cases hj : j < 2
+        · have hH : Hcoef j = 0 := Hcoef_of_lt_two hj
+          rw [hH]
+          simp [hj]
+        · have h2 : 2 ≤ j := by omega
+          simpa [hj, mul_assoc] using
+            (abs_BplusNonlinearLogCoeff_le (N := (N : ℚ)) (Nat.cast_nonneg N)
+              (j := j) h2)) p)
 
 /-- The sign-lock nonlinear residual `ε_p`, defined by
 `E^-_p(N) = -N c_p (1+ε_p)`. -/
@@ -655,26 +696,47 @@ theorem Qq_eq_linear_Eplus_sum (N m : Nat) :
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
   simpa [Qq, Eplus, expCoeff_linearExpSeq] using hcoeff
 
-/-- The corresponding explicit upper bound for `Qq`, after the exact linear
-exponential is convolved with the `EplusGcompBound` tail. -/
+/-- The corresponding explicit upper bound for `Qq`.
+
+This is the recurrence-level version of the paper split into the exact linear
+exponential and the nonlinear `EplusGcompBound`: the degree-one log coefficient
+is kept exact, while all degrees `≥ 2` use the same factorial majorant as
+`EplusGcompBound`. -/
 def QqEplusGcompBound (N m : Nat) : ℚ :=
-  ∑ s ∈ Finset.range (m+1),
-    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
-      EplusGcompBound N (m-s)
+  expCoeff
+    (fun j =>
+      if j = 0 then 0
+      else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+      else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ)) m
 
 theorem Qq_le_EplusGcompBound (N m : Nat) :
     Qq N m ≤ QqEplusGcompBound N m := by
-  rw [Qq_eq_linear_Eplus_sum]
-  unfold QqEplusGcompBound
-  refine Finset.sum_le_sum fun s _ => ?_
-  have hbase : 0 ≤ (N : ℚ) / 2 * c 1 / 2 := by
-    norm_num [c_one]
-    positivity
-  have hlin :
-      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
-    exact div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _)
-  exact mul_le_mul_of_nonneg_left
-    (Eplus_nat_le_GcompBound N (m-s)) hlin
+  unfold Qq QqEplusGcompBound
+  exact (le_abs_self _).trans
+    (abs_expCoeff_le_of_abs_le
+      (fun j => by
+        by_cases h0 : j = 0
+        · simp [h0]
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+            positivity
+          · simp [h0, h1]
+            positivity)
+      (fun j => by
+        by_cases h0 : j = 0
+        · subst j
+          simp
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+            rw [abs_of_nonneg]
+            positivity
+          · have h2 : 2 ≤ j := by omega
+            have h := abs_EplusLogCoeff_le
+              (N := (N : ℚ)) (Nat.cast_nonneg N) (j := j) h2
+            rw [Hcoef_of_ge_two h2] at h
+            simpa [h0, h1, mul_assoc] using h) m)
 
 /-- Positive `B` majorant split into its exact linear exponential and the
 nonlinear coefficients of `exp(NH)`. -/
@@ -706,25 +768,43 @@ theorem Bplusq_eq_linear_BplusNonlinear_sum (N m : Nat) :
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
   simpa [Bplusq, BplusNonlinear, expCoeff_linearExpSeq] using hcoeff
 
-/-- Explicit `Gcomp` upper bound for `Bplusq`, after convolving the exact
-linear exponential with the nonlinear `BplusNonlinearGcompBound`. -/
+/-- Explicit `Gcomp` upper bound for `Bplusq`.
+
+As for `QqEplusGcompBound`, this is the single-recurrence form of the split
+linear/nonlinear majorant: exact in degree one and factorial-majorized from
+degree two onward. -/
 def BplusqGcompBound (N m : Nat) : ℚ :=
-  ∑ s ∈ Finset.range (m+1),
-    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
-      BplusNonlinearGcompBound N (m-s)
+  expCoeff
+    (fun j =>
+      if j = 0 then 0
+      else if j = 1 then (N : ℚ) * c 1
+      else ((N : ℚ) * (4/25)) * 6^j * ((j - 1).factorial : ℚ)) m
 
 theorem Bplusq_le_GcompBound (N m : Nat) :
     Bplusq N m ≤ BplusqGcompBound N m := by
-  rw [Bplusq_eq_linear_BplusNonlinear_sum]
-  unfold BplusqGcompBound
-  refine Finset.sum_le_sum fun s _ => ?_
-  have hbase : 0 ≤ (N : ℚ) * c 1 := by
-    exact mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1)
-  have hlin :
-      0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
-    exact div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _)
-  exact mul_le_mul_of_nonneg_left
-    (BplusNonlinear_nat_le_GcompBound N (m-s)) hlin
+  unfold Bplusq BplusqGcompBound
+  exact (le_abs_self _).trans
+    (abs_expCoeff_le_of_abs_le
+      (fun j => by
+        by_cases h0 : j = 0
+        · simp [h0]
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+          · simp [h0, h1]
+            positivity)
+      (fun j => by
+        by_cases h0 : j = 0
+        · subst j
+          simp
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+          · have h2 : 2 ≤ j := by omega
+            have h := abs_BplusNonlinearLogCoeff_le
+              (N := (N : ℚ)) (Nat.cast_nonneg N) (j := j) h2
+            rw [Hcoef_of_ge_two h2] at h
+            simpa [h0, h1, mul_assoc] using h) m)
 
 /-- Finite decomposition of `-X_m(N)` in the form used by the sign-lock
 argument. -/

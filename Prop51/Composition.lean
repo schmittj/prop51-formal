@@ -17,6 +17,7 @@ bound of `Prop51/BinomRecip.lean` in disguise.
 -/
 
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Data.List.GetD
 import Mathlib.Tactic.LinearCombination
 import Prop51.BinomRecip
 
@@ -29,6 +30,69 @@ def Gcomp : Nat → Nat → ℚ
   | 0, p => if p = 0 then 1 else 0
   | (r+1), p => ∑ j ∈ Finset.Icc 2 p, ((j-1).factorial : ℚ) * Gcomp r (p-j)
 
+/-! ### Executable dynamic-programming evaluator
+
+The recursive definition of `Gcomp` is transparent and convenient for the
+paper proof, but it recomputes the same rows many times under `native_decide`.
+The following table evaluator computes the exact same rational numbers row by
+row.  This is a Lean implementation detail, not a mathematical divergence from
+the TeX argument. -/
+
+def gcompRow0 (P : Nat) : List ℚ :=
+  (List.range (P + 1)).map fun q => if q = 0 then 1 else 0
+
+def gcompNextRow (P : Nat) (prev : List ℚ) : List ℚ :=
+  (List.range (P + 1)).map fun q =>
+    ∑ j ∈ Finset.Icc 2 q, ((j - 1).factorial : ℚ) * prev.getD (q - j) 0
+
+def gcompRows : Nat → Nat → List ℚ
+  | 0, P => gcompRow0 P
+  | r + 1, P => gcompNextRow P (gcompRows r P)
+
+def GcompFast (r p : Nat) : ℚ :=
+  (gcompRows r p).getD p 0
+
+theorem gcompRow0_getD {P q : Nat} (hq : q ≤ P) :
+    (gcompRow0 P).getD q 0 = Gcomp 0 q := by
+  have hlen : q < (gcompRow0 P).length := by
+    simp [gcompRow0]
+    omega
+  rw [List.getD_eq_getElem (l := gcompRow0 P) (d := (0 : ℚ)) hlen]
+  simp [gcompRow0]
+  simp [Gcomp]
+
+theorem gcompNextRow_getD
+    {P r q : Nat} {prev : List ℚ}
+    (hprev : ∀ q, q ≤ P → prev.getD q 0 = Gcomp r q) (hq : q ≤ P) :
+    (gcompNextRow P prev).getD q 0 = Gcomp (r + 1) q := by
+  have hlen : q < (gcompNextRow P prev).length := by
+    simp [gcompNextRow]
+    omega
+  rw [List.getD_eq_getElem (l := gcompNextRow P prev) (d := (0 : ℚ)) hlen]
+  simp only [gcompNextRow, Gcomp]
+  simp
+  refine Finset.sum_congr rfl ?_
+  intro j hj
+  obtain ⟨_h2, hjq⟩ := Finset.mem_Icc.mp hj
+  have hp := hprev (q - j) (by omega)
+  rw [List.getD_eq_getElem?_getD] at hp
+  rw [hp]
+
+theorem gcompRows_getD (r P : Nat) : ∀ q, q ≤ P →
+    (gcompRows r P).getD q 0 = Gcomp r q := by
+  induction r with
+  | zero =>
+      intro q hq
+      simpa [gcompRows] using gcompRow0_getD (P := P) (q := q) hq
+  | succ r ih =>
+      intro q hq
+      simpa [gcompRows] using
+        gcompNextRow_getD (P := P) (r := r) (q := q)
+          (prev := gcompRows r P) (fun q hq => ih q hq) hq
+
+theorem GcompFast_eq_Gcomp (r p : Nat) : GcompFast r p = Gcomp r p := by
+  simpa [GcompFast] using gcompRows_getD r p p le_rfl
+
 theorem Gcomp_nonneg (r : Nat) : ∀ p : Nat, 0 ≤ Gcomp r p := by
   induction r with
   | zero =>
@@ -40,6 +104,10 @@ theorem Gcomp_nonneg (r : Nat) : ∀ p : Nat, 0 ≤ Gcomp r p := by
       simp only [Gcomp]
       exact Finset.sum_nonneg fun j _ =>
         mul_nonneg (Nat.cast_nonneg _) (ih (p-j))
+
+theorem GcompFast_nonneg (r p : Nat) : 0 ≤ GcompFast r p := by
+  rw [GcompFast_eq_Gcomp]
+  exact Gcomp_nonneg r p
 
 /-- Compositions of `p < 2r` into `r` parts `≥ 2` do not exist. -/
 theorem Gcomp_eq_zero (r : Nat) : ∀ p : Nat, 1 ≤ r → p < 2*r →
