@@ -944,6 +944,37 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawPr
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate
 
+/-- Final assembly from the split fixed finite-window route.  The first
+certificate is the generated finite-window `native_decide` part; the second
+certificate supplies the large-`a` raw product/solo pointwise and
+split-tempered reserve proofs. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen
+      edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen
+        edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
+
+/-- Final assembly from the executable all-fixed-chunks finite-window route.
+This is the shortest generated route when each whole-family Boolean is small
+enough for `native_decide`. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowAllChunksAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen
+      edgeRowLen nLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen
+        edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (cert.toTangentProductBudgetCertificate tail)
+
 /-- Final assembly from the fully fixed-width product chunk route.  Product
 checks use fixed-width row chunks and fixed-width `N` chunks, while tangent,
 displayed-solo, and edge checks use the default fixed-scale chunk interfaces. -/

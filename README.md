@@ -101,7 +101,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   harmlessly overrun the positive rectangle.  When fixed row lengths are
   enough for all finite check families, the
   `RawProductTableFixedFiniteRowNChunksFixedScale...` capstone supplies all
-  row covers from `Prop51.positiveSaddleFixedRowChunks`.  When
+  row covers from `Prop51.positiveSaddleFixedRowChunks`.  Its split
+  `Prop51.PositiveSaddleFixedFiniteWindowAuditCertificate` /
+  `Prop51.PositiveSaddleLargeTailAuditCertificate` form keeps generated
+  finite-window `native_decide` proofs separate from the remaining large-`a`
+  analytic inputs.  If each whole finite family is small enough to evaluate
+  at once, `Prop51.PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate`
+  packages one Boolean per finite family; `scripts/positive_saddle_fixed_finite_template.py`
+  emits that theorem shape for chosen fixed row and `N` lengths.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
@@ -147,7 +154,7 @@ build time.
 ```
 Prop51Kernel.lean  executable interval kernel (no Mathlib; natively precompiled)
 Prop51/            Lean library (Defs, soundness theory, certificates, Main)
-scripts/           axiom report, constants check, corrected saddle scan
+scripts/           axiom report, constants check, saddle scans/templates
 paper/             the LaTeX proof document (tenth revision + errata)
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
 blueprint/         (planned) Lean blueprint

@@ -543,6 +543,13 @@ Status:
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
       If that fully independent setup still uses fixed row lengths, use
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedFiniteRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      Generated finite-window proofs can now target the shorter split
+      `PositiveSaddleFixedFiniteWindowAuditCertificate` and combine it with
+      `PositiveSaddleLargeTailAuditCertificate`; if each whole finite family
+      is practical as one Boolean, target
+      `PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate` instead.
+      The script `scripts/positive_saddle_fixed_finite_template.py` emits the
+      all-chunks theorem shape for fixed row and `N` lengths.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
