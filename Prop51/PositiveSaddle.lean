@@ -10,6 +10,8 @@ Lean interface rather than an informal convention in the Python script.
 -/
 
 import Mathlib.Data.Nat.Sqrt
+import Mathlib.Data.Nat.Choose.Bounds
+import Mathlib.Data.Nat.Factorial.BigOperators
 import Prop51.SignLock
 
 namespace Prop51
@@ -1898,6 +1900,99 @@ theorem positiveBinomRatio_pos {a k : Nat} (ha : 2 ≤ a) (hk1 : 1 ≤ k)
     exact_mod_cast positiveBinomDen_pos ha hk1 hkmax
   unfold positiveBinomRatio
   positivity
+
+/-! ### Binomial tail helper for the positive saddle
+
+The latest TeX uses the sharper entropy lower bound for
+`choose (a-2) (k-1)` in the `a > 2000` tail.  The Lean route keeps this
+standard rational shadow explicit: `C(n,k) ≥ (n/k)^k`.  It is weaker than the
+printed entropy estimate, but it is a mechanically checkable combinatorial
+bridge for the same denominator-growth step and can be strengthened later
+without changing the finite certificate interface. -/
+
+theorem choose_ge_pow_div_pow {n k : Nat} (hk : 1 ≤ k) (hkn : k ≤ n) :
+    ((n : ℚ) / (k : ℚ))^k ≤ ((n.choose k : Nat) : ℚ) := by
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk
+  have hfacpos : (0 : ℚ) < (k.factorial : ℚ) := by
+    exact_mod_cast k.factorial_pos
+  have hasc :
+      (((n - k + 1).ascFactorial k : Nat) : ℚ)
+        = ((n.choose k : Nat) : ℚ) * (k.factorial : ℚ) := by
+    have htop : n - k + 1 + k - 1 = n := by omega
+    calc
+      (((n - k + 1).ascFactorial k : Nat) : ℚ)
+          = ((k.factorial * ((n - k + 1 + k - 1).choose k) : Nat) : ℚ) := by
+              rw [Nat.ascFactorial_eq_factorial_mul_choose']
+      _ = (k.factorial : ℚ) * ((n.choose k : Nat) : ℚ) := by
+              simp [Nat.cast_mul, htop]
+      _ = ((n.choose k : Nat) : ℚ) * (k.factorial : ℚ) := by ring
+  have hprod :
+      ((n : ℚ) / (k : ℚ))^k * (k.factorial : ℚ)
+        ≤ (((n - k + 1).ascFactorial k : Nat) : ℚ) := by
+    rw [Nat.ascFactorial_eq_prod_range, Nat.factorial_eq_prod_range_add_one]
+    push_cast
+    rw [Finset.pow_eq_prod_const, ← Finset.prod_mul_distrib]
+    refine Finset.prod_le_prod ?_ ?_
+    · intro i hi
+      exact mul_nonneg (div_nonneg (by positivity) hkpos.le) (by positivity)
+    · intro i hi
+      have hi_lt : i < k := Finset.mem_range.mp hi
+      have hi_succ_le : i + 1 ≤ k := Nat.succ_le_of_lt hi_lt
+      rw [div_mul_eq_mul_div, div_le_iff₀ hkpos]
+      rw [Nat.cast_sub hkn]
+      have hleft : 0 ≤ (k : ℚ) - ((i : ℚ) + 1) := by
+        have hle : (i : ℚ) + 1 ≤ (k : ℚ) := by exact_mod_cast hi_succ_le
+        linarith
+      have hright : 0 ≤ (n : ℚ) - (k : ℚ) := by
+        have hle : (k : ℚ) ≤ (n : ℚ) := by exact_mod_cast hkn
+        linarith
+      have hnonneg :
+          0 ≤ ((k : ℚ) - ((i : ℚ) + 1)) * ((n : ℚ) - (k : ℚ)) :=
+        mul_nonneg hleft hright
+      nlinarith
+  have hmul :
+      ((n : ℚ) / (k : ℚ))^k * (k.factorial : ℚ)
+        ≤ ((n.choose k : Nat) : ℚ) * (k.factorial : ℚ) := by
+    simpa [hasc] using hprod
+  exact (mul_le_mul_iff_of_pos_right hfacpos).mp hmul
+
+theorem positiveBinomDen_ge_tail_pow {a k : Nat} (ha : 3 ≤ a)
+    (hk : 2 ≤ k) (hkmax : k ≤ a - 1) :
+    (((a - 2 : Nat) : ℚ) / ((k - 1 : Nat) : ℚ))^(k - 1)
+      ≤ (positiveBinomDen a k : ℚ) := by
+  unfold positiveBinomDen
+  exact choose_ge_pow_div_pow (by omega : 1 ≤ k - 1) (by omega : k - 1 ≤ a - 2)
+
+/-- Closed rational upper bound for the reciprocal binomial prefactor in the
+large-`a` tail, obtained from `C(n,k) ≥ (n/k)^k`. -/
+def positiveBinomRatioTailPowBound (a k : Nat) : ℚ :=
+  1 / (((a - 1 : Nat) : ℚ) *
+    ((((a - 2 : Nat) : ℚ) / ((k - 1 : Nat) : ℚ))^(k - 1)))
+
+theorem positiveBinomRatio_le_tail_powBound {a k : Nat} (ha : 3 ≤ a)
+    (hk : 2 ≤ k) (hkmax : k ≤ a - 1) :
+    positiveBinomRatio a k ≤ positiveBinomRatioTailPowBound a k := by
+  have hpow_pos :
+      0 < (((a - 2 : Nat) : ℚ) / ((k - 1 : Nat) : ℚ))^(k - 1) := by
+    have hnum : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < a - 2)
+    have hden : (0 : ℚ) < ((k - 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < k - 1)
+    exact pow_pos (div_pos hnum hden) _
+  have ha1_pos : (0 : ℚ) < ((a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 1)
+  have htail_denom_pos :
+      0 < ((a - 1 : Nat) : ℚ) *
+        ((((a - 2 : Nat) : ℚ) / ((k - 1 : Nat) : ℚ))^(k - 1)) :=
+    mul_pos ha1_pos hpow_pos
+  have hden_ge := positiveBinomDen_ge_tail_pow ha hk hkmax
+  have hmul_ge :
+      ((a - 1 : Nat) : ℚ) *
+          ((((a - 2 : Nat) : ℚ) / ((k - 1 : Nat) : ℚ))^(k - 1))
+        ≤ ((a - 1 : Nat) : ℚ) * (positiveBinomDen a k : ℚ) :=
+    mul_le_mul_of_nonneg_left hden_ge ha1_pos.le
+  unfold positiveBinomRatioTailPowBound positiveBinomRatio
+  exact one_div_le_one_div_of_le htail_denom_pos hmul_ge
 
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.

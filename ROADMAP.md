@@ -76,7 +76,12 @@ surrogate, with the constant degradation absorbed by the sign-lock budget
   sum with first-omitted-term remainder (parity trick), reduced to a
   one-variable polynomial inequality on `0 ≤ ζ ≤ 50/27`;
 * the §6 window scan  →  `native_decide` over exact rationals / the Layer B
-  dyadic kernel; the `a > 2000` entropy tail  →  `C(n,k) ≥ (n/k)^k`.
+  dyadic kernel; the `a > 2000` entropy tail  →  the checked rational shadow
+  `choose_ge_pow_div_pow : ((n:ℚ)/(k:ℚ))^k ≤ C(n,k)`, specialized as
+  `positiveBinomDen_ge_tail_pow` for `C(a-2,k-1)` and the reciprocal
+  majorant `positiveBinomRatio_le_tail_powBound`.  This is deliberately weaker
+  than the entropy inequality printed in the TeX, and is the Lean bridge
+  currently being used for the same denominator-growth step.
 
 Status:
 
