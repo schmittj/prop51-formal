@@ -94,8 +94,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `RawProductTableFixedNChunksProductTangentRowChunksFixedScale...` capstone
   packages row-range product checks using `Prop51.positiveProductFixedNChunks`
   and lets the corrected tangent-edge range checks use a separate row cover.
-  Its final `N` chunk may harmlessly overrun the positive rectangle.  When a
-  common product row length and `N` length are enough, the
+  Its final `N` chunk may harmlessly overrun the positive rectangle.  When
+  common product-row and tangent-row lengths are enough, the
+  `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
+  supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
+  common product row length and `N` length are enough but tangent can stay on
+  the default chunks, the
   `RawProductTableFixedRowNChunksTangentEdgeChunksFixedScale...` capstone
   also supplies the product row cover from `Prop51.positiveSaddleFixedRowChunks`.
   The fully parameterized
