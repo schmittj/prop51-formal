@@ -362,7 +362,20 @@ Status:
       separate entropy tail for `a > 2000`.  Lean also has full-range and
       chunked range-certificate variants for generated finite-window proofs,
       with `Prop51/PositiveSaddleChunks.lean` providing a default 100-row
-      cover of `401 ≤ a ≤ 2000`.
+      cover of `401 ≤ a ≤ 2000`.  The current most concrete final audit
+      endpoint is
+      `PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly exposed as
+      `coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      It packages five default finite-window chunk booleans, raw large-exp
+      product estimates against `BplusqGcompBound * QqEplusGcompBound`, a
+      unit-scaled solo check `200000000 * solo ≤ 1`, and the candidate
+      split-tempered entropy tail with the raw base quotient denominator and
+      fixed reserve budgets cleared (`800000000 * reserveTerm ≤ 1`).  The
+      remaining proof-producing work is therefore: generate or prove the five
+      finite chunk families, prove the two raw product inequalities plus the
+      unit solo bound for all `a > 2000`, and prove the six one-dimensional
+      candidate split-tempered step/reserve inequalities.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
