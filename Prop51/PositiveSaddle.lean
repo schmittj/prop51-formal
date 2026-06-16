@@ -4433,6 +4433,72 @@ theorem positiveFactorizedRawTerm_le_of_XY_bounds
   exact positiveFactorizedRawTerm_le_of_bounds hN hk1 hB
     (positiveCRatio_le_binomRatio ha hk1 hkmax) hX hY
 
+/-- Factored explicit `Gcomp` target for one retained positive summand after
+the coefficient-ratio bound has been inserted. -/
+def positiveXplusYProductGcompFactoredTerm (a N k : Nat) : ℚ :=
+  ((N : ℚ) / 2) * positiveBinomRatio a k *
+    positiveDyadicDecay (posJ a k) * positiveXplusYProductGcompBound a N k
+
+theorem positiveXplusYProductGcompFactoredTerm_nonneg (a N k : Nat) :
+    0 ≤ positiveXplusYProductGcompFactoredTerm a N k := by
+  unfold positiveXplusYProductGcompFactoredTerm
+  exact mul_nonneg
+    (mul_nonneg
+      (mul_nonneg (by positivity) positiveBinomRatio_nonneg)
+      (positiveDyadicDecay_nonneg (posJ a k)))
+    (mul_nonneg (positiveXplusGcompBound_nonneg N k)
+      (positiveYgcompBound_nonneg N (posJ a k)))
+
+theorem positiveFactorizedRawTerm_le_XplusYProductGcompFactoredTerm
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k) :
+    positiveFactorizedRawTerm a N k
+      ≤ positiveXplusYProductGcompFactoredTerm a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hR := positiveCRatio_le_binomRatio ha hk1 hkmax
+  have hXY :
+      Xnorm N k * Ynorm N (posJ a k)
+        ≤ positiveXplusYProductGcompBound a N k :=
+    Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+      (XplusYnorm_le_positiveXplusYProductGcompBound a N k)
+  have hX0 : 0 ≤ Xnorm N k := ((Bq_pos_iff_Xnorm_pos hN hk1).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) := Ynorm_nonneg N (posJ a k)
+  have hprod :
+      positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))
+        ≤ positiveBinomRatio a k * positiveXplusYProductGcompBound a N k :=
+    mul_le_mul hR hXY (mul_nonneg hX0 hY0) positiveBinomRatio_nonneg
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg (by positivity) (positiveDyadicDecay_nonneg (posJ a k))
+  calc
+    positiveFactorizedRawTerm a N k
+        = ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))) := by
+          unfold positiveFactorizedRawTerm
+          ring
+    _ ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveBinomRatio a k * positiveXplusYProductGcompBound a N k) :=
+          mul_le_mul_of_nonneg_left hprod hcommon
+    _ = positiveXplusYProductGcompFactoredTerm a N k := by
+          unfold positiveXplusYProductGcompFactoredTerm
+          ring
+
+theorem normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+    {a N k : Nat} (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (hkRange : k ∈ positiveKRange a) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveXplusYProductGcompFactoredTerm a N k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos ha hrect
+  have hM : 0 ≤ positiveXplusYProductGcompFactoredTerm a N k :=
+    positiveXplusYProductGcompFactoredTerm_nonneg a N k
+  refine normalizedPositiveIfTerm_le_of_raw_le hM ?_
+  intro hk1 hB
+  exact normalizedPositiveRawTerm_le_of_factorized_bound hN (by omega : 1 ≤ a)
+    hk1 (one_le_posJ_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange)
+    hM
+    (fun _ => positiveFactorizedRawTerm_le_XplusYProductGcompFactoredTerm
+      hN ha hkRange hB)
+
 theorem positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
     {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
     (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
@@ -6529,6 +6595,49 @@ structure PositiveSaddleEntropyShadowLargeExpPointwiseCertificate : Prop where
   soloBudget :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
       normalizedSoloTerm a N ≤ positiveSoloBudget
+
+/-- Explicit-`Gcomp` form of the concrete large-exp pointwise certificate.
+
+The small and tempered fields bound the already factored `Gcomp` summand
+against the entropy-shadow large-exp targets.  The theorem below then supplies
+the guard handling, coefficient-ratio replacement, and `B_k` to
+`\overline B_k` transport. -/
+structure PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate : Prop where
+  smallGcomp :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveXplusYProductGcompFactoredTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k
+  temperedGcomp :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveXplusYProductGcompFactoredTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a k
+  soloGcomp :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveSoloGcompBound a N ≤ positiveSoloBudget
+
+theorem PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate.toPointwiseCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate) :
+    PositiveSaddleEntropyShadowLargeExpPointwiseCertificate where
+  small := by
+    intro a N k ha hrect hk hsmall
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (cert.smallGcomp ha hrect hk hsmall)
+  tempered := by
+    intro a N k ha hrect hk htempered
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (cert.temperedGcomp ha hrect hk htempered)
+  soloBudget := by
+    intro a N ha hrect
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact (normalizedSoloTerm_le_positiveSoloGcompBound hN
+      (by omega : 1 ≤ a)).trans (cert.soloGcomp ha hrect)
 
 /-- Numerical ratio and reserve fields for the concrete variable-cutoff
 mixed raw-quotient entropy-shadow tail.
