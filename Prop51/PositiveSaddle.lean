@@ -1442,6 +1442,212 @@ theorem XplusNorm_le_positiveXplusGcompBound (N k : Nat) :
   exact div_le_div_of_nonneg_right (Bplusq_le_GcompBound N k)
     (mul_nonneg (Nat.cast_nonneg N) (c_nonneg k))
 
+/-- Explicit normalized `Eplus`/`Gcomp` upper bound for `Y_j(N)`. -/
+def positiveYgcompBound (N j : Nat) : ℚ :=
+  QqEplusGcompBound N j / (((N : ℚ) / 2) * c j / (2 : ℚ)^j)
+
+theorem Ynorm_le_positiveYgcompBound (N j : Nat) :
+    Ynorm N j ≤ positiveYgcompBound N j := by
+  unfold Ynorm positiveYgcompBound
+  have hden : 0 ≤ ((N : ℚ) / 2) * c j / (2 : ℚ)^j := by
+    exact div_nonneg
+      (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) (c_nonneg j))
+      (by positivity)
+  exact div_le_div_of_nonneg_right (Qq_le_EplusGcompBound N j) hden
+
+theorem EplusGcompBound_nonneg (N p : Nat) :
+    0 ≤ EplusGcompBound N p := by
+  unfold EplusGcompBound
+  refine Finset.sum_nonneg fun r _ => ?_
+  exact div_nonneg
+    (mul_nonneg
+      (mul_nonneg
+        (pow_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) r)
+        (by positivity))
+      (Gcomp_nonneg r p))
+    (Nat.cast_nonneg _)
+
+theorem QqEplusGcompBound_nonneg (N j : Nat) :
+    0 ≤ QqEplusGcompBound N j := by
+  unfold QqEplusGcompBound
+  refine Finset.sum_nonneg fun s _ => ?_
+  have hbase : 0 ≤ (N : ℚ) / 2 * c 1 / 2 := by
+    norm_num [c_one]
+    positivity
+  exact mul_nonneg
+    (div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _))
+    (EplusGcompBound_nonneg N (j-s))
+
+theorem positiveYgcompBound_nonneg (N j : Nat) :
+    0 ≤ positiveYgcompBound N j := by
+  unfold positiveYgcompBound
+  have hden : 0 ≤ ((N : ℚ) / 2) * c j / (2 : ℚ)^j := by
+    exact div_nonneg
+      (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) (c_nonneg j))
+      (by positivity)
+  exact div_nonneg (QqEplusGcompBound_nonneg N j) hden
+
+theorem BplusNonlinearGcompBound_nonneg (N p : Nat) :
+    0 ≤ BplusNonlinearGcompBound N p := by
+  unfold BplusNonlinearGcompBound
+  refine Finset.sum_nonneg fun r _ => ?_
+  exact div_nonneg
+    (mul_nonneg
+      (mul_nonneg
+        (pow_nonneg (mul_nonneg (Nat.cast_nonneg N) (by norm_num)) r)
+        (by positivity))
+      (Gcomp_nonneg r p))
+    (Nat.cast_nonneg _)
+
+theorem BplusqGcompBound_nonneg (N k : Nat) :
+    0 ≤ BplusqGcompBound N k := by
+  unfold BplusqGcompBound
+  refine Finset.sum_nonneg fun s _ => ?_
+  have hbase : 0 ≤ (N : ℚ) * c 1 :=
+    mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1)
+  exact mul_nonneg
+    (div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _))
+    (BplusNonlinearGcompBound_nonneg N (k-s))
+
+theorem positiveXplusGcompBound_nonneg (N k : Nat) :
+    0 ≤ positiveXplusGcompBound N k := by
+  unfold positiveXplusGcompBound
+  exact div_nonneg (BplusqGcompBound_nonneg N k)
+    (mul_nonneg (Nat.cast_nonneg N) (c_nonneg k))
+
+/-- Fully explicit `Gcomp` product bound for the positive-side saddle product
+`XplusNorm N k * Ynorm N (a-k)`. -/
+def positiveXplusYProductGcompBound (a N k : Nat) : ℚ :=
+  positiveXplusGcompBound N k * positiveYgcompBound N (posJ a k)
+
+theorem XplusYnorm_le_positiveXplusYProductGcompBound (a N k : Nat) :
+    XplusNorm N k * Ynorm N (posJ a k)
+      ≤ positiveXplusYProductGcompBound a N k := by
+  unfold positiveXplusYProductGcompBound
+  calc
+    XplusNorm N k * Ynorm N (posJ a k)
+        ≤ positiveXplusGcompBound N k * Ynorm N (posJ a k) :=
+          mul_le_mul_of_nonneg_right
+            (XplusNorm_le_positiveXplusGcompBound N k)
+            (Ynorm_nonneg N (posJ a k))
+    _ ≤ positiveXplusGcompBound N k *
+          positiveYgcompBound N (posJ a k) :=
+          mul_le_mul_of_nonneg_left
+            (Ynorm_le_positiveYgcompBound N (posJ a k))
+            (positiveXplusGcompBound_nonneg N k)
+
+/-- Point check that the explicit `Gcomp` product bound fits the corrected
+small-regime tangent target. -/
+def checkPositiveSmallXplusYProductGcompCell (a N k : Nat) : Bool :=
+  decide (positiveXplusYProductGcompBound a N k ≤
+    positiveSmallXYProductTangentBound a N k)
+
+/-- Point check that the explicit `Gcomp` product bound fits the tempered
+target. -/
+def checkPositiveTemperedXplusYProductGcompCell (a N k : Nat) : Bool :=
+  decide (positiveXplusYProductGcompBound a N k ≤
+    positiveTemperedXYProductBound a N k)
+
+/-- Check all small-regime retained `k` for one `(a,N)`. -/
+def checkPositiveSmallXplusYProductGcompAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then checkPositiveSmallXplusYProductGcompCell a N k else true
+
+/-- Check all tempered-regime retained `k` for one `(a,N)`. -/
+def checkPositiveTemperedXplusYProductGcompAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if ceilSqrt N < k then checkPositiveTemperedXplusYProductGcompCell a N k else true
+
+/-- Row check for the small-regime explicit `Xplus*Y` product bound. -/
+def checkPositiveSmallXplusYProductGcompRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallXplusYProductGcompAtN a N
+
+/-- Row check for the tempered-regime explicit `Xplus*Y` product bound. -/
+def checkPositiveTemperedXplusYProductGcompRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveTemperedXplusYProductGcompAtN a N
+
+/-- Soundness of one small-regime explicit `Xplus*Y` product check. -/
+theorem positiveSmallXplusYProductGcompBound_of_checkCell {a N k : Nat}
+    (h : checkPositiveSmallXplusYProductGcompCell a N k = true) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k := by
+  exact of_decide_eq_true h
+
+/-- Soundness of one tempered-regime explicit `Xplus*Y` product check. -/
+theorem positiveTemperedXplusYProductGcompBound_of_checkCell {a N k : Nat}
+    (h : checkPositiveTemperedXplusYProductGcompCell a N k = true) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k := by
+  exact of_decide_eq_true h
+
+/-- Soundness of the small-regime product check at one `(a,N)`. -/
+theorem positiveSmallXplusYProductGcompBound_of_checkAtN
+    {a N k : Nat}
+    (h : checkPositiveSmallXplusYProductGcompAtN a N = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k := by
+  apply positiveSmallXplusYProductGcompBound_of_checkCell
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if x ≤ ceilSqrt N then checkPositiveSmallXplusYProductGcompCell a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompAtN] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [hsmall] using hx
+
+/-- Soundness of the tempered-regime product check at one `(a,N)`. -/
+theorem positiveTemperedXplusYProductGcompBound_of_checkAtN
+    {a N k : Nat}
+    (h : checkPositiveTemperedXplusYProductGcompAtN a N = true)
+    (hk : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k := by
+  apply positiveTemperedXplusYProductGcompBound_of_checkCell
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if ceilSqrt N < x then checkPositiveTemperedXplusYProductGcompCell a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompAtN] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [htempered] using hx
+
+/-- Soundness of a small-regime product row check. -/
+theorem positiveSmallXplusYProductGcompBound_of_checkRow
+    {a N k : Nat}
+    (h : checkPositiveSmallXplusYProductGcompRow a = true)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallXplusYProductGcompAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompRow] using h)
+  exact positiveSmallXplusYProductGcompBound_of_checkAtN
+    (hall N (mem_positiveNRangeList_of_rectangle hrect)) hk hsmall
+
+/-- Soundness of a tempered-regime product row check. -/
+theorem positiveTemperedXplusYProductGcompBound_of_checkRow
+    {a N k : Nat}
+    (h : checkPositiveTemperedXplusYProductGcompRow a = true)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveTemperedXplusYProductGcompAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompRow] using h)
+  exact positiveTemperedXplusYProductGcompBound_of_checkAtN
+    (hall N (mem_positiveNRangeList_of_rectangle hrect)) hk htempered
+
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
 `B_k Q_{a-k}/(N c_a) = (N/2) R_{k,a} 2^{-(a-k)} X_k Y_{a-k}`. -/
@@ -2969,6 +3175,31 @@ structure PositiveSaddleXplusTangentFullyCheckedRowsCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Fully row-checked `Xplus`/`Gcomp` positive-saddle interface.
+
+Compared with `PositiveSaddleXplusTangentFullyCheckedRowsCertificate`, the
+small and tempered saddle-product fields are replaced by executable row
+checks for the explicit `positiveXplusYProductGcompBound`.  The only
+non-finite field left is the entropy tail for `a > 2000`. -/
+structure PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate : Prop where
+  smallXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallXplusYProductGcompRow a = true
+  temperedXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveTemperedXplusYProductGcompRow a = true
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -3162,6 +3393,24 @@ theorem PositiveSaddleXplusTangentFullyCheckedRowsCertificate.toTangentFullyChec
     intro a N k ha ha2000 hrect hk htemp _hB
     exact Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
       (cert.temperedXplus ha ha2000 hrect hk htemp)
+  soloGcompRows := cert.soloGcompRows
+  edgeBudgetRows := cert.edgeBudgetRows
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate.toXplusTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleXplusTangentFullyCheckedRowsCertificate where
+  smallXplusTangent := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact (XplusYnorm_le_positiveXplusYProductGcompBound a N k).trans
+      (positiveSmallXplusYProductGcompBound_of_checkRow
+        (cert.smallXplusGcompRows ha ha2000) hrect hk hsmall)
+  smallTangentEdgeRows := cert.smallTangentEdgeRows
+  temperedXplus := by
+    intro a N k ha ha2000 hrect hk htempered
+    exact (XplusYnorm_le_positiveXplusYProductGcompBound a N k).trans
+      (positiveTemperedXplusYProductGcompBound_of_checkRow
+        (cert.temperedXplusGcompRows ha ha2000) hrect hk htempered)
   soloGcompRows := cert.soloGcompRows
   edgeBudgetRows := cert.edgeBudgetRows
   entropyTail := cert.entropyTail
@@ -3362,6 +3611,11 @@ theorem PositiveSaddleXplusTangentFullyCheckedRowsCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -3452,6 +3706,11 @@ theorem unorm_tail_of_positiveSaddleTangentFullyCheckedRowsCertificate
 
 theorem unorm_tail_of_positiveSaddleXplusTangentFullyCheckedRowsCertificate
     (cert : PositiveSaddleXplusTangentFullyCheckedRowsCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

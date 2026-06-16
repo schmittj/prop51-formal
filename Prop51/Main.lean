@@ -254,6 +254,15 @@ theorem coefficientNegativity_of_positiveSaddleXplusTangentFullyCheckedRowsCerti
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusTangentFullyCheckedRowsCertificate cert)
 
+/-- Final assembly from the row-checked `Xplus`/`Gcomp` tangent certificate,
+where the finite-window small/tempered saddle products, small edge, solo bound,
+and edge budget are all represented by row booleans. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRowsCertificate cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate

@@ -290,7 +290,13 @@ Status:
       `Xplus` side now also has its own linear/nonlinear split
       `Bplusq_eq_linear_BplusNonlinear_sum`, a `Gcomp` coefficient majorant,
       and the normalized executable upper bound
-      `positiveXplusGcompBound`.
+      `positiveXplusGcompBound`.  Combining this with the existing
+      `QqEplusGcompBound` gives the explicit product bound
+      `positiveXplusYProductGcompBound`, row checkers for the small tangent
+      and tempered product targets, and the stronger
+      `PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate`; in that
+      interface the finite window is reduced to boolean row checks plus the
+      separate entropy tail for `a > 2000`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
