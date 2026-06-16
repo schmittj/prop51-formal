@@ -5117,6 +5117,50 @@ theorem positiveLargeExpTemperedRatio_lt_one {a : Nat} (ha : 0 < a) :
     exact_mod_cast (by omega : 4 * a - 1 < 4 * a)
   simpa using hlt
 
+theorem positiveLargeExpTemperedRatio_margin {a : Nat} (ha : 0 < a) :
+    1 - positiveLargeExpTemperedRatio a =
+      1 / ((4 * a : Nat) : ℚ) := by
+  unfold positiveLargeExpTemperedRatio
+  have hden_pos : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  have hpred :
+      ((4 * a - 1 : Nat) : ℚ) + 1 = ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 4 * a - 1 + 1 = 4 * a)
+  field_simp [hden_pos.ne']
+  nlinarith
+
+theorem le_positiveLargeExpTemperedRatio_mul_of_mul_le
+    {a : Nat} {x y : ℚ} (ha : 0 < a)
+    (h :
+      ((4 * a : Nat) : ℚ) * x
+        ≤ ((4 * a - 1 : Nat) : ℚ) * y) :
+    x ≤ positiveLargeExpTemperedRatio a * y := by
+  have hden_pos : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  calc
+    x = (((4 * a : Nat) : ℚ) * x) / ((4 * a : Nat) : ℚ) := by
+          field_simp [hden_pos.ne']
+    _ ≤ (((4 * a - 1 : Nat) : ℚ) * y) / ((4 * a : Nat) : ℚ) :=
+          div_le_div_of_nonneg_right h (le_of_lt hden_pos)
+    _ = positiveLargeExpTemperedRatio a * y := by
+          unfold positiveLargeExpTemperedRatio
+          ring
+
+theorem le_mul_one_sub_positiveLargeExpTemperedRatio_of_mul_le
+    {a : Nat} {x budget : ℚ} (ha : 0 < a)
+    (h : ((4 * a : Nat) : ℚ) * x ≤ budget) :
+    x ≤ budget * (1 - positiveLargeExpTemperedRatio a) := by
+  have hden_pos : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  calc
+    x = (((4 * a : Nat) : ℚ) * x) / ((4 * a : Nat) : ℚ) := by
+          field_simp [hden_pos.ne']
+    _ ≤ budget / ((4 * a : Nat) : ℚ) :=
+          div_le_div_of_nonneg_right h (le_of_lt hden_pos)
+    _ = budget * (1 - positiveLargeExpTemperedRatio a) := by
+          rw [positiveLargeExpTemperedRatio_margin ha]
+          ring
+
 theorem positiveLargeExpTemperedLowerRatio_nonneg {a : Nat} :
     0 ≤ positiveLargeExpTemperedLowerRatio a :=
   positiveLargeExpTemperedRatio_nonneg
@@ -7777,6 +7821,116 @@ structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBound
           positiveTemperedLargeExp a (posKmax a)
         ≤ (positiveEdgeBudget / 4) *
           (1 - positiveLargeExpTemperedUpperReverseRatio a)
+
+/-- Denominator-cleared candidate split-tempered audit target.
+
+This is a still-more concrete wrapper around
+`PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate`.
+It unfolds the fixed ratios `1/2` and `(4a-1)/(4a)` and asks generated audits
+to prove the six remaining inequalities after clearing those simple
+denominators.  The conversion theorem below restores the public
+cross-multiplied certificate interface. -/
+structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate :
+    Prop where
+  smallRawStepDouble :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * (positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveSmallLargeExp a (r + 1))
+          ≤ positiveSmallLargeExp a r
+  smallFirstReserveQuarter :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ positiveEdgeBudget / 4
+  temperedLowerRawStepLinear :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveTemperedLargeExp a (r + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+              positiveTemperedLargeExp a r
+  temperedLowerFirstReserveLinear :
+    ∀ {a : Nat}, 2000 < a →
+      ((4 * a : Nat) : ℚ) *
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ positiveEdgeBudget / 4
+  temperedUpperReverseRawStepLinear :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1)
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedUpperLastReserveLinear :
+    ∀ {a : Nat}, 2000 < a →
+      ((4 * a : Nat) : ℚ) *
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (posKmax a)
+        ≤ positiveEdgeBudget / 4
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate where
+  smallRawStepCross := by
+    intro a r ha hr1 hrhi
+    unfold positiveLargeExpSmallRatio
+    nlinarith [cert.smallRawStepDouble ha hr1 hrhi]
+  smallFirstReserve := by
+    intro a ha
+    calc
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+          ≤ positiveEdgeBudget / 4 :=
+            cert.smallFirstReserveQuarter ha
+      _ = (positiveEdgeBudget / 2) *
+            (1 - positiveLargeExpSmallRatio a) := by
+            unfold positiveLargeExpSmallRatio
+            ring
+  temperedLowerRawStepCross := by
+    intro a r ha hrlo hrhi
+    simpa [positiveLargeExpTemperedLowerRatio] using
+      le_positiveLargeExpTemperedRatio_mul_of_mul_le
+        (a := a) (x :=
+          positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveTemperedLargeExp a (r + 1))
+        (y := positiveTemperedLargeExp a r)
+        (by omega : 0 < a)
+        (cert.temperedLowerRawStepLinear ha hrlo hrhi)
+  temperedLowerFirstReserve := by
+    intro a ha
+    simpa [positiveLargeExpTemperedLowerRatio] using
+      le_mul_one_sub_positiveLargeExpTemperedRatio_of_mul_le
+        (a := a)
+        (x :=
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1)))
+        (budget := positiveEdgeBudget / 4)
+        (by omega : 0 < a)
+        (cert.temperedLowerFirstReserveLinear ha)
+  temperedUpperReverseRawStepCross := by
+    intro a r ha hrlo hrhi
+    simpa [positiveLargeExpTemperedUpperReverseRatio] using
+      le_positiveLargeExpTemperedRatio_mul_of_mul_le
+        (a := a) (x := positiveTemperedLargeExp a (r - 1))
+        (y :=
+          positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r)
+        (by omega : 0 < a)
+        (cert.temperedUpperReverseRawStepLinear ha hrlo hrhi)
+  temperedUpperLastReserve := by
+    intro a ha
+    simpa [positiveLargeExpTemperedUpperReverseRatio] using
+      le_mul_one_sub_positiveLargeExpTemperedRatio_of_mul_le
+        (a := a)
+        (x :=
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (posKmax a))
+        (budget := positiveEdgeBudget / 4)
+        (by omega : 0 < a)
+        (cert.temperedUpperLastReserveLinear ha)
 
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
     (cert :
