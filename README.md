@@ -128,7 +128,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate in one Lean module.  Lean also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
-  index when whole-row `N` scans are too large.  When
+  index when whole-row `N` scans are too large; emit it with
+  `--strategy product-tangent-solo-n-chunked`.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

@@ -568,10 +568,15 @@ Status:
       certificate in one Lean module.  The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
-      `N`-chunk index; this records the local profiling result that
+      `N`-chunk index and is emitted with
+      `--strategy product-tangent-solo-n-chunked`; this records the local
+      profiling result that
       product/edge atoms are viable at one-row/one-`N` or one-row/one-`k`
       granularity, while tangent and solo whole-`N` row atoms remain too
-      large.
+      large.  A first probe of the new atom shape showed tangent fixed-`N`
+      and displayed-solo budget fixed-`N` atoms compile at single-point
+      granularity, but the displayed-solo saddle fixed-`N` atom is still the
+      next finite-computation bottleneck.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
