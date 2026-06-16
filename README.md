@@ -113,7 +113,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate` sibling
   keeps tangent checks at cell granularity, which is the practical shape when
   tangent row-range booleans are too large for `native_decide`; the same
-  script emits it with `--strategy cell-tangent`.  When
+  script emits it with `--strategy cell-tangent`.  The fully generated
+  `Prop51.PositiveSaddleFixedFiniteWindowChunkedTangentAuditCertificate`
+  additionally splits tangent by fixed row, `N`, and small-`k` chunks; use
+  `--strategy chunked-tangent` to emit that target.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

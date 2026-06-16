@@ -554,7 +554,10 @@ Status:
       still too large, the practical sibling
       `PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate` keeps the
       tangent proof at cell granularity; the script emits this with
-      `--strategy cell-tangent`.
+      `--strategy cell-tangent`.  The fully generated sibling
+      `PositiveSaddleFixedFiniteWindowChunkedTangentAuditCertificate` splits
+      tangent by fixed row, `N`, and small-`k` chunks and is emitted with
+      `--strategy chunked-tangent`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
