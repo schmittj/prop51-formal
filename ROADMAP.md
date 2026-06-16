@@ -565,7 +565,13 @@ Status:
       `--emit-single-chunk`; `--use-single-chunk-theorems` then assembles the
       final finite certificate from those names, while
       `--emit-single-chunk-suite` emits the atom theorems and assembled
-      certificate in one Lean module.
+      certificate in one Lean module.  The finer Lean endpoint
+      `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
+      also splits tangent and both displayed-solo finite checks by fixed
+      `N`-chunk index; this records the local profiling result that
+      product/edge atoms are viable at one-row/one-`N` or one-row/one-`k`
+      granularity, while tangent and solo whole-`N` row atoms remain too
+      large.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
