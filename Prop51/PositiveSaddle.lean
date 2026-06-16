@@ -387,6 +387,16 @@ def positiveEdgeMajorantSum (a : Nat) : ℚ :=
 /-- The positive-part target from paper §6. -/
 def positiveTarget : ℚ := 1 / 100000000
 
+/-- Lean's finite-envelope bookkeeping gives the solo term half of the
+`positiveTarget` budget.  This is intentionally looser than the TeX statement
+`2^{-a-1}Y_a(N) < exp(-0.49a)`; the latter will imply this budget with ample
+room once the solo saddle bound is formalized. -/
+def positiveSoloBudget : ℚ := positiveTarget / 2
+
+/-- The remaining half of the `positiveTarget` budget, reserved for the
+corrected two-edge finite scan. -/
+def positiveEdgeBudget : ℚ := positiveTarget / 2
+
 /-- The rational sign-lock margin left after the `2215/m²` error budget. -/
 def signLockMargin (m : Nat) : ℚ :=
   expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2
@@ -418,6 +428,32 @@ theorem positiveEnvelope_le_bound_of_solo
 
 theorem positiveTarget_pos : 0 < positiveTarget := by
   norm_num [positiveTarget]
+
+theorem positiveSoloBudget_nonneg : 0 ≤ positiveSoloBudget := by
+  norm_num [positiveSoloBudget, positiveTarget]
+
+theorem positiveEdgeBudget_nonneg : 0 ≤ positiveEdgeBudget := by
+  norm_num [positiveEdgeBudget, positiveTarget]
+
+theorem positiveSoloBudget_add_edgeBudget :
+    positiveSoloBudget + positiveEdgeBudget = positiveTarget := by
+  norm_num [positiveSoloBudget, positiveEdgeBudget, positiveTarget]
+
+theorem positiveEnvelopeBound_le_target_of_budgets
+    {a : Nat} {soloBound : ℚ}
+    (hsolo : soloBound ≤ positiveSoloBudget)
+    (hedge : positiveEdgeMajorantSum a ≤ positiveEdgeBudget) :
+    positiveEnvelopeBound a soloBound ≤ positiveTarget := by
+  unfold positiveEnvelopeBound
+  calc
+    soloBound + positiveEdgeMajorantSum a
+        ≤ positiveSoloBudget + positiveEdgeBudget := add_le_add hsolo hedge
+    _ = positiveTarget := positiveSoloBudget_add_edgeBudget
+
+theorem positiveEnvelopeBound_le_target_of_edgeBudget
+    {a : Nat} (hedge : positiveEdgeMajorantSum a ≤ positiveEdgeBudget) :
+    positiveEnvelopeBound a positiveSoloBudget ≤ positiveTarget :=
+  positiveEnvelopeBound_le_target_of_budgets le_rfl hedge
 
 theorem signLockMargin_pos_of_ge_361 {m : Nat} (hm : 361 ≤ m) :
     0 < signLockMargin m := by
@@ -1678,6 +1714,30 @@ structure PositiveSaddleScalarCertificate (soloBound : Nat → ℚ) : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Budgeted scalar-product interface for the remaining §6 work.
+
+Compared with `PositiveSaddleScalarCertificate`, this fixes the solo bound to
+the deliberately loose half-target budget and replaces the finite envelope
+field by the smaller corrected-edge scan obligation
+`positiveEdgeMajorantSum a ≤ positiveEdgeBudget`. -/
+structure PositiveSaddleScalarBudgetCertificate : Prop where
+  smallScalar :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveSmallScalarProductBound a k
+  temperedScalar :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveTemperedScalarProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -1692,6 +1752,18 @@ theorem PositiveSaddleScalarCertificate.toFactorCertificate
         (temperedRegime_of_rectangle hrect htemp))
   soloY := cert.soloY
   envelope := cert.envelope
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleScalarBudgetCertificate.toScalarCertificate
+    (cert : PositiveSaddleScalarBudgetCertificate) :
+    PositiveSaddleScalarCertificate (fun _ => positiveSoloBudget) where
+  smallScalar := cert.smallScalar
+  temperedScalar := cert.temperedScalar
+  soloY := cert.soloY
+  envelope := by
+    intro a ha ha2000
+    exact positiveEnvelopeBound_le_target_of_edgeBudget
+      (cert.edgeBudget ha ha2000)
   entropyTail := cert.entropyTail
 
 /-- A still more decomposed §6 interface: prove separate saddle bounds for
@@ -1820,6 +1892,11 @@ theorem PositiveSaddleScalarCertificate.toCertificate
     PositiveSaddleCertificate soloBound :=
   cert.toFactorCertificate.toCertificate
 
+theorem PositiveSaddleScalarBudgetCertificate.toCertificate
+    (cert : PositiveSaddleScalarBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toScalarCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -1865,6 +1942,11 @@ theorem unorm_tail_of_positiveSaddleFactorCertificate
 
 theorem unorm_tail_of_positiveSaddleScalarCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
+    (cert : PositiveSaddleScalarBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
