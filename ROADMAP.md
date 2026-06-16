@@ -359,7 +359,10 @@ Status:
       and tempered product targets, and the stronger
       `PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate`; in that
       interface the finite window is reduced to boolean row checks plus the
-      separate entropy tail for `a > 2000`.
+      separate entropy tail for `a > 2000`.  Lean also has full-range and
+      chunked range-certificate variants for generated finite-window proofs,
+      with `Prop51/PositiveSaddleChunks.lean` providing a default 100-row
+      cover of `401 ≤ a ≤ 2000`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
