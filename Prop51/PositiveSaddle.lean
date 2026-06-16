@@ -4855,6 +4855,137 @@ theorem positiveTemperedLargeExp_pos_of_large
     (positiveTemperedExponentUpper_nonneg hk1 hjpos)
     (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
 
+/-- Product-level target whose factored summand form is the small-branch
+large-exp entropy-shadow majorant after the reciprocal-binomial entropy
+replacement. -/
+def positiveSmallLargeGcompProductTarget (a N k : Nat) : ℚ :=
+  (130 / ((N : ℚ) * (posNhi a : ℚ))) *
+    ((k : ℚ) * (posJ a k : ℚ)) * positiveSmallLargeExp a k
+
+/-- Product-level target whose factored summand form is the tempered-branch
+large-exp entropy-shadow majorant after the reciprocal-binomial entropy
+replacement. -/
+def positiveTemperedLargeGcompProductTarget (a N k : Nat) : ℚ :=
+  (192 / ((N : ℚ) * (posNlo a : ℚ))) *
+    ((k : ℚ) * (posJ a k : ℚ)) * positiveTemperedLargeExp a k
+
+theorem positiveSmallLargeGcompProductTarget_nonneg
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) :
+    0 ≤ positiveSmallLargeGcompProductTarget a N k := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hExp : 0 ≤ positiveSmallLargeExp a k :=
+    positiveSmallLargeExp_nonneg_of_large ha hkRange
+  unfold positiveSmallLargeGcompProductTarget
+  positivity
+
+theorem positiveTemperedLargeGcompProductTarget_nonneg
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) :
+    0 ≤ positiveTemperedLargeGcompProductTarget a N k := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hExp : 0 ≤ positiveTemperedLargeExp a k :=
+    positiveTemperedLargeExp_nonneg_of_large ha hkRange
+  unfold positiveTemperedLargeGcompProductTarget
+  positivity
+
+theorem positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hkRange : k ∈ positiveKRange a)
+    (hproduct :
+      positiveXplusYProductGcompBound a N k
+        ≤ positiveSmallLargeGcompProductTarget a N k) :
+    positiveXplusYProductGcompFactoredTerm a N k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hbinom :
+      positiveBinomRatio a k ≤ positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large
+      (by omega : 20 ≤ a) hkRange
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveBinomRatio a k *
+          positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg
+      (mul_nonneg (by positivity) positiveBinomRatio_nonneg)
+      (positiveDyadicDecay_nonneg (posJ a k))
+  have hExp : 0 ≤ positiveSmallLargeExp a k :=
+    positiveSmallLargeExp_nonneg_of_large ha hkRange
+  have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_nonneg (posJ a k)
+  calc
+    positiveXplusYProductGcompFactoredTerm a N k
+        ≤ ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            positiveSmallLargeGcompProductTarget a N k := by
+          unfold positiveXplusYProductGcompFactoredTerm
+          exact mul_le_mul_of_nonneg_left hproduct hcommon
+    _ = (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+          positiveSmallLargeExp a k := by
+          unfold positiveSmallLargeGcompProductTarget
+          field_simp [hNQ.ne', hhi.ne']
+          ring
+    _ ≤ (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatioEntropyShadowPosJBound a k *
+          positiveDyadicDecay (posJ a k) * positiveSmallLargeExp a k := by
+          gcongr
+    _ = positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k := rfl
+
+theorem positiveXplusYProductGcompFactoredTerm_le_temperedEntropyShadowExp_of_product
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hkRange : k ∈ positiveKRange a)
+    (hproduct :
+      positiveXplusYProductGcompBound a N k
+        ≤ positiveTemperedLargeGcompProductTarget a N k) :
+    positiveXplusYProductGcompFactoredTerm a N k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hbinom :
+      positiveBinomRatio a k ≤ positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large
+      (by omega : 20 ≤ a) hkRange
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveBinomRatio a k *
+          positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg
+      (mul_nonneg (by positivity) positiveBinomRatio_nonneg)
+      (positiveDyadicDecay_nonneg (posJ a k))
+  have hExp : 0 ≤ positiveTemperedLargeExp a k :=
+    positiveTemperedLargeExp_nonneg_of_large ha hkRange
+  have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_nonneg (posJ a k)
+  calc
+    positiveXplusYProductGcompFactoredTerm a N k
+        ≤ ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            positiveTemperedLargeGcompProductTarget a N k := by
+          unfold positiveXplusYProductGcompFactoredTerm
+          exact mul_le_mul_of_nonneg_left hproduct hcommon
+    _ = (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+          positiveTemperedLargeExp a k := by
+          unfold positiveTemperedLargeGcompProductTarget
+          field_simp [hNQ.ne', hlo.ne']
+          ring
+    _ ≤ (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatioEntropyShadowPosJBound a k *
+          positiveDyadicDecay (posJ a k) *
+          positiveTemperedLargeExp a k := by
+          gcongr
+    _ = positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a k := rfl
+
 theorem posSmallCutoff_le_155 {a : Nat} (ha : a ≤ 2000) :
     posSmallCutoff a ≤ 155 := by
   unfold posSmallCutoff
@@ -6617,6 +6748,40 @@ structure PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate : Prop wh
   soloGcomp :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
       positiveSoloGcompBound a N ≤ positiveSoloBudget
+
+/-- Product-level version of the concrete large-exp pointwise certificate.
+
+This is one cancellation step closer to the saddle estimates: the two main
+fields compare only the explicit `Xplus*Y` `Gcomp` product bound with the
+large-tail product targets.  Lean then reattaches the common coefficient,
+dyadic, and entropy-binomial shell. -/
+structure PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate : Prop where
+  smallProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k
+  temperedProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k
+  soloGcomp :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveSoloGcompBound a N ≤ positiveSoloBudget
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toGcompPointwiseCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate) :
+    PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate where
+  smallGcomp := by
+    intro a N k ha hrect hk hsmall
+    exact positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
+      ha hrect hk (cert.smallProduct ha hrect hk hsmall)
+  temperedGcomp := by
+    intro a N k ha hrect hk htempered
+    exact positiveXplusYProductGcompFactoredTerm_le_temperedEntropyShadowExp_of_product
+      ha hrect hk (cert.temperedProduct ha hrect hk htempered)
+  soloGcomp := cert.soloGcomp
 
 theorem PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate.toPointwiseCertificate
     (cert : PositiveSaddleEntropyShadowLargeExpGcompPointwiseCertificate) :
