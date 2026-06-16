@@ -5485,6 +5485,12 @@ def signLockNearActual (N m : Nat) : ℚ :=
 def signLockNearBase (N m : Nat) : ℚ :=
   ∑ s ∈ Finset.range (m/3 + 1), signLockBaseSummand N m s
 
+def signLockBasePrefix (N m T : Nat) : ℚ :=
+  ∑ s ∈ Finset.range T, signLockBaseSummand N m s
+
+def signLockBaseTailFrom12 (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.Ico 12 (m/3 + 1), signLockBaseSummand N m s
+
 def signLockNearError (N m : Nat) : ℚ :=
   ∑ s ∈ Finset.range (m/3 + 1),
     ((-zetaQ N m)^s / (s.factorial : ℚ)) * signLockErrorW N m s
@@ -5510,6 +5516,16 @@ theorem signLockNearActual_eq_base_add_error
   have hs3 : 3*s ≤ m := three_mul_le_of_mem_near hs
   exact signLockActualSummand_eq_base_add_error
     (N := N) (m := m) (s := s) hN (by omega : s < m)
+
+theorem signLockNearBase_eq_prefix12_add_tail
+    (N : Nat) {m : Nat} (hm : 34 ≤ m) :
+    signLockNearBase N m =
+      signLockBasePrefix N m 12 + signLockBaseTailFrom12 N m := by
+  unfold signLockNearBase signLockBasePrefix signLockBaseTailFrom12
+  rw [Finset.range_eq_Ico,
+    ← Finset.sum_Ico_consecutive _ (Nat.zero_le 12)
+      (by omega : 12 ≤ m/3 + 1),
+    ← Finset.range_eq_Ico]
 
 theorem neg_Xnorm_eq_signLockNearBase_add_errors
     {N m : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) :
@@ -5671,6 +5687,18 @@ theorem signLock_final_margin_of_ge_361 {m : Nat} (hm : 361 ≤ m) :
     exact mul_le_mul_of_nonneg_left hpoly expNegLower50_pos.le
   exact lt_of_lt_of_le signLock_final_margin_endpoint hmono
 
+/-- The remaining alternating-base hypothesis can be proved from the first
+twelve terms plus a nonnegative paired tail.  This records the Lean form of
+the roadmap's "truncated alternating sum with parity trick" reduction. -/
+theorem signLockNearBase_lower_of_prefix12_tail
+    {N m : Nat} (hm : 361 ≤ m)
+    (hprefix :
+      expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12)
+    (htail : 0 ≤ signLockBaseTailFrom12 N m) :
+    expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockNearBase N m := by
+  rw [signLockNearBase_eq_prefix12_add_tail N (by omega : 34 ≤ m)]
+  linarith
+
 /-- Final §5 assembly, conditional only on the alternating-base lower bound.
 
 The TeX proof compresses this last step into the sign-lock discussion.  In
@@ -5698,5 +5726,18 @@ theorem Xnorm_le_neg_final_margin_of_signLockNearBase
     rw [hsplit]
     linarith
   linarith
+
+theorem Xnorm_le_neg_final_margin_of_signLockBasePrefix_tail
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hprefix :
+      expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12)
+    (htail : 0 ≤ signLockBaseTailFrom12 N m) :
+    Xnorm N m
+      ≤ -(expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2) :=
+  Xnorm_le_neg_final_margin_of_signLockNearBase
+    (N := N) (m := m) hN hN40 hm
+    (signLockNearBase_lower_of_prefix12_tail
+      (N := N) (m := m) hm hprefix htail)
 
 end Prop51

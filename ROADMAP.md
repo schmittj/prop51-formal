@@ -178,7 +178,9 @@ Status:
       now split as near alternating base + near signed error + far signed tail,
       and the completed error audit is connected to `Xnorm ≤ -margin`; the
       remaining §5 input is the alternating-base lower bound for
-      `signLockNearBase`.
+      `signLockNearBase`.  That input is now further reduced to the 12-term
+      prefix inequality `signLockBasePrefix ... 12` plus nonnegativity of the
+      paired tail `signLockBaseTailFrom12`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
@@ -205,7 +207,9 @@ Status:
       `Xnorm N m ≤ -signLockMargin m` supplies both the main `m = a`
       negative term and the large-`k` sign-lock exclusion.  A second bridge now
       consumes the remaining `signLockNearBase` lower-bound obligation
-      directly and produces the same large-`a` `Unorm < 0` conclusion.
+      directly and produces the same large-`a` `Unorm < 0` conclusion; a
+      sharper bridge exposes the 12-term prefix and paired-tail obligations
+      separately.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 
