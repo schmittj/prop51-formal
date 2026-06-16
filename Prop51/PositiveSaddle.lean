@@ -1474,6 +1474,80 @@ structure PositiveSaddleFactorCertificate (soloBound : Nat → ℚ) : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- A still more decomposed §6 interface: prove separate saddle bounds for
+`X_k(N)` and `Y_{a-k}(N)`, plus a purely scalar comparison from their product
+to the executable small/tempered majorant.  This matches the TeX proof split
+after the coefficient-ratio estimate has been inserted. -/
+structure PositiveSaddleXYCertificate
+    (soloBound : Nat → ℚ)
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ) : Prop where
+  smallX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k ≤ smallXBound a N k
+  smallY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ smallYBound a N k
+  smallProduct :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            smallXBound a N k * smallYBound a N k
+          ≤ positiveSmallMajorantTerm a k
+  temperedX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k ≤ temperedXBound a N k
+  temperedY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ temperedYBound a N k
+  temperedProduct :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            temperedXBound a N k * temperedYBound a N k
+          ≤ positiveTemperedMajorantTerm a k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEnvelopeBound a (soloBound a) ≤ positiveTarget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem PositiveSaddleXYCertificate.toFactorCertificate
+    {soloBound : Nat → ℚ}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleXYCertificate soloBound
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleFactorCertificate soloBound where
+  smallFactor := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact (positiveFactorizedRawTerm_le_of_XY_bounds hN (by omega : 2 ≤ a)
+      hk hB
+      (cert.smallX ha ha2000 hrect hk hsmall hB)
+      (cert.smallY ha ha2000 hrect hk hsmall hB)).trans
+      (cert.smallProduct ha ha2000 hrect hk hsmall hB)
+  temperedFactor := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact (positiveFactorizedRawTerm_le_of_XY_bounds hN (by omega : 2 ≤ a)
+      hk hB
+      (cert.temperedX ha ha2000 hrect hk htemp hB)
+      (cert.temperedY ha ha2000 hrect hk htemp hB)).trans
+      (cert.temperedProduct ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  envelope := cert.envelope
+  entropyTail := cert.entropyTail
+
 theorem PositiveSaddleFactorCertificate.toRawCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
     PositiveSaddleRawCertificate soloBound where
@@ -1521,6 +1595,15 @@ theorem PositiveSaddleFactorCertificate.toCertificate
     PositiveSaddleCertificate soloBound :=
   cert.toRawCertificate.toCertificate
 
+theorem PositiveSaddleXYCertificate.toCertificate
+    {soloBound : Nat → ℚ}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleXYCertificate soloBound
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleCertificate soloBound :=
+  cert.toFactorCertificate.toCertificate
+
 theorem Unorm_neg_of_positiveSaddleCertificate_finite
     {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound)
     {a N : Nat} (ha : 401 ≤ a) (ha2000 : a ≤ 2000)
@@ -1552,6 +1635,15 @@ theorem unorm_tail_of_positiveSaddleRawCertificate
 
 theorem unorm_tail_of_positiveSaddleFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXYCertificate
+    {soloBound : Nat → ℚ}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleXYCertificate soloBound
+      smallXBound smallYBound temperedXBound temperedYBound) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

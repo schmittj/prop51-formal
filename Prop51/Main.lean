@@ -197,4 +197,16 @@ theorem coefficientNegativity_of_positiveSaddleFactorCertificate
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleFactorCertificate cert)
 
+/-- Final assembly from the decomposed `X`/`Y` saddle-bound version of the
+§6 positive-saddle certificate. -/
+theorem coefficientNegativity_of_positiveSaddleXYCertificate
+    {soloBound : Nat → ℚ}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleXYCertificate soloBound
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXYCertificate cert)
+
 end Prop51
