@@ -600,7 +600,8 @@ Status:
       solo, adjacent-step, and unit-reserve subtargets and then reassembles
       the existing `PositiveSaddleLargeTailAuditCertificate`.  This is not a
       mathematical change, but it gives the remaining analytic proof work
-      smaller Lean interfaces.
+      smaller Lean interfaces.  The finite generator emits final theorems
+      against this split interface with `--emit-final --final-tail-parts`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

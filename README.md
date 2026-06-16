@@ -155,7 +155,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   product-small, product-tempered, solo, adjacent-step, and unit-reserve
   analytic targets before reassembling the existing
   `Prop51.PositiveSaddleLargeTailAuditCertificate`.  This is only a
-  proof-production decomposition of the same inequalities.  When
+  proof-production decomposition of the same inequalities.  The finite
+  generator can target this split final-theorem interface with
+  `--emit-final --final-tail-parts`.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
