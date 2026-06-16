@@ -102,6 +102,54 @@ theorem positiveSaddleDefaultChunks_cover :
                                 · omega
                                 · omega
 
+/-- Fixed-width row chunks covering the finite positive-saddle window
+`401 ≤ a ≤ 2000`.
+
+The final chunk may overrun `2000`; row-range checkers only need the cover
+property for rows inside the finite window. -/
+def positiveSaddleFixedRowChunks (rowLen : Nat) : List (Nat × Nat) :=
+  if rowLen = 0 then []
+  else
+    (List.range ((1600 + rowLen - 1) / rowLen)).map fun i =>
+      (401 + rowLen * i, rowLen)
+
+theorem positiveSaddleFixedRowChunks_cover {rowLen : Nat}
+    (hrowLen : 0 < rowLen) :
+    PositiveSaddleFiniteWindowChunkCover
+      (positiveSaddleFixedRowChunks rowLen) := by
+  intro a ha h2000
+  let off := a - 401
+  let i := off / rowLen
+  have hoff_add : 401 + off = a := by
+    dsimp [off]
+    exact Nat.add_sub_of_le ha
+  have hoff_lt : off < 1600 := by
+    omega
+  have hceil_mul :
+      1600 ≤ ((1600 + rowLen - 1) / rowLen) * rowLen := by
+    have hmod := Nat.mod_lt (1600 + rowLen - 1) hrowLen
+    have hdiv := Nat.div_add_mod (1600 + rowLen - 1) rowLen
+    have hdiv' :
+        ((1600 + rowLen - 1) / rowLen) * rowLen +
+            (1600 + rowLen - 1) % rowLen =
+          1600 + rowLen - 1 := by
+      simpa [Nat.mul_comm] using hdiv
+    omega
+  have hi_lt : i < (1600 + rowLen - 1) / rowLen := by
+    rw [Nat.div_lt_iff_lt_mul hrowLen]
+    exact hoff_lt.trans_le hceil_mul
+  refine ⟨(401 + rowLen * i, rowLen), ?_, ?_, ?_⟩
+  · unfold positiveSaddleFixedRowChunks
+    rw [if_neg hrowLen.ne']
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi_lt, rfl⟩
+  · have hdiv_le : rowLen * i ≤ off := by
+      simpa [i] using Nat.mul_div_le off rowLen
+    omega
+  · have hmod_lt : off % rowLen < rowLen := Nat.mod_lt off hrowLen
+    have hdiv_add : rowLen * i + off % rowLen = off := by
+      simpa [i] using Nat.div_add_mod off rowLen
+    omega
+
 /-- Every default finite-window chunk starts inside the proved finite window. -/
 theorem positiveSaddleDefaultChunks_lo_ge_401
     {chunk : Nat × Nat} (hchunk : chunk ∈ positiveSaddleDefaultChunks) :
@@ -3145,6 +3193,46 @@ structure PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksP
   candidateSplitTemperedRawClearedUnitReserve :
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
 
+/-- Fully fixed-width product-chunk wrapper.
+
+The generated product side is controlled by two positive lengths: `rowLen`
+for the product row chunks and `nLen` for each row's `N` chunks.  The product
+row cover is supplied by `positiveSaddleFixedRowChunks_cover`. -/
+structure PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (rowLen nLen : Nat) :
+    Prop where
+  rowLenPos : 0 < rowLen
+  nLenPos : 0 < nLen
+  smallXYProductRawClearedTableProductRowRangeKChunks :
+    ∀ {rowChunk : Nat × Nat}, rowChunk ∈ positiveSaddleFixedRowChunks rowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveSmallXYProductRawClearedTableFixedNChunksRowRangeKChunk
+          nLen rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2 = true
+  temperedXYProductRawClearedTableProductRowRangeKChunks :
+    ∀ {rowChunk : Nat × Nat}, rowChunk ∈ positiveSaddleFixedRowChunks rowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveTemperedXYProductRawClearedTableFixedNChunksRowRangeKChunk
+          nLen rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2 = true
+  smallTangentExpEdgeChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true
+  soloYSaddleClearedChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloDisplayedYSaddleClearedRange chunk.1 chunk.2 = true
+  soloYBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true
+  edgeKChunkUnitRowRanges :
+    ∀ {rowChunk : Nat × Nat}, rowChunk ∈ positiveSaddleDefaultChunks →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnitRowRange
+          rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+            (fun _ => positiveEdgeUniformScaleMin) = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
 /-- Table-backed exact raw-product wrapper with the remaining finite
 tangent and edge checks also chunked.
 
@@ -3608,6 +3696,63 @@ theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableF
     (cert :
       PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksProductRowChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
         productRowChunks nLen) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
+    cert.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toProductRowChunksAuditCertificate
+    {rowLen nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        rowLen nLen) :
+    PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksProductRowChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+      (positiveSaddleFixedRowChunks rowLen) nLen where
+  productRowChunksCover := positiveSaddleFixedRowChunks_cover cert.rowLenPos
+  nLenPos := cert.nLenPos
+  smallXYProductRawClearedTableProductRowRangeKChunks :=
+    cert.smallXYProductRawClearedTableProductRowRangeKChunks
+  temperedXYProductRawClearedTableProductRowRangeKChunks :=
+    cert.temperedXYProductRawClearedTableProductRowRangeKChunks
+  smallTangentExpEdgeChunks := cert.smallTangentExpEdgeChunks
+  soloYSaddleClearedChunks := cert.soloYSaddleClearedChunks
+  soloYBudgetChunks := cert.soloYBudgetChunks
+  edgeKChunkUnitRowRanges := cert.edgeKChunkUnitRowRanges
+  productPointwiseYRawUnitSolo := cert.productPointwiseYRawUnitSolo
+  candidateSplitTemperedRawClearedUnitReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    {rowLen nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        rowLen nLen) :
+    PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+      (positiveProductFixedNChunks nLen) :=
+  cert.toProductRowChunksAuditCertificate
+    |>.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toTangentProductBudgetCertificate
+    {rowLen nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        rowLen nLen) :
+    PositiveSaddleTangentProductBudgetCertificate :=
+  cert.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    |>.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toCertificate
+    {rowLen nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        rowLen nLen) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentProductBudgetCertificate.toCertificate
+
+theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {rowLen nLen : Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedRowNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        rowLen nLen) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate

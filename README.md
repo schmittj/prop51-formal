@@ -95,7 +95,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   capstone packages row-range product checks using
   `Prop51.positiveProductFixedNChunks`; its final `N` chunk may harmlessly
   overrun the positive rectangle, and the product row cover can be finer than
-  the default 100-row chunks used elsewhere.  The fully parameterized
+  the default 100-row chunks used elsewhere.  When a common product row length
+  and `N` length are enough, the
+  `RawProductTableFixedRowNChunksTangentEdgeChunksFixedScale...` capstone
+  also supplies the product row cover from `Prop51.positiveSaddleFixedRowChunks`.
+  The fully parameterized
   `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone is
   available for custom row-dependent `N` chunk families.
   The older
