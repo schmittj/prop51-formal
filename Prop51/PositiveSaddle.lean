@@ -85,6 +85,21 @@ in the rectangle.  This is the corrected `ceil(sqrt(6a-7))` edge from
 `scripts/positive_saddle_scan.py`. -/
 def posTemperedCutoff (a : Nat) : Nat := ceilSqrt (posNlo a)
 
+/-- The possible values of `ceilSqrt N` as `N` ranges over the positive
+rectangle for a fixed `a`. -/
+def positiveSmallCeilRange (a : Nat) : Finset Nat :=
+  Finset.Icc (posTemperedCutoff a) (posSmallCutoff a)
+
+/-- The first natural number in the plateau with ceiling square root `s`. -/
+def ceilSqrtPlateauLo (s : Nat) : Nat :=
+  if s = 0 then 0 else (s - 1)^2 + 1
+
+/-- The first `N` in the positive rectangle with a given ceiling-square-root
+plateau.  Finite checks at this anchor imply the same small-edge exponential
+gap throughout that plateau, because the right side is linear in `N`. -/
+def positiveSmallEdgeAnchor (a s : Nat) : Nat :=
+  max (posNlo a) (ceilSqrtPlateauLo s)
+
 theorem posNlo_le_posNhi {a : Nat} (ha : 1 ≤ a) :
     posNlo a ≤ posNhi a := by
   unfold posNlo posNhi
@@ -133,6 +148,29 @@ theorem temperedRegime_of_rectangle {a N k : Nat}
     (hrect : positiveRectangle a N) (hk : ceilSqrt N < k) :
     posTemperedCutoff a < k :=
   lower_edge_lt_of_temperedRegime hrect.1 hk
+
+/-- The actual `ceilSqrt N` lies in the finite plateau range for the rectangle. -/
+theorem ceilSqrt_mem_positiveSmallCeilRange_of_rectangle {a N : Nat}
+    (hrect : positiveRectangle a N) :
+    ceilSqrt N ∈ positiveSmallCeilRange a := by
+  simp [positiveSmallCeilRange, posTemperedCutoff, posSmallCutoff]
+  exact ⟨ceilSqrt_mono hrect.1, ceilSqrt_mono hrect.2⟩
+
+/-- The lower endpoint of the `ceilSqrt` plateau containing `N` is at most
+`N`. -/
+theorem ceilSqrtPlateauLo_le_self (N : Nat) :
+    ceilSqrtPlateauLo (ceilSqrt N) ≤ N := by
+  rcases N with _ | n
+  · simp [ceilSqrtPlateauLo]
+  · simpa [ceilSqrt, ceilSqrtPlateauLo, pow_two] using
+      Nat.succ_le_succ (Nat.sqrt_le n)
+
+/-- The rectangle-and-plateau anchor attached to `N` is at most `N`. -/
+theorem positiveSmallEdgeAnchor_le_of_rectangle {a N : Nat}
+    (hrect : positiveRectangle a N) :
+    positiveSmallEdgeAnchor a (ceilSqrt N) ≤ N := by
+  unfold positiveSmallEdgeAnchor
+  exact max_le hrect.1 (ceilSqrtPlateauLo_le_self N)
 
 /-! ## The retained `k ≤ 0.9a` range -/
 
@@ -300,6 +338,15 @@ def positiveSmallExponentAt (a N k : Nat) : ℚ :=
     + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
     + 1
 
+/-- Small-regime exponent with the ceiling-square-root value supplied
+explicitly.  This is the finite plateau-check form of
+`positiveSmallExponentAt`. -/
+def positiveSmallExponentWithCeil (a s k : Nat) : ℚ :=
+  (1139/1000) * (s : ℚ)
+    + (1/5) * (posJ a k : ℚ)
+    + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
+    + 1
+
 /-- Rational upper exponent for the tempered edge formula. -/
 def positiveTemperedExponentUpper (a k : Nat) : ℚ :=
   (1/5) * (a : ℚ)
@@ -401,6 +448,15 @@ def positiveSmallExpEdgeGap (a N k : Nat) : Prop :=
     (N : ℚ) *
       partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
 
+/-- Plateau-anchor form of `positiveSmallExpEdgeGap`, checking the worst `N`
+for a fixed ceiling-square-root value `s`. -/
+def positiveSmallExpEdgeGapAtCeil (a s k : Nat) : Prop :=
+  (posNhi a : ℚ) *
+      partialExpUpper (positiveSmallExponentWithCeil a s k) positiveExpCutoff
+    ≤
+    (positiveSmallEdgeAnchor a s : ℚ) *
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
 /-! ### Displayed `X`/`Y` saddle-bound shapes -/
 
 /-- The small-regime `X_k(N)` exponent from the TeX display. -/
@@ -486,6 +542,12 @@ theorem positiveSmallExponentAt_eq_smallX_add_Y (a N k : Nat) :
     positiveSmallExponentAt a N k =
       positiveSmallXExponentAt N + positiveYExponent a (posJ a k) := by
   unfold positiveSmallExponentAt positiveSmallXExponentAt positiveYExponent
+  ring
+
+theorem positiveSmallExponentAt_eq_withCeil (a N k : Nat) :
+    positiveSmallExponentAt a N k =
+      positiveSmallExponentWithCeil a (ceilSqrt N) k := by
+  unfold positiveSmallExponentAt positiveSmallExponentWithCeil
   ring
 
 theorem positiveSmallExponentUpper_eq_smallX_add_Y (a k : Nat) :
@@ -1629,6 +1691,45 @@ theorem positiveSmallXYProductAtBound_le_bound_of_expGap {a N k : Nat}
           (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup := by
           field_simp [hNne, hhiNe]
 
+/-- A plateau-anchor check implies the actual small exponential-gap check at
+every `N` in that plateau. -/
+theorem positiveSmallExpEdgeGap_of_anchor {a N k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hanchor : positiveSmallExpEdgeGapAtCeil a (ceilSqrt N) k) :
+    positiveSmallExpEdgeGap a N k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hEup :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveSmallExponentUpper_nonneg hjpos)
+      (positiveSmallExponentUpper_lt_expCutoff (by omega : 1 ≤ a) ha2000 hkmax)
+  have hanchor_le :
+      (positiveSmallEdgeAnchor a (ceilSqrt N) : ℚ) ≤ (N : ℚ) := by
+    exact_mod_cast positiveSmallEdgeAnchor_le_of_rectangle hrect
+  have hright :
+      (positiveSmallEdgeAnchor a (ceilSqrt N) : ℚ) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+        ≤
+        (N : ℚ) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff :=
+    mul_le_mul_of_nonneg_right hanchor_le hEup
+  unfold positiveSmallExpEdgeGap at *
+  rw [positiveSmallExponentAt_eq_withCeil]
+  exact hanchor.trans hright
+
+/-- Plateau-anchor form of the small finite-edge replacement. -/
+theorem positiveSmallXYProductAtBound_le_bound_of_anchorGap {a N k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hanchor : positiveSmallExpEdgeGapAtCeil a (ceilSqrt N) k) :
+    positiveSmallXYProductAtBound a N k ≤ positiveSmallXYProductBound a N k :=
+  positiveSmallXYProductAtBound_le_bound_of_expGap
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
+    (positiveSmallExpEdgeGap_of_anchor ha401 ha2000 hrect hk hanchor)
+
 theorem positiveTemperedXYProductBound_nonneg {a N k : Nat}
     (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
     (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
@@ -2283,6 +2384,34 @@ structure PositiveSaddleAtExpBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Plateau-anchor version of the actual-`N` positive-saddle certificate.
+
+The `smallExpEdgeAnchor` field ranges over the possible values
+`s = ceilSqrt N`, not over every `N` in the rectangle.  This records the
+monotonicity reduction that the worst point in each `ceilSqrt` plateau is the
+anchor `positiveSmallEdgeAnchor a s`. -/
+structure PositiveSaddleAtAnchorBudgetCertificate : Prop where
+  smallXYAt :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductAtBound a N k
+  smallExpEdgeAnchor :
+    ∀ {a s k : Nat}, 401 ≤ a → a ≤ 2000 →
+      s ∈ positiveSmallCeilRange a → k ∈ positiveKRange a → k ≤ s →
+        positiveSmallExpEdgeGapAtCeil a s k
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -2349,6 +2478,20 @@ theorem PositiveSaddleAtExpBudgetCertificate.toAtProductBudgetCertificate
     exact positiveSmallXYProductAtBound_le_bound_of_expGap
       (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
       (cert.smallExpEdge ha ha2000 hrect hk hsmall)
+  temperedXY := cert.temperedXY
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleAtAnchorBudgetCertificate.toAtExpBudgetCertificate
+    (cert : PositiveSaddleAtAnchorBudgetCertificate) :
+    PositiveSaddleAtExpBudgetCertificate where
+  smallXYAt := cert.smallXYAt
+  smallExpEdge := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact positiveSmallExpEdgeGap_of_anchor ha ha2000 hrect hk
+      (cert.smallExpEdgeAnchor ha ha2000
+        (ceilSqrt_mem_positiveSmallCeilRange_of_rectangle hrect) hk hsmall)
   temperedXY := cert.temperedXY
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
@@ -2500,6 +2643,11 @@ theorem PositiveSaddleAtExpBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toAtProductBudgetCertificate.toCertificate
 
+theorem PositiveSaddleAtAnchorBudgetCertificate.toCertificate
+    (cert : PositiveSaddleAtAnchorBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toAtExpBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2565,6 +2713,11 @@ theorem unorm_tail_of_positiveSaddleAtProductBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleAtExpBudgetCertificate
     (cert : PositiveSaddleAtExpBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleAtAnchorBudgetCertificate
+    (cert : PositiveSaddleAtAnchorBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

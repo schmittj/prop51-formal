@@ -269,6 +269,11 @@ Status:
       `checkPositiveEdgeBudgetRow`/`checkPositiveEdgeBudgetRange` and soundness
       lemmas for the finite corrected-edge budget, intended for generated row
       chunks or a faster checker rather than one monolithic direct evaluation.
+      The small edge has an additional `ceilSqrt` plateau reduction:
+      `PositiveSaddleAtAnchorBudgetCertificate` asks only for
+      `positiveSmallExpEdgeGapAtCeil` at the anchor
+      `positiveSmallEdgeAnchor a s`, where
+      `s ∈ positiveSmallCeilRange a`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
