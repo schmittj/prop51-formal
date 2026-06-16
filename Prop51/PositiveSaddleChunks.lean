@@ -2869,6 +2869,52 @@ structure PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChu
   candidateSplitTemperedRawClearedUnitReserve :
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
 
+/-- Table-backed exact raw-product wrapper for arbitrary generated `N` chunks,
+with tangent and edge checks chunked and the edge scale fixed.
+
+Generated certificates can instantiate `productNChunks` with coarser
+row-dependent `N` chunks than the built-in singleton cover, while retaining
+the same default row chunks for tangent/solo and the same fixed-scale edge
+row chunks. -/
+structure PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (productNChunks : Nat → List (Nat × Nat)) :
+    Prop where
+  productNChunksCover :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      ∃ chunk : Nat × Nat,
+        chunk ∈ productNChunks a ∧ N ∈ List.range' chunk.1 chunk.2
+  smallXYProductRawClearedTableChunks :
+    ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      nChunk ∈ productNChunks a →
+      kChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+          a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true
+  temperedXYProductRawClearedTableChunks :
+    ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      nChunk ∈ productNChunks a →
+      kChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+          a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true
+  smallTangentExpEdgeChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true
+  soloYSaddleClearedChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloDisplayedYSaddleClearedRange chunk.1 chunk.2 = true
+  soloYBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true
+  edgeKChunkUnitRowRanges :
+    ∀ {rowChunk : Nat × Nat}, rowChunk ∈ positiveSaddleDefaultChunks →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnitRowRange
+          rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+            (fun _ => positiveEdgeUniformScaleMin) = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
 /-- Table-backed exact raw-product wrapper with the remaining finite
 tangent and edge checks also chunked.
 
@@ -3208,6 +3254,81 @@ theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableS
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productNChunks) :
+    PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+      productNChunks :=
+  positiveSaddleRawProductTableChunkedDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    cert.productNChunksCover
+    cert.smallXYProductRawClearedTableChunks
+    cert.temperedXYProductRawClearedTableChunks
+    (by
+      intro a N k ha h2000 hrect hk hsmall
+      have hrow : checkPositiveSmallTangentExpEdgeRow a = true := by
+        exact checkPositiveSmallTangentExpEdgeRow_of_checkRangeChunks
+          cert.smallTangentExpEdgeChunks
+          (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+      exact decide_eq_true
+        (positiveSmallTangentExpEdgeGap_of_checkRow hrow hrect hk hsmall))
+    cert.soloYSaddleClearedChunks
+    cert.soloYBudgetChunks
+    (fun _ => positiveEdgeUniformScaleMin)
+    (fun {_a} _ha _h2000 => le_rfl)
+    (fun {_a} {chunk} ha h2000 hchunk =>
+      checkPositiveEdgeMajorantKChunkUnit_of_defaultRowChunks
+        cert.edgeKChunkUnitRowRanges ha h2000 hchunk)
+    cert.productPointwiseYRawUnitSolo
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toTangentProductBudgetCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productNChunks) :
+    PositiveSaddleTangentProductBudgetCertificate :=
+  cert.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    |>.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productNChunks) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentProductBudgetCertificate.toCertificate
+
+theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productNChunks) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
+    cert.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableNChunksAuditCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+      positiveProductSingletonNChunks where
+  productNChunksCover := by
+    intro _a _N _ha _h2000 hrect
+    exact positiveProductSingletonNChunks_cover hrect
+  smallXYProductRawClearedTableChunks :=
+    cert.smallXYProductRawClearedTableChunks
+  temperedXYProductRawClearedTableChunks :=
+    cert.temperedXYProductRawClearedTableChunks
+  smallTangentExpEdgeChunks := cert.smallTangentExpEdgeChunks
+  soloYSaddleClearedChunks := cert.soloYSaddleClearedChunks
+  soloYBudgetChunks := cert.soloYBudgetChunks
+  edgeKChunkUnitRowRanges := cert.edgeKChunkUnitRowRanges
+  productPointwiseYRawUnitSolo := cert.productPointwiseYRawUnitSolo
+  candidateSplitTemperedRawClearedUnitReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
 
 theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableSingletonNChunksAuditCertificate
     (cert :

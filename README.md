@@ -92,8 +92,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   provides a built-in singleton `N`-cover, and the concrete
   `RawProductTableSingletonNChunksTangentEdgeChunksFixedScale...` capstone
   combines that product cover with the tangent-edge, displayed-solo, edge,
-  and large-tail chunk fields.  Larger generated
-  `N` chunks can instantiate the same parameterized certificate directly.  The older
+  and large-tail chunk fields.  Larger generated `N` chunks can instantiate
+  the parameterized
+  `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone directly.
+  The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but
   that route is too strong for the finite window: direct checks already fail

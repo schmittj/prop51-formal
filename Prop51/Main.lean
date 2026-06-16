@@ -856,6 +856,19 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawPr
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate
 
+/-- Final assembly from the parameterized table-backed exact-product route
+whose generated finite product side may use arbitrary row-dependent `N`
+chunks, while tangent, displayed-solo, and edge checks use the default
+fixed-scale chunk interfaces. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        productNChunks) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    cert.toTangentProductBudgetCertificate
+
 /-- Final assembly from the currently lowest-level default finite-window
 route: product checks, tangent-edge checks, and displayed-solo checks are all
 split over the default 100-row chunks, with denominator-cleared finite product

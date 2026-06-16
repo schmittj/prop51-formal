@@ -393,7 +393,9 @@ Status:
       also chunks tangent-edge checks over the default row chunks and uses
       row-chunked edge checks at the fixed scale
       `positiveEdgeUniformScaleMin`.  Larger generated `N` chunks can use
-      the parameterized certificate directly.
+      the parameterized
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      directly.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
@@ -487,7 +489,10 @@ Status:
       has a still more concrete fixed-scale/chunked-edge sibling,
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       which is now the preferred finite-window endpoint when no larger `N`
-      chunks have been generated.
+      chunks have been generated.  If product chunks are generated in larger
+      row-dependent `N` intervals, use the parameterized
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      endpoint instead.
       The fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
