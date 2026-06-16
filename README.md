@@ -70,7 +70,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   additionally splits the finite solo input into the TeX-shaped
   `Ynorm N a ≤ positiveYBound a N a` saddle bound and a unit-scaled rational
   budget check; the `DisplayedSoloChunks` sibling uses the same default
-  100-row chunks for that budget check.
+  100-row chunks for that budget check.  The
+  `DisplayedSoloClearedChunks` sibling is the current lowest-level finite
+  solo audit target: it also chunks the denominator-cleared displayed
+  `Y_a(N)` saddle inequality.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.

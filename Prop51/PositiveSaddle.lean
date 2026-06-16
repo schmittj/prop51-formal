@@ -2029,6 +2029,36 @@ def checkPositiveSoloDisplayedYBoundRange (lo len : Nat) : Bool :=
 def checkPositiveSoloDisplayedYBoundUnitRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveSoloDisplayedYBoundUnitRow
 
+/-- Denominator-cleared form of the displayed `Y_a(N)` saddle inequality
+used by the finite solo route.
+
+For `N > 0` and `a > 0`, this is equivalent to
+`Ynorm N a ≤ positiveYBound a N a`, but avoids the normalizing denominator
+inside `Ynorm`. -/
+def positiveSoloDisplayedYSaddleCleared (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * Qq N a ≤
+    29 * (a : ℚ) * c a *
+      partialExpUpper (positiveYExponent a a) positiveExpCutoff
+
+/-- Boolean point check for the denominator-cleared displayed `Y_a(N)`
+saddle inequality. -/
+def checkPositiveSoloDisplayedYSaddleClearedCell (a N : Nat) : Bool :=
+  decide
+    ((4 : ℚ) * (2 : ℚ)^a * Qq N a ≤
+      29 * (a : ℚ) * c a *
+        partialExpUpper (positiveYExponent a a) positiveExpCutoff)
+
+/-- Row check for the denominator-cleared displayed `Y_a(N)` saddle
+inequality over every `N` in the positive rectangle at fixed `a`. -/
+def checkPositiveSoloDisplayedYSaddleClearedRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSoloDisplayedYSaddleClearedCell a N
+
+/-- Range check for the denominator-cleared displayed `Y_a(N)` saddle
+inequality over `a ∈ [lo, lo+len)`. -/
+def checkPositiveSoloDisplayedYSaddleClearedRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSoloDisplayedYSaddleClearedRow
+
 theorem normalizedSoloTerm_le_positiveSoloGcompBound
     {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
     normalizedSoloTerm a N ≤ positiveSoloGcompBound a N := by
@@ -2053,6 +2083,39 @@ theorem dyadic_Ynorm_le_positiveSoloDisplayedYBound
   exact mul_le_mul_of_nonneg_left hY
     (div_nonneg (positiveDyadicDecay_nonneg a) (by norm_num : (0 : ℚ) ≤ 2))
 
+/-- Soundness of the denominator-cleared displayed `Y_a(N)` saddle
+inequality. -/
+theorem Ynorm_le_positiveYBound_of_positiveSoloDisplayedYSaddleCleared
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (h : positiveSoloDisplayedYSaddleCleared a N) :
+    Ynorm N a ≤ positiveYBound a N a := by
+  unfold positiveSoloDisplayedYSaddleCleared at h
+  unfold Ynorm positiveYBound
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hca : 0 < c a := c_pos a ha
+  have hpow : 0 < (2 : ℚ)^a := by positivity
+  have hdenpos : 0 < ((N : ℚ) / 2) * c a / (2 : ℚ)^a := by
+    positivity
+  rw [div_le_iff₀ hdenpos]
+  have hscale : 0 < (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hQ :
+      Qq N a ≤
+        (29 * (a : ℚ) * c a *
+            partialExpUpper (positiveYExponent a a) positiveExpCutoff) /
+          ((4 : ℚ) * (2 : ℚ)^a) := by
+    rw [le_div_iff₀ hscale]
+    simpa [mul_assoc, mul_left_comm, mul_comm] using h
+  calc
+    Qq N a
+        ≤ (29 * (a : ℚ) * c a *
+            partialExpUpper (positiveYExponent a a) positiveExpCutoff) /
+            ((4 : ℚ) * (2 : ℚ)^a) := hQ
+    _ = (29 / 2 * ((a : ℚ) / (N : ℚ)) *
+          partialExpUpper (positiveYExponent a a) positiveExpCutoff) *
+          (((N : ℚ) / 2) * c a / (2 : ℚ)^a) := by
+        field_simp [ne_of_gt hNQ, ne_of_gt hpow]
+        ring
+
 /-- Soundness of one executable solo-bound point check. -/
 theorem positiveSoloGcompBound_of_checkCell {a N : Nat}
     (h : checkPositiveSoloGcompCell a N = true) :
@@ -2076,6 +2139,15 @@ theorem positiveSoloDisplayedYBound_of_checkUnitCell {a N : Nat}
     (h : checkPositiveSoloDisplayedYBoundUnitCell a N = true) :
     positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
   exact le_positiveSoloBudget_of_mul_200000000_le_one (of_decide_eq_true h)
+
+/-- Soundness of one denominator-cleared displayed `Y_a(N)` saddle point
+check. -/
+theorem positiveSoloDisplayedYSaddleCleared_of_checkCell {a N : Nat}
+    (h : checkPositiveSoloDisplayedYSaddleClearedCell a N = true) :
+    positiveSoloDisplayedYSaddleCleared a N := by
+  unfold checkPositiveSoloDisplayedYSaddleClearedCell at h
+  unfold positiveSoloDisplayedYSaddleCleared
+  exact of_decide_eq_true h
 
 /-- Soundness of one executable solo-bound row check. -/
 theorem positiveSoloGcompBound_of_checkRow {a N : Nat}
@@ -2114,6 +2186,19 @@ theorem positiveSoloDisplayedYBound_of_checkUnitRow {a N : Nat}
         checkPositiveSoloDisplayedYBoundUnitCell a x = true := by
     exact List.all_eq_true.mp (by
       simpa [checkPositiveSoloDisplayedYBoundUnitRow] using h)
+  exact hall N (mem_positiveNRangeList_of_rectangle hrect)
+
+/-- Soundness of one denominator-cleared displayed `Y_a(N)` saddle row check. -/
+theorem positiveSoloDisplayedYSaddleCleared_of_checkRow {a N : Nat}
+    (h : checkPositiveSoloDisplayedYSaddleClearedRow a = true)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYSaddleCleared a N := by
+  apply positiveSoloDisplayedYSaddleCleared_of_checkCell
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSoloDisplayedYSaddleClearedCell a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYSaddleClearedRow] using h)
   exact hall N (mem_positiveNRangeList_of_rectangle hrect)
 
 /-- Soundness of one unit-scaled executable solo-bound row check. -/
@@ -2170,6 +2255,20 @@ theorem positiveSoloDisplayedYBound_of_checkUnitRange
     exact List.all_eq_true.mp (by
       simpa [checkPositiveSoloDisplayedYBoundUnitRange] using h)
   exact positiveSoloDisplayedYBound_of_checkUnitRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
+
+theorem positiveSoloDisplayedYSaddleCleared_of_checkRange
+    {lo len a N : Nat}
+    (h : checkPositiveSoloDisplayedYSaddleClearedRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYSaddleCleared a N := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSoloDisplayedYSaddleClearedRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYSaddleClearedRange] using h)
+  exact positiveSoloDisplayedYSaddleCleared_of_checkRow
     (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
 
 theorem positiveSoloGcompBound_of_checkUnitRange

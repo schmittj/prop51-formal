@@ -429,7 +429,12 @@ Status:
       unit-scaled range budget `checkPositiveSoloDisplayedYBoundUnitRange`.
       The practical generated-certificate sibling
       `PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-      splits that solo budget over the default 100-row chunks.
+      splits that solo budget over the default 100-row chunks.  The still
+      lower-level
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      also chunks the denominator-cleared displayed `Y_a(N)` saddle
+      inequality, so the finite solo side is no longer a normalized
+      `Ynorm` field.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
