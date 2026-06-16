@@ -421,7 +421,12 @@ Status:
       to the single inequality `90 / scale ≤ positiveEdgeBudget`; the
       parallel `PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       then discharges that rational inequality from the natural threshold
-      `positiveEdgeUniformScaleMin ≤ scale`.
+      `positiveEdgeUniformScaleMin ≤ scale`.  The finite solo side now also
+      has a TeX-shaped staging endpoint,
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`:
+      it replaces the opaque semantic solo inequality by the displayed
+      saddle field `Ynorm N a ≤ positiveYBound a N a` plus the executable
+      unit-scaled range budget `checkPositiveSoloDisplayedYBoundUnitRange`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

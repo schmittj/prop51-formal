@@ -1994,6 +1994,41 @@ def checkPositiveSoloGcompRange (lo len : Nat) : Bool :=
 def checkPositiveSoloGcompUnitRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveSoloGcompUnitRow
 
+/-- TeX-shaped solo `Y_a(N)` budget after inserting the displayed tempered
+`Y_j` saddle bound with `j = a`.  This separates the analytic saddle
+inequality `Ynorm N a ≤ positiveYBound a N a` from the purely rational budget
+check for `2^{-a-1}Y_a(N)`. -/
+def positiveSoloDisplayedYBound (a N : Nat) : ℚ :=
+  positiveDyadicDecay a / 2 * positiveYBound a N a
+
+/-- Boolean point check for the displayed-`Y` solo budget. -/
+def checkPositiveSoloDisplayedYBoundCell (a N : Nat) : Bool :=
+  decide (positiveSoloDisplayedYBound a N ≤ positiveSoloBudget)
+
+/-- Unit-scaled point check for the displayed-`Y` solo budget. -/
+def checkPositiveSoloDisplayedYBoundUnitCell (a N : Nat) : Bool :=
+  decide ((200000000 : ℚ) * positiveSoloDisplayedYBound a N ≤ 1)
+
+/-- Row check for the displayed-`Y` solo budget over every `N` in the
+positive rectangle at fixed `a`. -/
+def checkPositiveSoloDisplayedYBoundRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N => checkPositiveSoloDisplayedYBoundCell a N
+
+/-- Unit-scaled row check for the displayed-`Y` solo budget over every `N` in
+the positive rectangle at fixed `a`. -/
+def checkPositiveSoloDisplayedYBoundUnitRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N => checkPositiveSoloDisplayedYBoundUnitCell a N
+
+/-- Range check for the displayed-`Y` solo budget over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveSoloDisplayedYBoundRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSoloDisplayedYBoundRow
+
+/-- Unit-scaled range check for the displayed-`Y` solo budget over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveSoloDisplayedYBoundUnitRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSoloDisplayedYBoundUnitRow
+
 theorem normalizedSoloTerm_le_positiveSoloGcompBound
     {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
     normalizedSoloTerm a N ≤ positiveSoloGcompBound a N := by
@@ -2009,6 +2044,15 @@ theorem dyadic_Ynorm_le_positiveSoloGcompBound
   rw [← normalizedSoloTerm_eq_dyadic_Ynorm hN ha]
   exact normalizedSoloTerm_le_positiveSoloGcompBound hN ha
 
+/-- Insert the displayed tempered `Y` saddle bound into the solo term. -/
+theorem dyadic_Ynorm_le_positiveSoloDisplayedYBound
+    {a N : Nat} (hY : Ynorm N a ≤ positiveYBound a N a) :
+    positiveDyadicDecay a / 2 * Ynorm N a ≤
+      positiveSoloDisplayedYBound a N := by
+  unfold positiveSoloDisplayedYBound
+  exact mul_le_mul_of_nonneg_left hY
+    (div_nonneg (positiveDyadicDecay_nonneg a) (by norm_num : (0 : ℚ) ≤ 2))
+
 /-- Soundness of one executable solo-bound point check. -/
 theorem positiveSoloGcompBound_of_checkCell {a N : Nat}
     (h : checkPositiveSoloGcompCell a N = true) :
@@ -2019,6 +2063,18 @@ theorem positiveSoloGcompBound_of_checkCell {a N : Nat}
 theorem positiveSoloGcompBound_of_checkUnitCell {a N : Nat}
     (h : checkPositiveSoloGcompUnitCell a N = true) :
     positiveSoloGcompBound a N ≤ positiveSoloBudget := by
+  exact le_positiveSoloBudget_of_mul_200000000_le_one (of_decide_eq_true h)
+
+/-- Soundness of one displayed-`Y` solo budget point check. -/
+theorem positiveSoloDisplayedYBound_of_checkCell {a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundCell a N = true) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  exact of_decide_eq_true h
+
+/-- Soundness of one unit-scaled displayed-`Y` solo budget point check. -/
+theorem positiveSoloDisplayedYBound_of_checkUnitCell {a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundUnitCell a N = true) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
   exact le_positiveSoloBudget_of_mul_200000000_le_one (of_decide_eq_true h)
 
 /-- Soundness of one executable solo-bound row check. -/
@@ -2032,6 +2088,32 @@ theorem positiveSoloGcompBound_of_checkRow {a N : Nat}
         checkPositiveSoloGcompCell a x = true := by
     exact List.all_eq_true.mp (by
       simpa [checkPositiveSoloGcompRow] using h)
+  exact hall N (mem_positiveNRangeList_of_rectangle hrect)
+
+/-- Soundness of one displayed-`Y` solo budget row check. -/
+theorem positiveSoloDisplayedYBound_of_checkRow {a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundRow a = true)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  apply positiveSoloDisplayedYBound_of_checkCell
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSoloDisplayedYBoundCell a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYBoundRow] using h)
+  exact hall N (mem_positiveNRangeList_of_rectangle hrect)
+
+/-- Soundness of one unit-scaled displayed-`Y` solo budget row check. -/
+theorem positiveSoloDisplayedYBound_of_checkUnitRow {a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundUnitRow a = true)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  apply positiveSoloDisplayedYBound_of_checkUnitCell
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSoloDisplayedYBoundUnitCell a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYBoundUnitRow] using h)
   exact hall N (mem_positiveNRangeList_of_rectangle hrect)
 
 /-- Soundness of one unit-scaled executable solo-bound row check. -/
@@ -2060,6 +2142,34 @@ theorem positiveSoloGcompBound_of_checkRange
     exact List.all_eq_true.mp (by
       simpa [checkPositiveSoloGcompRange] using h)
   exact positiveSoloGcompBound_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
+
+theorem positiveSoloDisplayedYBound_of_checkRange
+    {lo len a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSoloDisplayedYBoundRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYBoundRange] using h)
+  exact positiveSoloDisplayedYBound_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
+
+theorem positiveSoloDisplayedYBound_of_checkUnitRange
+    {lo len a N : Nat}
+    (h : checkPositiveSoloDisplayedYBoundUnitRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSoloDisplayedYBoundUnitRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYBoundUnitRange] using h)
+  exact positiveSoloDisplayedYBound_of_checkUnitRow
     (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
 
 theorem positiveSoloGcompBound_of_checkUnitRange
@@ -2099,6 +2209,34 @@ theorem checkPositiveSoloGcompUnitRow_of_checkUnitRange
     exact List.all_eq_true.mp (by
       simpa [checkPositiveSoloGcompUnitRange] using h)
   exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
+
+/-- The displayed-`Y` solo budget follows from the displayed saddle inequality
+and a range check for the rational budget. -/
+theorem dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_checkRange
+    (hY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        Ynorm N a ≤ positiveYBound a N a)
+    (hbudget : checkPositiveSoloDisplayedYBoundRange 401 1600 = true) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  intro a N ha ha2000 hrect
+  exact (dyadic_Ynorm_le_positiveSoloDisplayedYBound
+      (hY ha ha2000 hrect)).trans
+    (positiveSoloDisplayedYBound_of_checkRange
+      (lo := 401) (len := 1600) hbudget ha (by omega) hrect)
+
+theorem dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_checkUnitRange
+    (hY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        Ynorm N a ≤ positiveYBound a N a)
+    (hbudget : checkPositiveSoloDisplayedYBoundUnitRange 401 1600 = true) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  intro a N ha ha2000 hrect
+  exact (dyadic_Ynorm_le_positiveSoloDisplayedYBound
+      (hY ha ha2000 hrect)).trans
+    (positiveSoloDisplayedYBound_of_checkUnitRange
+      (lo := 401) (len := 1600) hbudget ha (by omega) hrect)
 
 /-- The finite-window solo certificate field follows from a single range
 check over `401 ≤ a ≤ 2000`. -/

@@ -754,6 +754,19 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeUniformLargeScaleK
     (PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
       cert)
 
+/-- Final assembly from the preferred large-scale edge audit shape with the
+finite solo input split into the displayed `Y_a(N)` saddle bound and its
+unit-scaled rational budget check. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
+    (PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+      cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
