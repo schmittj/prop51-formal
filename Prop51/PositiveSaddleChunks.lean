@@ -2010,6 +2010,77 @@ theorem positiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetE
       hsoloY hsoloBudget)
     edgeScale hedgeScale hedgeChunks pointwise bounds
 
+theorem positiveSoloDisplayedYBound_of_defaultUnitChunks
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true)
+    {a N : Nat} (ha : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) :
+    positiveSoloDisplayedYBound a N ≤ positiveSoloBudget := by
+  have hrow : checkPositiveSoloDisplayedYBoundUnitRow a = true := by
+    exact checkRow_of_checkRangeChunks
+      (row := checkPositiveSoloDisplayedYBoundUnitRow)
+      (chunks := positiveSaddleDefaultChunks)
+      (a := a)
+      (by
+        intro chunk hmem
+        simpa [checkPositiveSoloDisplayedYBoundUnitRange]
+          using hchunks (chunk := chunk) hmem)
+      (positiveSaddleDefaultChunks_cover (a := a) ha ha2000)
+  exact positiveSoloDisplayedYBound_of_checkUnitRow hrow hrect
+
+theorem dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_defaultUnitChunks
+    (hY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        Ynorm N a ≤ positiveYBound a N a)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  intro a N ha ha2000 hrect
+  exact (dyadic_Ynorm_le_positiveSoloDisplayedYBound
+      (hY ha ha2000 hrect)).trans
+    (positiveSoloDisplayedYBound_of_defaultUnitChunks
+      hchunks ha ha2000 hrect)
+
+theorem positiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          checkPositiveSmallTangentExpEdgeCell a N k = true)
+    (hsoloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        Ynorm N a ≤ positiveYBound a N a)
+    (hsoloBudgetChunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true)
+    (edgeScale : Nat → Nat)
+    (hedgeScale :
+      ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+        positiveEdgeUniformScaleMin ≤ edgeScale a)
+    (hedgeChunks :
+      ∀ {a : Nat} {chunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+        chunk ∈ positiveEdgeDefaultKChunks →
+          checkPositiveEdgeMajorantKChunkUnit
+            a chunk.1 chunk.2 (edgeScale a) = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate :=
+  positiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    hsmall htempered htangent
+    (dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_defaultUnitChunks
+      hsoloY hsoloBudgetChunks)
+    edgeScale hedgeScale hedgeChunks pointwise bounds
+
 /-- Audit target using the same edge unit scale for every default `k`-chunk
 in a fixed row `a`.
 
@@ -2120,6 +2191,43 @@ structure PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudge
   candidateSplitTemperedRawClearedUnitReserve :
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
 
+/-- Displayed-solo audit wrapper using the default finite-window chunks for
+the rational solo-budget check.  This is the practical variant of the
+displayed-solo endpoint: the `Y_a(N)` saddle estimate remains a semantic
+field, while the budget side is split into the same 100-row chunks used by
+the product checks. -/
+structure PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (edgeScale : Nat → Nat) :
+    Prop where
+  smallXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentExpEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloYDisplayed :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      Ynorm N a ≤ positiveYBound a N a
+  soloYBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloDisplayedYBoundUnitRange chunk.1 chunk.2 = true
+  edgeScaleLarge :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeUniformScaleMin ≤ edgeScale a
+  edgeKChunkUnitChecks :
+    ∀ {a : Nat} {chunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      chunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 (edgeScale a) = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
 theorem PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
     {edgeScale : Nat → Nat}
     (cert :
@@ -2179,6 +2287,25 @@ theorem PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetE
   candidateSplitTemperedRawClearedUnitReserve :=
     cert.candidateSplitTemperedRawClearedUnitReserve
 
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toUniformLargeScaleKChunkBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale where
+  smallXplusYProductGcompChunks := cert.smallXplusYProductGcompChunks
+  temperedXplusYProductGcompChunks := cert.temperedXplusYProductGcompChunks
+  smallTangentExpEdgeCells := cert.smallTangentExpEdgeCells
+  soloY :=
+    dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_defaultUnitChunks
+      cert.soloYDisplayed cert.soloYBudgetChunks
+  edgeScaleLarge := cert.edgeScaleLarge
+  edgeKChunkUnitChecks := cert.edgeKChunkUnitChecks
+  productPointwiseYRawUnitSolo := cert.productPointwiseYRawUnitSolo
+  candidateSplitTemperedRawClearedUnitReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
 theorem PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
     {edgeScale : Nat → Nat}
     (cert :
@@ -2191,6 +2318,14 @@ theorem PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetE
     {edgeScale : Nat → Nat}
     (cert :
       PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate :=
+  cert.toUniformLargeScaleKChunkBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
         edgeScale) :
     PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate :=
   cert.toUniformLargeScaleKChunkBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
@@ -2219,6 +2354,14 @@ theorem PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetE
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentCellEdgeBudgetCertificate.toCertificate
 
+theorem PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentCellEdgeBudgetCertificate.toCertificate
+
 theorem unorm_tail_of_positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
     {edgeScale : Nat → Nat}
     (cert :
@@ -2239,6 +2382,14 @@ theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScal
     {edgeScale : Nat → Nat}
     (cert :
       PositiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
         edgeScale) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate

@@ -69,7 +69,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   additionally splits the finite solo input into the TeX-shaped
   `Ynorm N a ≤ positiveYBound a N a` saddle bound and a unit-scaled rational
-  budget check.
+  budget check; the `DisplayedSoloChunks` sibling uses the same default
+  100-row chunks for that budget check.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.

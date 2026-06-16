@@ -427,6 +427,9 @@ Status:
       it replaces the opaque semantic solo inequality by the displayed
       saddle field `Ynorm N a ≤ positiveYBound a N a` plus the executable
       unit-scaled range budget `checkPositiveSoloDisplayedYBoundUnitRange`.
+      The practical generated-certificate sibling
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      splits that solo budget over the default 100-row chunks.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
