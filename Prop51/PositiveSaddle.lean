@@ -1087,6 +1087,13 @@ theorem geom_chain_Icc_sum_le_inv_one_sub
     (mul_le_mul_of_nonneg_left
       (geom_sum_le_inv_one_sub q hq0 hq1 (hi + 1 - lo)) hF0)
 
+theorem mul_inv_one_sub_le_of_le_mul_one_sub {x B q : ℚ}
+    (hq1 : q < 1) (h : x ≤ B * (1 - q)) :
+    x * (1 / (1 - q)) ≤ B := by
+  have hden : 0 < 1 - q := by linarith
+  rw [← div_eq_mul_one_div, div_le_iff₀ hden]
+  simpa [mul_comm] using h
+
 /-! ## Large-`a` final margins -/
 
 /-- The positive-part target from paper §6. -/
@@ -3024,6 +3031,23 @@ theorem positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_large
   (positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio_large
     ha hF0 hq0 hq1 hstep).trans hbudget
 
+theorem positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_reserve_large
+    {smallExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 : 0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1)
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, 1 ≤ r → r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q)
+    (hfirst :
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - q)) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a ≤ positiveEdgeBudget / 2 :=
+  positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_large
+    ha hF0 hq0 hq1 hstep
+    (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hfirst)
+
 theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio
     {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
     (hlohi : max 1 (posTemperedCutoff a + 1) ≤ posKmax a)
@@ -3079,6 +3103,26 @@ theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_lar
     positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2 :=
   (positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio_large
     ha hF0 hq0 hq1 hstep).trans hbudget
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_reserve_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q)
+    (hfirst :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1))
+          ≤ (positiveEdgeBudget / 2) * (1 - q)) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2 :=
+  positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_large
+    ha hF0 hq0 hq1 hstep
+    (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hfirst)
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope

@@ -275,6 +275,8 @@ Status:
       first-term/ratio budget lemmas
       `positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio` and
       `positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio`;
+      reserve-form wrappers are also available when the first term is proved
+      below `budget * (1 - ratio)`.
       for `a > 2000`, the interval bookkeeping is discharged by
       `positiveSmallBranch_hi_nonempty_of_large` and
       `positiveTemperedBranch_start_le_posKmax_of_large`.  The resulting
