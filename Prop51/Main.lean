@@ -221,6 +221,14 @@ theorem coefficientNegativity_of_positiveSaddleDisplayedBudgetCertificate
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleDisplayedBudgetCertificate cert)
 
+/-- Final assembly from the budgeted displayed-`X`/`Y` certificate after the
+product fields have been reduced to pure exponential/edge comparisons. -/
+theorem coefficientNegativity_of_positiveSaddleExpEdgeBudgetCertificate
+    (cert : PositiveSaddleExpEdgeBudgetCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleExpEdgeBudgetCertificate cert)
+
 /-- Final assembly from the decomposed `X`/`Y` saddle-bound version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleXYCertificate

@@ -1974,6 +1974,43 @@ structure PositiveSaddleDisplayedBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Same displayed-`X`/`Y` budgeted interface, but with the product fields
+reduced to the pure exponential/edge comparisons isolated above. -/
+structure PositiveSaddleExpEdgeBudgetCertificate : Prop where
+  smallX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k ≤ positiveSmallXBound N k
+  smallY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  smallExpEdge :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveSmallDisplayedExpEdge a N k ≤ positiveSmallCombinedExpEdge a k
+  temperedX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k ≤ positiveTemperedXBound a N k
+  temperedY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  temperedExpEdge :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        positiveTemperedDisplayedExpEdge a N k ≤
+          positiveTemperedCombinedExpEdge a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -2021,6 +2058,27 @@ theorem PositiveSaddleDisplayedBudgetCertificate.toScalarBudgetCertificate
       (cert.temperedX ha ha2000 hrect hk htemp hB)
       (cert.temperedY ha ha2000 hrect hk htemp hB)).trans
       (cert.temperedProduct ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleExpEdgeBudgetCertificate.toDisplayedBudgetCertificate
+    (cert : PositiveSaddleExpEdgeBudgetCertificate) :
+    PositiveSaddleDisplayedBudgetCertificate where
+  smallX := cert.smallX
+  smallY := cert.smallY
+  smallProduct := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact positiveSmallDisplayedProductBound_le_scalar_of_expEdge hN
+      (cert.smallExpEdge ha ha2000 hrect hk hsmall hB)
+  temperedX := cert.temperedX
+  temperedY := cert.temperedY
+  temperedProduct := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact positiveTemperedDisplayedProductBound_le_scalar_of_expEdge hN
+      (cert.temperedExpEdge ha ha2000 hrect hk htemp hB)
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
@@ -2161,6 +2219,11 @@ theorem PositiveSaddleDisplayedBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toScalarBudgetCertificate.toCertificate
 
+theorem PositiveSaddleExpEdgeBudgetCertificate.toCertificate
+    (cert : PositiveSaddleExpEdgeBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toDisplayedBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2216,6 +2279,11 @@ theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleDisplayedBudgetCertificate
     (cert : PositiveSaddleDisplayedBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleExpEdgeBudgetCertificate
+    (cert : PositiveSaddleExpEdgeBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
