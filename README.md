@@ -140,7 +140,16 @@ All Lean proofs are sorry-free.  Headline theorems:
   obligations.  In local profiling, one-row product atoms with
   `--n-len 10 --product-k-len 1` compile in roughly 13-15 seconds at
   `a = 401`, whereas the 20-wide product atom at `--n-len 10` did not finish
-  in the earlier timeout.  When
+  in the earlier timeout.  The further
+  `PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate`
+  wrapper shares each table-backed `(a,N)` product pass between the small and
+  tempered regimes; emit it with
+  `--strategy combined-product-nk-tangent-solo-n-chunked` and
+  `--emit-single-chunk product-combined`.  This is a Lean proof-production
+  optimization of the same inequalities: the conversion extracts the separate
+  small and tempered fields expected by the existing certificate.  In the
+  same local sample, one combined product atom replaces the two separate
+  small/tempered product atoms and compiles in about 15 seconds.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

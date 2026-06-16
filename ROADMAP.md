@@ -585,7 +585,15 @@ Status:
       reassembled into the default 20-wide edge-product chunks.  Local samples
       at `a = 401` show one-row product atoms with `--n-len 10
       --product-k-len 1` compile in roughly 13-15 seconds, where the earlier
-      20-wide product atom at `--n-len 10` timed out.
+      20-wide product atom at `--n-len 10` timed out.  The combined-product
+      sibling
+      `PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate`,
+      emitted with `--strategy combined-product-nk-tangent-solo-n-chunked`,
+      runs one shared-table product atom and extracts both the small and
+      tempered obligations.  This does not change the TeX-side inequalities;
+      it only avoids proving separate small and tempered product atoms for
+      the same `(a,N)` tables.  In the same sample, one combined atom compiles
+      in about 15 seconds, replacing two separate 13-15 second atoms.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

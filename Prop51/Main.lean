@@ -1049,6 +1049,23 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNKChunked
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate
     finite.toProductTangentSoloNChunkedAuditCertificate tail
 
+/-- Final assembly from the combined-product proof-production route.  The
+single product field is unpacked into the separate small/tempered product
+obligations used by the existing saddle certificate. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate
+    finite.toProductNKChunkedTangentSoloNChunkedAuditCertificate tail
+
 /-- Final assembly from the fully fixed-width product chunk route.  Product
 checks use fixed-width row chunks and fixed-width `N` chunks, while tangent,
 displayed-solo, and edge checks use the default fixed-scale chunk interfaces. -/
