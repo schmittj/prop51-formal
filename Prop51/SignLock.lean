@@ -5854,6 +5854,110 @@ theorem expNegLower50_pos : 0 < expNegLower50 := by
   rw [expNegLower50_eq]
   norm_num
 
+/-! ### The twelve-term prefix as a one-variable rational certificate -/
+
+/-- The pure alternating exponential prefix appearing in the sign-lock base. -/
+def signLockPrefixA (z : ℚ) (T : Nat) : ℚ :=
+  ∑ s ∈ Finset.range T, (-z)^s / (s.factorial : ℚ)
+
+/-- The first-order `1/m` correction in the sign-lock base prefix. -/
+def signLockPrefixC (z : ℚ) (T : Nat) : ℚ :=
+  ∑ s ∈ Finset.range T,
+    ((-z)^s / (s.factorial : ℚ)) * (eOne s - z)
+
+/-- The sign-lock base prefix with `z` and `m` separated. -/
+def signLockPrefixScalar (z : ℚ) (m T : Nat) : ℚ :=
+  ∑ s ∈ Finset.range T,
+    ((-z)^s / (s.factorial : ℚ)) *
+      (1 + (eOne s - z) / (m : ℚ))
+
+theorem signLockBasePrefix_eq_scalar (N m T : Nat) :
+    signLockBasePrefix N m T = signLockPrefixScalar (zetaQ N m) m T := by
+  unfold signLockBasePrefix signLockPrefixScalar signLockBaseSummand
+  refine Finset.sum_congr rfl fun s hs => ?_
+  ring
+
+theorem signLockPrefixScalar_eq_A_add_C (z : ℚ) (m T : Nat) :
+    signLockPrefixScalar z m T =
+      signLockPrefixA z T + signLockPrefixC z T / (m : ℚ) := by
+  unfold signLockPrefixScalar signLockPrefixA signLockPrefixC
+  rw [Finset.sum_div, ← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun s hs => ?_
+  ring
+
+private theorem signLock_prefix_delta_of_endpoint
+    {A C E : ℚ}
+    (hendpoint : E * (1 - 2/(361 : ℚ)) ≤ A + C/(361 : ℚ)) :
+    0 ≤ A - E + (C + 2*E)/(361 : ℚ) := by
+  have hrew :
+      A + C/(361 : ℚ) - E * (1 - 2/(361 : ℚ))
+        = A - E + (C + 2*E)/(361 : ℚ) := by
+    ring
+  nlinarith
+
+private theorem signLock_prefix_target_of_delta
+    {A C E R d : ℚ} (hR : R = C + 2*E)
+    (hdelta : 0 ≤ A - E + R / d) :
+    E * (1 - 2/d) ≤ A + C/d := by
+  rw [hR] at hdelta
+  have hrew :
+      A + C/d - E * (1 - 2/d) = A - E + (C + 2*E)/d := by
+    ring
+  nlinarith
+
+/-- Once the pure prefix dominates `expNegLower50` and the first-order
+correction is checked at the worst denominator `m = 361`, the same lower
+bound holds for every larger denominator.
+
+This is the Lean version of a small bookkeeping step that is implicit in the
+paper: write the prefix as `A(z) + C(z)/m`.  If `C(z)+2E` is nonnegative, the
+`1/m` term is harmless; if it is negative, increasing `m` only improves the
+comparison with the endpoint `m = 361`. -/
+theorem signLockBasePrefix_lower_of_A_and_endpoint361
+    {N m : Nat} (hm : 361 ≤ m)
+    (hA : expNegLower50 ≤ signLockPrefixA (zetaQ N m) 12)
+    (h361 :
+      expNegLower50 * (1 - 2/(361 : ℚ))
+        ≤ signLockPrefixScalar (zetaQ N m) 361 12) :
+    expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12 := by
+  let z : ℚ := zetaQ N m
+  let A : ℚ := signLockPrefixA z 12
+  let C : ℚ := signLockPrefixC z 12
+  let E : ℚ := expNegLower50
+  let R : ℚ := C + 2*E
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+  have hA0 : 0 ≤ A - E := by
+    dsimp [A, E, z] at hA ⊢
+    linarith
+  have h361scalar :
+      E * (1 - 2/(361 : ℚ)) ≤ A + C/(361 : ℚ) := by
+    rw [signLockPrefixScalar_eq_A_add_C] at h361
+    dsimp [A, C, E, z] at h361 ⊢
+    exact h361
+  have h361delta : 0 ≤ A - E + R/(361 : ℚ) := by
+    have h := signLock_prefix_delta_of_endpoint h361scalar
+    dsimp [R]
+    exact h
+  rw [signLockBasePrefix_eq_scalar, signLockPrefixScalar_eq_A_add_C]
+  by_cases hRnonneg : 0 ≤ R
+  · have hRdiv : 0 ≤ R / (m : ℚ) := div_nonneg hRnonneg hmpos.le
+    have hdelta : 0 ≤ A - E + R / (m : ℚ) := add_nonneg hA0 hRdiv
+    exact signLock_prefix_target_of_delta (A := A) (C := C) (E := E)
+      (R := R) (d := (m : ℚ)) (by rfl) hdelta
+  · have hRle : R ≤ 0 := le_of_not_ge hRnonneg
+    have hnegR : 0 ≤ -R := by linarith
+    have hdiv_neg :
+        (-R) / (m : ℚ) ≤ (-R) / (361 : ℚ) :=
+      div_le_div_of_nonneg_left hnegR (by norm_num : (0 : ℚ) < 361) hmQ
+    have hdiv :
+        R / (361 : ℚ) ≤ R / (m : ℚ) := by
+      have h := neg_le_neg hdiv_neg
+      convert h using 1 <;> ring
+    have hdelta : 0 ≤ A - E + R / (m : ℚ) := by linarith
+    exact signLock_prefix_target_of_delta (A := A) (C := C) (E := E)
+      (R := R) (d := (m : ℚ)) (by rfl) hdelta
+
 /-- Exact rational audit of the endpoint margin. -/
 theorem signLock_final_margin_endpoint :
     (2215 : ℚ) <

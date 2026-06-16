@@ -181,7 +181,10 @@ Status:
       `signLockNearBase`.  That input is now further reduced to the 12-term
       prefix inequality `signLockBasePrefix ... 12`; the paired alternating
       tail `signLockBaseTailFrom12` is proved nonnegative from adjacent
-      even/odd pairs.
+      even/odd pairs.  The 12-term prefix is also split as
+      `A(z)+C(z)/m`, with a formal endpoint-denominator reduction showing
+      that it remains only to certify the pure prefix `A(z)` and the
+      `m = 361` scalar prefix uniformly for `0 ≤ z ≤ 50/27`.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
