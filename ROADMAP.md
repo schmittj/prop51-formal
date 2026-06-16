@@ -385,8 +385,15 @@ Status:
       `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       combines the singleton table product chunks with the displayed-solo
       chunk fields, the uniform large-scale edge `k`-chunk budget, and the
-      raw-cleared large-tail reserve certificates.  Larger generated `N`
-      chunks can use the parameterized certificate directly.
+      raw-cleared large-tail reserve certificates.  The further concrete
+      endpoint
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      also chunks tangent-edge checks over the default row chunks and uses
+      row-chunked edge checks at the fixed scale
+      `positiveEdgeUniformScaleMin`.  Larger generated `N` chunks can use
+      the parameterized certificate directly.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
@@ -477,10 +484,11 @@ Status:
       `k` chunks instead of asking Lean to evaluate a whole product row.  The
       concrete singleton-`N` generated-audit wrapper
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-      is now the preferred finite-window endpoint when no larger `N` chunks
-      have been generated.
-      The
-      fixed-scale
+      has a still more concrete fixed-scale/chunked-edge sibling,
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      which is now the preferred finite-window endpoint when no larger `N`
+      chunks have been generated.
+      The fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
       route, not as the expected final product certificate.  The remaining

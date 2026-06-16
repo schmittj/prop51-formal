@@ -54,13 +54,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — the current most practical large-`a` conditional capstone: table-backed
   exact finite product chunks using the built-in singleton `N` cover and the
-  default 20-wide retained-`k` chunks, tangent-edge cell checks,
-  displayed-solo finite chunks, default unit-cleared edge `k`-chunks, and the
-  raw-cleared large-tail reserve certificate imply full
-  `CoefficientNegativity`.  The older
+  default 20-wide retained-`k` chunks, tangent-edge row chunks,
+  displayed-solo finite chunks, fixed-scale unit-cleared edge row chunks, and
+  the raw-cleared large-tail reserve certificate imply full
+  `CoefficientNegativity`.  The intermediate
+  `RawProductTableSingletonNChunksUniformLargeScale...` sibling keeps
+  tangent-edge cell checks and a row-dependent edge scale.  The older
   `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   keeps a semantic finite solo budget and the older product staging.
   The sibling theorem
@@ -88,8 +90,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `(a,N)` and splits product checks by a row-dependent `N`-chunk cover and
   the default 20-wide retained-`k` chunks.  `Prop51.positiveProductSingletonNChunks`
   provides a built-in singleton `N`-cover, and the concrete
-  `RawProductTableSingletonNChunks...` capstone combines that product cover
-  with the displayed-solo, edge, and large-tail fields.  Larger generated
+  `RawProductTableSingletonNChunksTangentEdgeChunksFixedScale...` capstone
+  combines that product cover with the tangent-edge, displayed-solo, edge,
+  and large-tail chunk fields.  Larger generated
   `N` chunks can instantiate the same parameterized certificate directly.  The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but

@@ -26,9 +26,10 @@ of Proposition 5.1 there).
   positive-saddle certificates.  The sign-lock side is closed; the preferred
   current finite-window interface uses table-backed exact raw-product chunks,
   tangent-edge cells, displayed-solo chunks, and default unit-cleared edge
-  `k`-chunks with one large enough edge scale per row, with final assembly
-  exposed below by
-  `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+  `k`-chunks.  The most concrete exposed endpoint also chunks the
+  tangent-edge and edge checks and fixes the edge scale to
+  `positiveEdgeUniformScaleMin`; final assembly is exposed below by
+  `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
   A concrete instance of that audit certificate would upgrade the capstone to
   full `CoefficientNegativity`.
 -/
@@ -841,6 +842,16 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawPr
     (cert :
       PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
         edgeScale) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    cert.toTangentProductBudgetCertificate
+
+/-- Final assembly from the concrete table-backed exact-product route with
+singleton `N` chunks, tangent-edge row chunks, displayed-solo chunks, and
+fixed-scale edge row chunks. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     cert.toTangentProductBudgetCertificate
