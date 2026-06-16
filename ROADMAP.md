@@ -548,8 +548,9 @@ Status:
       `PositiveSaddleLargeTailAuditCertificate`; if each whole finite family
       is practical as one Boolean, target
       `PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate` instead.
-      The script `scripts/positive_saddle_fixed_finite_template.py` emits the
-      all-chunks theorem shape for fixed row and `N` lengths.
+      The script `scripts/positive_saddle_fixed_finite_template.py` emits
+      both the all-chunks theorem shape and a `split-fields` dispatch shape
+      for fixed row and `N` lengths.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

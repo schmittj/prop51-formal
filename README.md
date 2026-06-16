@@ -108,7 +108,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   analytic inputs.  If each whole finite family is small enough to evaluate
   at once, `Prop51.PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate`
   packages one Boolean per finite family; `scripts/positive_saddle_fixed_finite_template.py`
-  emits that theorem shape for chosen fixed row and `N` lengths.  When
+  emits either that theorem shape or a `split-fields` version that dispatches
+  each field by fixed row and edge chunk indices.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

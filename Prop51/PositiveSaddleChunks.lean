@@ -113,6 +113,25 @@ def positiveSaddleFixedRowChunks (rowLen : Nat) : List (Nat × Nat) :=
     (List.range ((1600 + rowLen - 1) / rowLen)).map fun i =>
       (401 + rowLen * i, rowLen)
 
+/-- Membership in the fixed row cover, exposed by row-index.
+
+This is mainly for generated finite-window certificates: after rewriting a
+row chunk to `(401 + rowLen * i, rowLen)`, `interval_cases i` can dispatch to
+the individual `native_decide` branch for that chunk. -/
+theorem mem_positiveSaddleFixedRowChunks_iff
+    {rowLen : Nat} (hrowLen : 0 < rowLen) {chunk : Nat × Nat} :
+    chunk ∈ positiveSaddleFixedRowChunks rowLen ↔
+      ∃ i, i < (1600 + rowLen - 1) / rowLen ∧
+        chunk = (401 + rowLen * i, rowLen) := by
+  unfold positiveSaddleFixedRowChunks
+  rw [if_neg hrowLen.ne']
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, List.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi, rfl⟩
+
 theorem positiveSaddleFixedRowChunks_cover {rowLen : Nat}
     (hrowLen : 0 < rowLen) :
     PositiveSaddleFiniteWindowChunkCover
@@ -340,6 +359,17 @@ reducers in `PositiveSaddle.lean`. -/
 `k ∈ positiveKRange a` for `a ≤ 2000`. -/
 def positiveEdgeDefaultKChunks : Finset (Nat × Nat) :=
   (Finset.range 90).image fun i => (1 + 20 * i, 20)
+
+/-- Membership in the default edge `k`-chunk cover, exposed by chunk-index. -/
+theorem mem_positiveEdgeDefaultKChunks_iff {chunk : Nat × Nat} :
+    chunk ∈ positiveEdgeDefaultKChunks ↔
+      ∃ i, i < 90 ∧ chunk = (1 + 20 * i, 20) := by
+  constructor
+  · intro h
+    rcases Finset.mem_image.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, Finset.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact Finset.mem_image.mpr ⟨i, Finset.mem_range.mpr hi, rfl⟩
 
 /-- List version of `positiveEdgeDefaultKChunks`, convenient for generated
 certificates that use `List.all` reducers. -/
