@@ -2516,6 +2516,50 @@ def positiveTemperedEntropyShadowMajorantTerm (a k : Nat) : ℚ :=
     positiveDyadicDecay (posJ a k) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
+def positiveEntropyShadowEdgeMajorantTerm (a k : Nat) : ℚ :=
+  positiveCustomEdgeMajorantTerm
+    positiveSmallEntropyShadowMajorantTerm
+    positiveTemperedEntropyShadowMajorantTerm a k
+
+def positiveEntropyShadowEdgeMajorantSum (a : Nat) : ℚ :=
+  positiveCustomEdgeMajorantSum
+    positiveSmallEntropyShadowMajorantTerm
+    positiveTemperedEntropyShadowMajorantTerm a
+
+@[simp] theorem positiveEntropyShadowEdgeMajorantTerm_eq (a k : Nat) :
+    positiveEntropyShadowEdgeMajorantTerm a k =
+      positiveCustomEdgeMajorantTerm
+        positiveSmallEntropyShadowMajorantTerm
+        positiveTemperedEntropyShadowMajorantTerm a k := rfl
+
+@[simp] theorem positiveEntropyShadowEdgeMajorantSum_eq (a : Nat) :
+    positiveEntropyShadowEdgeMajorantSum a =
+      positiveCustomEdgeMajorantSum
+        positiveSmallEntropyShadowMajorantTerm
+        positiveTemperedEntropyShadowMajorantTerm a := rfl
+
+def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
+  positiveCustomEnvelope
+    positiveSmallEntropyShadowMajorantTerm
+    positiveTemperedEntropyShadowMajorantTerm a N
+
+def positiveEntropyShadowEnvelopeBound (a : Nat) (soloBound : ℚ) : ℚ :=
+  positiveCustomEnvelopeBound
+    positiveSmallEntropyShadowMajorantTerm
+    positiveTemperedEntropyShadowMajorantTerm a soloBound
+
+@[simp] theorem positiveEntropyShadowEnvelope_eq (a N : Nat) :
+    positiveEntropyShadowEnvelope a N =
+      positiveCustomEnvelope
+        positiveSmallEntropyShadowMajorantTerm
+        positiveTemperedEntropyShadowMajorantTerm a N := rfl
+
+@[simp] theorem positiveEntropyShadowEnvelopeBound_eq (a : Nat) (soloBound : ℚ) :
+    positiveEntropyShadowEnvelopeBound a soloBound =
+      positiveCustomEnvelopeBound
+        positiveSmallEntropyShadowMajorantTerm
+        positiveTemperedEntropyShadowMajorantTerm a soloBound := rfl
+
 theorem positiveSmallMajorantTerm_le_entropyShadowMajorantTerm
     {a k : Nat} (ha : 1 ≤ a) (hk : 2 ≤ k) (hklt : k < a - 1)
     (hExp :
@@ -3741,6 +3785,41 @@ structure PositiveSaddleCustomTailCertificate
     ∀ {a : Nat}, 2000 < a →
       positiveCustomEnvelopeBound smallTerm temperedTerm a (soloBound a) ≤ positiveTarget
 
+/-- Entropy-shadow specialization of the custom `a > 2000` positive-tail
+certificate.  The remaining fields are exactly the analytic saddle bounds for
+the entropy-shadow small/tempered shells, the solo bound, and the rational
+custom-envelope budget. -/
+structure PositiveSaddleEntropyShadowTailCertificate
+    (soloBound : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallEntropyShadowMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedEntropyShadowMajorantTerm a k
+  solo :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowEnvelopeBound a (soloBound a) ≤ positiveTarget
+
+theorem PositiveSaddleEntropyShadowTailCertificate.toCustomTailCertificate
+    {soloBound : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowTailCertificate soloBound) :
+    PositiveSaddleCustomTailCertificate
+      positiveSmallEntropyShadowMajorantTerm
+      positiveTemperedEntropyShadowMajorantTerm
+      soloBound where
+  small := cert.small
+  tempered := cert.tempered
+  solo := cert.solo
+  envelope := by
+    intro a ha
+    simpa [positiveEntropyShadowEnvelopeBound] using cert.envelope (a := a) ha
+
 theorem PositiveSaddleCustomTailCertificate.entropyTail
     {smallTerm temperedTerm : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
     (cert : PositiveSaddleCustomTailCertificate smallTerm temperedTerm soloBound) :
@@ -3754,6 +3833,12 @@ theorem PositiveSaddleCustomTailCertificate.entropyTail
     (fun k hk htempered => cert.tempered ha2000 hrect hk htempered)
     (cert.solo ha2000 hrect)
     (cert.envelope ha2000)
+
+theorem PositiveSaddleEntropyShadowTailCertificate.entropyTail
+    {soloBound : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowTailCertificate soloBound) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toCustomTailCertificate.entropyTail
 
 /-! ## Packaged remaining §6 certificate interface -/
 
