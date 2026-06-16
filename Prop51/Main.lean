@@ -709,6 +709,19 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeBudgetEntropyLarge
     (PositiveSaddleDefaultCellEdgeBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
       cert)
 
+/-- Final assembly from the unit-budget large-tail audit shape with cell-level
+tangent edge checks, semantic finite solo budgets, and default `k`-chunk
+unit-cleared finite edge budgets. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat × Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
+    (PositiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+      cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
