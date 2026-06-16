@@ -259,6 +259,10 @@ Status:
       intermediate target is `PositiveSaddleCombinedProductBudgetCertificate`,
       which asks directly for combined `X_k(N) * Y_{a-k}(N)` bounds with the
       single executable exponent and converts to the scalar-budget certificate.
+      The actual-`N` version, `PositiveSaddleAtProductBudgetCertificate`,
+      separates the analytic small-regime product estimate from the remaining
+      upper-edge replacement `positiveSmallXYProductAtBound ≤
+      positiveSmallXYProductBound`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

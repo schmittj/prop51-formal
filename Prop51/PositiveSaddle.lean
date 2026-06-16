@@ -376,6 +376,13 @@ def positiveSmallXYProductBound (a N k : Nat) : ℚ :=
     ((N : ℚ) * (posNhi a : ℚ))) *
     partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
 
+/-- Actual-`N` combined small-regime target before the upper-edge replacement.
+This is the direct rational form of the displayed small `X` constant times
+the tempered `Y` constant, with a single combined exponent surrogate. -/
+def positiveSmallXYProductAtBound (a N k : Nat) : ℚ :=
+  (2581/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
+    partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff
+
 /-- Direct combined tempered-regime target for `X_k(N) * Y_{a-k}(N)`. -/
 def positiveTemperedXYProductBound (a N k : Nat) : ℚ :=
   (2117/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
@@ -1274,6 +1281,17 @@ theorem positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
           field_simp [hNQ, hhiQ]
           ring
 
+theorem positiveFactorizedRawTerm_le_smallScalar_of_XYProductAt
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
+    (hXY :
+      Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductAtBound a N k)
+    (hedge :
+      positiveSmallXYProductAtBound a N k ≤ positiveSmallXYProductBound a N k) :
+    positiveFactorizedRawTerm a N k ≤ positiveSmallScalarProductBound a k :=
+  positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
+    hN ha hkRange hB (hXY.trans hedge)
+
 theorem positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
     {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
     (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
@@ -1444,6 +1462,14 @@ theorem partialExpUpper_smallExponentAt_le_upper
     (positiveSmallExponentAt_le_upper_of_rectangle hrect)
     (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
 
+theorem positiveSmallExponentAt_lt_expCutoff
+    {a N k : Nat} (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a) :
+    positiveSmallExponentAt a N k < (positiveExpCutoff : ℚ) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  exact (positiveSmallExponentAt_le_upper_of_rectangle hrect).trans_lt
+    (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
+
 theorem positiveTemperedExponentUpper_lt_expCutoff {a k : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
     (hkmax : k ≤ posKmax a) (htempered : posTemperedCutoff a < k) :
@@ -1485,6 +1511,21 @@ theorem positiveSmallXYProductBound_nonneg {a N k : Nat}
       (positiveSmallExponentUpper_nonneg hjpos)
       (positiveSmallExponentUpper_lt_expCutoff (by omega : 1 ≤ a) ha2000 hkmax)
   unfold positiveSmallXYProductBound
+  positivity
+
+theorem positiveSmallXYProductAtBound_nonneg {a N k : Nat}
+    (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a) :
+    0 ≤ positiveSmallXYProductAtBound a N k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hExp : 0 ≤ partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveSmallExponentAt_nonneg hjpos)
+      (positiveSmallExponentAt_lt_expCutoff (by omega : 1 ≤ a) ha2000 hrect hk)
+  unfold positiveSmallXYProductAtBound
   positivity
 
 theorem positiveTemperedXYProductBound_nonneg {a N k : Nat}
@@ -2086,6 +2127,32 @@ structure PositiveSaddleCombinedProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Actual-`N` combined-product version of the budgeted §6 interface.  The
+small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
+the separate `smallEdge` field records the finite/monotone replacement by the
+upper-edge bound used in the executable scan. -/
+structure PositiveSaddleAtProductBudgetCertificate : Prop where
+  smallXYAt :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductAtBound a N k
+  smallEdge :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveSmallXYProductAtBound a N k ≤ positiveSmallXYProductBound a N k
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -2127,6 +2194,18 @@ theorem PositiveSaddleCombinedProductBudgetCertificate.toScalarBudgetCertificate
     exact positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
       (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 2 ≤ a)
       hk hB (cert.temperedXY ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
+    (cert : PositiveSaddleAtProductBudgetCertificate) :
+    PositiveSaddleCombinedProductBudgetCertificate where
+  smallXY := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    exact (cert.smallXYAt ha ha2000 hrect hk hsmall hB).trans
+      (cert.smallEdge ha ha2000 hrect hk hsmall hB)
+  temperedXY := cert.temperedXY
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
@@ -2267,6 +2346,11 @@ theorem PositiveSaddleCombinedProductBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toScalarBudgetCertificate.toCertificate
 
+theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
+    (cert : PositiveSaddleAtProductBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toCombinedProductBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2322,6 +2406,11 @@ theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleCombinedProductBudgetCertificate
     (cert : PositiveSaddleCombinedProductBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleAtProductBudgetCertificate
+    (cert : PositiveSaddleAtProductBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
