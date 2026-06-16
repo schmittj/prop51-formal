@@ -575,7 +575,17 @@ Status:
       granularity, while tangent and solo whole-`N` row atoms remain too
       large.  The displayed-solo saddle atom now uses the table-backed
       `QListQ (cList a) N a` evaluator, proved equal to `Qq N a`, which makes
-      the single-point fixed-`N` atom practical.
+      the single-point fixed-`N` atom practical.  The next proof-production
+      endpoint,
+      `PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate`,
+      also splits product checks by `positiveProductFixedKChunks`, emitted
+      with `--strategy product-nk-tangent-solo-n-chunked` and
+      `--product-k-len`.  This is a Lean-level refinement of the same
+      finite-window proof obligation: the finer product `k` chunks are
+      reassembled into the default 20-wide edge-product chunks.  Local samples
+      at `a = 401` show one-row product atoms with `--n-len 10
+      --product-k-len 1` compile in roughly 13-15 seconds, where the earlier
+      20-wide product atom at `--n-len 10` timed out.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

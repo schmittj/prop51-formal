@@ -338,6 +338,74 @@ theorem positiveProductFixedNChunkIndices_cover_chunk
     omega
   exact hi.trans_le (Nat.div_le_div_right hnum_le)
 
+/-! ## Product retained-`k` chunks -/
+
+/-- Fixed-width retained-`k` chunks covering `1 ≤ k ≤ 1800`.
+
+This is the product analogue of `positiveTangentFixedKChunks`, but it covers
+the whole finite-window retained-`k` range rather than only the small tangent
+range.  It lets proof-producing generated certificates choose product
+`k`-atoms finer than the default 20-wide edge chunks while still assembling
+back to the existing finite-window target. -/
+def positiveProductFixedKChunks (kLen : Nat) : List (Nat × Nat) :=
+  if kLen = 0 then []
+  else
+    (List.range ((1800 + kLen - 1) / kLen)).map fun i =>
+      (1 + kLen * i, kLen)
+
+theorem mem_positiveProductFixedKChunks_iff
+    {kLen : Nat} (hkLen : 0 < kLen) {chunk : Nat × Nat} :
+    chunk ∈ positiveProductFixedKChunks kLen ↔
+      ∃ i, i < (1800 + kLen - 1) / kLen ∧
+        chunk = (1 + kLen * i, kLen) := by
+  unfold positiveProductFixedKChunks
+  rw [if_neg hkLen.ne']
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, List.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi, rfl⟩
+
+theorem positiveProductFixedKChunks_cover_of_le_1800
+    {kLen k : Nat} (hkLen : 0 < kLen) (hk1 : 1 ≤ k)
+    (hk1800 : k ≤ 1800) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveProductFixedKChunks kLen ∧
+        k ∈ List.range' chunk.1 chunk.2 := by
+  let off := k - 1
+  let i := off / kLen
+  have hoff_add : 1 + off = k := by
+    dsimp [off]
+    exact Nat.add_sub_of_le hk1
+  have hoff_lt : off < 1800 := by
+    omega
+  have hceil_mul :
+      1800 ≤ ((1800 + kLen - 1) / kLen) * kLen := by
+    have hmod := Nat.mod_lt (1800 + kLen - 1) hkLen
+    have hdiv := Nat.div_add_mod (1800 + kLen - 1) kLen
+    have hdiv' :
+        ((1800 + kLen - 1) / kLen) * kLen +
+            (1800 + kLen - 1) % kLen =
+          1800 + kLen - 1 := by
+      simpa [Nat.mul_comm] using hdiv
+    omega
+  have hi_lt : i < (1800 + kLen - 1) / kLen := by
+    rw [Nat.div_lt_iff_lt_mul hkLen]
+    exact hoff_lt.trans_le hceil_mul
+  refine ⟨(1 + kLen * i, kLen), ?_, ?_⟩
+  · unfold positiveProductFixedKChunks
+    rw [if_neg hkLen.ne']
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi_lt, rfl⟩
+  · have hdiv_le : kLen * i ≤ off := by
+      simpa [i] using Nat.mul_div_le off kLen
+    have hmod_lt : off % kLen < kLen := Nat.mod_lt off hkLen
+    have hdiv_add : kLen * i + off % kLen = off := by
+      simpa [i] using Nat.div_add_mod off kLen
+    exact (List.mem_range'_1).mpr ⟨by
+      omega, by
+      omega⟩
+
 /-- Product table check over one fixed `N`-chunk index across a row range and
 one retained-`k` chunk, for the small regime. -/
 def checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk
@@ -387,6 +455,80 @@ theorem checkPositiveTemperedXYProductRawClearedTableNRangeKChunk_of_fixedNIndex
       simpa [checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk]
         using h)
   exact hall a ha_mem
+
+/-- A checked table-backed small product `N`/`k` chunk gives the executable
+cell check for every covered active cell. -/
+theorem checkPositiveSmallXYProductRawClearedTableCell_of_NRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat}
+    (h :
+      checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNmem : N ∈ List.range' nLo nLen)
+    (hkmem : k ∈ List.range' kLo kLen)
+    (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    checkPositiveSmallXYProductRawClearedTableCell
+      (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+      a N k = true := by
+  have hNs :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveSmallXYProductRawClearedTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableNRangeKChunk] using h)
+  have hAtN :
+      checkPositiveSmallXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hNs N hNmem
+  have hks :
+      ∀ y ∈ List.range' kLo kLen,
+        (if y ∈ positiveKRange a ∧ y ≤ ceilSqrt N then
+            checkPositiveSmallXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N y
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableKChunkAtN] using hAtN)
+  simpa [hk, hsmall] using hks k hkmem
+
+/-- A checked table-backed tempered product `N`/`k` chunk gives the
+executable cell check for every covered active cell. -/
+theorem checkPositiveTemperedXYProductRawClearedTableCell_of_NRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat}
+    (h :
+      checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNmem : N ∈ List.range' nLo nLen)
+    (hkmem : k ∈ List.range' kLo kLen)
+    (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    checkPositiveTemperedXYProductRawClearedTableCell
+      (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+      a N k = true := by
+  have hNs :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableNRangeKChunk] using h)
+  have hAtN :
+      checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hNs N hNmem
+  have hks :
+      ∀ y ∈ List.range' kLo kLen,
+        (if y ∈ positiveKRange a ∧ ceilSqrt N < y then
+            checkPositiveTemperedXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N y
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableKChunkAtN] using hAtN)
+  simpa [hk, htempered] using hks k hkmem
 
 /-- Product table check over all fixed-width `N`-chunks in one row and one
 retained-`k` chunk, for the small regime. -/
@@ -1009,6 +1151,136 @@ theorem positiveEdgeDefaultKChunks_cover
   · simp [Finset.mem_Ico]
     dsimp [i]
     constructor <;> omega
+
+theorem checkPositiveSmallXYProductRawClearedTableNRangeKChunk_of_productKChunks
+    {productKLen a nLo nLen : Nat} {edgeChunk : Nat × Nat}
+    (hproductKLen : 0 < productKLen)
+    (hedgeChunk : edgeChunk ∈ positiveEdgeDefaultKChunks)
+    (hchunks :
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+          a nLo nLen productKChunk.1 productKChunk.2 = true) :
+    checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+      a nLo nLen edgeChunk.1 edgeChunk.2 = true := by
+  unfold checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  by_cases hrect : positiveRectangle a N
+  · have hAtN :
+        checkPositiveSmallXYProductRawClearedTableKChunkAtN
+          a N edgeChunk.1 edgeChunk.2 = true := by
+      unfold checkPositiveSmallXYProductRawClearedTableKChunkAtN
+      apply List.all_eq_true.mpr
+      intro k hkmem
+      by_cases hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N
+      · rcases (mem_positiveEdgeDefaultKChunks_iff).1 hedgeChunk with
+          ⟨i, hi, hedgeEq⟩
+        have hkmem' : k ∈ List.range' (1 + 20 * i) 20 := by
+          simpa [hedgeEq] using hkmem
+        rcases (List.mem_range'_1.mp hkmem') with ⟨hklo, hkhi⟩
+        have hk1 : 1 ≤ k := by omega
+        have hk1800 : k ≤ 1800 := by omega
+        rcases positiveProductFixedKChunks_cover_of_le_1800
+            hproductKLen hk1 hk1800 with
+          ⟨productKChunk, hproductKChunk, hkProductMem⟩
+        have hcellCheck :
+            checkPositiveSmallXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N k = true :=
+          checkPositiveSmallXYProductRawClearedTableCell_of_NRangeKChunk
+            (hchunks hproductKChunk) hNmem hkProductMem hrect
+            hcell.1 hcell.2
+        simpa [hcell] using hcellCheck
+      · simp [hcell]
+    simpa [hrect] using hAtN
+  · simp [hrect]
+
+theorem checkPositiveTemperedXYProductRawClearedTableNRangeKChunk_of_productKChunks
+    {productKLen a nLo nLen : Nat} {edgeChunk : Nat × Nat}
+    (hproductKLen : 0 < productKLen)
+    (hedgeChunk : edgeChunk ∈ positiveEdgeDefaultKChunks)
+    (hchunks :
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+          a nLo nLen productKChunk.1 productKChunk.2 = true) :
+    checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+      a nLo nLen edgeChunk.1 edgeChunk.2 = true := by
+  unfold checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  by_cases hrect : positiveRectangle a N
+  · have hAtN :
+        checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+          a N edgeChunk.1 edgeChunk.2 = true := by
+      unfold checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+      apply List.all_eq_true.mpr
+      intro k hkmem
+      by_cases hcell : k ∈ positiveKRange a ∧ ceilSqrt N < k
+      · rcases (mem_positiveEdgeDefaultKChunks_iff).1 hedgeChunk with
+          ⟨i, hi, hedgeEq⟩
+        have hkmem' : k ∈ List.range' (1 + 20 * i) 20 := by
+          simpa [hedgeEq] using hkmem
+        rcases (List.mem_range'_1.mp hkmem') with ⟨hklo, hkhi⟩
+        have hk1 : 1 ≤ k := by omega
+        have hk1800 : k ≤ 1800 := by omega
+        rcases positiveProductFixedKChunks_cover_of_le_1800
+            hproductKLen hk1 hk1800 with
+          ⟨productKChunk, hproductKChunk, hkProductMem⟩
+        have hcellCheck :
+            checkPositiveTemperedXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N k = true :=
+          checkPositiveTemperedXYProductRawClearedTableCell_of_NRangeKChunk
+            (hchunks hproductKChunk) hNmem hkProductMem hrect
+            hcell.1 hcell.2
+        simpa [hcell] using hcellCheck
+      · simp [hcell]
+    simpa [hrect] using hAtN
+  · simp [hrect]
+
+theorem checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk_of_productKChunks
+    {productKLen nLen lo len nIndex : Nat} {edgeChunk : Nat × Nat}
+    (hproductKLen : 0 < productKLen)
+    (hedgeChunk : edgeChunk ∈ positiveEdgeDefaultKChunks)
+    (hchunks :
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk
+          nLen lo len nIndex productKChunk.1 productKChunk.2 = true) :
+    checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk
+      nLen lo len nIndex edgeChunk.1 edgeChunk.2 = true := by
+  unfold checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk
+  apply List.all_eq_true.mpr
+  intro a ha_mem
+  exact
+    checkPositiveSmallXYProductRawClearedTableNRangeKChunk_of_productKChunks
+      hproductKLen hedgeChunk
+      (fun {productKChunk} hproductKChunk =>
+        checkPositiveSmallXYProductRawClearedTableNRangeKChunk_of_fixedNIndexRowRangeKChunk
+          (hchunks hproductKChunk) ha_mem)
+
+theorem checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk_of_productKChunks
+    {productKLen nLen lo len nIndex : Nat} {edgeChunk : Nat × Nat}
+    (hproductKLen : 0 < productKLen)
+    (hedgeChunk : edgeChunk ∈ positiveEdgeDefaultKChunks)
+    (hchunks :
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk
+          nLen lo len nIndex productKChunk.1 productKChunk.2 = true) :
+    checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk
+      nLen lo len nIndex edgeChunk.1 edgeChunk.2 = true := by
+  unfold checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk
+  apply List.all_eq_true.mpr
+  intro a ha_mem
+  exact
+    checkPositiveTemperedXYProductRawClearedTableNRangeKChunk_of_productKChunks
+      hproductKLen hedgeChunk
+      (fun {productKChunk} hproductKChunk =>
+        checkPositiveTemperedXYProductRawClearedTableNRangeKChunk_of_fixedNIndexRowRangeKChunk
+          (hchunks hproductKChunk) ha_mem)
 
 theorem checkPositiveEdgeMajorantKChunkUnit_of_defaultRowChunks
     {edgeScale : Nat → Nat}
@@ -4566,6 +4838,80 @@ structure PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertific
           rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
             (fun _ => positiveEdgeUniformScaleMin) = true
 
+/-- Fixed finite-window target with product checks split by row, `N`, and
+retained-`k` chunk, while tangent and displayed-solo checks use the same
+fixed `N`-index split as
+`PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`.
+
+This is a proof-production refinement only: the product `k` atoms can be
+finer than the default 20-wide edge chunks, and the conversion below assembles
+them back to the older default-`k` product obligations. -/
+structure PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate
+    (productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen : Nat) :
+    Prop where
+  productRowLenPos : 0 < productRowLen
+  tangentRowLenPos : 0 < tangentRowLen
+  soloSaddleRowLenPos : 0 < soloSaddleRowLen
+  soloBudgetRowLenPos : 0 < soloBudgetRowLen
+  edgeRowLenPos : 0 < edgeRowLen
+  productNLenPos : 0 < productNLen
+  productKLenPos : 0 < productKLen
+  tangentNLenPos : 0 < tangentNLen
+  soloSaddleNLenPos : 0 < soloSaddleNLen
+  soloBudgetNLenPos : 0 < soloBudgetNLen
+  tangentKLenPos : 0 < tangentKLen
+  smallXYProductRawClearedTableProductRowRangeNIndexKChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks productRowLen →
+      ∀ {nIndex : Nat},
+        nIndex ∈ positiveProductFixedNChunkIndices productRowLen productNLen →
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk
+          productNLen rowChunk.1 rowChunk.2 nIndex
+            productKChunk.1 productKChunk.2 = true
+  temperedXYProductRawClearedTableProductRowRangeNIndexKChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks productRowLen →
+      ∀ {nIndex : Nat},
+        nIndex ∈ positiveProductFixedNChunkIndices productRowLen productNLen →
+      ∀ {productKChunk : Nat × Nat},
+        productKChunk ∈ positiveProductFixedKChunks productKLen →
+        checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk
+          productNLen rowChunk.1 rowChunk.2 nIndex
+            productKChunk.1 productKChunk.2 = true
+  smallTangentExpEdgeRowRangeNIndexKChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+      ∀ {nIndex : Nat},
+        nIndex ∈ positiveProductFixedNChunkIndices tangentRowLen tangentNLen →
+      ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+        checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+          tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true
+  soloYSaddleClearedRowRangeNIndexChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+      ∀ {nIndex : Nat},
+        nIndex ∈ positiveProductFixedNChunkIndices soloSaddleRowLen soloSaddleNLen →
+        checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+          soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true
+  soloYBudgetRowRangeNIndexChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+      ∀ {nIndex : Nat},
+        nIndex ∈ positiveProductFixedNChunkIndices soloBudgetRowLen soloBudgetNLen →
+        checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+          soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true
+  edgeKChunkUnitRowRanges :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks edgeRowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnitRowRange
+          rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+            (fun _ => positiveEdgeUniformScaleMin) = true
+
 /-- Large-`a` part shared by the generated fixed finite-window targets. -/
 structure PositiveSaddleLargeTailAuditCertificate : Prop where
   productPointwiseYRawUnitSolo :
@@ -5668,6 +6014,54 @@ theorem PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate.to
   soloYBudgetRowRangeChunks := cert.soloYBudgetRowRangeChunks
   edgeKChunkUnitRowRanges := cert.edgeKChunkUnitRowRanges
 
+theorem PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate.toProductTangentSoloNChunkedAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen) :
+    PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate
+      productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen where
+  productRowLenPos := cert.productRowLenPos
+  tangentRowLenPos := cert.tangentRowLenPos
+  soloSaddleRowLenPos := cert.soloSaddleRowLenPos
+  soloBudgetRowLenPos := cert.soloBudgetRowLenPos
+  edgeRowLenPos := cert.edgeRowLenPos
+  productNLenPos := cert.productNLenPos
+  tangentNLenPos := cert.tangentNLenPos
+  soloSaddleNLenPos := cert.soloSaddleNLenPos
+  soloBudgetNLenPos := cert.soloBudgetNLenPos
+  tangentKLenPos := cert.tangentKLenPos
+  smallXYProductRawClearedTableProductRowRangeNIndexKChunks := by
+    intro rowChunk hrowChunk nIndex hnIndex edgeChunk hedgeChunk
+    exact
+      checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk_of_productKChunks
+        cert.productKLenPos hedgeChunk
+        (fun {productKChunk} hproductKChunk =>
+          cert.smallXYProductRawClearedTableProductRowRangeNIndexKChunks
+            (rowChunk := rowChunk) hrowChunk (nIndex := nIndex) hnIndex
+            (productKChunk := productKChunk) hproductKChunk)
+  temperedXYProductRawClearedTableProductRowRangeNIndexKChunks := by
+    intro rowChunk hrowChunk nIndex hnIndex edgeChunk hedgeChunk
+    exact
+      checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk_of_productKChunks
+        cert.productKLenPos hedgeChunk
+        (fun {productKChunk} hproductKChunk =>
+          cert.temperedXYProductRawClearedTableProductRowRangeNIndexKChunks
+            (rowChunk := rowChunk) hrowChunk (nIndex := nIndex) hnIndex
+            (productKChunk := productKChunk) hproductKChunk)
+  smallTangentExpEdgeRowRangeNIndexKChunks :=
+    cert.smallTangentExpEdgeRowRangeNIndexKChunks
+  soloYSaddleClearedRowRangeNIndexChunks :=
+    cert.soloYSaddleClearedRowRangeNIndexChunks
+  soloYBudgetRowRangeNIndexChunks :=
+    cert.soloYBudgetRowRangeNIndexChunks
+  edgeKChunkUnitRowRanges := cert.edgeKChunkUnitRowRanges
+
 theorem PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate.toProductNChunkedTangentAuditCertificate
     {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
       productNLen tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen : Nat}
@@ -5798,6 +6192,20 @@ theorem unorm_tail_of_positiveSaddleFixedFiniteWindowProductTangentSoloNChunkedA
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate
     cert.toProductNChunkedTangentAuditCertificate tail
+
+theorem unorm_tail_of_positiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate
+    cert.toProductTangentSoloNChunkedAuditCertificate tail
 
 theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedFiniteRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
     {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen

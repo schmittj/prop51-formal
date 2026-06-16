@@ -129,7 +129,18 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
   index when whole-row `N` scans are too large; emit it with
-  `--strategy product-tangent-solo-n-chunked`.  When
+  `--strategy product-tangent-solo-n-chunked`.  The proof-production
+  refinement
+  `Prop51.PositiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate`
+  additionally splits product checks by `Prop51.positiveProductFixedKChunks`;
+  emit it with `--strategy product-nk-tangent-solo-n-chunked` and choose
+  `--product-k-len` independently of the default edge chunks.  This is still
+  mathematically the same finite certificate target: the finer product
+  `k`-atoms are assembled back into the existing 20-wide edge-product
+  obligations.  In local profiling, one-row product atoms with
+  `--n-len 10 --product-k-len 1` compile in roughly 13-15 seconds at
+  `a = 401`, whereas the 20-wide product atom at `--n-len 10` did not finish
+  in the earlier timeout.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
