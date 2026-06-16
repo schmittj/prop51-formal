@@ -847,6 +847,29 @@ def positiveEdgeMajorantTerm (a k : Nat) : ℚ :=
 def positiveEdgeMajorantSum (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
 
+/-- Partial corrected edge sum over a half-open `k`-chunk.
+
+This is an executable helper for generated finite audits: whole-row edge
+budget checks are expensive, while 20-term chunks currently evaluate in a few
+seconds.  Terms outside `positiveKRange a` are padded by zero, so fixed
+`k`-chunks can be reused uniformly for all `a` in the finite window. -/
+def positiveEdgeMajorantKChunkSum (a lo len : Nat) : ℚ :=
+  ∑ k ∈ Finset.Ico lo (lo + len),
+    if k ∈ positiveKRange a then positiveEdgeMajorantTerm a k else 0
+
+/-- Sum of several edge `k`-chunks.  The chunks may overlap; the monotonicity
+lemmas below only use nonnegativity, so overlapping chunks are harmless but may
+make the bound looser. -/
+def positiveEdgeMajorantKChunksSum
+    (a : Nat) (chunks : Finset (Nat × Nat)) : ℚ :=
+  ∑ chunk ∈ chunks, positiveEdgeMajorantKChunkSum a chunk.1 chunk.2
+
+/-- Unit-scaled check for one partial edge `k`-chunk.  If this succeeds with
+scale `D`, the chunk sum is at most `1/D`. -/
+def checkPositiveEdgeMajorantKChunkUnit
+    (a lo len scale : Nat) : Bool :=
+  decide ((scale : ℚ) * positiveEdgeMajorantKChunkSum a lo len ≤ 1)
+
 /-! ### Custom edge majorants
 
 The finite-window scan uses `positiveSmallMajorantTerm` and
@@ -6194,6 +6217,121 @@ theorem positiveEdgeMajorantSum_nonneg {a : Nat}
   unfold positiveEdgeMajorantSum
   exact Finset.sum_nonneg fun k hk =>
     positiveEdgeMajorantTerm_nonneg ha401 ha2000 hk
+
+theorem positiveEdgeMajorantKChunkSum_nonneg {a lo len : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    0 ≤ positiveEdgeMajorantKChunkSum a lo len := by
+  unfold positiveEdgeMajorantKChunkSum
+  refine Finset.sum_nonneg fun k _hk => ?_
+  by_cases hkRange : k ∈ positiveKRange a
+  · simpa [hkRange] using
+      positiveEdgeMajorantTerm_nonneg ha401 ha2000 hkRange
+  · simp [hkRange]
+
+theorem positiveEdgeMajorantKChunksSum_nonneg
+    {a : Nat} {chunks : Finset (Nat × Nat)}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    0 ≤ positiveEdgeMajorantKChunksSum a chunks := by
+  unfold positiveEdgeMajorantKChunksSum
+  exact Finset.sum_nonneg fun chunk _ =>
+    positiveEdgeMajorantKChunkSum_nonneg
+      (a := a) (lo := chunk.1) (len := chunk.2) ha401 ha2000
+
+theorem positiveEdgeMajorantTerm_le_KChunkSum_of_mem
+    {a k lo len : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hkRange : k ∈ positiveKRange a)
+    (hkChunk : k ∈ Finset.Ico lo (lo + len)) :
+    positiveEdgeMajorantTerm a k ≤
+      positiveEdgeMajorantKChunkSum a lo len := by
+  unfold positiveEdgeMajorantKChunkSum
+  calc
+    positiveEdgeMajorantTerm a k
+        = ∑ x ∈ ({k} : Finset Nat),
+            if x ∈ positiveKRange a then positiveEdgeMajorantTerm a x else 0 := by
+          simp [hkRange]
+    _ ≤ ∑ x ∈ Finset.Ico lo (lo + len),
+          if x ∈ positiveKRange a then positiveEdgeMajorantTerm a x else 0 :=
+        Finset.sum_le_sum_of_subset_of_nonneg
+          (by
+            intro x hx
+            simp at hx
+            subst x
+            exact hkChunk)
+          (by
+            intro x _hx _hxnot
+            by_cases hxRange : x ∈ positiveKRange a
+            · simpa [hxRange] using
+                positiveEdgeMajorantTerm_nonneg ha401 ha2000 hxRange
+            · simp [hxRange])
+
+theorem positiveEdgeMajorantKChunkSum_le_KChunksSum_of_mem
+    {a lo len : Nat} {chunks : Finset (Nat × Nat)}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hmem : (lo, len) ∈ chunks) :
+    positiveEdgeMajorantKChunkSum a lo len ≤
+      positiveEdgeMajorantKChunksSum a chunks := by
+  unfold positiveEdgeMajorantKChunksSum
+  calc
+    positiveEdgeMajorantKChunkSum a lo len
+        = ∑ chunk ∈ ({(lo, len)} : Finset (Nat × Nat)),
+            positiveEdgeMajorantKChunkSum a chunk.1 chunk.2 := by
+          simp
+    _ ≤ ∑ chunk ∈ chunks,
+          positiveEdgeMajorantKChunkSum a chunk.1 chunk.2 :=
+        Finset.sum_le_sum_of_subset_of_nonneg
+          (by
+            intro chunk hchunk
+            simp at hchunk
+            subst chunk
+            exact hmem)
+          (by
+            intro chunk _hchunk _hnot
+            exact positiveEdgeMajorantKChunkSum_nonneg
+              (a := a) (lo := chunk.1) (len := chunk.2) ha401 ha2000)
+
+theorem positiveEdgeMajorantSum_le_KChunkSum_of_cover
+    {a lo len : Nat}
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        k ∈ Finset.Ico lo (lo + len)) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeMajorantKChunkSum a lo len := by
+  unfold positiveEdgeMajorantSum positiveEdgeMajorantKChunkSum
+  calc
+    ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
+        = ∑ k ∈ positiveKRange a,
+            if k ∈ positiveKRange a then positiveEdgeMajorantTerm a k else 0 := by
+          simp
+    _ ≤ ∑ k ∈ Finset.Ico lo (lo + len),
+          if k ∈ positiveKRange a then positiveEdgeMajorantTerm a k else 0 :=
+        Finset.sum_le_sum_of_subset_of_nonneg
+          (by
+            intro k hk
+            exact hcover hk)
+          (by
+            intro k _hk hnot
+            simp [hnot])
+
+theorem positiveEdgeMajorantKChunkSum_le_inv_of_checkUnit
+    {a lo len scale : Nat}
+    (hscale : 0 < scale)
+    (h : checkPositiveEdgeMajorantKChunkUnit a lo len scale = true) :
+    positiveEdgeMajorantKChunkSum a lo len ≤ 1 / (scale : ℚ) := by
+  have hscaleQ : (0 : ℚ) < (scale : ℚ) := by exact_mod_cast hscale
+  have hmul :
+      (scale : ℚ) * positiveEdgeMajorantKChunkSum a lo len ≤ 1 :=
+    of_decide_eq_true h
+  rw [le_div_iff₀ hscaleQ]
+  simpa [mul_comm] using hmul
+
+theorem positiveEdgeBudget_of_KChunkBound
+    {a lo len : Nat}
+    (hcover :
+      ∀ {k : Nat}, k ∈ positiveKRange a →
+        k ∈ Finset.Ico lo (lo + len))
+    (hchunk : positiveEdgeMajorantKChunkSum a lo len ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  exact (positiveEdgeMajorantSum_le_KChunkSum_of_cover hcover).trans hchunk
 
 /-! ## Reducer from pointwise saddle estimates to the corrected edge scan -/
 
