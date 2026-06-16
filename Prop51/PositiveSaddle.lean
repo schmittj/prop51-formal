@@ -2849,6 +2849,60 @@ theorem positiveTemperedEntropyShadowExpMajorantTerm_nonneg
     (mul_nonneg (mul_nonneg (mul_nonneg hcoef hkj) hbinom) hdecay)
     hExp
 
+theorem positiveSmallEntropyShadowExpMajorantTerm_pos
+    {smallExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp : 0 < smallExp a k) :
+    0 < positiveSmallEntropyShadowExpMajorantTerm smallExp a k := by
+  have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hkpos : 0 < k := by
+    have hk1 := (mem_positiveKRange.mp hkRange).1
+    omega
+  have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hkpos
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+  have hbinom :
+      0 < positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatioEntropyShadowPosJBound_pos_of_mem_large ha hkRange
+  have hcoef : (0 : ℚ) < 65 / (posNhi a : ℚ) := by positivity
+  have hkj : (0 : ℚ) < (k : ℚ) * (posJ a k : ℚ) :=
+    mul_pos hkQ hjQ
+  have hdecay : 0 < positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_pos (posJ a k)
+  unfold positiveSmallEntropyShadowExpMajorantTerm
+  exact mul_pos
+    (mul_pos (mul_pos (mul_pos hcoef hkj) hbinom) hdecay)
+    hExp
+
+theorem positiveTemperedEntropyShadowExpMajorantTerm_pos
+    {temperedExp : Nat → Nat → ℚ} {a k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp : 0 < temperedExp a k) :
+    0 < positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k := by
+  have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hkpos : 0 < k := by
+    have hk1 := (mem_positiveKRange.mp hkRange).1
+    omega
+  have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hkpos
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+  have hbinom :
+      0 < positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatioEntropyShadowPosJBound_pos_of_mem_large ha hkRange
+  have hcoef : (0 : ℚ) < 96 / (posNlo a : ℚ) := by positivity
+  have hkj : (0 : ℚ) < (k : ℚ) * (posJ a k : ℚ) :=
+    mul_pos hkQ hjQ
+  have hdecay : 0 < positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_pos (posJ a k)
+  unfold positiveTemperedEntropyShadowExpMajorantTerm
+  exact mul_pos
+    (mul_pos (mul_pos (mul_pos hcoef hkj) hbinom) hdecay)
+    hExp
+
 theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
     {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
     (hExp :
@@ -2982,6 +3036,99 @@ theorem positiveEntropyShadowExpTemperedBranchSum_eq_Icc
         positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k :=
   positiveCustomTemperedBranchSum_eq_Icc
     (positiveTemperedEntropyShadowExpMajorantTerm temperedExp) a
+
+theorem mem_positiveKRange_of_small_branch_step
+    {a r : Nat} (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    r ∈ positiveKRange a :=
+  mem_positiveKRange.mpr ⟨hr1, by omega⟩
+
+theorem mem_positiveKRange_of_tempered_branch_step
+    {a r : Nat} (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a) :
+    r ∈ positiveKRange a :=
+  mem_positiveKRange.mpr ⟨(le_trans (le_max_left _ _) hrlo), by omega⟩
+
+theorem positiveSmallEntropyShadowExpMajorantTerm_pos_of_branch_step
+    {smallExp : Nat → Nat → ℚ} {a r : Nat}
+    (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hExp : 0 < smallExp a r) :
+    0 < positiveSmallEntropyShadowExpMajorantTerm smallExp a r :=
+  positiveSmallEntropyShadowExpMajorantTerm_pos
+    (by omega : 20 ≤ a)
+    (mem_positiveKRange_of_small_branch_step hr1 hrhi)
+    hExp
+
+theorem positiveTemperedEntropyShadowExpMajorantTerm_pos_of_branch_step
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat}
+    (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a)
+    (hExp : 0 < temperedExp a r) :
+    0 < positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r :=
+  positiveTemperedEntropyShadowExpMajorantTerm_pos
+    (by omega : 20 ≤ a)
+    (mem_positiveKRange_of_tempered_branch_step hrlo hrhi)
+    hExp
+
+/-- Convert a quotient-style successor estimate into the multiplicative step
+used by the geometric-tail lemmas. -/
+theorem le_mul_of_div_le_pos {x y q : ℚ} (hx : 0 < x)
+    (hquot : y / x ≤ q) : y ≤ x * q := by
+  have hmul : y ≤ q * x := (div_le_iff₀ hx).mp hquot
+  simpa [mul_comm] using hmul
+
+theorem positiveSmallEntropyShadowExp_step_of_div_step
+    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (hpos : 0 < positiveSmallEntropyShadowExpMajorantTerm smallExp a r)
+    (hquot :
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1) /
+          positiveSmallEntropyShadowExpMajorantTerm smallExp a r ≤ q) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q :=
+  le_mul_of_div_le_pos hpos hquot
+
+theorem positiveTemperedEntropyShadowExp_step_of_div_step
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (hpos : 0 < positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r)
+    (hquot :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1) /
+          positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r ≤ q) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q :=
+  le_mul_of_div_le_pos hpos hquot
+
+theorem positiveSmallEntropyShadowExp_step_of_exp_pos_div_step
+    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hExp : 0 < smallExp a r)
+    (hquot :
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1) /
+          positiveSmallEntropyShadowExpMajorantTerm smallExp a r ≤ q) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q :=
+  positiveSmallEntropyShadowExp_step_of_div_step
+    (positiveSmallEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hr1 hrhi hExp)
+    hquot
+
+theorem positiveTemperedEntropyShadowExp_step_of_exp_pos_div_step
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a)
+    (hExp : 0 < temperedExp a r)
+    (hquot :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1) /
+          positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r ≤ q) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q :=
+  positiveTemperedEntropyShadowExp_step_of_div_step
+    (positiveTemperedEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hrlo hrhi hExp)
+    hquot
 
 theorem positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio
     {smallExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
@@ -3123,33 +3270,6 @@ theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_res
   positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_large
     ha hF0 hq0 hq1 hstep
     (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hfirst)
-
-/-- Convert a quotient-style successor estimate into the multiplicative step
-used by the geometric-tail lemmas. -/
-theorem le_mul_of_div_le_pos {x y q : ℚ} (hx : 0 < x)
-    (hquot : y / x ≤ q) : y ≤ x * q := by
-  have hmul : y ≤ q * x := (div_le_iff₀ hx).mp hquot
-  simpa [mul_comm] using hmul
-
-theorem positiveSmallEntropyShadowExp_step_of_div_step
-    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
-    (hpos : 0 < positiveSmallEntropyShadowExpMajorantTerm smallExp a r)
-    (hquot :
-      positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1) /
-          positiveSmallEntropyShadowExpMajorantTerm smallExp a r ≤ q) :
-    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
-      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q :=
-  le_mul_of_div_le_pos hpos hquot
-
-theorem positiveTemperedEntropyShadowExp_step_of_div_step
-    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
-    (hpos : 0 < positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r)
-    (hquot :
-      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1) /
-          positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r ≤ q) :
-    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
-      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q :=
-  le_mul_of_div_le_pos hpos hquot
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
