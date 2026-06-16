@@ -191,7 +191,12 @@ Status:
       conditional theorem bounding the retained positive sum by the corrected
       edge scan.  The rectangle arithmetic needed to feed the sign-lock
       theorem into the large-`k` exclusion (`k ≥ 361`, `N ≤ 40k/3`) is now
-      packaged as a reusable interface.
+      packaged as a reusable interface.  The final rational margin
+      `expNegLower50(1-2/a)-2215/a²` and the `10^-8` positive target are now
+      formalized, including the exact proof that the margin dominates the
+      target for every `a ≥ 401`; the large-`a` `Unorm < 0` assembly is
+      reduced to the remaining `Xnorm` lower bound, pointwise saddle
+      estimates, and positive-envelope certificate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

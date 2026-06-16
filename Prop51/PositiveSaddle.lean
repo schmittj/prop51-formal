@@ -285,12 +285,75 @@ def positiveEdgeMajorantTerm (a k : Nat) : ℚ :=
 def positiveEdgeMajorantSum (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
 
+/-! ## Large-`a` final margins -/
+
+/-- The positive-part target from paper §6. -/
+def positiveTarget : ℚ := 1 / 100000000
+
+/-- The rational sign-lock margin left after the `2215/m²` error budget. -/
+def signLockMargin (m : Nat) : ℚ :=
+  expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2
+
 /-! ## Raw normalized positive contribution -/
 
 /-- The normalized solo `Q_a` contribution in `Unorm`.  In the paper's
 notation this is the term written as `2^{-a-1}Y_a(N)`. -/
 def normalizedSoloTerm (a N : Nat) : ℚ :=
   Qq N a / ((N : ℚ) * c a)
+
+/-- The positive contribution envelope used by the large-`a` assembly. -/
+def positiveEnvelope (a N : Nat) : ℚ :=
+  normalizedSoloTerm a N + positiveEdgeMajorantSum a
+
+theorem positiveTarget_pos : 0 < positiveTarget := by
+  norm_num [positiveTarget]
+
+theorem signLockMargin_pos_of_ge_361 {m : Nat} (hm : 361 ≤ m) :
+    0 < signLockMargin m := by
+  have hmargin := signLock_final_margin_of_ge_361 (m := m) hm
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hm2pos : (0 : ℚ) < (m : ℚ)^2 := by positivity
+  unfold signLockMargin
+  rw [sub_pos]
+  rw [div_lt_iff₀ hm2pos]
+  nlinarith
+
+/-- The sign-lock margin is far larger than the §6 positive-part target on the
+whole post-certificate range. -/
+theorem positiveTarget_lt_signLockMargin_of_ge_401 {m : Nat} (hm : 401 ≤ m) :
+    positiveTarget < signLockMargin m := by
+  have hmQ : (401 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hfactor :
+      (399/401 : ℚ) ≤ 1 - 2/(m : ℚ) := by
+    have hdiv : (2 : ℚ) / (m : ℚ) ≤ 2 / 401 := by
+      rw [div_le_div_iff₀ hmpos (by norm_num : (0 : ℚ) < 401)]
+      nlinarith
+    nlinarith
+  have hfactor_exp :
+      expNegLower50 * (399/401 : ℚ)
+        ≤ expNegLower50 * (1 - 2/(m : ℚ)) :=
+    mul_le_mul_of_nonneg_left hfactor expNegLower50_pos.le
+  have hm_sq :
+      (401 : ℚ)^2 ≤ (m : ℚ)^2 := by
+    nlinarith
+  have hbudget :
+      2215 / (m : ℚ)^2 ≤ 2215 / (401 : ℚ)^2 := by
+    exact div_le_div_of_nonneg_left
+      (by norm_num : (0 : ℚ) ≤ 2215)
+      (by norm_num : (0 : ℚ) < (401 : ℚ)^2)
+      hm_sq
+  have hendpoint :
+      positiveTarget <
+        expNegLower50 * (399/401 : ℚ) - 2215 / (401 : ℚ)^2 := by
+    rw [expNegLower50_eq]
+    norm_num [positiveTarget]
+  have hlower :
+      expNegLower50 * (399/401 : ℚ) - 2215 / (401 : ℚ)^2
+        ≤ signLockMargin m := by
+    unfold signLockMargin
+    linarith
+  exact hendpoint.trans_le hlower
 
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
@@ -723,6 +786,47 @@ theorem Unorm_le_Xnorm_add_solo_add_edge_of_signLock_nonpos
     (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) hrect
     (large_Xnorm_nonpos_of_signLock_nonpos ha hrect hSL)
     hsmall htempered
+
+theorem Unorm_le_Xnorm_add_positiveEnvelope_of_signLock_nonpos
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k) :
+    Unorm a N ≤ Xnorm N a + positiveEnvelope a N := by
+  have hU := Unorm_le_Xnorm_add_solo_add_edge_of_signLock_nonpos
+    (a := a) (N := N) ha hrect hSL hsmall htempered
+  unfold positiveEnvelope
+  linarith
+
+/-- Large-`a` assembly: a sign-lock lower bound for `-X_a`, the two
+pointwise positive saddle estimates, and the `10^-8` positive-envelope
+certificate imply `Unorm < 0`. -/
+theorem Unorm_neg_of_signLockMargin_and_positiveEnvelope
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSLlarge : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hXmain : Xnorm N a ≤ -signLockMargin a)
+    (hpositive : positiveEnvelope a N ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  have hU := Unorm_le_Xnorm_add_positiveEnvelope_of_signLock_nonpos
+    (a := a) (N := N) ha hrect hSLlarge hsmall htempered
+  have htarget := positiveTarget_lt_signLockMargin_of_ge_401 (m := a) ha
+  linarith
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
