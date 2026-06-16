@@ -368,6 +368,19 @@ def positiveTemperedScalarProductBound (a N k : Nat) : ℚ :=
     positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
+/-- Direct combined small-regime target for `X_k(N) * Y_{a-k}(N)`.
+This is the product form that implies `positiveSmallScalarProductBound`
+without multiplying two independent `partialExpUpper` estimates. -/
+def positiveSmallXYProductBound (a N k : Nat) : ℚ :=
+  (2581/20) * (((k : ℚ) * (posJ a k : ℚ)) /
+    ((N : ℚ) * (posNhi a : ℚ))) *
+    partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- Direct combined tempered-regime target for `X_k(N) * Y_{a-k}(N)`. -/
+def positiveTemperedXYProductBound (a N k : Nat) : ℚ :=
+  (2117/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
+    partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
 /-! ### Displayed `X`/`Y` saddle-bound shapes -/
 
 /-- The small-regime `X_k(N)` exponent from the TeX display. -/
@@ -1225,6 +1238,76 @@ theorem positiveFactorizedRawTerm_le_of_XY_bounds
   exact positiveFactorizedRawTerm_le_of_bounds hN hk1 hB
     (positiveCRatio_le_binomRatio ha hk1 hkmax) hX hY
 
+theorem positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
+    (hXY :
+      Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductBound a N k) :
+    positiveFactorizedRawTerm a N k ≤ positiveSmallScalarProductBound a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hNQpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNQ : (N : ℚ) ≠ 0 := hNQpos.ne'
+  have hhiPos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hhiQ : (posNhi a : ℚ) ≠ 0 := hhiPos.ne'
+  have hR := positiveCRatio_le_binomRatio ha hk1 hkmax
+  have hX0 : 0 ≤ Xnorm N k := ((Bq_pos_iff_Xnorm_pos hN hk1).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) := Ynorm_nonneg N (posJ a k)
+  have hprod :
+      positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))
+        ≤ positiveBinomRatio a k * positiveSmallXYProductBound a N k :=
+    mul_le_mul hR hXY (mul_nonneg hX0 hY0) positiveBinomRatio_nonneg
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg (by positivity) (positiveDyadicDecay_nonneg (posJ a k))
+  calc
+    positiveFactorizedRawTerm a N k
+        = ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))) := by
+          unfold positiveFactorizedRawTerm
+          ring
+    _ ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveBinomRatio a k * positiveSmallXYProductBound a N k) :=
+          mul_le_mul_of_nonneg_left hprod hcommon
+    _ = positiveSmallScalarProductBound a k := by
+          unfold positiveSmallXYProductBound positiveSmallScalarProductBound
+          field_simp [hNQ, hhiQ]
+          ring
+
+theorem positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a) (hB : 0 < Bq N k)
+    (hXY :
+      Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k) :
+    positiveFactorizedRawTerm a N k ≤
+      positiveTemperedScalarProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hNQpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNQ : (N : ℚ) ≠ 0 := hNQpos.ne'
+  have hR := positiveCRatio_le_binomRatio ha hk1 hkmax
+  have hX0 : 0 ≤ Xnorm N k := ((Bq_pos_iff_Xnorm_pos hN hk1).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) := Ynorm_nonneg N (posJ a k)
+  have hprod :
+      positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))
+        ≤ positiveBinomRatio a k * positiveTemperedXYProductBound a N k :=
+    mul_le_mul hR hXY (mul_nonneg hX0 hY0) positiveBinomRatio_nonneg
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg (by positivity) (positiveDyadicDecay_nonneg (posJ a k))
+  calc
+    positiveFactorizedRawTerm a N k
+        = ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))) := by
+          unfold positiveFactorizedRawTerm
+          ring
+    _ ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+            (positiveBinomRatio a k * positiveTemperedXYProductBound a N k) :=
+          mul_le_mul_of_nonneg_left hprod hcommon
+    _ = positiveTemperedScalarProductBound a N k := by
+          unfold positiveTemperedXYProductBound positiveTemperedScalarProductBound
+          field_simp [hNQ]
+          ring
+
 theorem partialExpUpper_nonneg_of_nonneg_lt {y : ℚ} {T₀ : Nat}
     (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
     0 ≤ partialExpUpper y T₀ := by
@@ -1948,6 +2031,28 @@ structure PositiveSaddleScalarBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Combined-product version of the budgeted §6 interface.  Its analytic
+fields ask directly for bounds on `X_k(N) * Y_{a-k}(N)` with the combined
+exponents used by the executable majorants, avoiding the false
+submultiplicativity requirement for independent `partialExpUpper` bounds. -/
+structure PositiveSaddleCombinedProductBudgetCertificate : Prop where
+  smallXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductBound a N k
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -1974,6 +2079,23 @@ theorem PositiveSaddleScalarBudgetCertificate.toScalarCertificate
     intro a ha ha2000
     exact positiveEnvelopeBound_le_target_of_edgeBudget
       (cert.edgeBudget ha ha2000)
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleCombinedProductBudgetCertificate.toScalarBudgetCertificate
+    (cert : PositiveSaddleCombinedProductBudgetCertificate) :
+    PositiveSaddleScalarBudgetCertificate where
+  smallScalar := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    exact positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 2 ≤ a)
+      hk hB (cert.smallXY ha ha2000 hrect hk hsmall hB)
+  temperedScalar := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    exact positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 2 ≤ a)
+      hk hB (cert.temperedXY ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
 
 /-- A still more decomposed §6 interface: prove separate saddle bounds for
@@ -2107,6 +2229,11 @@ theorem PositiveSaddleScalarBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toScalarCertificate.toCertificate
 
+theorem PositiveSaddleCombinedProductBudgetCertificate.toCertificate
+    (cert : PositiveSaddleCombinedProductBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toScalarBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2157,6 +2284,11 @@ theorem unorm_tail_of_positiveSaddleScalarCertificate
 
 theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
     (cert : PositiveSaddleScalarBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleCombinedProductBudgetCertificate
+    (cert : PositiveSaddleCombinedProductBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

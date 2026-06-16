@@ -255,7 +255,10 @@ Status:
       surrogates is slightly too strong for the executable majorants, so the
       sound target remains the combined scalar-product estimate.  Lean records
       this with the exact audit witness
-      `positiveSmallDisplayedExpEdge_not_le_combined_example`.
+      `positiveSmallDisplayedExpEdge_not_le_combined_example`.  The corrected
+      intermediate target is `PositiveSaddleCombinedProductBudgetCertificate`,
+      which asks directly for combined `X_k(N) * Y_{a-k}(N)` bounds with the
+      single executable exponent and converts to the scalar-budget certificate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
