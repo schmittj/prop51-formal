@@ -235,6 +235,29 @@ theorem self_le_ten_mul_posJ_of_le_posKmax {a k : Nat}
   have h10 : 10*k ≤ 9*a := ten_mul_le_nine_mul_of_le_posKmax hk
   omega
 
+theorem lt_pred_of_le_posKmax_of_large {a k : Nat}
+    (ha : 20 ≤ a) (hk : k ≤ posKmax a) :
+    k < a - 1 := by
+  have h10 : 10*k ≤ 9*a := ten_mul_le_nine_mul_of_le_posKmax hk
+  omega
+
+theorem two_le_posJ_of_le_posKmax_of_large {a k : Nat}
+    (ha : 20 ≤ a) (hk : k ≤ posKmax a) :
+    2 ≤ posJ a k := by
+  have hka : k < a - 1 := lt_pred_of_le_posKmax_of_large ha hk
+  unfold posJ
+  omega
+
+theorem lt_pred_of_mem_positiveKRange_of_large {a k : Nat}
+    (ha : 20 ≤ a) (hk : k ∈ positiveKRange a) :
+    k < a - 1 :=
+  lt_pred_of_le_posKmax_of_large ha (mem_positiveKRange.mp hk).2
+
+theorem two_le_posJ_of_mem_positiveKRange_of_large {a k : Nat}
+    (ha : 20 ≤ a) (hk : k ∈ positiveKRange a) :
+    2 ≤ posJ a k :=
+  two_le_posJ_of_le_posKmax_of_large ha (mem_positiveKRange.mp hk).2
+
 theorem nine_mul_le_ten_mul_of_posKmax_lt {a k : Nat}
     (hk : posKmax a < k) :
     9*a ≤ 10*k := by
@@ -2441,6 +2464,41 @@ theorem positiveBinomRatio_le_entropyShadowPosJBound {a k : Nat}
   simpa [positiveBinomRatioEntropyShadowPosJBound, hcomp]
     using positiveBinomRatio_le_entropyShadowRatio (a := a) (k := k) hk hklt
 
+theorem positiveBinomRatio_one (a : Nat) :
+    positiveBinomRatio a 1 = 1 / ((a - 1 : Nat) : ℚ) := by
+  simp [positiveBinomRatio, positiveBinomDen]
+
+theorem positiveBinomRatioEntropyShadowPosJBound_one {a : Nat} (ha : 3 ≤ a) :
+    positiveBinomRatioEntropyShadowPosJBound a 1 = 1 := by
+  have hJ : posJ a 1 - 1 = a - 2 := by
+    unfold posJ
+    omega
+  have hpow_ne : ((a - 2 : Nat) : ℚ)^(a - 2) ≠ 0 := by
+    have ha2 : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < a - 2)
+    exact (pow_pos ha2 _).ne'
+  simp [positiveBinomRatioEntropyShadowPosJBound, hJ, hpow_ne]
+
+theorem positiveBinomRatio_le_entropyShadowPosJBound_one {a : Nat} (ha : 3 ≤ a) :
+    positiveBinomRatio a 1 ≤ positiveBinomRatioEntropyShadowPosJBound a 1 := by
+  rw [positiveBinomRatio_one, positiveBinomRatioEntropyShadowPosJBound_one ha]
+  have hpos : (0 : ℚ) < ((a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 1)
+  rw [div_le_iff₀ hpos]
+  norm_num
+  exact_mod_cast (by omega : 1 ≤ a - 1)
+
+theorem positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a) :
+    positiveBinomRatio a k ≤ positiveBinomRatioEntropyShadowPosJBound a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  rcases Nat.eq_or_lt_of_le hk1 with hkeq | hkgt
+  · subst k
+    exact positiveBinomRatio_le_entropyShadowPosJBound_one (by omega : 3 ≤ a)
+  · have hk2 : 2 ≤ k := by omega
+    have hklt : k < a - 1 := lt_pred_of_mem_positiveKRange_of_large ha hkRange
+    exact positiveBinomRatio_le_entropyShadowPosJBound hk2 hklt
+
 /-- Small-regime summand with the binomial reciprocal replaced by the
 entropy-shadow ratio.  This is a rational shell for the large-`a` tail; a
 later step still supplies the appropriate exponential tail majorant. -/
@@ -2488,6 +2546,37 @@ theorem positiveTemperedMajorantTerm_le_entropyShadowMajorantTerm
   gcongr
   · exact positiveDyadicDecay_nonneg (posJ a k)
   · exact positiveBinomRatio_le_entropyShadowPosJBound hk hklt
+
+theorem positiveSmallMajorantTerm_le_entropyShadowMajorantTerm_of_mem_large
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff) :
+    positiveSmallMajorantTerm a k ≤ positiveSmallEntropyShadowMajorantTerm a k := by
+  have hhi : (0 : ℚ) ≤ 65 / (posNhi a : ℚ) := by
+    have hpos : (0 : ℚ) < (posNhi a : ℚ) := by
+      exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+    positivity
+  rw [positiveSmallMajorantTerm_eq_binomRatio]
+  unfold positiveSmallEntropyShadowMajorantTerm
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large ha hkRange
+
+theorem positiveTemperedMajorantTerm_le_entropyShadowMajorantTerm_of_mem_large
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hExp :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff) :
+    positiveTemperedMajorantTerm a k ≤
+      positiveTemperedEntropyShadowMajorantTerm a k := by
+  have hlo : (0 : ℚ) ≤ 96 / (posNlo a : ℚ) := by
+    have hpos : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+    positivity
+  rw [positiveTemperedMajorantTerm_eq_binomRatio]
+  unfold positiveTemperedEntropyShadowMajorantTerm
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large ha hkRange
 
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.

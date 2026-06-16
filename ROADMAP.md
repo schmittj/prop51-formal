@@ -89,7 +89,10 @@ surrogate, with the constant degradation absorbed by the sign-lock budget
   The same reciprocal is also available in the paper's `j=a-k` notation as
   `positiveBinomRatio_le_entropyShadowPosJBound`, with small/tempered
   summand shells `positiveSmallEntropyShadowMajorantTerm` and
-  `positiveTemperedEntropyShadowMajorantTerm`.
+  `positiveTemperedEntropyShadowMajorantTerm`.  Endpoint bookkeeping is
+  covered by `positiveBinomRatio_le_entropyShadowPosJBound_one`, and the
+  retained range has the uniform wrapper
+  `positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large`.
 
 Status:
 
