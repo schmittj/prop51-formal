@@ -4268,6 +4268,68 @@ theorem positiveTemperedMajorantTerm_le_entropyShadowExpMajorantTerm_of_mem_larg
     (positiveTemperedEntropyShadowMajorantTerm_le_expMajorantTerm
       ha hkRange hExpLe)
 
+theorem normalizedPositiveIfTerm_le_smallEntropyShadowExpMajorantTerm_of_entropyShadow
+    {smallExp : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hTerm :
+      normalizedPositiveIfTerm a N k
+        ≤ positiveSmallEntropyShadowMajorantTerm a k)
+    (hExpLe :
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+        ≤ smallExp a k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k :=
+  hTerm.trans
+    (positiveSmallEntropyShadowMajorantTerm_le_expMajorantTerm
+      ha hkRange hExpLe)
+
+theorem normalizedPositiveIfTerm_le_temperedEntropyShadowExpMajorantTerm_of_entropyShadow
+    {temperedExp : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hTerm :
+      normalizedPositiveIfTerm a N k
+        ≤ positiveTemperedEntropyShadowMajorantTerm a k)
+    (hExpLe :
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+        ≤ temperedExp a k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k :=
+  hTerm.trans
+    (positiveTemperedEntropyShadowMajorantTerm_le_expMajorantTerm
+      ha hkRange hExpLe)
+
+theorem normalizedPositiveIfTerm_le_smallEntropyShadowExpMajorantTerm_of_majorant
+    {smallExp : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hTerm :
+      normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (hPartialNonneg :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff)
+    (hExpLe :
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+        ≤ smallExp a k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k :=
+  hTerm.trans
+    (positiveSmallMajorantTerm_le_entropyShadowExpMajorantTerm_of_mem_large
+      ha hkRange hPartialNonneg hExpLe)
+
+theorem normalizedPositiveIfTerm_le_temperedEntropyShadowExpMajorantTerm_of_majorant
+    {temperedExp : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (hTerm :
+      normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hPartialNonneg :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff)
+    (hExpLe :
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+        ≤ temperedExp a k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k :=
+  hTerm.trans
+    (positiveTemperedMajorantTerm_le_entropyShadowExpMajorantTerm_of_mem_large
+      ha hkRange hPartialNonneg hExpLe)
+
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.
 The paper records the sharper `9/(5π²)` constant; Lean uses the rational
