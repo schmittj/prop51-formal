@@ -251,7 +251,12 @@ Status:
       budgeted half-target split exposed as
       `PositiveSaddleEntropyShadowBudgetCertificate.entropyTail`.  This
       records the Lean-side loose solo/edge budget; it is weaker than the
-      TeX solo estimate but follows the same final positivity margin.
+      TeX solo estimate but follows the same final positivity margin.  The
+      retained edge budget can now be split by regime through
+      `positiveEntropyShadowSmallBranchSum`,
+      `positiveEntropyShadowTemperedBranchSum`, and
+      `PositiveSaddleEntropyShadowSplitBudgetCertificate.entropyTail`,
+      matching the paper's small/tempered entropy-tail decomposition.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to

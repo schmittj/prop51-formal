@@ -798,6 +798,16 @@ def positiveCustomEdgeMajorantSum
     (smallTerm temperedTerm : Nat → Nat → ℚ) (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k
 
+def positiveCustomSmallBranchSum
+    (smallTerm : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a,
+    if k ≤ posSmallCutoff a then smallTerm a k else 0
+
+def positiveCustomTemperedBranchSum
+    (temperedTerm : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a,
+    if posTemperedCutoff a < k then temperedTerm a k else 0
+
 @[simp] theorem positiveCustomEdgeMajorantTerm_finite (a k : Nat) :
     positiveCustomEdgeMajorantTerm positiveSmallMajorantTerm positiveTemperedMajorantTerm a k
       = positiveEdgeMajorantTerm a k := rfl
@@ -821,6 +831,22 @@ theorem positiveTemperedCustomTerm_le_edge
   unfold positiveCustomEdgeMajorantTerm
   rw [if_pos hk]
   exact le_max_right _ _
+
+theorem positiveCustomEdgeMajorantTerm_le_branch_sum_of_nonneg
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a k : Nat}
+    (hsmall0 : 0 ≤ smallTerm a k)
+    (htempered0 : 0 ≤ temperedTerm a k) :
+    positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k
+      ≤ (if k ≤ posSmallCutoff a then smallTerm a k else 0)
+        + (if posTemperedCutoff a < k then temperedTerm a k else 0) := by
+  unfold positiveCustomEdgeMajorantTerm
+  have hsmallBranch :
+      0 ≤ (if k ≤ posSmallCutoff a then smallTerm a k else 0 : ℚ) := by
+    by_cases hk : k ≤ posSmallCutoff a <;> simp [hk, hsmall0]
+  have htemperedBranch :
+      0 ≤ (if posTemperedCutoff a < k then temperedTerm a k else 0 : ℚ) := by
+    by_cases hk : posTemperedCutoff a < k <;> simp [hk, htempered0]
+  exact max_le (by linarith) (by linarith)
 
 theorem term_le_positiveCustomEdgeMajorantTerm_of_regime_bounds
     {smallTerm temperedTerm : Nat → Nat → ℚ} {a N k : Nat}
@@ -859,6 +885,53 @@ theorem sum_le_positiveCustomEdgeMajorantSum_of_regime_bounds
   sum_le_positiveCustomEdgeMajorantSum fun k hk =>
     term_le_positiveCustomEdgeMajorantTerm_of_regime_bounds hrect
       (hFsmall k hk) (hFtempered k hk)
+
+theorem positiveCustomEdgeMajorantSum_le_branchSums_of_nonneg
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a : Nat}
+    (hsmall0 : ∀ k, k ∈ positiveKRange a → 0 ≤ smallTerm a k)
+    (htempered0 : ∀ k, k ∈ positiveKRange a → 0 ≤ temperedTerm a k) :
+    positiveCustomEdgeMajorantSum smallTerm temperedTerm a
+      ≤ positiveCustomSmallBranchSum smallTerm a
+        + positiveCustomTemperedBranchSum temperedTerm a := by
+  unfold positiveCustomEdgeMajorantSum
+    positiveCustomSmallBranchSum positiveCustomTemperedBranchSum
+  calc
+    ∑ k ∈ positiveKRange a,
+        positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k
+        ≤
+      ∑ k ∈ positiveKRange a,
+        ((if k ≤ posSmallCutoff a then smallTerm a k else 0)
+          + (if posTemperedCutoff a < k then temperedTerm a k else 0)) := by
+          exact Finset.sum_le_sum fun k hk =>
+            positiveCustomEdgeMajorantTerm_le_branch_sum_of_nonneg
+              (hsmall0 k hk) (htempered0 k hk)
+    _ =
+      (∑ k ∈ positiveKRange a,
+        (if k ≤ posSmallCutoff a then smallTerm a k else 0))
+        +
+      (∑ k ∈ positiveKRange a,
+        (if posTemperedCutoff a < k then temperedTerm a k else 0)) := by
+          rw [Finset.sum_add_distrib]
+
+theorem positiveCustomEdgeMajorantSum_le_edgeBudget_of_branch_budgets
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a : Nat}
+    {smallBudget temperedBudget edgeBudget : ℚ}
+    (hsmall0 : ∀ k, k ∈ positiveKRange a → 0 ≤ smallTerm a k)
+    (htempered0 : ∀ k, k ∈ positiveKRange a → 0 ≤ temperedTerm a k)
+    (hsmall :
+      positiveCustomSmallBranchSum smallTerm a ≤ smallBudget)
+    (htempered :
+      positiveCustomTemperedBranchSum temperedTerm a ≤ temperedBudget)
+    (hbudget : smallBudget + temperedBudget ≤ edgeBudget) :
+    positiveCustomEdgeMajorantSum smallTerm temperedTerm a ≤ edgeBudget := by
+  calc
+    positiveCustomEdgeMajorantSum smallTerm temperedTerm a
+        ≤ positiveCustomSmallBranchSum smallTerm a
+          + positiveCustomTemperedBranchSum temperedTerm a :=
+          positiveCustomEdgeMajorantSum_le_branchSums_of_nonneg
+            hsmall0 htempered0
+    _ ≤ smallBudget + temperedBudget := add_le_add hsmall htempered
+    _ ≤ edgeBudget := hbudget
 
 /-! ## Large-`a` final margins -/
 
@@ -2526,6 +2599,12 @@ def positiveEntropyShadowEdgeMajorantSum (a : Nat) : ℚ :=
     positiveSmallEntropyShadowMajorantTerm
     positiveTemperedEntropyShadowMajorantTerm a
 
+def positiveEntropyShadowSmallBranchSum (a : Nat) : ℚ :=
+  positiveCustomSmallBranchSum positiveSmallEntropyShadowMajorantTerm a
+
+def positiveEntropyShadowTemperedBranchSum (a : Nat) : ℚ :=
+  positiveCustomTemperedBranchSum positiveTemperedEntropyShadowMajorantTerm a
+
 @[simp] theorem positiveEntropyShadowEdgeMajorantTerm_eq (a k : Nat) :
     positiveEntropyShadowEdgeMajorantTerm a k =
       positiveCustomEdgeMajorantTerm
@@ -2537,6 +2616,14 @@ def positiveEntropyShadowEdgeMajorantSum (a : Nat) : ℚ :=
       positiveCustomEdgeMajorantSum
         positiveSmallEntropyShadowMajorantTerm
         positiveTemperedEntropyShadowMajorantTerm a := rfl
+
+@[simp] theorem positiveEntropyShadowSmallBranchSum_eq (a : Nat) :
+    positiveEntropyShadowSmallBranchSum a =
+      positiveCustomSmallBranchSum positiveSmallEntropyShadowMajorantTerm a := rfl
+
+@[simp] theorem positiveEntropyShadowTemperedBranchSum_eq (a : Nat) :
+    positiveEntropyShadowTemperedBranchSum a =
+      positiveCustomTemperedBranchSum positiveTemperedEntropyShadowMajorantTerm a := rfl
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
@@ -3892,6 +3979,39 @@ theorem positiveEntropyShadowEnvelopeBound_le_target_of_standard_budgets
   refine positiveEntropyShadowEnvelopeBound_le_target_of_budgets hsolo hedge ?_
   rw [positiveSoloBudget_add_edgeBudget]
 
+theorem positiveEntropyShadowEdgeMajorantSum_le_edgeBudget_of_branch_budgets
+    {a : Nat} {smallBudget temperedBudget edgeBudget : ℚ}
+    (hsmall0 :
+      ∀ k, k ∈ positiveKRange a →
+        0 ≤ positiveSmallEntropyShadowMajorantTerm a k)
+    (htempered0 :
+      ∀ k, k ∈ positiveKRange a →
+        0 ≤ positiveTemperedEntropyShadowMajorantTerm a k)
+    (hsmall : positiveEntropyShadowSmallBranchSum a ≤ smallBudget)
+    (htempered : positiveEntropyShadowTemperedBranchSum a ≤ temperedBudget)
+    (hbudget : smallBudget + temperedBudget ≤ edgeBudget) :
+    positiveEntropyShadowEdgeMajorantSum a ≤ edgeBudget :=
+  positiveCustomEdgeMajorantSum_le_edgeBudget_of_branch_budgets
+    (smallTerm := positiveSmallEntropyShadowMajorantTerm)
+    (temperedTerm := positiveTemperedEntropyShadowMajorantTerm)
+    hsmall0 htempered0 hsmall htempered hbudget
+
+theorem positiveEntropyShadowEdgeMajorantSum_le_edgeBudget_of_half_branch_budgets
+    {a : Nat}
+    (hsmall0 :
+      ∀ k, k ∈ positiveKRange a →
+        0 ≤ positiveSmallEntropyShadowMajorantTerm a k)
+    (htempered0 :
+      ∀ k, k ∈ positiveKRange a →
+        0 ≤ positiveTemperedEntropyShadowMajorantTerm a k)
+    (hsmall : positiveEntropyShadowSmallBranchSum a ≤ positiveEdgeBudget / 2)
+    (htempered :
+      positiveEntropyShadowTemperedBranchSum a ≤ positiveEdgeBudget / 2) :
+    positiveEntropyShadowEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  refine positiveEntropyShadowEdgeMajorantSum_le_edgeBudget_of_branch_budgets
+    hsmall0 htempered0 hsmall htempered ?_
+  norm_num [positiveEdgeBudget, positiveTarget]
+
 /-- Budgeted entropy-shadow tail interface.
 
 This is the large-`a` analogue of the finite-window budget certificates: the
@@ -3929,6 +4049,56 @@ theorem PositiveSaddleEntropyShadowBudgetCertificate.entropyTail
     (cert : PositiveSaddleEntropyShadowBudgetCertificate) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toTailCertificate.entropyTail
+
+/-- Split-budget form of the entropy-shadow tail interface.
+
+This matches the two-regime structure of the TeX proof more closely than the
+single retained-edge budget: small and tempered branch sums are bounded
+separately, and Lean combines them through the `max ≤ small + tempered`
+branch-split lemma above. -/
+structure PositiveSaddleEntropyShadowSplitBudgetCertificate : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallEntropyShadowMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedEntropyShadowMajorantTerm a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ positiveSmallEntropyShadowMajorantTerm a k
+  temperedNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ positiveTemperedEntropyShadowMajorantTerm a k
+  smallEdgeBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowSmallBranchSum a ≤ positiveEdgeBudget / 2
+  temperedEdgeBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveEntropyShadowTemperedBranchSum a ≤ positiveEdgeBudget / 2
+
+theorem PositiveSaddleEntropyShadowSplitBudgetCertificate.toBudgetCertificate
+    (cert : PositiveSaddleEntropyShadowSplitBudgetCertificate) :
+    PositiveSaddleEntropyShadowBudgetCertificate where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  edgeBudget := by
+    intro a ha
+    exact positiveEntropyShadowEdgeMajorantSum_le_edgeBudget_of_half_branch_budgets
+      (fun k hk => cert.smallNonneg (a := a) ha hk)
+      (fun k hk => cert.temperedNonneg (a := a) ha hk)
+      (cert.smallEdgeBudget ha)
+      (cert.temperedEdgeBudget ha)
+
+theorem PositiveSaddleEntropyShadowSplitBudgetCertificate.entropyTail
+    (cert : PositiveSaddleEntropyShadowSplitBudgetCertificate) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toBudgetCertificate.entropyTail
 
 /-! ## Packaged remaining §6 certificate interface -/
 
