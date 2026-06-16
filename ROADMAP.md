@@ -255,7 +255,11 @@ Status:
       surrogate used by the executable majorants.  Those product obligations
       are now also factored through `PositiveSaddleExpEdgeBudgetCertificate`,
       whose remaining fields are the pure exponential/edge inequalities
-      after all common scalar prefactors have been cancelled.
+      after all common scalar prefactors have been cancelled.  The pure
+      comparisons are finally named as small/tempered product kernels in
+      `PositiveSaddleProductKernelBudgetCertificate`; the small kernel includes
+      the `posNhi/N` denominator-replacement factor, while the tempered kernel
+      is just the product-of-partial-exponentials comparison.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

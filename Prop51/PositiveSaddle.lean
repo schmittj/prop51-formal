@@ -449,6 +449,28 @@ def positiveTemperedCombinedExpEdge (a N k : Nat) : ℚ :=
   (1 / (N : ℚ)) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
+/-- Small-regime product kernel before dividing by the upper-edge denominator.
+The factor `posNhi a / N` is exactly the extra monotonicity burden caused by
+replacing the actual `N` denominator with the upper rectangle edge. -/
+def positiveSmallExpProductKernel (a N k : Nat) : ℚ :=
+  (posNhi a : ℚ) *
+    (partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff *
+      partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff)
+
+/-- Small-regime combined kernel after the upper-edge denominator replacement. -/
+def positiveSmallExpCombinedKernel (a N k : Nat) : ℚ :=
+  (N : ℚ) * partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- Tempered-regime product kernel.  The denominator is unchanged in this
+regime, so only the product of the two rational exponential surrogates remains. -/
+def positiveTemperedExpProductKernel (a k : Nat) : ℚ :=
+  partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff *
+    partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff
+
+/-- Tempered-regime combined exponential kernel. -/
+def positiveTemperedExpCombinedKernel (a k : Nat) : ℚ :=
+  partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
 theorem positiveSmallExponentAt_eq_smallX_add_Y (a N k : Nat) :
     positiveSmallExponentAt a N k =
       positiveSmallXExponentAt N + positiveYExponent a (posJ a k) := by
@@ -553,6 +575,35 @@ theorem positiveSmallDisplayedProductBound_le_scalar_of_expEdge
   exact mul_le_mul_of_nonneg_left hexp
     (positiveDisplayedCommonFactor_nonneg (by norm_num) a k)
 
+theorem positiveSmallDisplayedExpEdge_le_combined_of_kernel
+    {a N k : Nat} (hN : 1 ≤ N) (hNhi : N ≤ posNhi a)
+    (hkernel :
+      positiveSmallExpProductKernel a N k ≤
+        positiveSmallExpCombinedKernel a N k) :
+    positiveSmallDisplayedExpEdge a N k ≤ positiveSmallCombinedExpEdge a k := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhiNat : 0 < posNhi a := Nat.lt_of_lt_of_le (by omega : 0 < N) hNhi
+  have hhiQ : (0 : ℚ) < (posNhi a : ℚ) := by exact_mod_cast hhiNat
+  unfold positiveSmallExpProductKernel positiveSmallExpCombinedKernel at hkernel
+  unfold positiveSmallDisplayedExpEdge positiveSmallCombinedExpEdge
+  calc
+    (1 / (N : ℚ)) *
+        partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff *
+        partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff
+        =
+      ((posNhi a : ℚ) *
+        (partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff *
+          partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff)) /
+        ((N : ℚ) * (posNhi a : ℚ)) := by
+          field_simp [hNQ.ne', hhiQ.ne']
+    _ ≤ ((N : ℚ) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff) /
+        ((N : ℚ) * (posNhi a : ℚ)) :=
+          div_le_div_of_nonneg_right hkernel (mul_pos hNQ hhiQ).le
+    _ = (1 / (posNhi a : ℚ)) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+          field_simp [hNQ.ne', hhiQ.ne']
+
 theorem positiveTemperedDisplayedProductBound_le_scalar_of_expEdge
     {a N k : Nat} (hN : 1 ≤ N)
     (hexp : positiveTemperedDisplayedExpEdge a N k ≤
@@ -563,6 +614,31 @@ theorem positiveTemperedDisplayedProductBound_le_scalar_of_expEdge
     positiveTemperedScalarProductBound_eq_expEdge]
   exact mul_le_mul_of_nonneg_left hexp
     (positiveDisplayedCommonFactor_nonneg (by norm_num) a k)
+
+theorem positiveTemperedDisplayedExpEdge_le_combined_of_kernel
+    {a N k : Nat} (hN : 1 ≤ N)
+    (hkernel :
+      positiveTemperedExpProductKernel a k ≤
+        positiveTemperedExpCombinedKernel a k) :
+    positiveTemperedDisplayedExpEdge a N k ≤
+      positiveTemperedCombinedExpEdge a N k := by
+  have hNQpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNQ : (0 : ℚ) ≤ 1 / (N : ℚ) := by
+    exact one_div_nonneg.mpr hNQpos.le
+  unfold positiveTemperedExpProductKernel positiveTemperedExpCombinedKernel at hkernel
+  unfold positiveTemperedDisplayedExpEdge positiveTemperedCombinedExpEdge
+  calc
+    1 / (N : ℚ) *
+        partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff *
+        partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff
+        =
+      1 / (N : ℚ) *
+        (partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff *
+          partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff) := by
+          ring
+    _ ≤ 1 / (N : ℚ) *
+        partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff :=
+          mul_le_mul_of_nonneg_left hkernel hNQ
 
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
 use the small formula only when the small regime is possible somewhere in the
@@ -2011,6 +2087,46 @@ structure PositiveSaddleExpEdgeBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Product-kernel version of the displayed positive-saddle interface.  This
+is the narrowest current Lean target before the actual saddle estimates and
+finite certificates: all scalar prefactors have been removed from the product
+comparisons. -/
+structure PositiveSaddleProductKernelBudgetCertificate : Prop where
+  smallX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k ≤ positiveSmallXBound N k
+  smallY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  smallKernel :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveSmallExpProductKernel a N k ≤
+          positiveSmallExpCombinedKernel a N k
+  temperedX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k ≤ positiveTemperedXBound a N k
+  temperedY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  temperedKernel :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        positiveTemperedExpProductKernel a k ≤
+          positiveTemperedExpCombinedKernel a k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -2058,6 +2174,27 @@ theorem PositiveSaddleDisplayedBudgetCertificate.toScalarBudgetCertificate
       (cert.temperedX ha ha2000 hrect hk htemp hB)
       (cert.temperedY ha ha2000 hrect hk htemp hB)).trans
       (cert.temperedProduct ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleProductKernelBudgetCertificate.toExpEdgeBudgetCertificate
+    (cert : PositiveSaddleProductKernelBudgetCertificate) :
+    PositiveSaddleExpEdgeBudgetCertificate where
+  smallX := cert.smallX
+  smallY := cert.smallY
+  smallExpEdge := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact positiveSmallDisplayedExpEdge_le_combined_of_kernel hN hrect.2
+      (cert.smallKernel ha ha2000 hrect hk hsmall hB)
+  temperedX := cert.temperedX
+  temperedY := cert.temperedY
+  temperedExpEdge := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact positiveTemperedDisplayedExpEdge_le_combined_of_kernel hN
+      (cert.temperedKernel ha ha2000 hrect hk htemp hB)
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
@@ -2224,6 +2361,11 @@ theorem PositiveSaddleExpEdgeBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toDisplayedBudgetCertificate.toCertificate
 
+theorem PositiveSaddleProductKernelBudgetCertificate.toCertificate
+    (cert : PositiveSaddleProductKernelBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toExpEdgeBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2284,6 +2426,11 @@ theorem unorm_tail_of_positiveSaddleDisplayedBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleExpEdgeBudgetCertificate
     (cert : PositiveSaddleExpEdgeBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleProductKernelBudgetCertificate
+    (cert : PositiveSaddleProductKernelBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
