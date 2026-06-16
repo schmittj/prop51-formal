@@ -640,6 +640,16 @@ theorem coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeEx
   coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
     cert.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
 
+/-- Final assembly from the fully unit-budgeted current generated-audit shape:
+the product-pointwise solo field is `200000000 * solo ≤ 1`, and the candidate
+tail reserve fields are `800000000 * term ≤ 1`. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (cert :
+      PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    cert.toDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate

@@ -1366,6 +1366,17 @@ theorem positiveSoloBudget_nonneg : 0 ≤ positiveSoloBudget := by
 theorem positiveEdgeBudget_nonneg : 0 ≤ positiveEdgeBudget := by
   norm_num [positiveEdgeBudget, positiveTarget]
 
+theorem positiveSoloBudget_eq_inv_200000000 :
+    positiveSoloBudget = (1 : ℚ) / 200000000 := by
+  norm_num [positiveSoloBudget, positiveTarget]
+
+theorem le_positiveSoloBudget_of_mul_200000000_le_one
+    {x : ℚ} (h : (200000000 : ℚ) * x ≤ 1) :
+    x ≤ positiveSoloBudget := by
+  rw [positiveSoloBudget_eq_inv_200000000]
+  rw [le_div_iff₀ (by norm_num : (0 : ℚ) < 200000000)]
+  simpa [mul_comm] using h
+
 theorem positiveEdgeBudget_div_four_eq_inv_800000000 :
     positiveEdgeBudget / 4 = (1 : ℚ) / 800000000 := by
   norm_num [positiveEdgeBudget, positiveTarget]
@@ -7699,6 +7710,47 @@ structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate :
   soloY :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
       positiveDyadicDecay a / 2 * positiveYgcompBound N a ≤ positiveSoloBudget
+
+/-- Raw `Gcomp` product-pointwise certificate with the solo `Y_a(N)` budget
+scaled to the unit interval.
+
+The two product fields are the same as in
+`PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate`; the solo
+field clears `positiveSoloBudget = 1 / 200000000`. -/
+structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :
+    Prop where
+  smallProductRaw :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+  temperedProductRaw :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+  soloYUnit :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+        ≤ 1
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toProductPointwiseYRawCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate where
+  smallProductRaw := cert.smallProductRaw
+  temperedProductRaw := cert.temperedProductRaw
+  soloY := by
+    intro a N ha hrect
+    exact le_positiveSoloBudget_of_mul_200000000_le_one
+      (cert.soloYUnit ha hrect)
 
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate.toProductPointwiseLinearCertificate
     (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate) :
