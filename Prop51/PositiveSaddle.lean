@@ -78,6 +78,12 @@ theorem lt_ceilSqrt_of_sq_lt {n k : Nat} (h : k*k < n) :
   have hn : n ≤ k*k := (ceilSqrt_le_iff_le_sq).mp hle
   omega
 
+theorem one_le_ceilSqrt_of_pos {n : Nat} (hn : 0 < n) :
+    1 ≤ ceilSqrt n := by
+  rcases n with _ | n
+  · omega
+  · simp [ceilSqrt]
+
 /-- The largest cutoff at which the small-`k` saddle regime can occur anywhere
 in the rectangle.  This is the corrected `ceil(sqrt(12a-8))` edge from
 `scripts/positive_saddle_scan.py`. -/
@@ -205,6 +211,21 @@ theorem posKmax_lt_self {a : Nat} (ha : 1 ≤ a) :
   rw [Nat.div_lt_iff_lt_mul (by norm_num : 0 < 10)]
   omega
 
+theorem one_le_posKmax {a : Nat} (ha : 2 ≤ a) :
+    1 ≤ posKmax a := by
+  unfold posKmax
+  rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+  omega
+
+theorem four_mul_self_le_five_mul_posKmax {a : Nat} (ha : 9 ≤ a) :
+    4 * a ≤ 5 * posKmax a := by
+  have hlt : 9 * a < 10 * (posKmax a + 1) := by
+    have hsucc : posKmax a < posKmax a + 1 := Nat.lt_succ_self _
+    unfold posKmax at hsucc ⊢
+    simpa [Nat.mul_comm] using
+      (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 10)).mp hsucc
+  omega
+
 theorem lt_self_of_le_posKmax {a k : Nat} (ha : 1 ≤ a)
     (hk : k ≤ posKmax a) :
     k < a :=
@@ -257,6 +278,53 @@ theorem two_le_posJ_of_mem_positiveKRange_of_large {a k : Nat}
     (ha : 20 ≤ a) (hk : k ∈ positiveKRange a) :
     2 ≤ posJ a k :=
   two_le_posJ_of_le_posKmax_of_large ha (mem_positiveKRange.mp hk).2
+
+theorem one_le_posSmallCutoff {a : Nat} (ha : 1 ≤ a) :
+    1 ≤ posSmallCutoff a := by
+  unfold posSmallCutoff
+  exact one_le_ceilSqrt_of_pos (posNhi_pos ha)
+
+theorem positiveSmallBranch_hi_nonempty_of_large {a : Nat} (ha : 2000 < a) :
+    1 ≤ min (posKmax a) (posSmallCutoff a) := by
+  exact le_min (one_le_posKmax (by omega : 2 ≤ a))
+    (one_le_posSmallCutoff (by omega : 1 ≤ a))
+
+theorem posTemperedCutoff_add_one_le_posKmax_of_large {a : Nat}
+    (ha : 2000 < a) :
+    posTemperedCutoff a + 1 ≤ posKmax a := by
+  let q := posKmax a
+  let r := q - 1
+  have hq1 : 1 ≤ q := by
+    dsimp [q]
+    exact one_le_posKmax (by omega : 2 ≤ a)
+  have hq4 : 4 * a ≤ 5 * q := by
+    dsimp [q]
+    exact four_mul_self_le_five_mul_posKmax (by omega : 9 ≤ a)
+  have ha_le_2r : a ≤ 2 * r := by
+    dsimp [r]
+    omega
+  have hr_ge : 12 ≤ r := by
+    dsimp [r]
+    omega
+  have h6a_le : 6 * a ≤ r * r := by
+    have h6a : 6 * a ≤ 12 * r := by omega
+    have h12r : 12 * r ≤ r * r := by
+      exact Nat.mul_le_mul_right r hr_ge
+    exact h6a.trans h12r
+  have hr_sq : posNlo a ≤ r * r := by
+    unfold posNlo
+    omega
+  have hceil : posTemperedCutoff a ≤ r := by
+    unfold posTemperedCutoff
+    exact ceilSqrt_le_of_le_sq hr_sq
+  dsimp [r] at hceil
+  omega
+
+theorem positiveTemperedBranch_start_le_posKmax_of_large {a : Nat}
+    (ha : 2000 < a) :
+    max 1 (posTemperedCutoff a + 1) ≤ posKmax a := by
+  exact max_le (one_le_posKmax (by omega : 2 ≤ a))
+    (posTemperedCutoff_add_one_le_posKmax_of_large ha)
 
 theorem nine_mul_le_ten_mul_of_posKmax_lt {a k : Nat}
     (hk : posKmax a < k) :
@@ -2925,6 +2993,37 @@ theorem positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio
     (fun k => positiveSmallEntropyShadowExpMajorantTerm smallExp a k)
     hlohi hF0 hq0 hq1 hstep
 
+theorem positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio_large
+    {smallExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 : 0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1)
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, 1 ≤ r → r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 *
+        (1 / (1 - q)) :=
+  positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio
+    (positiveSmallBranch_hi_nonempty_of_large ha) hF0 hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_large
+    {smallExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 : 0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1)
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, 1 ≤ r → r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q)
+    (hbudget :
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 *
+        (1 / (1 - q)) ≤ positiveEdgeBudget / 2) :
+    positiveEntropyShadowExpSmallBranchSum smallExp a ≤ positiveEdgeBudget / 2 :=
+  (positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio_large
+    ha hF0 hq0 hq1 hstep).trans hbudget
+
 theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio
     {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
     (hlohi : max 1 (posTemperedCutoff a + 1) ≤ posKmax a)
@@ -2943,6 +3042,43 @@ theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio
   exact geom_chain_Icc_sum_le_inv_one_sub
     (fun k => positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k)
     hlohi hF0 hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - q)) :=
+  positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio
+    (positiveTemperedBranch_start_le_posKmax_of_large ha)
+    hF0 hq0 hq1 hstep
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hF0 :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hq0 : 0 ≤ q) (hq1 : q < 1)
+    (hstep :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q)
+    (hbudget :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - q))
+          ≤ positiveEdgeBudget / 2) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a ≤ positiveEdgeBudget / 2 :=
+  (positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio_large
+    ha hF0 hq0 hq1 hstep).trans hbudget
 
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
@@ -4498,6 +4634,130 @@ theorem PositiveSaddleEntropyShadowExpSplitBudgetCertificate.entropyTail
       smallExp temperedExp) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toCustomTailCertificate.entropyTail
+
+/-- First-term/ratio version of the parameterized entropy-shadow tail
+certificate.
+
+This is the form expected from a hand or generated rational entropy-tail
+audit: for each branch, prove a nonnegative exponential factor, a uniform
+successor ratio below `1`, and a first-term geometric tail budget.  Lean then
+supplies the active-range arithmetic, branch-sum geometric bound, and final
+positive-envelope assembly. -/
+structure PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ smallExp a k
+  temperedExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ temperedExp a k
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallStep :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r *
+            smallRatio a
+  smallFirstBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 *
+        (1 / (1 - smallRatio a)) ≤ positiveEdgeBudget / 2
+  temperedRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedRatio a
+  temperedRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedRatio a < 1
+  temperedStep :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            temperedRatio a
+  temperedFirstBudget :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)) *
+          (1 / (1 - temperedRatio a)) ≤ positiveEdgeBudget / 2
+
+theorem one_mem_positiveKRange_of_large {a : Nat} (ha : 2 ≤ a) :
+    1 ∈ positiveKRange a :=
+  mem_positiveKRange.mpr ⟨le_rfl, one_le_posKmax ha⟩
+
+theorem positiveTemperedBranch_start_mem_positiveKRange_of_large {a : Nat}
+    (ha : 2000 < a) :
+    max 1 (posTemperedCutoff a + 1) ∈ positiveKRange a :=
+  mem_positiveKRange.mpr
+    ⟨le_max_left _ _, positiveTemperedBranch_start_le_posKmax_of_large ha⟩
+
+theorem PositiveSaddleEntropyShadowExpGeometricBudgetCertificate.toExpSplitBudgetCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate smallExp temperedExp where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallNonneg := by
+    intro a k ha hk
+    exact positiveSmallEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.smallExpNonneg ha hk)
+  temperedNonneg := by
+    intro a k ha hk
+    exact positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.temperedExpNonneg ha hk)
+  smallEdgeBudget := by
+    intro a ha
+    have hF0 :
+        0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 :=
+      positiveSmallEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a)
+        (one_mem_positiveKRange_of_large (by omega : 2 ≤ a))
+        (cert.smallExpNonneg ha
+          (one_mem_positiveKRange_of_large (by omega : 2 ≤ a)))
+    exact positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_large
+      ha hF0 (cert.smallRatioNonneg ha) (cert.smallRatioLtOne ha)
+      (fun r hr1 hrhi => cert.smallStep ha hr1 hrhi)
+      (cert.smallFirstBudget ha)
+  temperedEdgeBudget := by
+    intro a ha
+    have hstart :
+        max 1 (posTemperedCutoff a + 1) ∈ positiveKRange a :=
+      positiveTemperedBranch_start_mem_positiveKRange_of_large ha
+    have hF0 :
+        0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) :=
+      positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a) hstart
+        (cert.temperedExpNonneg ha hstart)
+    exact positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_ratio_large
+      ha hF0 (cert.temperedRatioNonneg ha) (cert.temperedRatioLtOne ha)
+      (fun r hrlo hrhi => cert.temperedStep ha hrlo hrhi)
+      (cert.temperedFirstBudget ha)
+
+theorem PositiveSaddleEntropyShadowExpGeometricBudgetCertificate.entropyTail
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toExpSplitBudgetCertificate.entropyTail
 
 /-! ## Packaged remaining §6 certificate interface -/
 

@@ -274,7 +274,12 @@ Status:
       `positiveEntropyShadowExpTemperedBranchSum_eq_Icc`, plus direct
       first-term/ratio budget lemmas
       `positiveEntropyShadowExpSmallBranchSum_le_inv_one_sub_of_ratio` and
-      `positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio`.
+      `positiveEntropyShadowExpTemperedBranchSum_le_inv_one_sub_of_ratio`;
+      for `a > 2000`, the interval bookkeeping is discharged by
+      `positiveSmallBranch_hi_nonempty_of_large` and
+      `positiveTemperedBranch_start_le_posKmax_of_large`.  The resulting
+      first-term/ratio certificate is
+      `PositiveSaddleEntropyShadowExpGeometricBudgetCertificate.entropyTail`.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to
