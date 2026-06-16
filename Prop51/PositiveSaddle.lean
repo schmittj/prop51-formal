@@ -1154,6 +1154,58 @@ theorem geom_reverse_chain_Icc_sum_le_inv_one_sub
     (mul_le_mul_of_nonneg_left
       (geom_sum_le_inv_one_sub q hq0 hq1 (hi + 1 - lo)) hFhi)
 
+theorem sum_Icc_eq_sum_Icc_add_sum_Icc_succ
+    (F : Nat → ℚ) {lo mid hi : Nat}
+    (hlo_mid : lo ≤ mid) (hmid_hi : mid < hi) :
+    ∑ r ∈ Finset.Icc lo hi, F r =
+      ∑ r ∈ Finset.Icc lo mid, F r +
+        ∑ r ∈ Finset.Icc (mid + 1) hi, F r := by
+  have hsplit :
+      Finset.Icc lo hi =
+        Finset.Icc lo mid ∪ Finset.Icc (mid + 1) hi := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_union]
+    constructor
+    · intro hr
+      by_cases hle : r ≤ mid
+      · exact Or.inl ⟨hr.1, hle⟩
+      · exact Or.inr ⟨Nat.succ_le_of_lt (Nat.lt_of_not_ge hle), hr.2⟩
+    · intro hr
+      rcases hr with hleft | hright
+      · exact ⟨hleft.1, by omega⟩
+      · exact ⟨by omega, hright.2⟩
+  have hdisj :
+      Disjoint (Finset.Icc lo mid) (Finset.Icc (mid + 1) hi) := by
+    rw [Finset.disjoint_left]
+    intro r hleft hright
+    simp only [Finset.mem_Icc] at hleft hright
+    omega
+  rw [hsplit, Finset.sum_union hdisj]
+
+/-- Split geometric domination on a finite interval.
+
+The lower part of `[lo, hi]` is controlled forward from `lo` to `mid`, while
+the upper part is controlled backward from `hi` down to `mid + 1`.  This is
+the bookkeeping needed for the large-`a` tempered entropy-shadow branch: the
+natural quotient is not uniformly below one in a single direction on the full
+tempered interval. -/
+theorem geom_split_chain_Icc_sum_le_inv_one_sub
+    (F : Nat → ℚ) {lo mid hi : Nat} {qlo qhi : ℚ}
+    (hlo_mid : lo ≤ mid) (hmid_hi : mid < hi)
+    (hFlo : 0 ≤ F lo) (hFhi : 0 ≤ F hi)
+    (hqlo0 : 0 ≤ qlo) (hqlo1 : qlo < 1)
+    (hqhi0 : 0 ≤ qhi) (hqhi1 : qhi < 1)
+    (hstepLo : ∀ r, lo ≤ r → r < mid → F (r + 1) ≤ F r * qlo)
+    (hstepHi : ∀ r, mid + 1 < r → r ≤ hi → F (r - 1) ≤ F r * qhi) :
+    ∑ r ∈ Finset.Icc lo hi, F r
+      ≤ F lo * (1 / (1 - qlo)) + F hi * (1 / (1 - qhi)) := by
+  rw [sum_Icc_eq_sum_Icc_add_sum_Icc_succ F hlo_mid hmid_hi]
+  exact add_le_add
+    (geom_chain_Icc_sum_le_inv_one_sub F hlo_mid hFlo hqlo0 hqlo1
+      hstepLo)
+    (geom_reverse_chain_Icc_sum_le_inv_one_sub F
+      (by omega : mid + 1 ≤ hi) hFhi hqhi0 hqhi1 hstepHi)
+
 theorem mul_inv_one_sub_le_of_le_mul_one_sub {x B q : ℚ}
     (hq1 : q < 1) (h : x ≤ B * (1 - q)) :
     x * (1 / (1 - q)) ≤ B := by
@@ -4132,6 +4184,154 @@ theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_reverse_r
     ha hFhi hq0 hq1 hstep
     (mul_inv_one_sub_le_of_le_mul_one_sub hq1 hlast)
 
+theorem positiveEntropyShadowExpTemperedBranchSum_le_split_inv_one_sub_of_ratio
+    {temperedExp : Nat → Nat → ℚ} {a split : Nat} {qlo qhi : ℚ}
+    (hstart_split : max 1 (posTemperedCutoff a + 1) ≤ split)
+    (hsplit_hi : split < posKmax a)
+    (hFstart :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hqlo0 : 0 ≤ qlo) (hqlo1 : qlo < 1)
+    (hqhi0 : 0 ≤ qhi) (hqhi1 : qhi < 1)
+    (hstepLo :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < split →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qlo)
+    (hstepHi :
+      ∀ r, split + 1 < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qhi) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - qlo)) +
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) * (1 / (1 - qhi)) := by
+  rw [positiveEntropyShadowExpTemperedBranchSum_eq_Icc]
+  exact geom_split_chain_Icc_sum_le_inv_one_sub
+    (fun k => positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k)
+    hstart_split hsplit_hi hFstart hFhi hqlo0 hqlo1 hqhi0 hqhi1
+    hstepLo hstepHi
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_split_inv_one_sub_of_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a split : Nat} {qlo qhi : ℚ}
+    (_ha : 2000 < a)
+    (hstart_split : max 1 (posTemperedCutoff a + 1) ≤ split)
+    (hsplit_hi : split < posKmax a)
+    (hFstart :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hqlo0 : 0 ≤ qlo) (hqlo1 : qlo < 1)
+    (hqhi0 : 0 ≤ qhi) (hqhi1 : qhi < 1)
+    (hstepLo :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < split →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qlo)
+    (hstepHi :
+      ∀ r, split + 1 < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qhi) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - qlo)) +
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) * (1 / (1 - qhi)) :=
+  positiveEntropyShadowExpTemperedBranchSum_le_split_inv_one_sub_of_ratio
+    hstart_split hsplit_hi hFstart hFhi hqlo0 hqlo1 hqhi0 hqhi1
+    hstepLo hstepHi
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_split_ratio_large
+    {temperedExp : Nat → Nat → ℚ} {a split : Nat} {qlo qhi : ℚ}
+    (ha : 2000 < a)
+    (hstart_split : max 1 (posTemperedCutoff a + 1) ≤ split)
+    (hsplit_hi : split < posKmax a)
+    (hFstart :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hqlo0 : 0 ≤ qlo) (hqlo1 : qlo < 1)
+    (hqhi0 : 0 ≤ qhi) (hqhi1 : qhi < 1)
+    (hstepLo :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < split →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qlo)
+    (hstepHi :
+      ∀ r, split + 1 < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qhi)
+    (hbudget :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - qlo)) +
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) * (1 / (1 - qhi)) ≤ positiveEdgeBudget / 2) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveEdgeBudget / 2 :=
+  (positiveEntropyShadowExpTemperedBranchSum_le_split_inv_one_sub_of_ratio_large
+    ha hstart_split hsplit_hi hFstart hFhi hqlo0 hqlo1 hqhi0 hqhi1
+    hstepLo hstepHi).trans hbudget
+
+theorem positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_split_ratio_reserve_large
+    {temperedExp : Nat → Nat → ℚ} {a split : Nat} {qlo qhi : ℚ}
+    (ha : 2000 < a)
+    (hstart_split : max 1 (posTemperedCutoff a + 1) ≤ split)
+    (hsplit_hi : split < posKmax a)
+    (hFstart :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1)))
+    (hFhi :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a))
+    (hqlo0 : 0 ≤ qlo) (hqlo1 : qlo < 1)
+    (hqhi0 : 0 ≤ qhi) (hqhi1 : qhi < 1)
+    (hstepLo :
+      ∀ r, max 1 (posTemperedCutoff a + 1) ≤ r → r < split →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qlo)
+    (hstepHi :
+      ∀ r, split + 1 < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            qhi)
+    (hfirst :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1))
+          ≤ (positiveEdgeBudget / 4) * (1 - qlo))
+    (hlast :
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (posKmax a)
+          ≤ (positiveEdgeBudget / 4) * (1 - qhi)) :
+    positiveEntropyShadowExpTemperedBranchSum temperedExp a
+      ≤ positiveEdgeBudget / 2 :=
+  positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_split_ratio_large
+    ha hstart_split hsplit_hi hFstart hFhi hqlo0 hqlo1 hqhi0 hqhi1
+    hstepLo hstepHi
+    (by
+      calc
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+            (max 1 (posTemperedCutoff a + 1)) * (1 / (1 - qlo)) +
+          positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+            (posKmax a) * (1 / (1 - qhi))
+            ≤ positiveEdgeBudget / 4 + positiveEdgeBudget / 4 := by
+              exact add_le_add
+                (mul_inv_one_sub_le_of_le_mul_one_sub hqlo1 hfirst)
+                (mul_inv_one_sub_le_of_le_mul_one_sub hqhi1 hlast)
+        _ ≤ positiveEdgeBudget / 2 := by
+              norm_num [positiveEdgeBudget, positiveTarget])
+
 def positiveEntropyShadowEnvelope (a N : Nat) : ℚ :=
   positiveCustomEnvelope
     positiveSmallEntropyShadowMajorantTerm
@@ -6616,6 +6816,236 @@ structure PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
       positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (posKmax a)
         ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
 
+/-- Split-tempered geometric reserve certificate for the entropy-shadow tail.
+
+The small branch is unchanged.  The tempered branch is split at
+`temperedSplit a`: the lower part is controlled by a forward ratio and the
+upper part by a reverse ratio.  This records the only serious divergence from
+the streamlined TeX bookkeeping currently used here: the concrete large-exp
+tempered majorant is not uniformly reverse-geometric with ratio below one on
+the whole tempered interval, so Lean needs the split point explicitly. -/
+structure PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ smallExp a k
+  temperedExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ temperedExp a k
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallStep :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r *
+            smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedSplitLower :
+    ∀ {a : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ temperedSplit a
+  temperedSplitUpper :
+    ∀ {a : Nat}, 2000 < a → temperedSplit a < posKmax a
+  temperedLowerRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedLowerRatio a
+  temperedLowerRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedLowerRatio a < 1
+  temperedLowerStep :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            temperedLowerRatio a
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1))
+          ≤ (positiveEdgeBudget / 4) * (1 - temperedLowerRatio a)
+  temperedUpperReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedUpperReverseRatio a
+  temperedUpperReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedUpperReverseRatio a < 1
+  temperedUpperReverseStep :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r - 1)
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r *
+            temperedUpperReverseRatio a
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedUpperReverseRatio a)
+
+/-- Raw-base quotient form of the split-tempered reserve certificate.
+
+The lower tempered half uses the forward raw quotient at `r`; the upper half
+uses the inverse of the forward raw quotient at `r - 1`, matching the reverse
+geometric step. -/
+structure PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ smallExp a k
+  temperedExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ temperedExp a k
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallStepExpPos :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        0 < smallExp a r
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (smallExp a (r + 1) / smallExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedSplitLower :
+    ∀ {a : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ temperedSplit a
+  temperedSplitUpper :
+    ∀ {a : Nat}, 2000 < a → temperedSplit a < posKmax a
+  temperedLowerRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedLowerRatio a
+  temperedLowerRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedLowerRatio a < 1
+  temperedLowerStepExpPos :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        0 < temperedExp a r
+  temperedLowerRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (temperedExp a (r + 1) / temperedExp a r)
+          ≤ temperedLowerRatio a
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1))
+          ≤ (positiveEdgeBudget / 4) * (1 - temperedLowerRatio a)
+  temperedUpperReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedUpperReverseRatio a
+  temperedUpperReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedUpperReverseRatio a < 1
+  temperedUpperReverseStepExpPrevPos :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        0 < temperedExp a (r - 1)
+  temperedUpperReverseStepExpPos :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        0 < temperedExp a r
+  temperedUpperReverseRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (temperedExp a r / temperedExp a (r - 1)))
+          ≤ temperedUpperReverseRatio a
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedUpperReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate.toSplitTemperedGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate
+        smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate
+      smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+      temperedUpperReverseRatio where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallExpNonneg := cert.smallExpNonneg
+  temperedExpNonneg := cert.temperedExpNonneg
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallStep := by
+    intro a r ha hr1 hrhi
+    exact positiveSmallEntropyShadowExp_step_of_branch_raw_exp_quotient
+      ha hr1 hrhi
+      (cert.smallStepExpPos ha hr1 hrhi)
+      (cert.smallRawStepQuotient ha hr1 hrhi)
+  smallFirstReserve := cert.smallFirstReserve
+  temperedSplitLower := cert.temperedSplitLower
+  temperedSplitUpper := cert.temperedSplitUpper
+  temperedLowerRatioNonneg := cert.temperedLowerRatioNonneg
+  temperedLowerRatioLtOne := cert.temperedLowerRatioLtOne
+  temperedLowerStep := by
+    intro a r ha hrlo hrhi
+    have hrK : r < posKmax a := by
+      exact lt_of_lt_of_le hrhi
+        (le_of_lt (cert.temperedSplitUpper (a := a) ha))
+    exact positiveTemperedEntropyShadowExp_step_of_branch_raw_exp_quotient
+      ha hrlo hrK
+      (cert.temperedLowerStepExpPos ha hrlo hrhi)
+      (cert.temperedLowerRawStepQuotient ha hrlo hrhi)
+  temperedLowerFirstReserve := cert.temperedLowerFirstReserve
+  temperedUpperReverseRatioNonneg :=
+    cert.temperedUpperReverseRatioNonneg
+  temperedUpperReverseRatioLtOne :=
+    cert.temperedUpperReverseRatioLtOne
+  temperedUpperReverseStep := by
+    intro a r ha hrlo hrhi
+    have hstart_lt : max 1 (posTemperedCutoff a + 1) < r := by
+      exact lt_of_le_of_lt (cert.temperedSplitLower (a := a) ha)
+        (by omega : temperedSplit a < r)
+    exact positiveTemperedEntropyShadowExp_reverse_step_of_branch_raw_exp_quotient
+      ha hstart_lt hrhi
+      (cert.temperedUpperReverseStepExpPrevPos ha hrlo hrhi)
+      (cert.temperedUpperReverseStepExpPos ha hrlo hrhi)
+      (cert.temperedUpperReverseRawStepQuotient ha hrlo hrhi)
+  temperedUpperLastReserve := cert.temperedUpperLastReserve
+
 /-- Raw-base quotient form of the mixed-direction entropy-shadow reserve
 certificate.
 
@@ -6990,6 +7420,224 @@ theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCrossmulBounds
               using cert.temperedReverseRawStepCross ha hrlo hrhi
   temperedLastReserve := cert.temperedLastReserve
 
+/-- Concrete split-tempered quotient/reserve fields for the large-exp
+entropy-shadow tail.  This is the quotient-shaped target; generated rational
+audits should usually prove the cross-multiplied variant below instead. -/
+structure PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedSplitLower :
+    ∀ {a : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ temperedSplit a
+  temperedSplitUpper :
+    ∀ {a : Nat}, 2000 < a → temperedSplit a < posKmax a
+  temperedLowerRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedLowerRatio a
+  temperedLowerRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedLowerRatio a < 1
+  temperedLowerRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r)
+          ≤ temperedLowerRatio a
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedLowerRatio a)
+  temperedUpperReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedUpperReverseRatio a
+  temperedUpperReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedUpperReverseRatio a < 1
+  temperedUpperReverseRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1)))
+          ≤ temperedUpperReverseRatio a
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedUpperReverseRatio a)
+
+/-- Cross-multiplied concrete split-tempered bounds.  These fields are
+polynomial/rational inequalities after denominators are cleared; Lean converts
+them to the quotient-shaped bounds using positivity of the large-exp factors
+and the raw base quotient. -/
+structure PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepCross :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveSmallLargeExp a (r + 1)
+          ≤ smallRatio a * positiveSmallLargeExp a r
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedSplitLower :
+    ∀ {a : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ temperedSplit a
+  temperedSplitUpper :
+    ∀ {a : Nat}, 2000 < a → temperedSplit a < posKmax a
+  temperedLowerRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedLowerRatio a
+  temperedLowerRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedLowerRatio a < 1
+  temperedLowerRawStepCross :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveTemperedLargeExp a (r + 1)
+          ≤ temperedLowerRatio a * positiveTemperedLargeExp a r
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedLowerRatio a)
+  temperedUpperReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedUpperReverseRatio a
+  temperedUpperReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedUpperReverseRatio a < 1
+  temperedUpperReverseRawStepCross :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        positiveTemperedLargeExp a (r - 1)
+          ≤ temperedUpperReverseRatio a *
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedUpperReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate.toBoundsCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      temperedSplit smallRatio temperedLowerRatio temperedUpperReverseRatio where
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallRawStepQuotient := by
+    intro a r ha hr1 hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange_of_small_branch_step hr1 hrhi
+    have hEpos : 0 < positiveSmallLargeExp a r :=
+      positiveSmallLargeExp_pos_of_large ha hrmem
+    calc
+      positiveEntropyShadowBaseStepRawQuotient a r *
+          (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          = (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveSmallLargeExp a (r + 1)) /
+                positiveSmallLargeExp a r := by
+            ring
+      _ ≤ smallRatio a := by
+            rw [div_le_iff₀ hEpos]
+            simpa [mul_assoc, mul_left_comm, mul_comm]
+              using cert.smallRawStepCross ha hr1 hrhi
+  smallFirstReserve := cert.smallFirstReserve
+  temperedSplitLower := cert.temperedSplitLower
+  temperedSplitUpper := cert.temperedSplitUpper
+  temperedLowerRatioNonneg := cert.temperedLowerRatioNonneg
+  temperedLowerRatioLtOne := cert.temperedLowerRatioLtOne
+  temperedLowerRawStepQuotient := by
+    intro a r ha hrlo hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨le_trans (le_max_left _ _) hrlo, by
+        have hsplit := cert.temperedSplitUpper (a := a) ha
+        omega⟩
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrmem
+    calc
+      positiveEntropyShadowBaseStepRawQuotient a r *
+          (positiveTemperedLargeExp a (r + 1) /
+            positiveTemperedLargeExp a r)
+          = (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveTemperedLargeExp a (r + 1)) /
+                positiveTemperedLargeExp a r := by
+            ring
+      _ ≤ temperedLowerRatio a := by
+            rw [div_le_iff₀ hEpos]
+            simpa [mul_assoc, mul_left_comm, mul_comm]
+              using cert.temperedLowerRawStepCross ha hrlo hrhi
+  temperedLowerFirstReserve := cert.temperedLowerFirstReserve
+  temperedUpperReverseRatioNonneg :=
+    cert.temperedUpperReverseRatioNonneg
+  temperedUpperReverseRatioLtOne :=
+    cert.temperedUpperReverseRatioLtOne
+  temperedUpperReverseRawStepQuotient := by
+    intro a r ha hrlo hrhi
+    have hprevMem : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by
+        have hsplit := cert.temperedSplitLower (a := a) ha
+        omega, by omega⟩
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by
+        have hsplit := cert.temperedSplitLower (a := a) ha
+        omega, hrhi⟩
+    have hEprev : 0 < positiveTemperedLargeExp a (r - 1) :=
+      positiveTemperedLargeExp_pos_of_large ha hprevMem
+    have hE : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrmem
+    have hraw :
+        0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) := by
+      have hrprev1 : 1 ≤ r - 1 := by
+        have hsplit := cert.temperedSplitLower (a := a) ha
+        omega
+      have hj2 : 2 ≤ posJ a (r - 1) :=
+        two_le_posJ_of_le_posKmax_of_large
+          (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+      exact positiveEntropyShadowBaseStepRawQuotient_pos hrprev1 hj2
+    have hden :
+        0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r :=
+      mul_pos hraw hE
+    calc
+      1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+          (positiveTemperedLargeExp a r /
+            positiveTemperedLargeExp a (r - 1)))
+          =
+        positiveTemperedLargeExp a (r - 1) /
+          (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r) := by
+            field_simp [hraw.ne', hE.ne', hEprev.ne']
+      _ ≤ temperedUpperReverseRatio a := by
+            rw [div_le_iff₀ hden]
+            simpa [mul_assoc, mul_left_comm, mul_comm]
+              using cert.temperedUpperReverseRawStepCross ha hrlo hrhi
+  temperedUpperLastReserve := cert.temperedUpperLastReserve
+
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
 `positiveTemperedLargeExp`.
@@ -7047,6 +7695,79 @@ structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
           positiveTemperedLargeExp a (posKmax a)
         ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
 
+/-- Concrete large-exp certificate using the split-tempered raw-quotient
+reserve interface.  This is the intended replacement for the full tempered
+reverse-ratio certificate when instantiating the actual large-exp majorant. -/
+structure PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedSplitLower :
+    ∀ {a : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ temperedSplit a
+  temperedSplitUpper :
+    ∀ {a : Nat}, 2000 < a → temperedSplit a < posKmax a
+  temperedLowerRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedLowerRatio a
+  temperedLowerRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedLowerRatio a < 1
+  temperedLowerRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < temperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r)
+          ≤ temperedLowerRatio a
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedLowerRatio a)
+  temperedUpperReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedUpperReverseRatio a
+  temperedUpperReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedUpperReverseRatio a < 1
+  temperedUpperReverseRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      temperedSplit a + 1 < r → r ≤ posKmax a →
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1)))
+          ≤ temperedUpperReverseRatio a
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) * (1 - temperedUpperReverseRatio a)
+
 theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpMixedRawQuotientReserveCertificate
     {smallRatio temperedReverseRatio : Nat → ℚ}
     (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
@@ -7066,6 +7787,48 @@ theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpMixedR
   temperedReverseRatioLtOne := bounds.temperedReverseRatioLtOne
   temperedReverseRawStepQuotient := bounds.temperedReverseRawStepQuotient
   temperedLastReserve := bounds.temperedLastReserve
+
+theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpSplitTemperedRawQuotientReserveCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      temperedSplit smallRatio temperedLowerRatio temperedUpperReverseRatio where
+  small := pointwise.small
+  tempered := pointwise.tempered
+  soloBudget := pointwise.soloBudget
+  smallRatioNonneg := bounds.smallRatioNonneg
+  smallRatioLtOne := bounds.smallRatioLtOne
+  smallRawStepQuotient := bounds.smallRawStepQuotient
+  smallFirstReserve := bounds.smallFirstReserve
+  temperedSplitLower := bounds.temperedSplitLower
+  temperedSplitUpper := bounds.temperedSplitUpper
+  temperedLowerRatioNonneg := bounds.temperedLowerRatioNonneg
+  temperedLowerRatioLtOne := bounds.temperedLowerRatioLtOne
+  temperedLowerRawStepQuotient := bounds.temperedLowerRawStepQuotient
+  temperedLowerFirstReserve := bounds.temperedLowerFirstReserve
+  temperedUpperReverseRatioNonneg := bounds.temperedUpperReverseRatioNonneg
+  temperedUpperReverseRatioLtOne := bounds.temperedUpperReverseRatioLtOne
+  temperedUpperReverseRawStepQuotient :=
+    bounds.temperedUpperReverseRawStepQuotient
+  temperedUpperLastReserve := bounds.temperedUpperLastReserve
+
+theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpSplitTemperedCrossmulReserveCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      temperedSplit smallRatio temperedLowerRatio temperedUpperReverseRatio :=
+  pointwise.toLargeExpSplitTemperedRawQuotientReserveCertificate
+    bounds.toBoundsCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
     {smallRatio temperedReverseRatio : Nat → ℚ}
@@ -7116,6 +7879,80 @@ theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.to
       positiveSmallLargeExp positiveTemperedLargeExp
       smallRatio temperedReverseRatio :=
   cert.toMixedRawQuotientReserveCertificate.toMixedGeometricReserveCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate.toSplitTemperedRawQuotientReserveCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp temperedSplit
+      smallRatio temperedLowerRatio temperedUpperReverseRatio where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallExpNonneg := by
+    intro a k ha hk
+    exact positiveSmallLargeExp_nonneg_of_large ha hk
+  temperedExpNonneg := by
+    intro a k ha hk
+    exact positiveTemperedLargeExp_nonneg_of_large ha hk
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallStepExpPos := by
+    intro a r ha hr1 hrhi
+    exact positiveSmallLargeExp_pos_of_large ha
+      (mem_positiveKRange_of_small_branch_step hr1 hrhi)
+  smallRawStepQuotient := cert.smallRawStepQuotient
+  smallFirstReserve := cert.smallFirstReserve
+  temperedSplitLower := cert.temperedSplitLower
+  temperedSplitUpper := cert.temperedSplitUpper
+  temperedLowerRatioNonneg := cert.temperedLowerRatioNonneg
+  temperedLowerRatioLtOne := cert.temperedLowerRatioLtOne
+  temperedLowerStepExpPos := by
+    intro a r ha hrlo hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨le_trans (le_max_left _ _) hrlo, by
+        have hsplit := cert.temperedSplitUpper (a := a) ha
+        omega⟩
+    exact positiveTemperedLargeExp_pos_of_large ha hrmem
+  temperedLowerRawStepQuotient := cert.temperedLowerRawStepQuotient
+  temperedLowerFirstReserve := cert.temperedLowerFirstReserve
+  temperedUpperReverseRatioNonneg :=
+    cert.temperedUpperReverseRatioNonneg
+  temperedUpperReverseRatioLtOne :=
+    cert.temperedUpperReverseRatioLtOne
+  temperedUpperReverseStepExpPrevPos := by
+    intro a r ha hrlo hrhi
+    have hprev : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by
+        have hsplit := cert.temperedSplitLower (a := a) ha
+        omega, by omega⟩
+    exact positiveTemperedLargeExp_pos_of_large ha hprev
+  temperedUpperReverseStepExpPos := by
+    intro a r ha hrlo hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by
+        have hsplit := cert.temperedSplitLower (a := a) ha
+        omega, hrhi⟩
+    exact positiveTemperedLargeExp_pos_of_large ha hrmem
+  temperedUpperReverseRawStepQuotient :=
+    cert.temperedUpperReverseRawStepQuotient
+  temperedUpperLastReserve := cert.temperedUpperLastReserve
+
+theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate.toSplitTemperedGeometricReserveCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp temperedSplit
+      smallRatio temperedLowerRatio temperedUpperReverseRatio :=
+  cert.toSplitTemperedRawQuotientReserveCertificate.toSplitTemperedGeometricReserveCertificate
 
 theorem one_mem_positiveKRange_of_large {a : Nat} (ha : 2 ≤ a) :
     1 ∈ positiveKRange a :=
@@ -7244,6 +8081,104 @@ theorem PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate.entropyTa
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toExpSplitBudgetCertificate.entropyTail
 
+theorem PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate.toExpSplitBudgetCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate
+        smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate smallExp temperedExp where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallNonneg := by
+    intro a k ha hk
+    exact positiveSmallEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.smallExpNonneg ha hk)
+  temperedNonneg := by
+    intro a k ha hk
+    exact positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hk (cert.temperedExpNonneg ha hk)
+  smallEdgeBudget := by
+    intro a ha
+    have hF0 :
+        0 ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a 1 :=
+      positiveSmallEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a)
+        (one_mem_positiveKRange_of_large (by omega : 2 ≤ a))
+        (cert.smallExpNonneg ha
+          (one_mem_positiveKRange_of_large (by omega : 2 ≤ a)))
+    exact positiveEntropyShadowExpSmallBranchSum_le_halfEdgeBudget_of_ratio_reserve_large
+      ha hF0 (cert.smallRatioNonneg ha) (cert.smallRatioLtOne ha)
+      (fun r hr1 hrhi => cert.smallStep ha hr1 hrhi)
+      (cert.smallFirstReserve ha)
+  temperedEdgeBudget := by
+    intro a ha
+    have hstart :
+        max 1 (posTemperedCutoff a + 1) ∈ positiveKRange a :=
+      positiveTemperedBranch_start_mem_positiveKRange_of_large ha
+    have hK :
+        posKmax a ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨one_le_posKmax (by omega : 2 ≤ a), le_rfl⟩
+    have hFstart :
+        0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (max 1 (posTemperedCutoff a + 1)) :=
+      positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a) hstart
+        (cert.temperedExpNonneg ha hstart)
+    have hFhi :
+        0 ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+          (posKmax a) :=
+      positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+        (by omega : 20 ≤ a) hK (cert.temperedExpNonneg ha hK)
+    exact
+      positiveEntropyShadowExpTemperedBranchSum_le_halfEdgeBudget_of_split_ratio_reserve_large
+        ha (cert.temperedSplitLower ha) (cert.temperedSplitUpper ha)
+        hFstart hFhi (cert.temperedLowerRatioNonneg ha)
+        (cert.temperedLowerRatioLtOne ha)
+        (cert.temperedUpperReverseRatioNonneg ha)
+        (cert.temperedUpperReverseRatioLtOne ha)
+        (fun r hrlo hrhi => cert.temperedLowerStep ha hrlo hrhi)
+        (fun r hrlo hrhi => cert.temperedUpperReverseStep ha hrlo hrhi)
+        (cert.temperedLowerFirstReserve ha)
+        (cert.temperedUpperLastReserve ha)
+
+theorem PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate.entropyTail
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowExpSplitTemperedGeometricReserveCertificate
+        smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toExpSplitBudgetCertificate.entropyTail
+
+theorem PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate.toExpSplitBudgetCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate
+        smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate smallExp temperedExp :=
+  cert.toSplitTemperedGeometricReserveCertificate.toExpSplitBudgetCertificate
+
+theorem PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate.entropyTail
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowExpSplitTemperedRawQuotientReserveCertificate
+        smallExp temperedExp temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toSplitTemperedGeometricReserveCertificate.entropyTail
+
 theorem PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate.toExpSplitBudgetCertificate
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedReverseRatio : Nat → ℚ}
@@ -7276,6 +8211,27 @@ theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.en
         smallRatio temperedReverseRatio) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toMixedRawQuotientReserveCertificate.entropyTail
+
+theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate.toExpSplitBudgetCertificate
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp :=
+  cert.toSplitTemperedRawQuotientReserveCertificate.toExpSplitBudgetCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate.entropyTail
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+        temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toSplitTemperedRawQuotientReserveCertificate.entropyTail
 
 theorem PositiveSaddleEntropyShadowExpQuotientReserveCertificate.entropyTail
     {smallExp temperedExp : Nat → Nat → ℚ}
@@ -7968,6 +8924,20 @@ structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuot
   entropyLargeMixedRawQuotientReserve :
     PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
       smallRatio temperedReverseRatio
+
+/-- Chunked finite-window certificate plus the concrete split-tempered
+large-exp raw-quotient reserve certificate for the large-`a`
+entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    (chunks : List (Nat × Nat))
+    (temperedSplit : Nat → Nat)
+    (smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ) :
+    Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyLargeSplitTemperedRawQuotientReserve :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      temperedSplit smallRatio temperedLowerRatio temperedUpperReverseRatio
 
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
@@ -8867,6 +9837,18 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotie
   cert.finiteChunks.toXplusGcompTangentFullyCheckedRowsCertificate
     cert.entropyLargeMixedRawQuotientReserve.entropyTail
 
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+        chunks temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.finiteChunks.toXplusGcompTangentFullyCheckedRowsCertificate
+    cert.entropyLargeSplitTemperedRawQuotientReserve.entropyTail
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCombinedProductBudgetCertificate where
@@ -9238,6 +10220,17 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotie
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+        chunks temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -9503,6 +10496,17 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExp
     (cert :
       PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpMixedRawQuotientReserveCertificate
         chunks smallRatio temperedReverseRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {temperedSplit : Nat → Nat}
+    {smallRatio temperedLowerRatio temperedUpperReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleXplusGcompTangentChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+        chunks temperedSplit smallRatio temperedLowerRatio
+        temperedUpperReverseRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
