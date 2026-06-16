@@ -148,6 +148,60 @@ theorem expCoeff_mono {L M : Nat → ℚ} (hL : ∀ r, 0 ≤ L r)
           have hpos : (0:ℚ) < ((n+1 : Nat) : ℚ) := by positivity
           nlinarith
 
+/-- Absolute-value version of `expCoeff_mono`.
+
+If the logarithmic coefficients of `L` are termwise dominated in absolute
+value by a nonnegative sequence `M`, then the coefficients of `exp(L)` are
+dominated in absolute value by the coefficients of `exp(M)`.  This is the
+recurrence-level form of the paper's use of a positive exponential majorant. -/
+theorem abs_expCoeff_le_of_abs_le {L M : Nat → ℚ} (hM : ∀ r, 0 ≤ M r)
+    (hLM : ∀ r, |L r| ≤ M r) : ∀ n, |expCoeff L n| ≤ expCoeff M n := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+      match n with
+      | 0 => norm_num
+      | (n+1) =>
+          have hML := expCoeff_succ_mul L n
+          have hMM := expCoeff_succ_mul M n
+          have hS :
+              |∑ t ∈ Finset.range (n+1),
+                  ((t+1 : Nat) : ℚ) * L (t+1) * expCoeff L (n-t)|
+                ≤ ∑ t ∈ Finset.range (n+1),
+                  ((t+1 : Nat) : ℚ) * M (t+1) * expCoeff M (n-t) := by
+            refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
+            refine Finset.sum_le_sum fun t ht => ?_
+            have hcast : 0 ≤ ((t+1 : Nat) : ℚ) := by positivity
+            have hMterm : 0 ≤ M (t+1) := hM (t+1)
+            have hE : 0 ≤ expCoeff M (n-t) := expCoeff_nonneg hM (n-t)
+            have hrec : |expCoeff L (n-t)| ≤ expCoeff M (n-t) :=
+              ih (n-t) (by omega)
+            calc
+              |((t+1 : Nat) : ℚ) * L (t+1) * expCoeff L (n-t)|
+                  = ((t+1 : Nat) : ℚ) * |L (t+1)| * |expCoeff L (n-t)| := by
+                    rw [abs_mul, abs_mul, abs_of_nonneg hcast]
+              _ ≤ ((t+1 : Nat) : ℚ) * M (t+1) * expCoeff M (n-t) := by
+                    exact mul_le_mul
+                      (mul_le_mul_of_nonneg_left (hLM (t+1)) hcast)
+                      hrec (abs_nonneg _)
+                      (mul_nonneg hcast hMterm)
+          have hpos : (0:ℚ) < ((n+1 : Nat) : ℚ) := by positivity
+          have hmul :
+              ((n+1 : Nat) : ℚ) * |expCoeff L (n+1)|
+                ≤ ((n+1 : Nat) : ℚ) * expCoeff M (n+1) := by
+            calc
+              ((n+1 : Nat) : ℚ) * |expCoeff L (n+1)|
+                  = |((n+1 : Nat) : ℚ) * expCoeff L (n+1)| := by
+                    rw [abs_mul, abs_of_nonneg hpos.le]
+              _ = |∑ t ∈ Finset.range (n+1),
+                    ((t+1 : Nat) : ℚ) * L (t+1) * expCoeff L (n-t)| := by
+                    rw [hML]
+              _ ≤ ∑ t ∈ Finset.range (n+1),
+                    ((t+1 : Nat) : ℚ) * M (t+1) * expCoeff M (n-t) := hS
+              _ = ((n+1 : Nat) : ℚ) * expCoeff M (n+1) := by
+                    rw [← hMM]
+          nlinarith
+
 /-! ## Exp-algebra: products, powers, rescaling -/
 
 theorem expSeries_mul (L M : Nat → ℚ) :
@@ -353,8 +407,30 @@ theorem bSeries_eq_B_mul_prod (μ : List Nat) :
 /-- `B_k(N) = [X^k] C(X)^{-N}` (official; cf. `coeff_BSeriesQ`). -/
 def Bq (N k : Nat) : ℚ := expCoeff (fun r => -(N : ℚ) * c r) k
 
+/-- `\overline B_k(N) = [X^k] C(X)^N`, the positive exponential majorant for
+`B_k(N)` used in the positive-saddle estimates. -/
+def Bplusq (N k : Nat) : ℚ := expCoeff (fun r => (N : ℚ) * c r) k
+
 /-- `Q_j(N) = [X^j] C(X/2)^{N/2}` (official; see `QSeriesQ_sq`). -/
 def Qq (N j : Nat) : ℚ := expCoeff (fun r => (N : ℚ)/2 * c r / 2^r) j
+
+theorem Bplusq_nonneg (N k : Nat) : 0 ≤ Bplusq N k := by
+  unfold Bplusq
+  refine expCoeff_nonneg ?_ k
+  intro r
+  exact mul_nonneg (Nat.cast_nonneg N) (c_nonneg r)
+
+theorem abs_Bq_le_Bplusq (N k : Nat) : |Bq N k| ≤ Bplusq N k := by
+  unfold Bq Bplusq
+  refine abs_expCoeff_le_of_abs_le ?_ ?_ k
+  · intro r
+    exact mul_nonneg (Nat.cast_nonneg N) (c_nonneg r)
+  · intro r
+    rw [abs_mul, abs_neg, abs_of_nonneg (Nat.cast_nonneg N),
+      abs_of_nonneg (c_nonneg r)]
+
+theorem Bq_le_Bplusq (N k : Nat) : Bq N k ≤ Bplusq N k :=
+  (le_abs_self (Bq N k)).trans (abs_Bq_le_Bplusq N k)
 
 theorem coeff_BSeriesQ (N k : Nat) : coeff k (BSeriesQ N) = Bq N k :=
   coeff_expSeries k _

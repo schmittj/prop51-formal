@@ -31,6 +31,36 @@ def zetaQ (N m : Nat) : ℚ := 5 * (N : ℚ) / (36 * (m : ℚ))
 /-- The normalized coefficient `X_m(N) = B_m(N)/(N c_m)`. -/
 def Xnorm (N m : Nat) : ℚ := Bq N m / ((N : ℚ) * c m)
 
+/-- The normalized positive majorant
+`\overline X_m(N) = \overline B_m(N)/(N c_m)`, where
+`\overline B_m(N) = [X^m] C(X)^N`.
+
+The TeX proof uses this as the saddle-side replacement for `|X_m(N)|`.
+In Lean it is recorded explicitly as a recurrence-level comparison, so the
+later positive-saddle estimates do not need to reason about analytic
+convergence of `C(X)^N`. -/
+def XplusNorm (N m : Nat) : ℚ := Bplusq N m / ((N : ℚ) * c m)
+
+theorem XplusNorm_nonneg (N m : Nat) : 0 ≤ XplusNorm N m := by
+  unfold XplusNorm
+  exact div_nonneg (Bplusq_nonneg N m)
+    (mul_nonneg (Nat.cast_nonneg N) (c_nonneg m))
+
+theorem Xnorm_le_XplusNorm (N m : Nat) :
+    Xnorm N m ≤ XplusNorm N m := by
+  unfold Xnorm XplusNorm
+  exact div_le_div_of_nonneg_right (Bq_le_Bplusq N m)
+    (mul_nonneg (Nat.cast_nonneg N) (c_nonneg m))
+
+theorem abs_Xnorm_le_XplusNorm (N m : Nat) :
+    |Xnorm N m| ≤ XplusNorm N m := by
+  unfold Xnorm XplusNorm
+  rw [abs_div]
+  have hden : 0 ≤ (N : ℚ) * c m :=
+    mul_nonneg (Nat.cast_nonneg N) (c_nonneg m)
+  rw [abs_of_nonneg hden]
+  exact div_le_div_of_nonneg_right (abs_Bq_le_Bplusq N m) hden
+
 /-- The paper's factor
 `Π_s = m^s (m-s-1)!/(m-1)! = ∏_{i=1}^s (1-i/m)^{-1}`,
 used only when `s < m`. -/

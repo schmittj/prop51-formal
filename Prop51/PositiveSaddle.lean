@@ -1247,6 +1247,16 @@ theorem Ynorm_nonneg (N j : Nat) : 0 ≤ Ynorm N j := by
       (mul_nonneg (div_nonneg hN (by norm_num)) (c_nonneg j))
       (by positivity))
 
+/-- If the positive exponential majorant `XplusNorm` controls the product,
+then the original `Xnorm` product is controlled too.  This is the Lean
+bridge corresponding to the paper's replacement of `B_k(N)` by
+`\overline B_k(N)` on the positive side. -/
+theorem Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm {N k j : Nat} {M : ℚ}
+    (hXY : XplusNorm N k * Ynorm N j ≤ M) :
+    Xnorm N k * Ynorm N j ≤ M := by
+  exact (mul_le_mul_of_nonneg_right (Xnorm_le_XplusNorm N k)
+    (Ynorm_nonneg N j)).trans hXY
+
 /-- The exact positive-side linear/nonlinear decomposition, normalized as
 `Y_j(N)`.  This is the `Y`/`Q` analogue of
 `neg_Xnorm_eq_linear_Eminus_sum`: after the linear `c_1 X/2` exponential is
@@ -2918,6 +2928,36 @@ structure PositiveSaddleTangentFullyCheckedRowsCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- `\overline B`/`Xplus` version of the row-checked tangent certificate.
+
+The TeX proof estimates the positive side through the absolute majorant
+`\overline B_k(N) = [X^k]C(X)^N`.  This interface records that route
+explicitly: the remaining saddle product fields are stated for
+`XplusNorm * Ynorm`, and Lean converts them back to the existing `Xnorm`
+certificate using `Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm`. -/
+structure PositiveSaddleXplusTangentFullyCheckedRowsCertificate : Prop where
+  smallXplusTangent :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        XplusNorm N k * Ynorm N (posJ a k)
+          ≤ positiveSmallXYProductTangentBound a N k
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  temperedXplus :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        XplusNorm N k * Ynorm N (posJ a k)
+          ≤ positiveTemperedXYProductBound a N k
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -3096,6 +3136,22 @@ theorem PositiveSaddleTangentFullyCheckedRowsCertificate.toTangentCheckedRowsCer
     intro a N ha ha2000 hrect
     exact dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRow
       (cert.soloGcompRows ha ha2000) ha hrect
+  edgeBudgetRows := cert.edgeBudgetRows
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleXplusTangentFullyCheckedRowsCertificate.toTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleTangentFullyCheckedRowsCertificate where
+  smallXYTangent := by
+    intro a N k ha ha2000 hrect hk hsmall _hB
+    exact Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+      (cert.smallXplusTangent ha ha2000 hrect hk hsmall)
+  smallTangentEdgeRows := cert.smallTangentEdgeRows
+  temperedXY := by
+    intro a N k ha ha2000 hrect hk htemp _hB
+    exact Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+      (cert.temperedXplus ha ha2000 hrect hk htemp)
+  soloGcompRows := cert.soloGcompRows
   edgeBudgetRows := cert.edgeBudgetRows
   entropyTail := cert.entropyTail
 
@@ -3290,6 +3346,11 @@ theorem PositiveSaddleTangentFullyCheckedRowsCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toTangentCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusTangentFullyCheckedRowsCertificate.toCertificate
+    (cert : PositiveSaddleXplusTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -3375,6 +3436,11 @@ theorem unorm_tail_of_positiveSaddleTangentCheckedRowsCertificate
 
 theorem unorm_tail_of_positiveSaddleTangentFullyCheckedRowsCertificate
     (cert : PositiveSaddleTangentFullyCheckedRowsCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleXplusTangentFullyCheckedRowsCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

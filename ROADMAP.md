@@ -280,7 +280,13 @@ Status:
       `Eplus` coefficients, an explicit `Eplus`/`Gcomp` upper bound, and
       `checkPositiveSoloGcompRow`; the stronger
       `PositiveSaddleTangentFullyCheckedRowsCertificate` replaces the analytic
-      solo field by this row check.
+      solo field by this row check.  The positive `X` side now also records
+      the paper's `\overline B` majorant route in Lean: `Bplusq` and
+      `XplusNorm` are defined from `[X^k]C(X)^N`, an absolute exp-recurrence
+      comparison proves `|Xnorm| ≤ XplusNorm`, and
+      `PositiveSaddleXplusTangentFullyCheckedRowsCertificate` lets the
+      remaining small/tempered saddle products be proved for
+      `XplusNorm * Ynorm` instead of directly for `Xnorm * Ynorm`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
