@@ -1363,4 +1363,90 @@ theorem PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRa
     cert.productPointwiseYRawUnitSolo
     cert.candidateSplitTemperedRawClearedUnitReserve
 
+/-- Default finite-window constructor using cell-level tangent-edge checks and
+chunked row checks for the other finite predicates. -/
+theorem positiveSaddleDefaultCellEdgeRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          checkPositiveSmallTangentExpEdgeCell a N k = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+      hsmall (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+      htempered (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  smallTangentEdgeCells := htangent
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRangeChunks
+      hsolo (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRangeChunks
+      hedge (positiveSaddleDefaultChunks_cover (a := a) ha h2000)
+  entropyTail :=
+    (pointwise.toProductPointwiseYRawCertificate
+      |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+        bounds.toRawClearedBoundsCertificate).entropyTail
+
+/-- Unit-budget final audit target with cell-level tangent-edge finite checks.
+
+This variant is intended for generated certificates when the tangent-edge cell
+predicate is fast but full tangent rows or ranges are not. -/
+structure PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate :
+    Prop where
+  smallXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentExpEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSoloGcompRange chunk.1 chunk.2 = true
+  edgeBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
+theorem PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeRowsCertificate
+    (cert :
+      PositiveSaddleDefaultCellEdgeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate :=
+  positiveSaddleDefaultCellEdgeRowsEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    cert.smallXplusYProductGcompChunks
+    cert.temperedXplusYProductGcompChunks
+    cert.smallTangentExpEdgeCells
+    cert.soloGcompChunks
+    cert.edgeBudgetChunks
+    cert.productPointwiseYRawUnitSolo
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
 end Prop51

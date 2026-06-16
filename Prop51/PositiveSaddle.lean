@@ -9732,6 +9732,34 @@ structure PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate : Prop wher
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- `Xplus`/`Gcomp` finite-window interface with cell-level tangent-edge
+checks.
+
+Single tangent-edge cells are much cheaper to evaluate than full tangent rows.
+This interface lets generated certificates provide
+`checkPositiveSmallTangentExpEdgeCell a N k = true` only for the cells
+actually used by the small regime, while retaining the existing row booleans
+for the product, solo, and edge-budget checks. -/
+structure PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate : Prop where
+  smallXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallXplusYProductGcompRow a = true
+  temperedXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveTemperedXplusYProductGcompRow a = true
+  smallTangentEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Fully row-checked finite-window certificate plus the first-term/ratio
 geometric entropy-tail certificate for `a > 2000`.
 
@@ -10357,6 +10385,35 @@ theorem PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate.toXplusTangen
         (cert.temperedXplusGcompRows ha ha2000) hrect hk htempered)
   soloGcompRows := cert.soloGcompRows
   edgeBudgetRows := cert.edgeBudgetRows
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate.toTangentProductBudgetCertificate
+    (cert : PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := by
+    intro a N k ha ha2000 hrect hk hsmall _hB
+    exact Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+      ((XplusYnorm_le_positiveXplusYProductGcompBound a N k).trans
+        (positiveSmallXplusYProductGcompBound_of_checkRow
+          (cert.smallXplusGcompRows ha ha2000) hrect hk hsmall))
+  smallTangentEdge := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact positiveSmallTangentExpEdgeGap_of_checkCell
+      (cert.smallTangentEdgeCells ha ha2000 hrect hk hsmall)
+  temperedXY := by
+    intro a N k ha ha2000 hrect hk htempered _hB
+    exact Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+      ((XplusYnorm_le_positiveXplusYProductGcompBound a N k).trans
+        (positiveTemperedXplusYProductGcompBound_of_checkRow
+          (cert.temperedXplusGcompRows ha ha2000) hrect hk htempered))
+  soloY := by
+    intro a N ha ha2000 hrect
+    exact dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRow
+      (cert.soloGcompRows ha ha2000) ha hrect
+  edgeBudget := by
+    intro a ha ha2000
+    exact positiveEdgeBudget_of_checkPositiveEdgeBudgetRow
+      (cert.edgeBudgetRows ha ha2000)
   entropyTail := cert.entropyTail
 
 theorem PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
@@ -11255,6 +11312,11 @@ theorem PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate.toCertificate
+    (cert : PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentProductBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate.toCertificate
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
@@ -11531,6 +11593,11 @@ theorem unorm_tail_of_positiveSaddleXplusTangentFullyCheckedRowsCertificate
 
 theorem unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRowsCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentCellEdgeRowsCertificate
+    (cert : PositiveSaddleXplusGcompTangentCellEdgeRowsCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
