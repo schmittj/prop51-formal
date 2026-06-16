@@ -805,6 +805,20 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloProdu
     (PositiveSaddleDefaultCellEdgeDisplayedSoloProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
       cert)
 
+/-- Final assembly from the corrected exact-product finite route: product
+checks are denominator-cleared `Bq * Qq` inequalities over the default
+100-row chunks, while tangent-edge and displayed-solo checks use the current
+cell/chunk interfaces. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTangentCellEdgeBudgetCertificate
+      cert |>.toTangentProductBudgetCertificate)
+
 /-- Final assembly from the currently lowest-level default finite-window
 route: product checks, tangent-edge checks, and displayed-solo checks are all
 split over the default 100-row chunks, with denominator-cleared finite product

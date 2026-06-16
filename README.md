@@ -73,12 +73,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   100-row chunks for that budget check.  The
   `DisplayedSoloClearedChunks` sibling is the current lowest-level finite
   solo audit target: it also chunks the denominator-cleared displayed
-  `Y_a(N)` saddle inequality.  The current most concrete finite-window
-  wrapper is
-  `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`:
-  it also uses denominator-cleared finite product chunks, tangent-edge
-  chunks, and row-chunked finite edge `k`-chunk checks at the fixed scale
-  `positiveEdgeUniformScaleMin`.
+  `Y_a(N)` saddle inequality.  For the product fields, the corrected current
+  endpoint is
+  `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`:
+  it checks the exact denominator-cleared `Bq * Qq` product inequalities
+  against the combined-exponent targets.  The older
+  `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
+  Lean as audit interfaces for the stronger independent-majorant route, but
+  that route is too strong for the finite window: direct checks already fail
+  at `a = 401`, `N = 6*401 - 7`, `k = 1`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.

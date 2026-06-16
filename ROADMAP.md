@@ -359,11 +359,19 @@ Status:
       and tempered product targets, and the stronger
       `PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate`; in that
       interface the finite window is reduced to boolean row checks plus the
-      separate entropy tail for `a > 2000`.  Lean also has full-range and
-      chunked range-certificate variants for generated finite-window proofs,
-      with `Prop51/PositiveSaddleChunks.lean` providing a default 100-row
-      cover of `401 ≤ a ≤ 2000`.  The current most concrete final audit
-      endpoint is
+      separate entropy tail for `a > 2000`.  This independent `Gcomp`
+      product route is now marked as audit-only: its product inequalities are
+      stronger than the combined-exponent target and fail already in the
+      first finite row (`a = 401`, `N = 6*401 - 7`, `k = 1`).  Lean therefore
+      also exposes the exact raw-product cleared predicates
+      `positiveSmallXYProductRawCleared` and
+      `positiveTemperedXYProductRawCleared`, which keep the actual
+      `Bq * Qq` product and convert directly to
+      `PositiveSaddleTangentProductBudgetCertificate`.  Lean also has
+      full-range and chunked range-certificate variants for generated
+      finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
+      a default 100-row cover of `401 ≤ a ≤ 2000`.  An older concrete final
+      audit endpoint is
       `PositiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       with final assembly exposed as
       `coefficientNegativity_of_positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
@@ -434,16 +442,19 @@ Status:
       `PositiveSaddleDefaultCellEdgeDisplayedSoloClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       also chunks the denominator-cleared displayed `Y_a(N)` saddle
       inequality, so the finite solo side is no longer a normalized
-      `Ynorm` field.  The current most concrete finite-window endpoint is
-      `PositiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      `Ynorm` field.  The corrected finite product target is now the exact
+      raw-product wrapper
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       with final assembly theorem
-      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
-      It additionally chunks the denominator-cleared small/tempered product
-      checks, chunks the tangent-edge checks, and checks each default edge
-      `k`-chunk over each default row chunk using the fixed scale
-      `positiveEdgeUniformScaleMin`.  Thus the finite-window side now has a
-      fully chunked generated-certificate shape; the remaining non-finite
-      inputs to this endpoint are the large-`a` raw product/solo pointwise
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      It chunks the denominator-cleared actual `Bq * Qq` small/tempered
+      product checks, keeps tangent-edge checks at cell granularity, and
+      checks each default edge `k`-chunk using a row scale bounded below by
+      `positiveEdgeUniformScaleMin`.  The fixed-scale
+      `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
+      Lean as the fully chunked version of the stronger `Gcomp` product audit
+      route, not as the expected final product certificate.  The remaining
+      non-finite inputs are still the large-`a` raw product/solo pointwise
       certificate and the raw-cleared unit-reserve entropy-tail certificate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now

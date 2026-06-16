@@ -2575,6 +2575,15 @@ instance decidablePositiveTemperedXplusYProductGcompCleared (a N k : Nat) :
   unfold positiveTemperedXplusYProductGcompCleared
   infer_instance
 
+/-- Concrete audit note for the product route: the independent `Gcomp`
+majorant product is too strong for the combined-exponent target already in the
+first finite-window row.  The final generated-certificate route should target
+`positiveSmallXYProductRawCleared`/`positiveTemperedXYProductRawCleared`
+instead. -/
+theorem positiveSmallXplusYProductGcompCleared_firstFiniteCell_not :
+    ¬ positiveSmallXplusYProductGcompCleared 401 (6*401 - 7) 1 := by
+  native_decide
+
 theorem positiveXplusYProductGcompBound_eq_raw_div
     {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
     (hkRange : k ∈ positiveKRange a) :
@@ -2589,6 +2598,28 @@ theorem positiveXplusYProductGcompBound_eq_raw_div
     c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
   unfold positiveXplusYProductGcompBound positiveXplusGcompBound
     positiveYgcompBound
+  field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
+
+/-- Exact denominator-cleared normal form for the actual positive-side product
+`X_k(N) * Y_{a-k}(N)`.
+
+This is the product route corresponding to the combined exponent in the TeX
+argument.  Unlike `positiveXplusYProductGcompBound_eq_raw_div`, it keeps the
+actual coefficients `Bq` and `Qq` instead of replacing both factors by their
+independent `Gcomp` majorants. -/
+theorem Xnorm_mul_Ynorm_eq_raw_div
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a) :
+    Xnorm N k * Ynorm N (posJ a k) =
+      (2 * (2 : ℚ)^(posJ a k) * Bq N k *
+          Qq N (posJ a k)) /
+        (((N : ℚ)^2) * c k * c (posJ a k)) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  unfold Xnorm Ynorm
   field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
 
 theorem positiveSmallXYProductTangentBound_eq_raw_div
@@ -2622,6 +2653,76 @@ theorem positiveTemperedXYProductBound_eq_raw_div
     c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
   unfold positiveTemperedXYProductBound
   field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
+
+/-- Denominator-cleared exact small-regime product check for
+`Xnorm N k * Ynorm N (a-k)`.
+
+Audit note: this is intentionally different from the preceding `Gcomp` cleared
+predicate.  The `Gcomp` predicate asks for the product of two independent
+coefficient majorants to fit under the combined-exponent target; that stronger
+condition is false in the finite window.  This predicate is the exact algebraic
+condition for the actual product inequality used by the certificate interface. -/
+def positiveSmallXYProductRawCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)
+    ≤
+    (2581/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff *
+        (c k * c (posJ a k))
+
+/-- Denominator-cleared exact tempered-regime product check for
+`Xnorm N k * Ynorm N (a-k)`. -/
+def positiveTemperedXYProductRawCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)
+    ≤
+    (2117/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+        (c k * c (posJ a k))
+
+instance decidablePositiveSmallXYProductRawCleared (a N k : Nat) :
+    Decidable (positiveSmallXYProductRawCleared a N k) := by
+  unfold positiveSmallXYProductRawCleared
+  infer_instance
+
+instance decidablePositiveTemperedXYProductRawCleared (a N k : Nat) :
+    Decidable (positiveTemperedXYProductRawCleared a N k) := by
+  unfold positiveTemperedXYProductRawCleared
+  infer_instance
+
+theorem positiveSmallXYProductTangentBound_of_rawCleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveSmallXYProductRawCleared a N k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductTangentBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  have hden_nonneg :
+      0 ≤ ((N : ℚ)^2) * c k * c (posJ a k) := by
+    positivity
+  rw [Xnorm_mul_Ynorm_eq_raw_div hN ha hkRange,
+    positiveSmallXYProductTangentBound_eq_raw_div hN ha hkRange]
+  exact div_le_div_of_nonneg_right h hden_nonneg
+
+theorem positiveTemperedXYProductBound_of_rawCleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveTemperedXYProductRawCleared a N k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  have hden_nonneg :
+      0 ≤ ((N : ℚ)^2) * c k * c (posJ a k) := by
+    positivity
+  rw [Xnorm_mul_Ynorm_eq_raw_div hN ha hkRange,
+    positiveTemperedXYProductBound_eq_raw_div hN ha hkRange]
+  exact div_le_div_of_nonneg_right h hden_nonneg
 
 theorem positiveSmallXplusYProductGcompBound_of_cleared
     {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
@@ -2679,6 +2780,15 @@ def checkPositiveSmallXplusYProductGcompClearedCell (a N k : Nat) : Bool :=
 def checkPositiveTemperedXplusYProductGcompClearedCell (a N k : Nat) : Bool :=
   decide (positiveTemperedXplusYProductGcompCleared a N k)
 
+/-- Point check for the denominator-cleared exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedCell (a N k : Nat) : Bool :=
+  decide (positiveSmallXYProductRawCleared a N k)
+
+/-- Point check for the denominator-cleared exact tempered product
+inequality. -/
+def checkPositiveTemperedXYProductRawClearedCell (a N k : Nat) : Bool :=
+  decide (positiveTemperedXYProductRawCleared a N k)
+
 /-- Check all small-regime retained `k` for one `(a,N)`. -/
 def checkPositiveSmallXplusYProductGcompAtN (a N : Nat) : Bool :=
   (positiveKRangeList a).all fun k =>
@@ -2705,6 +2815,22 @@ def checkPositiveTemperedXplusYProductGcompClearedAtN (a N : Nat) : Bool :=
       checkPositiveTemperedXplusYProductGcompClearedCell a N k
     else true
 
+/-- Check all small-regime retained `k` for one `(a,N)` using the exact
+denominator-cleared product inequality. -/
+def checkPositiveSmallXYProductRawClearedAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then
+      checkPositiveSmallXYProductRawClearedCell a N k
+    else true
+
+/-- Check all tempered-regime retained `k` for one `(a,N)` using the exact
+denominator-cleared product inequality. -/
+def checkPositiveTemperedXYProductRawClearedAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if ceilSqrt N < k then
+      checkPositiveTemperedXYProductRawClearedCell a N k
+    else true
+
 /-- Row check for the small-regime explicit `Xplus*Y` product bound. -/
 def checkPositiveSmallXplusYProductGcompRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
@@ -2725,6 +2851,16 @@ def checkPositiveTemperedXplusYProductGcompClearedRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
     checkPositiveTemperedXplusYProductGcompClearedAtN a N
 
+/-- Row check for the denominator-cleared exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallXYProductRawClearedAtN a N
+
+/-- Row check for the denominator-cleared exact tempered product inequality. -/
+def checkPositiveTemperedXYProductRawClearedRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveTemperedXYProductRawClearedAtN a N
+
 /-- Range check for the small-regime explicit `Xplus*Y` product bound over
 `a ∈ [lo, lo+len)`. -/
 def checkPositiveSmallXplusYProductGcompRange (lo len : Nat) : Bool :=
@@ -2742,6 +2878,15 @@ def checkPositiveSmallXplusYProductGcompClearedRange (lo len : Nat) : Bool :=
 /-- Range check for the denominator-cleared tempered product inequality. -/
 def checkPositiveTemperedXplusYProductGcompClearedRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveTemperedXplusYProductGcompClearedRow
+
+/-- Range check for the denominator-cleared exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallXYProductRawClearedRow
+
+/-- Range check for the denominator-cleared exact tempered product
+inequality. -/
+def checkPositiveTemperedXYProductRawClearedRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveTemperedXYProductRawClearedRow
 
 /-- Soundness of one denominator-cleared small product point check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkClearedCell
@@ -2898,6 +3043,138 @@ theorem checkPositiveTemperedXplusYProductGcompRange_of_checkClearedRange
   have ha_lo : lo ≤ a := (List.mem_range'_1.mp haMem).1
   exact checkPositiveTemperedXplusYProductGcompRow_of_checkClearedRow
     (hlo.trans ha_lo) (hall a haMem)
+
+/-- Soundness of one denominator-cleared exact small product point check. -/
+theorem positiveSmallXYProductTangentBound_of_checkRawClearedCell
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : checkPositiveSmallXYProductRawClearedCell a N k = true) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductTangentBound a N k :=
+  positiveSmallXYProductTangentBound_of_rawCleared hN ha hkRange
+    (of_decide_eq_true h)
+
+/-- Soundness of one denominator-cleared exact tempered product point check. -/
+theorem positiveTemperedXYProductBound_of_checkRawClearedCell
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : checkPositiveTemperedXYProductRawClearedCell a N k = true) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k :=
+  positiveTemperedXYProductBound_of_rawCleared hN ha hkRange
+    (of_decide_eq_true h)
+
+/-- Soundness of the denominator-cleared exact small product check at one
+`(a,N)`. -/
+theorem positiveSmallXYProductTangentBound_of_checkRawClearedAtN
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (h : checkPositiveSmallXYProductRawClearedAtN a N = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductTangentBound a N k := by
+  apply positiveSmallXYProductTangentBound_of_checkRawClearedCell
+    hN ha hk
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if x ≤ ceilSqrt N then
+            checkPositiveSmallXYProductRawClearedCell a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedAtN] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [hsmall] using hx
+
+/-- Soundness of the denominator-cleared exact tempered product check at one
+`(a,N)`. -/
+theorem positiveTemperedXYProductBound_of_checkRawClearedAtN
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (h : checkPositiveTemperedXYProductRawClearedAtN a N = true)
+    (hk : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  apply positiveTemperedXYProductBound_of_checkRawClearedCell
+    hN ha hk
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if ceilSqrt N < x then
+            checkPositiveTemperedXYProductRawClearedCell a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedAtN] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [htempered] using hx
+
+/-- Soundness of one exact raw-cleared small product row check. -/
+theorem positiveSmallXYProductTangentBound_of_checkRawClearedRow
+    {a N k : Nat} (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveSmallXYProductRawClearedRow a = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductTangentBound a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallXYProductRawClearedAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedRow] using h)
+  have hNmem : N ∈ positiveNRangeList a :=
+    mem_positiveNRangeList_of_rectangle hrect
+  exact positiveSmallXYProductTangentBound_of_checkRawClearedAtN
+    (positiveRectangle_N_pos ha hrect) (by omega : 1 ≤ a)
+    (hall N hNmem) hk hsmall
+
+/-- Soundness of one exact raw-cleared tempered product row check. -/
+theorem positiveTemperedXYProductBound_of_checkRawClearedRow
+    {a N k : Nat} (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveTemperedXYProductRawClearedRow a = true)
+    (hk : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveTemperedXYProductRawClearedAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedRow] using h)
+  have hNmem : N ∈ positiveNRangeList a :=
+    mem_positiveNRangeList_of_rectangle hrect
+  exact positiveTemperedXYProductBound_of_checkRawClearedAtN
+    (positiveRectangle_N_pos ha hrect) (by omega : 1 ≤ a)
+    (hall N hNmem) hk htempered
+
+/-- Soundness of an exact raw-cleared small product range check. -/
+theorem positiveSmallXYProductTangentBound_of_checkRawClearedRange
+    {lo len a N k : Nat} (hlo : lo ≤ a) (ha_hi : a < lo + len)
+    (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveSmallXYProductRawClearedRange lo len = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductTangentBound a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallXYProductRawClearedRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedRange] using h)
+  have haMem : a ∈ List.range' lo len :=
+    (List.mem_range'_1).mpr ⟨hlo, ha_hi⟩
+  exact positiveSmallXYProductTangentBound_of_checkRawClearedRow
+    ha hrect (hall a haMem) hk hsmall
+
+/-- Soundness of an exact raw-cleared tempered product range check. -/
+theorem positiveTemperedXYProductBound_of_checkRawClearedRange
+    {lo len a N k : Nat} (hlo : lo ≤ a) (ha_hi : a < lo + len)
+    (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveTemperedXYProductRawClearedRange lo len = true)
+    (hk : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveTemperedXYProductRawClearedRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedRange] using h)
+  have haMem : a ∈ List.range' lo len :=
+    (List.mem_range'_1).mpr ⟨hlo, ha_hi⟩
+  exact positiveTemperedXYProductBound_of_checkRawClearedRow
+    ha hrect (hall a haMem) hk htempered
 
 /-- Soundness of one small-regime explicit `Xplus*Y` product check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkCell {a N k : Nat}
@@ -10847,6 +11124,34 @@ structure PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Exact-product finite-window interface with cell-level tangent-edge checks
+and semantic solo/edge budget fields.
+
+This is the replacement target for generated finite product certificates after
+the `Xplus`/`Gcomp` product route was found to be too strong.  The small and
+tempered product rows are denominator-cleared checks for the actual
+`Bq * Qq` product, so they feed the combined-exponent tangent certificate
+directly. -/
+structure PositiveSaddleRawProductTangentCellEdgeBudgetCertificate : Prop where
+  smallXYRawClearedRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallXYProductRawClearedRow a = true
+  temperedXYRawClearedRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveTemperedXYProductRawClearedRow a = true
+  smallTangentEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Fully row-checked finite-window certificate plus the first-term/ratio
 geometric entropy-tail certificate for `a > 2000`.
 
@@ -11538,6 +11843,27 @@ theorem PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate.toTangentProduc
       ((XplusYnorm_le_positiveXplusYProductGcompBound a N k).trans
         (positiveTemperedXplusYProductGcompBound_of_checkRow
           (cert.temperedXplusGcompRows ha ha2000) hrect hk htempered))
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleRawProductTangentCellEdgeBudgetCertificate.toTangentProductBudgetCertificate
+    (cert : PositiveSaddleRawProductTangentCellEdgeBudgetCertificate) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := by
+    intro a N k ha ha2000 hrect hk hsmall _hB
+    exact positiveSmallXYProductTangentBound_of_checkRawClearedRow
+      (by omega : 2 ≤ a) hrect
+      (cert.smallXYRawClearedRows ha ha2000) hk hsmall
+  smallTangentEdge := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact positiveSmallTangentExpEdgeGap_of_checkCell
+      (cert.smallTangentEdgeCells ha ha2000 hrect hk hsmall)
+  temperedXY := by
+    intro a N k ha ha2000 hrect hk htempered _hB
+    exact positiveTemperedXYProductBound_of_checkRawClearedRow
+      (by omega : 2 ≤ a) hrect
+      (cert.temperedXYRawClearedRows ha ha2000) hk htempered
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
