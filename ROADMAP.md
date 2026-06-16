@@ -241,7 +241,8 @@ Status:
       `N` to the upper rectangle edge; the lower/upper edge denominator
       comparisons are packaged separately.  The products of the displayed
       small/tempered `X` and `Y` constants are now isolated as scalar bounds
-      and proved to sit below the executable majorant terms.
+      and proved to sit below the executable majorant terms; this is exposed
+      as `PositiveSaddleScalarCertificate`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

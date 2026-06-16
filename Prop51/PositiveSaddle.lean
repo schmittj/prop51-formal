@@ -1655,6 +1655,45 @@ structure PositiveSaddleFactorCertificate (soloBound : Nat → ℚ) : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Intermediate §6 interface after the coefficient-ratio and scalar-product
+bookkeeping has been formalized.  The pointwise fields only need to prove the
+factorized summand is below the explicit scalar products with constants
+`8.9·14.5/2` and `7.3·14.5/2`; Lean then transports those bounds to the
+executable small/tempered majorants. -/
+structure PositiveSaddleScalarCertificate (soloBound : Nat → ℚ) : Prop where
+  smallScalar :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveSmallScalarProductBound a k
+  temperedScalar :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveTemperedScalarProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEnvelopeBound a (soloBound a) ≤ positiveTarget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem PositiveSaddleScalarCertificate.toFactorCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
+    PositiveSaddleFactorCertificate soloBound where
+  smallFactor := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    exact (cert.smallScalar ha ha2000 hrect hk hsmall hB).trans
+      (positiveSmallScalarProductBound_le_majorant ha ha2000 hk)
+  temperedFactor := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    exact (cert.temperedScalar ha ha2000 hrect hk htemp hB).trans
+      (positiveTemperedScalarProductBound_le_majorant ha ha2000 hrect hk
+        (temperedRegime_of_rectangle hrect htemp))
+  soloY := cert.soloY
+  envelope := cert.envelope
+  entropyTail := cert.entropyTail
+
 /-- A still more decomposed §6 interface: prove separate saddle bounds for
 `X_k(N)` and `Y_{a-k}(N)`, plus a purely scalar comparison from their product
 to the executable small/tempered majorant.  This matches the TeX proof split
@@ -1776,6 +1815,11 @@ theorem PositiveSaddleFactorCertificate.toCertificate
     PositiveSaddleCertificate soloBound :=
   cert.toRawCertificate.toCertificate
 
+theorem PositiveSaddleScalarCertificate.toCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
+    PositiveSaddleCertificate soloBound :=
+  cert.toFactorCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -1816,6 +1860,11 @@ theorem unorm_tail_of_positiveSaddleRawCertificate
 
 theorem unorm_tail_of_positiveSaddleFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleScalarCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
