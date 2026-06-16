@@ -116,7 +116,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   script emits it with `--strategy cell-tangent`.  The fully generated
   `Prop51.PositiveSaddleFixedFiniteWindowChunkedTangentAuditCertificate`
   additionally splits tangent by fixed row, `N`, and small-`k` chunks; use
-  `--strategy chunked-tangent` to emit that target.  When
+  `--strategy chunked-tangent` to emit that target.  The finer
+  `Prop51.PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate`
+  also splits product by a uniform product `N`-chunk index; use
+  `--strategy product-n-chunked-tangent` when product row-range checks are
+  still too coarse.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

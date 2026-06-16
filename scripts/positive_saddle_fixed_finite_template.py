@@ -14,6 +14,8 @@ Two strategies are available:
     theorem argument over `checkPositiveSmallTangentExpEdgeCell`.
   * chunked-tangent: product/solo/edge use fixed row chunks, and tangent is
     split by fixed row, `N`, and small-regime `k` chunks.
+  * product-n-chunked-tangent: product is additionally split by fixed
+    row, uniform product `N`-chunk index, and retained `k` chunk.
 
 Example:
   scripts/positive_saddle_fixed_finite_template.py \
@@ -87,18 +89,24 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--strategy",
-        choices=("all-chunks", "split-fields", "cell-tangent", "chunked-tangent"),
+        choices=(
+            "all-chunks",
+            "split-fields",
+            "cell-tangent",
+            "chunked-tangent",
+            "product-n-chunked-tangent",
+        ),
         default="all-chunks",
         help="finite certificate shape to emit",
     )
     args = parser.parse_args(argv)
     if args.strategy != "cell-tangent" and args.tangent_row_len is None:
         parser.error("--tangent-row-len is required unless --strategy cell-tangent")
-    if args.strategy == "chunked-tangent":
+    if args.strategy in ("chunked-tangent", "product-n-chunked-tangent"):
         if args.tangent_n_len is None:
-            parser.error("--tangent-n-len is required for --strategy chunked-tangent")
+            parser.error(f"--tangent-n-len is required for --strategy {args.strategy}")
         if args.tangent_k_len is None:
-            parser.error("--tangent-k-len is required for --strategy chunked-tangent")
+            parser.error(f"--tangent-k-len is required for --strategy {args.strategy}")
     if args.name is None:
         if args.strategy == "all-chunks":
             args.name = "positiveSaddleGeneratedFixedFiniteWindowAllChunksCertificate"
@@ -106,8 +114,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             args.name = "positiveSaddleGeneratedFixedFiniteWindowCertificate"
         elif args.strategy == "cell-tangent":
             args.name = "positiveSaddleGeneratedFixedFiniteWindowCellTangentCertificate"
-        else:
+        elif args.strategy == "chunked-tangent":
             args.name = "positiveSaddleGeneratedFixedFiniteWindowChunkedTangentCertificate"
+        else:
+            args.name = (
+                "positiveSaddleGeneratedFixedFiniteWindowProductNChunkedTangentCertificate"
+            )
     return args
 
 
@@ -117,6 +129,10 @@ def row_count(row_len: int) -> int:
 
 def tangent_k_count(k_len: int) -> int:
     return (155 + k_len - 1) // k_len
+
+
+def product_n_index_count(row_len: int, n_len: int) -> int:
+    return (6 * (2000 + row_len) + n_len - 1) // n_len
 
 
 def emit_header() -> list[str]:
@@ -203,6 +219,33 @@ def add_tangent_row_k_dispatch_field(
             f"    have hj' : j < {tangent_k_count(k_len)} := by simpa using hj",
             "    clear hj",
             "    interval_cases i; interval_cases j; native_decide",
+        ]
+    )
+
+
+def add_product_row_n_edge_dispatch_field(
+    lines: list[str], field_name: str, row_len: int, n_len: int
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex edgeChunk hedgeChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    have hnIndex' :",
+            f"        nIndex < {product_n_index_count(row_len, n_len)} := by",
+            "      simpa using",
+            "        (mem_positiveProductFixedNChunkIndices_iff",
+            f"          (by norm_num : 0 < {n_len})).1 hnIndex",
+            "    clear hnIndex",
+            "    rcases (mem_positiveEdgeDefaultKChunks_iff).1 hedgeChunk with",
+            "      ⟨j, hj, rfl⟩",
+            "    have hj' : j < 90 := by simpa using hj",
+            "    clear hj",
+            "    interval_cases i; interval_cases nIndex; interval_cases j; native_decide",
         ]
     )
 
@@ -499,6 +542,88 @@ def emit_chunked_tangent(args: argparse.Namespace) -> str:
     return "\n".join(lines)
 
 
+def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
+    p = args.product_row_len
+    t = args.tangent_row_len
+    ss = args.solo_saddle_row_len
+    sb = args.solo_budget_row_len
+    e = args.edge_row_len
+    product_n = args.n_len
+    tangent_n = args.tangent_n_len
+    tangent_k = args.tangent_k_len
+    name = args.name
+    final_name = f"coefficientNegativity_of_{name}"
+
+    lines = emit_header()
+    lines.extend(
+        [
+            f"theorem {name} :",
+            "    PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate",
+            f"      {p} {t} {ss} {sb} {e}",
+            f"      {product_n} {tangent_n} {tangent_k} where",
+            "  productRowLenPos := by norm_num",
+            "  tangentRowLenPos := by norm_num",
+            "  soloSaddleRowLenPos := by norm_num",
+            "  soloBudgetRowLenPos := by norm_num",
+            "  edgeRowLenPos := by norm_num",
+            "  productNLenPos := by norm_num",
+            "  tangentNLenPos := by norm_num",
+            "  tangentKLenPos := by norm_num",
+        ]
+    )
+    add_product_row_n_edge_dispatch_field(
+        lines,
+        "smallXYProductRawClearedTableProductRowRangeNIndexKChunks",
+        p,
+        product_n,
+    )
+    add_product_row_n_edge_dispatch_field(
+        lines,
+        "temperedXYProductRawClearedTableProductRowRangeNIndexKChunks",
+        p,
+        product_n,
+    )
+    add_tangent_row_k_dispatch_field(
+        lines,
+        "smallTangentExpEdgeRowRangeNChunksKChunks",
+        t,
+        tangent_k,
+    )
+    add_row_dispatch_field(
+        lines,
+        "soloYSaddleClearedRowRangeChunks",
+        ss,
+        row_count(ss),
+    )
+    add_row_dispatch_field(
+        lines,
+        "soloYBudgetRowRangeChunks",
+        sb,
+        row_count(sb),
+    )
+    add_row_edge_dispatch_field(
+        lines,
+        "edgeKChunkUnitRowRanges",
+        e,
+        row_count(e),
+    )
+
+    if args.emit_final:
+        lines.extend(
+            [
+                "",
+                f"theorem {final_name}",
+                "    (tail : PositiveSaddleLargeTailAuditCertificate) :",
+                "    CoefficientNegativity :=",
+                "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate",
+                f"    {name} tail",
+            ]
+        )
+
+    lines.extend(["", "end Prop51", ""])
+    return "\n".join(lines)
+
+
 def emit(args: argparse.Namespace) -> str:
     if args.strategy == "all-chunks":
         return emit_all_chunks(args)
@@ -506,7 +631,9 @@ def emit(args: argparse.Namespace) -> str:
         return emit_split_fields(args)
     if args.strategy == "cell-tangent":
         return emit_cell_tangent(args)
-    return emit_chunked_tangent(args)
+    if args.strategy == "chunked-tangent":
+        return emit_chunked_tangent(args)
+    return emit_product_n_chunked_tangent(args)
 
 
 def main(argv: list[str]) -> int:

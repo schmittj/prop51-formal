@@ -557,7 +557,10 @@ Status:
       `--strategy cell-tangent`.  The fully generated sibling
       `PositiveSaddleFixedFiniteWindowChunkedTangentAuditCertificate` splits
       tangent by fixed row, `N`, and small-`k` chunks and is emitted with
-      `--strategy chunked-tangent`.
+      `--strategy chunked-tangent`.  The finer generated sibling
+      `PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate`
+      also splits product by a uniform product `N`-chunk index and is emitted
+      with `--strategy product-n-chunked-tangent`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

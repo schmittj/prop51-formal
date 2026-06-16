@@ -1003,6 +1003,21 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowChunkedTangentAu
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     (finite.toTangentProductBudgetCertificate tail)
 
+/-- Final assembly from the fixed finite-window route where both product and
+tangent checks are split by row and `N` chunks.  This is the smallest current
+fixed-width generated finite-window target. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen tangentNLen tangentKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen tangentNLen tangentKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
+
 /-- Final assembly from the fully fixed-width product chunk route.  Product
 checks use fixed-width row chunks and fixed-width `N` chunks, while tangent,
 displayed-solo, and edge checks use the default fixed-scale chunk interfaces. -/
