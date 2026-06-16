@@ -3196,6 +3196,22 @@ def positiveEntropyShadowBaseStepRawQuotient (a r : Nat) : ℚ :=
       ((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) *
     ((2 : ℚ)^(posJ a r) / (2 : ℚ)^(posJ a r - 1))
 
+/-- Numerator of `positiveEntropyShadowBaseStepRawQuotient` after combining
+the entropy-shadow and dyadic quotient factors into one rational quotient. -/
+def positiveEntropyShadowBaseStepRawNumerator (a r : Nat) : ℚ :=
+  ((r + 1 : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ) *
+    ((r : Nat) : ℚ)^r *
+    ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2) *
+    (2 : ℚ)^(posJ a r)
+
+/-- Denominator of `positiveEntropyShadowBaseStepRawQuotient` after combining
+the entropy-shadow and dyadic quotient factors into one rational quotient. -/
+def positiveEntropyShadowBaseStepRawDenominator (a r : Nat) : ℚ :=
+  ((r : Nat) : ℚ) * ((posJ a r : Nat) : ℚ) *
+    ((r - 1 : Nat) : ℚ)^(r - 1) *
+    ((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1) *
+    (2 : ℚ)^(posJ a r - 1)
+
 theorem ratCast_natSub_selfPow_pos {n d : Nat} (hd : d ≤ n) :
     (0 : ℚ) < (((n - d : Nat) : ℚ)^(n - d)) := by
   by_cases hnd : n = d
@@ -3244,6 +3260,81 @@ theorem positiveEntropyShadowBaseStepRawQuotient_pos
     mul_pos (mul_pos (mul_pos hrQ hjQ) hrPredPow) hjPredPow
   simpa [positiveEntropyShadowBaseStepRawQuotient] using
     mul_pos (div_pos hnum hden) hdyadic
+
+theorem positiveEntropyShadowBaseStepRawDenominator_pos
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
+    0 < positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hrQ : (0 : ℚ) < ((r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hjQ : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r)
+  have hrPredPow : (0 : ℚ) < (((r - 1 : Nat) : ℚ)^(r - 1)) :=
+    ratCast_natSub_selfPow_pos (n := r) (d := 1) hr1
+  have hj1 : 1 ≤ posJ a r := by omega
+  have hjPredPow :
+      (0 : ℚ) < (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) :=
+    ratCast_natSub_selfPow_pos (n := posJ a r) (d := 1) hj1
+  unfold positiveEntropyShadowBaseStepRawDenominator
+  positivity
+
+theorem positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
+    positiveEntropyShadowBaseStepRawQuotient a r =
+      positiveEntropyShadowBaseStepRawNumerator a r /
+        positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hrQ : ((r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : r ≠ 0)
+  have hjQ : ((posJ a r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r ≠ 0)
+  have hpow_r1 : (((r - 1 : Nat) : ℚ)^(r - 1)) ≠ 0 := by
+    exact (ratCast_natSub_selfPow_pos (n := r) (d := 1) hr1).ne'
+  have hj1pos : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r - 1)
+  have hpow_j1 : (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) ≠ 0 :=
+    (pow_pos hj1pos _).ne'
+  have hpow2j1 : ((2 : ℚ)^(posJ a r - 1)) ≠ 0 := by positivity
+  unfold positiveEntropyShadowBaseStepRawQuotient
+    positiveEntropyShadowBaseStepRawNumerator
+    positiveEntropyShadowBaseStepRawDenominator
+  field_simp [hrQ, hjQ, hpow_r1, hpow_j1, hpow2j1]
+
+theorem mul_rawQuotient_mul_le_of_mul_num_le
+    {a r : Nat} {q x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (h :
+      q * (positiveEntropyShadowBaseStepRawNumerator a r * x)
+        ≤ y * positiveEntropyShadowBaseStepRawDenominator a r) :
+    q * (positiveEntropyShadowBaseStepRawQuotient a r * x) ≤ y := by
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawDenominator a r :=
+    positiveEntropyShadowBaseStepRawDenominator_pos hr1 hj2
+  have hrewrite :
+      q * (positiveEntropyShadowBaseStepRawQuotient a r * x) =
+        (q * (positiveEntropyShadowBaseStepRawNumerator a r * x)) /
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+    rw [positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den hr1 hj2]
+    field_simp [hden.ne']
+  rw [hrewrite]
+  rw [div_le_iff₀ hden]
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h
+
+theorem mul_le_mul_rawQuotient_mul_of_mul_den_le
+    {a r : Nat} {q p x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (h :
+      q * x * positiveEntropyShadowBaseStepRawDenominator a r
+        ≤ p * (positiveEntropyShadowBaseStepRawNumerator a r * y)) :
+    q * x ≤ p * (positiveEntropyShadowBaseStepRawQuotient a r * y) := by
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawDenominator a r :=
+    positiveEntropyShadowBaseStepRawDenominator_pos hr1 hj2
+  have hrewrite :
+      p * (positiveEntropyShadowBaseStepRawQuotient a r * y) =
+        (p * (positiveEntropyShadowBaseStepRawNumerator a r * y)) /
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+    rw [positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den hr1 hj2]
+    field_simp [hden.ne']
+  rw [hrewrite]
+  rw [le_div_iff₀ hden]
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h
 
 theorem positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul
     (smallExp : Nat → Nat → ℚ) (a k : Nat) :
@@ -8178,6 +8269,104 @@ structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsC
             positiveTemperedLargeExp a (posKmax a)
         ≤ positiveEdgeBudget / 4
 
+/-- Candidate split-tempered audit target with the raw entropy-shadow quotient
+denominator also cleared.
+
+This is the lowest-level current generated-audit interface for the adjacent
+step inequalities: the only remaining divisions are those inside the
+large-tail exponential factors and the first/last reserve terms. -/
+structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate :
+    Prop where
+  smallRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+            positiveSmallLargeExp a (r + 1))
+          ≤ positiveSmallLargeExp a r *
+            positiveEntropyShadowBaseStepRawDenominator a r
+  smallFirstReserveQuarter :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ positiveEdgeBudget / 4
+  temperedLowerRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a r *
+              positiveTemperedLargeExp a (r + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveTemperedLargeExp a r *
+              positiveEntropyShadowBaseStepRawDenominator a r
+  temperedLowerFirstReserveLinear :
+    ∀ {a : Nat}, 2000 < a →
+      ((4 * a : Nat) : ℚ) *
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ positiveEdgeBudget / 4
+  temperedUpperReverseRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1) *
+            positiveEntropyShadowBaseStepRawDenominator a (r - 1)
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedUpperLastReserveLinear :
+    ∀ {a : Nat}, 2000 < a →
+      ((4 * a : Nat) : ℚ) *
+          positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (posKmax a)
+        ≤ positiveEdgeBudget / 4
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toLinearBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate where
+  smallRawStepDouble := by
+    intro a r ha hr1 hrhi
+    have hrK : r ≤ posKmax a := by omega
+    have hj2 : 2 ≤ posJ a r :=
+      two_le_posJ_of_le_posKmax_of_large (by omega : 20 ≤ a) hrK
+    exact mul_rawQuotient_mul_le_of_mul_num_le
+      (a := a) (r := r) (q := 2)
+      (x := positiveSmallLargeExp a (r + 1))
+      (y := positiveSmallLargeExp a r)
+      hr1 hj2 (cert.smallRawStepCleared ha hr1 hrhi)
+  smallFirstReserveQuarter := cert.smallFirstReserveQuarter
+  temperedLowerRawStepLinear := by
+    intro a r ha hrlo hrhi
+    have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+    have hsplit := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hrK : r ≤ posKmax a := by omega
+    have hj2 : 2 ≤ posJ a r :=
+      two_le_posJ_of_le_posKmax_of_large (by omega : 20 ≤ a) hrK
+    exact mul_rawQuotient_mul_le_of_mul_num_le
+      (a := a) (r := r) (q := ((4 * a : Nat) : ℚ))
+      (x := positiveTemperedLargeExp a (r + 1))
+      (y := ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a r)
+      hr1 hj2 (by
+        simpa [mul_assoc, mul_left_comm, mul_comm]
+          using cert.temperedLowerRawStepCleared ha hrlo hrhi)
+  temperedLowerFirstReserveLinear := cert.temperedLowerFirstReserveLinear
+  temperedUpperReverseRawStepLinear := by
+    intro a r ha hrlo hrhi
+    have hsplitLower := positiveLargeExpTemperedSplitLower_of_large ha
+    have hrprev1 : 1 ≤ r - 1 := by omega
+    have hj2 : 2 ≤ posJ a (r - 1) :=
+      two_le_posJ_of_le_posKmax_of_large
+        (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+    exact mul_le_mul_rawQuotient_mul_of_mul_den_le
+      (a := a) (r := r - 1) (q := ((4 * a : Nat) : ℚ))
+      (p := ((4 * a - 1 : Nat) : ℚ))
+      (x := positiveTemperedLargeExp a (r - 1))
+      (y := positiveTemperedLargeExp a r)
+      hrprev1 hj2 (by
+        simpa [mul_assoc, mul_left_comm, mul_comm]
+          using cert.temperedUpperReverseRawStepCleared ha hrlo hrhi)
+  temperedUpperLastReserveLinear := cert.temperedUpperLastReserveLinear
+
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
@@ -8287,6 +8476,21 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCer
       positiveLargeExpTemperedUpperReverseRatio :=
   cert.toCandidateSplitTemperedCrossmulBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
 
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate :=
+  cert.toLinearBoundsCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toLinearBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toBoundsCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
@@ -8295,6 +8499,15 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCer
       positiveLargeExpTemperedLowerRatio
       positiveLargeExpTemperedUpperReverseRatio :=
   cert.toSplitTemperedCrossmulBoundsCertificate.toBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate.toBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toLinearBoundsCertificate.toBoundsCertificate
 
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
@@ -8499,6 +8712,17 @@ theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpCandid
   pointwise.toLargeExpSplitTemperedRawQuotientReserveCertificate
     bounds.toBoundsCertificate
 
+theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate)
@@ -8510,6 +8734,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toLargeEx
       positiveLargeExpTemperedUpperReverseRatio :=
   pointwise.toGcompPointwiseCertificate.toPointwiseCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
@@ -8523,6 +8759,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toLargeE
   pointwise.toProductPointwiseCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
 
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate)
@@ -8534,6 +8782,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate.toL
       positiveLargeExpTemperedUpperReverseRatio :=
   pointwise.toProductPointwiseCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
@@ -8547,6 +8807,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.to
   pointwise.toProductPointwiseYCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
 
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate)
@@ -8559,6 +8831,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate.toLarg
   pointwise.toProductPointwiseLinearCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
 
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
     (pointwise :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate)
@@ -8570,6 +8854,18 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate.toLar
       positiveLargeExpTemperedUpperReverseRatio :=
   pointwise.toProductPointwiseYLinearCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    bounds.toLinearBoundsCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
     {smallRatio temperedReverseRatio : Nat → ℚ}

@@ -1008,4 +1008,171 @@ theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedLi
     hsmall htempered htangent hsolo hedge
     pointwise.toProductPointwiseRawCertificate bounds
 
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedLinearReserveCertificate_of_parts
+    hsmall htempered htangent hsolo hedge pointwise
+    bounds.toLinearBoundsCertificate
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_productY_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise : PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_parts
+    hsmall htempered htangent hsolo hedge
+    pointwise.toProductPointwiseCertificate.toGcompPointwiseCertificate.toPointwiseCertificate
+    bounds
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_linearProduct_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedLinearReserveCertificate_of_linearProduct_parts
+    hsmall htempered htangent hsolo hedge pointwise
+    bounds.toLinearBoundsCertificate
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_linearProductY_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_linearProduct_parts
+    hsmall htempered htangent hsolo hedge
+    pointwise.toProductPointwiseLinearCertificate bounds
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_rawProduct_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseRawCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedLinearReserveCertificate_of_rawProduct_parts
+    hsmall htempered htangent hsolo hedge pointwise
+    bounds.toLinearBoundsCertificate
+
+theorem positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_rawProductY_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  positiveSaddleDefaultChunkedRangeEntropyLargeExpCandidateSplitTemperedRawClearedReserveCertificate_of_rawProduct_parts
+    hsmall htempered htangent hsolo hedge
+    pointwise.toProductPointwiseRawCertificate bounds
+
 end Prop51
