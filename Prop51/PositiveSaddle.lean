@@ -6843,6 +6843,110 @@ structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertif
           positiveTemperedLargeExp a (posKmax a)
         ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
 
+/-- Cross-multiplied variant of
+`PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertificate`.
+
+This avoids quotient goals in the generated rational audit.  Positivity of the
+large-exp factors and entropy-shadow raw base quotient is supplied by Lean when
+converting back to the quotient-shaped certificate. -/
+structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCrossmulBoundsCertificate
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepCross :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveSmallLargeExp a (r + 1)
+          ≤ smallRatio a * positiveSmallLargeExp a r
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedReverseRatio a
+  temperedReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedReverseRatio a < 1
+  temperedReverseRawStepCross :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        positiveTemperedLargeExp a (r - 1)
+          ≤ temperedReverseRatio a *
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCrossmulBoundsCertificate.toBoundsCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCrossmulBoundsCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveBoundsCertificate
+      smallRatio temperedReverseRatio where
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallRawStepQuotient := by
+    intro a r ha hr1 hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange_of_small_branch_step hr1 hrhi
+    have hEpos : 0 < positiveSmallLargeExp a r :=
+      positiveSmallLargeExp_pos_of_large ha hrmem
+    calc
+      positiveEntropyShadowBaseStepRawQuotient a r *
+          (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          = (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveSmallLargeExp a (r + 1)) /
+                positiveSmallLargeExp a r := by
+            ring
+      _ ≤ smallRatio a := by
+            rw [div_le_iff₀ hEpos]
+            simpa [mul_assoc, mul_left_comm, mul_comm]
+              using cert.smallRawStepCross ha hr1 hrhi
+  smallFirstReserve := cert.smallFirstReserve
+  temperedReverseRatioNonneg := cert.temperedReverseRatioNonneg
+  temperedReverseRatioLtOne := cert.temperedReverseRatioLtOne
+  temperedReverseRawStepQuotient := by
+    intro a r ha hrlo hrhi
+    have hprevMem : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    have hEprev : 0 < positiveTemperedLargeExp a (r - 1) :=
+      positiveTemperedLargeExp_pos_of_large ha hprevMem
+    have hE : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrmem
+    have hraw :
+        0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) := by
+      have hrprev1 : 1 ≤ r - 1 := by omega
+      have hj2 : 2 ≤ posJ a (r - 1) :=
+        two_le_posJ_of_le_posKmax_of_large
+          (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+      exact positiveEntropyShadowBaseStepRawQuotient_pos hrprev1 hj2
+    have hden :
+        0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r :=
+      mul_pos hraw hE
+    calc
+      1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+          (positiveTemperedLargeExp a r /
+            positiveTemperedLargeExp a (r - 1)))
+          =
+        positiveTemperedLargeExp a (r - 1) /
+          (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r) := by
+            field_simp [hraw.ne', hE.ne', hEprev.ne']
+      _ ≤ temperedReverseRatio a := by
+            rw [div_le_iff₀ hden]
+            simpa [mul_assoc, mul_left_comm, mul_comm]
+              using cert.temperedReverseRawStepCross ha hrlo hrhi
+  temperedLastReserve := cert.temperedLastReserve
+
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
 `positiveTemperedLargeExp`.
