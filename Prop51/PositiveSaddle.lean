@@ -4532,6 +4532,42 @@ theorem partialExpUpper_nonneg_of_nonneg_lt {y : ℚ} {T₀ : Nat}
   · exact Finset.sum_nonneg fun t _ => by positivity
   · positivity
 
+theorem partialExpUpper_pos_of_nonneg_lt {y : ℚ} {T₀ : Nat}
+    (hy : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    0 < partialExpUpper y T₀ := by
+  have hTpos : 0 < T₀ := by
+    by_contra hnot
+    have hzero : T₀ = 0 := Nat.eq_zero_of_not_pos hnot
+    subst T₀
+    norm_num at hyT
+    linarith
+  rcases T₀ with _ | T
+  · omega
+  have hTQ : (0 : ℚ) < ((T + 1 : Nat) : ℚ) := by positivity
+  have hden : (0 : ℚ) < 1 - y/((T + 1 : Nat) : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hyT
+  unfold partialExpUpper
+  have hterm_nonneg :
+      ∀ t ∈ Finset.range (T + 1),
+        0 ≤ y^t / (t.factorial : ℚ) := by
+    intro t _ht
+    positivity
+  have hmem0 : 0 ∈ Finset.range (T + 1) := by
+    exact Finset.mem_range.mpr (by omega)
+  have hsum_ge_one :
+      (1 : ℚ) ≤ ∑ t ∈ Finset.range (T + 1),
+        y^t / (t.factorial : ℚ) := by
+    simpa using
+      (Finset.single_le_sum hterm_nonneg hmem0 :
+        y^0 / ((0 : Nat).factorial : ℚ) ≤
+          ∑ t ∈ Finset.range (T + 1), y^t / (t.factorial : ℚ))
+  have hsum_pos :
+      (0 : ℚ) < ∑ t ∈ Finset.range (T + 1),
+        y^t / (t.factorial : ℚ) := by
+    linarith
+  exact add_pos_of_pos_of_nonneg hsum_pos (by positivity)
+
 theorem partialExpUpper_mono_of_nonneg_le_lt {y z : ℚ} {T₀ : Nat}
     (hy0 : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T₀ : ℚ)) :
     partialExpUpper y T₀ ≤ partialExpUpper z T₀ := by
@@ -4730,6 +4766,26 @@ theorem positiveTemperedLargeExp_nonneg_of_large
   have hjpos : 0 < posJ a k :=
     posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
   exact partialExpUpper_nonneg_of_nonneg_lt
+    (positiveTemperedExponentUpper_nonneg hk1 hjpos)
+    (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
+
+theorem positiveSmallLargeExp_pos_of_large
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    0 < positiveSmallLargeExp a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  exact partialExpUpper_pos_of_nonneg_lt
+    (positiveSmallExponentUpper_nonneg hjpos)
+    (positiveSmallExponentUpper_lt_largeExpCutoff ha hkRange)
+
+theorem positiveTemperedLargeExp_pos_of_large
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    0 < positiveTemperedLargeExp a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  exact partialExpUpper_pos_of_nonneg_lt
     (positiveTemperedExponentUpper_nonneg hk1 hjpos)
     (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
 
@@ -6451,6 +6507,113 @@ theorem PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate.toMixed
       (cert.temperedReverseRawStepQuotient ha hrlo hrhi)
   temperedLastReserve := cert.temperedLastReserve
 
+/-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
+large-tail exponential factors `positiveSmallLargeExp` and
+`positiveTemperedLargeExp`.
+
+Compared with the fully generic
+`PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate`, this
+specialization omits the exponential nonnegativity and step-positivity fields:
+they follow from the cutoff inequalities
+`positiveSmallExponentUpper_lt_largeExpCutoff` and
+`positiveTemperedExponentUpper_lt_largeExpCutoff`. -/
+structure PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+    (smallRatio temperedReverseRatio : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedReverseRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedReverseRatio a
+  temperedReverseRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedReverseRatio a < 1
+  temperedReverseRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) < r → r ≤ posKmax a →
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1)))
+          ≤ temperedReverseRatio a
+  temperedLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 2) * (1 - temperedReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp
+      smallRatio temperedReverseRatio where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallExpNonneg := by
+    intro a k ha hk
+    exact positiveSmallLargeExp_nonneg_of_large ha hk
+  temperedExpNonneg := by
+    intro a k ha hk
+    exact positiveTemperedLargeExp_nonneg_of_large ha hk
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallStepExpPos := by
+    intro a r ha hr1 hrhi
+    exact positiveSmallLargeExp_pos_of_large ha
+      (mem_positiveKRange_of_small_branch_step hr1 hrhi)
+  smallRawStepQuotient := cert.smallRawStepQuotient
+  smallFirstReserve := cert.smallFirstReserve
+  temperedReverseRatioNonneg := cert.temperedReverseRatioNonneg
+  temperedReverseRatioLtOne := cert.temperedReverseRatioLtOne
+  temperedReverseStepExpPrevPos := by
+    intro a r ha hrlo hrhi
+    have hprev : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    exact positiveTemperedLargeExp_pos_of_large ha hprev
+  temperedReverseStepExpPos := by
+    intro a r ha hrlo hrhi
+    have hrmem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    exact positiveTemperedLargeExp_pos_of_large ha hrmem
+  temperedReverseRawStepQuotient := cert.temperedReverseRawStepQuotient
+  temperedLastReserve := cert.temperedLastReserve
+
+theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedGeometricReserveCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowExpMixedGeometricReserveCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp
+      smallRatio temperedReverseRatio :=
+  cert.toMixedRawQuotientReserveCertificate.toMixedGeometricReserveCertificate
+
 theorem one_mem_positiveKRange_of_large {a : Nat} (ha : 2 ≤ a) :
     1 ∈ positiveKRange a :=
   mem_positiveKRange.mpr ⟨le_rfl, one_le_posKmax ha⟩
@@ -6593,6 +6756,23 @@ theorem PositiveSaddleEntropyShadowExpMixedRawQuotientReserveCertificate.entropy
       smallExp temperedExp smallRatio temperedReverseRatio) :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
   cert.toMixedGeometricReserveCertificate.entropyTail
+
+theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toExpSplitBudgetCertificate
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    PositiveSaddleEntropyShadowExpSplitBudgetCertificate
+      positiveSmallLargeExp positiveTemperedLargeExp :=
+  cert.toMixedGeometricReserveCertificate.toExpSplitBudgetCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.entropyTail
+    {smallRatio temperedReverseRatio : Nat → ℚ}
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate
+        smallRatio temperedReverseRatio) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 :=
+  cert.toMixedRawQuotientReserveCertificate.entropyTail
 
 theorem PositiveSaddleEntropyShadowExpQuotientReserveCertificate.entropyTail
     {smallExp temperedExp : Nat → Nat → ℚ}
