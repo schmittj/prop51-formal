@@ -5244,6 +5244,60 @@ theorem positiveTemperedLargeGcompProductTarget_nonneg
   unfold positiveTemperedLargeGcompProductTarget
   positivity
 
+theorem positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (h :
+      ((N : ℚ) * (posNhi a : ℚ)) *
+          positiveXplusYProductGcompBound a N k
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k) :
+    positiveXplusYProductGcompBound a N k
+      ≤ positiveSmallLargeGcompProductTarget a N k := by
+  let den : ℚ := (N : ℚ) * (posNhi a : ℚ)
+  have hden_pos : 0 < den := by
+    have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+      exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+    exact mul_pos hNQ hhi
+  calc
+    positiveXplusYProductGcompBound a N k
+        = den * positiveXplusYProductGcompBound a N k / den := by
+          field_simp [hden_pos.ne']
+    _ ≤ (130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k) / den :=
+          div_le_div_of_nonneg_right (by simpa [den] using h) hden_pos.le
+    _ = positiveSmallLargeGcompProductTarget a N k := by
+          unfold positiveSmallLargeGcompProductTarget
+          dsimp [den]
+          ring_nf
+
+theorem positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_mul_le
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (h :
+      ((N : ℚ) * (posNlo a : ℚ)) *
+          positiveXplusYProductGcompBound a N k
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k) :
+    positiveXplusYProductGcompBound a N k
+      ≤ positiveTemperedLargeGcompProductTarget a N k := by
+  let den : ℚ := (N : ℚ) * (posNlo a : ℚ)
+  have hden_pos : 0 < den := by
+    have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+    exact mul_pos hNQ hlo
+  calc
+    positiveXplusYProductGcompBound a N k
+        = den * positiveXplusYProductGcompBound a N k / den := by
+          field_simp [hden_pos.ne']
+    _ ≤ (192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k) / den :=
+          div_le_div_of_nonneg_right (by simpa [den] using h) hden_pos.le
+    _ = positiveTemperedLargeGcompProductTarget a N k := by
+          unfold positiveTemperedLargeGcompProductTarget
+          dsimp [den]
+          ring_nf
+
 theorem positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
     {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     (hkRange : k ∈ positiveKRange a)
@@ -7369,6 +7423,95 @@ structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate : Prop
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
       positiveDyadicDecay a / 2 * positiveYgcompBound N a ≤ positiveSoloBudget
 
+/-- Denominator-cleared product-level large-exp pointwise certificate.
+
+The `smallProductLinear` and `temperedProductLinear` fields are equivalent to
+the product-pointwise target fields above, but clear the positive denominators
+`N * posNhi a` and `N * posNlo a`.  This is the preferred shape for generated
+large-`a` product audits. -/
+structure PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate :
+    Prop where
+  smallProductLinear :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        ((N : ℚ) * (posNhi a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k
+  temperedProductLinear :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        ((N : ℚ) * (posNlo a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k
+  soloGcomp :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveSoloGcompBound a N ≤ positiveSoloBudget
+
+/-- Denominator-cleared product-level large-exp pointwise certificate with the
+solo estimate stated in the `Y_a(N)` form used by the paper. -/
+structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate :
+    Prop where
+  smallProductLinear :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        ((N : ℚ) * (posNhi a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k
+  temperedProductLinear :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        ((N : ℚ) * (posNlo a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k
+  soloY :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * positiveYgcompBound N a ≤ positiveSoloBudget
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate.toProductPointwiseCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate where
+  smallProduct := by
+    intro a N k ha hrect hk hsmall
+    exact positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (cert.smallProductLinear ha hrect hk hsmall)
+  temperedProduct := by
+    intro a N k ha hrect hk htempered
+    exact positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (cert.temperedProductLinear ha hrect hk htempered)
+  soloGcomp := cert.soloGcomp
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.toProductPointwiseYCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate where
+  smallProduct := by
+    intro a N k ha hrect hk hsmall
+    exact positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (cert.smallProductLinear ha hrect hk hsmall)
+  temperedProduct := by
+    intro a N k ha hrect hk htempered
+    exact positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (cert.temperedProductLinear ha hrect hk htempered)
+  soloY := cert.soloY
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.toProductPointwiseLinearCertificate
+    (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate where
+  smallProductLinear := cert.smallProductLinear
+  temperedProductLinear := cert.temperedProductLinear
+  soloGcomp := by
+    intro a N ha hrect
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    rw [positiveSoloGcompBound_eq_dyadic_YgcompBound hN (by omega : 1 ≤ a)]
+    exact cert.soloY ha hrect
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toProductPointwiseCertificate
     (cert : PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate) :
     PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate where
@@ -8214,6 +8357,30 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toLargeE
       positiveLargeExpTemperedLowerRatio
       positiveLargeExpTemperedUpperReverseRatio :=
   pointwise.toProductPointwiseCertificate
+    |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toProductPointwiseCertificate
+    |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYLinearCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toProductPointwiseYCertificate
     |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
 
 theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
