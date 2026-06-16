@@ -98,7 +98,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `RawProductTableFixedNChunksIndependentRowChunksFixedScale...` capstone
   additionally lets the displayed-solo saddle, displayed-solo budget, and edge
   finite range checks use their own row covers.  The final `N` chunk may
-  harmlessly overrun the positive rectangle.  When
+  harmlessly overrun the positive rectangle.  When fixed row lengths are
+  enough for all finite check families, the
+  `RawProductTableFixedFiniteRowNChunksFixedScale...` capstone supplies all
+  row covers from `Prop51.positiveSaddleFixedRowChunks`.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
