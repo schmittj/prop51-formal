@@ -274,6 +274,14 @@ def positiveSmallExponentUpper (a k : Nat) : ℚ :=
     + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
     + 1
 
+/-- The same small-regime exponent before replacing the actual `N` by the
+upper rectangle edge. -/
+def positiveSmallExponentAt (a N k : Nat) : ℚ :=
+  (1139/1000) * (ceilSqrt N : ℚ)
+    + (1/5) * (posJ a k : ℚ)
+    + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
+    + 1
+
 /-- Rational upper exponent for the tempered edge formula. -/
 def positiveTemperedExponentUpper (a k : Nat) : ℚ :=
   (1/5) * (a : ℚ)
@@ -957,12 +965,64 @@ theorem partialExpUpper_nonneg_of_nonneg_lt {y : ℚ} {T₀ : Nat}
   · exact Finset.sum_nonneg fun t _ => by positivity
   · positivity
 
+theorem partialExpUpper_mono_of_nonneg_le_lt {y z : ℚ} {T₀ : Nat}
+    (hy0 : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T₀ : ℚ)) :
+    partialExpUpper y T₀ ≤ partialExpUpper z T₀ := by
+  have hz0 : 0 ≤ z := hy0.trans hyz
+  have hyT : y < (T₀ : ℚ) := lt_of_le_of_lt hyz hzT
+  have hTpos : 0 < T₀ := by
+    by_contra hnot
+    have hzero : T₀ = 0 := Nat.eq_zero_of_not_pos hnot
+    subst T₀
+    norm_num at hzT
+    linarith
+  have hTQ : (0 : ℚ) < (T₀ : ℚ) := by exact_mod_cast hTpos
+  have hden_y_pos : 0 < 1 - y/(T₀ : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hyT
+  have hden_z_pos : 0 < 1 - z/(T₀ : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hzT
+  have hdiv_yz : y/(T₀ : ℚ) ≤ z/(T₀ : ℚ) :=
+    div_le_div_of_nonneg_right hyz hTQ.le
+  have hden_le : 1 - z/(T₀ : ℚ) ≤ 1 - y/(T₀ : ℚ) := by
+    linarith
+  have hrecip :
+      1 / (1 - y/(T₀ : ℚ)) ≤ 1 / (1 - z/(T₀ : ℚ)) :=
+    one_div_le_one_div_of_le hden_z_pos hden_le
+  unfold partialExpUpper
+  apply add_le_add
+  · refine Finset.sum_le_sum fun t _ => ?_
+    exact div_le_div_of_nonneg_right
+      (pow_le_pow_left₀ hy0 hyz t) (by positivity)
+  · exact mul_le_mul
+      (div_le_div_of_nonneg_right
+        (pow_le_pow_left₀ hy0 hyz T₀) (by positivity))
+      hrecip
+      (div_nonneg (by norm_num : (0 : ℚ) ≤ 1) hden_y_pos.le)
+      (div_nonneg (pow_nonneg hz0 T₀) (by positivity))
+
 theorem positiveSmallExponentUpper_nonneg {a k : Nat}
     (hj : 0 < posJ a k) :
     0 ≤ positiveSmallExponentUpper a k := by
   unfold positiveSmallExponentUpper
   have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hj
   positivity
+
+theorem positiveSmallExponentAt_nonneg {a N k : Nat}
+    (hj : 0 < posJ a k) :
+    0 ≤ positiveSmallExponentAt a N k := by
+  unfold positiveSmallExponentAt
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hj
+  positivity
+
+theorem positiveSmallExponentAt_le_upper_of_rectangle {a N k : Nat}
+    (hrect : positiveRectangle a N) :
+    positiveSmallExponentAt a N k ≤ positiveSmallExponentUpper a k := by
+  have hcut : (ceilSqrt N : ℚ) ≤ (posSmallCutoff a : ℚ) := by
+    exact_mod_cast (smallRegime_le_upper_edge hrect.2 le_rfl)
+  unfold positiveSmallExponentAt positiveSmallExponentUpper
+  nlinarith
 
 theorem positiveTemperedExponentUpper_nonneg {a k : Nat}
     (hk : 1 ≤ k) (hj : 0 < posJ a k) :
@@ -1010,6 +1070,18 @@ theorem positiveSmallExponentUpper_lt_expCutoff {a k : Nat}
           gcongr
     _ < (positiveExpCutoff : ℚ) := by
           norm_num [positiveExpCutoff]
+
+theorem partialExpUpper_smallExponentAt_le_upper
+    {a N k : Nat} (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a) :
+    partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff
+      ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k := posJ_pos_of_le_posKmax ha1 hkmax
+  exact partialExpUpper_mono_of_nonneg_le_lt
+    (positiveSmallExponentAt_nonneg hjpos)
+    (positiveSmallExponentAt_le_upper_of_rectangle hrect)
+    (positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
 
 theorem positiveTemperedExponentUpper_lt_expCutoff {a k : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)

@@ -236,6 +236,9 @@ Status:
       decomposed interface is packaged as `PositiveSaddleXYCertificate`.
       The executable small/tempered majorants also have reciprocal-binomial
       normal forms, matching the scalar shape produced by this bridge.
+      Lean now also proves monotonicity of the rational `partialExpUpper`
+      surrogate and uses it to move the small-regime exponent from the actual
+      `N` to the upper rectangle edge.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
