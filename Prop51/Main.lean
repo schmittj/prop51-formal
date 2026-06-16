@@ -26,7 +26,7 @@ of Proposition 5.1 there).
   positive-saddle certificates.  The sign-lock side is closed; the preferred
   current finite-window interface uses default product chunks, tangent-edge
   cells, a semantic finite solo budget, and default unit-cleared edge
-  `k`-chunks, with final assembly exposed below by
+  `k`-chunks, optionally with one edge scale per row, with final assembly exposed below by
   `coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
   A concrete instance of that audit certificate would upgrade the capstone to
   full `CoefficientNegativity`.
@@ -726,6 +726,19 @@ theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntrop
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
     (PositiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+      cert)
+
+/-- Final assembly from the unit-budget large-tail audit shape with cell-level
+tangent edge checks, semantic finite solo budgets, and default `k`-chunk
+unit-cleared finite edge budgets using one scale per row. -/
+theorem coefficientNegativity_of_positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleXplusGcompTangentCellEdgeBudgetCertificate
+    (PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
       cert)
 
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the

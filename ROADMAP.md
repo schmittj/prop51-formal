@@ -414,7 +414,11 @@ Status:
       budgets are summed in Lean.  The remaining finite-window divergence
       from the TeX-style fully executable audit is therefore concentrated in
       the solo bound, while the corrected edge scan has a generated-audit
-      path that avoids the slow whole-row boolean.
+      path that avoids the slow whole-row boolean.  A lighter sibling
+      endpoint,
+      `PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      uses one edge unit scale per row and reduces the reciprocal-budget field
+      to the single inequality `90 / scale ≤ positiveEdgeBudget`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

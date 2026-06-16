@@ -59,6 +59,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   product chunks, tangent-edge cell checks, semantic finite solo budgets,
   default unit-cleared edge `k`-chunks, and the raw-cleared large-tail reserve
   certificate imply full `CoefficientNegativity`.
+  The sibling theorem
+  `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+  is the same route with one edge unit scale per row.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.
