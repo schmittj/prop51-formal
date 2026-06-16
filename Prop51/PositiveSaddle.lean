@@ -1545,6 +1545,14 @@ theorem mem_positiveKRangeList_of_mem {a k : Nat}
   exact (List.mem_range'_1).mpr (by
     exact ⟨hk1, by omega⟩)
 
+/-- Membership bridge from the executable retained range back to the `Finset`
+predicate. -/
+theorem positiveKRange_of_mem_positiveKRangeList {a k : Nat}
+    (hk : k ∈ positiveKRangeList a) :
+    k ∈ positiveKRange a := by
+  rcases (List.mem_range'_1.mp hk) with ⟨hk1, hklt⟩
+  exact mem_positiveKRange.mpr ⟨hk1, by omega⟩
+
 /-- Membership bridge from the `Finset` plateau range to its executable list
 enumerator. -/
 theorem mem_positiveSmallCeilRangeList_of_mem {a s : Nat}
@@ -1565,6 +1573,20 @@ theorem mem_positiveNRangeList_of_rectangle {a N : Nat}
   have hlt_list : N < posNlo a + (posNhi a + 1 - posNlo a) := by
     rwa [hlen]
   exact (List.mem_range'_1).mpr ⟨hrect.1, hlt_list⟩
+
+/-- Membership bridge from the executable `N` list back to the rectangle
+predicate. -/
+theorem positiveRectangle_of_mem_positiveNRangeList {a N : Nat}
+    (ha : 1 ≤ a) (hN : N ∈ positiveNRangeList a) :
+    positiveRectangle a N := by
+  rcases (List.mem_range'_1.mp hN) with ⟨hlo, hlt⟩
+  have hlohi : posNlo a ≤ posNhi a + 1 := by
+    have hrect : positiveRectangle a (posNlo a) :=
+      positiveRectangle_nonempty ha
+    exact hrect.1.trans (Nat.le_succ_of_le hrect.2)
+  have hlen : posNlo a + (posNhi a + 1 - posNlo a) = posNhi a + 1 :=
+    Nat.add_sub_of_le hlohi
+  exact ⟨hlo, Nat.le_of_lt_succ (by rwa [hlen] at hlt)⟩
 
 /-- Soundness of one executable plateau-anchor small-edge check. -/
 theorem positiveSmallExpEdgeGapAtCeil_of_checkCell {a s k : Nat}
@@ -2519,6 +2541,124 @@ theorem XplusYnorm_le_positiveXplusYProductGcompBound (a N k : Nat) :
             (Ynorm_le_positiveYgcompBound N (posJ a k))
             (positiveXplusGcompBound_nonneg N k)
 
+/-- Denominator-cleared form of the small-regime finite product check.
+
+This is the same inequality as
+`positiveXplusYProductGcompBound a N k ≤
+positiveSmallXYProductTangentBound a N k`, after clearing the two normalizing
+denominators from the `X` and `Y` `Gcomp` bounds.  The small target still uses
+the corrected tangent-line exponent. -/
+def positiveSmallXplusYProductGcompCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * BplusqGcompBound N k *
+      QqEplusGcompBound N (posJ a k)
+    ≤
+    (2581/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff *
+        (c k * c (posJ a k))
+
+/-- Denominator-cleared form of the tempered-regime finite product check. -/
+def positiveTemperedXplusYProductGcompCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * BplusqGcompBound N k *
+      QqEplusGcompBound N (posJ a k)
+    ≤
+    (2117/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+        (c k * c (posJ a k))
+
+instance decidablePositiveSmallXplusYProductGcompCleared (a N k : Nat) :
+    Decidable (positiveSmallXplusYProductGcompCleared a N k) := by
+  unfold positiveSmallXplusYProductGcompCleared
+  infer_instance
+
+instance decidablePositiveTemperedXplusYProductGcompCleared (a N k : Nat) :
+    Decidable (positiveTemperedXplusYProductGcompCleared a N k) := by
+  unfold positiveTemperedXplusYProductGcompCleared
+  infer_instance
+
+theorem positiveXplusYProductGcompBound_eq_raw_div
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a) :
+    positiveXplusYProductGcompBound a N k =
+      (2 * (2 : ℚ)^(posJ a k) * BplusqGcompBound N k *
+          QqEplusGcompBound N (posJ a k)) /
+        (((N : ℚ)^2) * c k * c (posJ a k)) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  unfold positiveXplusYProductGcompBound positiveXplusGcompBound
+    positiveYgcompBound
+  field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
+
+theorem positiveSmallXYProductTangentBound_eq_raw_div
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a) :
+    positiveSmallXYProductTangentBound a N k =
+      ((2581/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+          partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff *
+            (c k * c (posJ a k))) /
+        (((N : ℚ)^2) * c k * c (posJ a k)) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  unfold positiveSmallXYProductTangentBound
+  field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
+
+theorem positiveTemperedXYProductBound_eq_raw_div
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a) :
+    positiveTemperedXYProductBound a N k =
+      ((2117/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+          partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+            (c k * c (posJ a k))) /
+        (((N : ℚ)^2) * c k * c (posJ a k)) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  unfold positiveTemperedXYProductBound
+  field_simp [hNpos.ne', hck_pos.ne', hcj_pos.ne']
+
+theorem positiveSmallXplusYProductGcompBound_of_cleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveSmallXplusYProductGcompCleared a N k) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  have hden_nonneg :
+      0 ≤ ((N : ℚ)^2) * c k * c (posJ a k) := by
+    positivity
+  rw [positiveXplusYProductGcompBound_eq_raw_div hN ha hkRange,
+    positiveSmallXYProductTangentBound_eq_raw_div hN ha hkRange]
+  exact div_le_div_of_nonneg_right h hden_nonneg
+
+theorem positiveTemperedXplusYProductGcompBound_of_cleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveTemperedXplusYProductGcompCleared a N k) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  have hden_nonneg :
+      0 ≤ ((N : ℚ)^2) * c k * c (posJ a k) := by
+    positivity
+  rw [positiveXplusYProductGcompBound_eq_raw_div hN ha hkRange,
+    positiveTemperedXYProductBound_eq_raw_div hN ha hkRange]
+  exact div_le_div_of_nonneg_right h hden_nonneg
+
 /-- Point check that the explicit `Gcomp` product bound fits the corrected
 small-regime tangent target. -/
 def checkPositiveSmallXplusYProductGcompCell (a N k : Nat) : Bool :=
@@ -2531,6 +2671,14 @@ def checkPositiveTemperedXplusYProductGcompCell (a N k : Nat) : Bool :=
   decide (positiveXplusYProductGcompBound a N k ≤
     positiveTemperedXYProductBound a N k)
 
+/-- Point check for the denominator-cleared small product inequality. -/
+def checkPositiveSmallXplusYProductGcompClearedCell (a N k : Nat) : Bool :=
+  decide (positiveSmallXplusYProductGcompCleared a N k)
+
+/-- Point check for the denominator-cleared tempered product inequality. -/
+def checkPositiveTemperedXplusYProductGcompClearedCell (a N k : Nat) : Bool :=
+  decide (positiveTemperedXplusYProductGcompCleared a N k)
+
 /-- Check all small-regime retained `k` for one `(a,N)`. -/
 def checkPositiveSmallXplusYProductGcompAtN (a N : Nat) : Bool :=
   (positiveKRangeList a).all fun k =>
@@ -2540,6 +2688,22 @@ def checkPositiveSmallXplusYProductGcompAtN (a N : Nat) : Bool :=
 def checkPositiveTemperedXplusYProductGcompAtN (a N : Nat) : Bool :=
   (positiveKRangeList a).all fun k =>
     if ceilSqrt N < k then checkPositiveTemperedXplusYProductGcompCell a N k else true
+
+/-- Check all small-regime retained `k` for one `(a,N)` using the
+denominator-cleared product inequality. -/
+def checkPositiveSmallXplusYProductGcompClearedAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then
+      checkPositiveSmallXplusYProductGcompClearedCell a N k
+    else true
+
+/-- Check all tempered-regime retained `k` for one `(a,N)` using the
+denominator-cleared product inequality. -/
+def checkPositiveTemperedXplusYProductGcompClearedAtN (a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if ceilSqrt N < k then
+      checkPositiveTemperedXplusYProductGcompClearedCell a N k
+    else true
 
 /-- Row check for the small-regime explicit `Xplus*Y` product bound. -/
 def checkPositiveSmallXplusYProductGcompRow (a : Nat) : Bool :=
@@ -2551,6 +2715,16 @@ def checkPositiveTemperedXplusYProductGcompRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
     checkPositiveTemperedXplusYProductGcompAtN a N
 
+/-- Row check for the denominator-cleared small product inequality. -/
+def checkPositiveSmallXplusYProductGcompClearedRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallXplusYProductGcompClearedAtN a N
+
+/-- Row check for the denominator-cleared tempered product inequality. -/
+def checkPositiveTemperedXplusYProductGcompClearedRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveTemperedXplusYProductGcompClearedAtN a N
+
 /-- Range check for the small-regime explicit `Xplus*Y` product bound over
 `a ∈ [lo, lo+len)`. -/
 def checkPositiveSmallXplusYProductGcompRange (lo len : Nat) : Bool :=
@@ -2560,6 +2734,170 @@ def checkPositiveSmallXplusYProductGcompRange (lo len : Nat) : Bool :=
 `a ∈ [lo, lo+len)`. -/
 def checkPositiveTemperedXplusYProductGcompRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveTemperedXplusYProductGcompRow
+
+/-- Range check for the denominator-cleared small product inequality. -/
+def checkPositiveSmallXplusYProductGcompClearedRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallXplusYProductGcompClearedRow
+
+/-- Range check for the denominator-cleared tempered product inequality. -/
+def checkPositiveTemperedXplusYProductGcompClearedRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveTemperedXplusYProductGcompClearedRow
+
+/-- Soundness of one denominator-cleared small product point check. -/
+theorem positiveSmallXplusYProductGcompBound_of_checkClearedCell
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : checkPositiveSmallXplusYProductGcompClearedCell a N k = true) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveSmallXYProductTangentBound a N k :=
+  positiveSmallXplusYProductGcompBound_of_cleared hN ha hkRange
+    (of_decide_eq_true h)
+
+/-- Soundness of one denominator-cleared tempered product point check. -/
+theorem positiveTemperedXplusYProductGcompBound_of_checkClearedCell
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : checkPositiveTemperedXplusYProductGcompClearedCell a N k = true) :
+    positiveXplusYProductGcompBound a N k ≤
+      positiveTemperedXYProductBound a N k :=
+  positiveTemperedXplusYProductGcompBound_of_cleared hN ha hkRange
+    (of_decide_eq_true h)
+
+/-- One cleared small-regime `(a,N)` check implies the existing normalized
+`Gcomp` product check at the same `(a,N)`. -/
+theorem checkPositiveSmallXplusYProductGcompAtN_of_checkClearedAtN
+    {a N : Nat} (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveSmallXplusYProductGcompClearedAtN a N = true) :
+    checkPositiveSmallXplusYProductGcompAtN a N = true := by
+  apply List.all_eq_true.mpr
+  intro k hkList
+  by_cases hsmall : k ≤ ceilSqrt N
+  · have hall :
+        ∀ x ∈ positiveKRangeList a,
+          (if x ≤ ceilSqrt N then
+              checkPositiveSmallXplusYProductGcompClearedCell a N x
+            else true) = true := by
+      exact List.all_eq_true.mp (by
+        simpa [checkPositiveSmallXplusYProductGcompClearedAtN] using h)
+    have hkRange : k ∈ positiveKRange a :=
+      positiveKRange_of_mem_positiveKRangeList hkList
+    have hcell :
+        checkPositiveSmallXplusYProductGcompClearedCell a N k = true := by
+      simpa [hsmall] using hall k hkList
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos ha hrect
+    have hineq :
+        positiveXplusYProductGcompBound a N k ≤
+          positiveSmallXYProductTangentBound a N k :=
+      positiveSmallXplusYProductGcompBound_of_checkClearedCell
+        hN (by omega : 1 ≤ a) hkRange hcell
+    simpa [checkPositiveSmallXplusYProductGcompAtN,
+      checkPositiveSmallXplusYProductGcompCell, hsmall]
+      using (decide_eq_true hineq)
+  · simp [hsmall]
+
+/-- One cleared tempered-regime `(a,N)` check implies the existing normalized
+`Gcomp` product check at the same `(a,N)`. -/
+theorem checkPositiveTemperedXplusYProductGcompAtN_of_checkClearedAtN
+    {a N : Nat} (ha : 2 ≤ a) (hrect : positiveRectangle a N)
+    (h : checkPositiveTemperedXplusYProductGcompClearedAtN a N = true) :
+    checkPositiveTemperedXplusYProductGcompAtN a N = true := by
+  apply List.all_eq_true.mpr
+  intro k hkList
+  by_cases htempered : ceilSqrt N < k
+  · have hall :
+        ∀ x ∈ positiveKRangeList a,
+          (if ceilSqrt N < x then
+              checkPositiveTemperedXplusYProductGcompClearedCell a N x
+            else true) = true := by
+      exact List.all_eq_true.mp (by
+        simpa [checkPositiveTemperedXplusYProductGcompClearedAtN] using h)
+    have hkRange : k ∈ positiveKRange a :=
+      positiveKRange_of_mem_positiveKRangeList hkList
+    have hcell :
+        checkPositiveTemperedXplusYProductGcompClearedCell a N k = true := by
+      simpa [htempered] using hall k hkList
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos ha hrect
+    have hineq :
+        positiveXplusYProductGcompBound a N k ≤
+          positiveTemperedXYProductBound a N k :=
+      positiveTemperedXplusYProductGcompBound_of_checkClearedCell
+        hN (by omega : 1 ≤ a) hkRange hcell
+    simpa [checkPositiveTemperedXplusYProductGcompAtN,
+      checkPositiveTemperedXplusYProductGcompCell, htempered]
+      using (decide_eq_true hineq)
+  · simp [htempered]
+
+/-- A cleared small-regime row check implies the existing normalized product
+row check. -/
+theorem checkPositiveSmallXplusYProductGcompRow_of_checkClearedRow
+    {a : Nat} (ha : 401 ≤ a)
+    (h : checkPositiveSmallXplusYProductGcompClearedRow a = true) :
+    checkPositiveSmallXplusYProductGcompRow a = true := by
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallXplusYProductGcompClearedAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompClearedRow] using h)
+  have hrect : positiveRectangle a N :=
+    positiveRectangle_of_mem_positiveNRangeList (by omega : 1 ≤ a) hNmem
+  exact checkPositiveSmallXplusYProductGcompAtN_of_checkClearedAtN
+    (by omega : 2 ≤ a) hrect (hall N hNmem)
+
+/-- A cleared tempered-regime row check implies the existing normalized
+product row check. -/
+theorem checkPositiveTemperedXplusYProductGcompRow_of_checkClearedRow
+    {a : Nat} (ha : 401 ≤ a)
+    (h : checkPositiveTemperedXplusYProductGcompClearedRow a = true) :
+    checkPositiveTemperedXplusYProductGcompRow a = true := by
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveTemperedXplusYProductGcompClearedAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompClearedRow] using h)
+  have hrect : positiveRectangle a N :=
+    positiveRectangle_of_mem_positiveNRangeList (by omega : 1 ≤ a) hNmem
+  exact checkPositiveTemperedXplusYProductGcompAtN_of_checkClearedAtN
+    (by omega : 2 ≤ a) hrect (hall N hNmem)
+
+/-- A cleared small-regime range check implies the existing normalized product
+range check. -/
+theorem checkPositiveSmallXplusYProductGcompRange_of_checkClearedRange
+    {lo len : Nat} (hlo : 401 ≤ lo)
+    (h : checkPositiveSmallXplusYProductGcompClearedRange lo len = true) :
+    checkPositiveSmallXplusYProductGcompRange lo len = true := by
+  apply List.all_eq_true.mpr
+  intro a haMem
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallXplusYProductGcompClearedRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXplusYProductGcompClearedRange] using h)
+  have ha_lo : lo ≤ a := (List.mem_range'_1.mp haMem).1
+  exact checkPositiveSmallXplusYProductGcompRow_of_checkClearedRow
+    (hlo.trans ha_lo) (hall a haMem)
+
+/-- A cleared tempered-regime range check implies the existing normalized
+product range check. -/
+theorem checkPositiveTemperedXplusYProductGcompRange_of_checkClearedRange
+    {lo len : Nat} (hlo : 401 ≤ lo)
+    (h : checkPositiveTemperedXplusYProductGcompClearedRange lo len = true) :
+    checkPositiveTemperedXplusYProductGcompRange lo len = true := by
+  apply List.all_eq_true.mpr
+  intro a haMem
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveTemperedXplusYProductGcompClearedRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXplusYProductGcompClearedRange] using h)
+  have ha_lo : lo ≤ a := (List.mem_range'_1.mp haMem).1
+  exact checkPositiveTemperedXplusYProductGcompRow_of_checkClearedRow
+    (hlo.trans ha_lo) (hall a haMem)
 
 /-- Soundness of one small-regime explicit `Xplus*Y` product check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkCell {a N k : Nat}
