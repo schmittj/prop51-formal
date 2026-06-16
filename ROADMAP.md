@@ -434,7 +434,17 @@ Status:
       `PositiveSaddleDefaultCellEdgeDisplayedSoloClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       also chunks the denominator-cleared displayed `Y_a(N)` saddle
       inequality, so the finite solo side is no longer a normalized
-      `Ynorm` field.
+      `Ynorm` field.  The current most concrete finite-window endpoint is
+      `PositiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      It additionally chunks the denominator-cleared small/tempered product
+      checks, chunks the tangent-edge checks, and checks each default edge
+      `k`-chunk over each default row chunk using the fixed scale
+      `positiveEdgeUniformScaleMin`.  Thus the finite-window side now has a
+      fully chunked generated-certificate shape; the remaining non-finite
+      inputs to this endpoint are the large-`a` raw product/solo pointwise
+      certificate and the raw-cleared unit-reserve entropy-tail certificate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

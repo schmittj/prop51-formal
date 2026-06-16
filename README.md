@@ -73,7 +73,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   100-row chunks for that budget check.  The
   `DisplayedSoloClearedChunks` sibling is the current lowest-level finite
   solo audit target: it also chunks the denominator-cleared displayed
-  `Y_a(N)` saddle inequality.
+  `Y_a(N)` saddle inequality.  The current most concrete finite-window
+  wrapper is
+  `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloProductClearedTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`:
+  it also uses denominator-cleared finite product chunks, tangent-edge
+  chunks, and row-chunked finite edge `k`-chunk checks at the fixed scale
+  `positiveEdgeUniformScaleMin`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.
