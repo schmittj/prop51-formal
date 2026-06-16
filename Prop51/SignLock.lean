@@ -5527,6 +5527,209 @@ theorem signLockNearBase_eq_prefix12_add_tail
       (by omega : 12 ≤ m/3 + 1),
     ← Finset.range_eq_Ico]
 
+private theorem sum_Ico_from_twelve_nonneg_of_pairs
+    {f : Nat → ℚ} (b : Nat)
+    (hpair : ∀ q, 6 ≤ q → 2*q + 1 < b → 0 ≤ f (2*q) + f (2*q+1))
+    (heven : ∀ q, 6 ≤ q → 2*q < b → 0 ≤ f (2*q)) :
+    0 ≤ ∑ s ∈ Finset.Ico 12 b, f s := by
+  induction b using Nat.strong_induction_on with
+  | h b ih =>
+      by_cases hb : b ≤ 12
+      · rw [Finset.Ico_eq_empty_of_le hb]
+        simp
+      · have hbgt : 12 < b := Nat.lt_of_not_ge hb
+        let t := b - 1
+        have ht_succ : t + 1 = b := by omega
+        by_cases htmod : t % 2 = 0
+        · let q := t / 2
+          have htq : t = 2*q := by
+            have hdiv := Nat.div_add_mod t 2
+            dsimp [q]
+            omega
+          have hsplit :
+              (∑ s ∈ Finset.Ico 12 b, f s)
+                = (∑ s ∈ Finset.Ico 12 t, f s) + f t := by
+            rw [← ht_succ, Finset.sum_Ico_succ_top (by omega : 12 ≤ t)]
+          rw [hsplit]
+          have hprev :
+              0 ≤ ∑ s ∈ Finset.Ico 12 t, f s :=
+            ih t (by omega)
+              (fun q hq hlt => hpair q hq (by omega))
+              (fun q hq hlt => heven q hq (by omega))
+          have htop : 0 ≤ f t := by
+            rw [htq]
+            exact heven q (by omega) (by omega)
+          exact add_nonneg hprev htop
+        · have htmod1 : t % 2 = 1 := by
+            rcases Nat.mod_two_eq_zero_or_one t with h0 | h1
+            · exact False.elim (htmod h0)
+            · exact h1
+          let q := t / 2
+          have htq : t = 2*q + 1 := by
+            have hdiv := Nat.div_add_mod t 2
+            dsimp [q]
+            omega
+          have hsplit :
+              (∑ s ∈ Finset.Ico 12 b, f s)
+                = (∑ s ∈ Finset.Ico 12 (t-1), f s) + f (t-1) + f t := by
+            have hsplit0 :
+                (∑ s ∈ Finset.Ico 12 t, f s)
+                  = (∑ s ∈ Finset.Ico 12 (t-1), f s) + f (t-1) := by
+              calc
+                (∑ s ∈ Finset.Ico 12 t, f s)
+                    = ∑ s ∈ Finset.Ico 12 ((t-1)+1), f s := by
+                      rw [show (t-1)+1 = t by omega]
+                _ = (∑ s ∈ Finset.Ico 12 (t-1), f s) + f (t-1) := by
+                      rw [Finset.sum_Ico_succ_top (by omega : 12 ≤ t-1)]
+            rw [← ht_succ, Finset.sum_Ico_succ_top (by omega : 12 ≤ t),
+              hsplit0]
+          rw [hsplit]
+          have hprev :
+              0 ≤ ∑ s ∈ Finset.Ico 12 (t-1), f s :=
+            ih (t-1) (by omega)
+              (fun q hq hlt => hpair q hq (by omega))
+              (fun q hq hlt => heven q hq (by omega))
+          have hpair_top : 0 ≤ f (t-1) + f t := by
+            rw [htq, show 2*q + 1 - 1 = 2*q by omega]
+            exact hpair q (by omega) (by omega)
+          linarith
+
+theorem signLockBaseTailFrom12_nonneg_of_pairs
+    {N m : Nat}
+    (hpair : ∀ q, 6 ≤ q → 2*q + 1 < m/3 + 1 →
+      0 ≤ signLockBaseSummand N m (2*q)
+          + signLockBaseSummand N m (2*q+1))
+    (heven : ∀ q, 6 ≤ q → 2*q < m/3 + 1 →
+      0 ≤ signLockBaseSummand N m (2*q)) :
+    0 ≤ signLockBaseTailFrom12 N m := by
+  unfold signLockBaseTailFrom12
+  exact sum_Ico_from_twelve_nonneg_of_pairs
+    (f := signLockBaseSummand N m) (m/3 + 1) hpair heven
+
+theorem signLockBaseSummand_even_nonneg
+    {N m q : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hq : 6 ≤ q) :
+    0 ≤ signLockBaseSummand N m (2*q) := by
+  let z : ℚ := zetaQ N m
+  have hz0 : 0 ≤ z := by
+    dsimp [z]
+    exact zetaQ_nonneg N m
+  have hzle : z ≤ 50/27 := by
+    dsimp [z]
+    simpa [zetaMax] using
+      (zetaQ_le_zetaMax (N := N) (m := m) (by omega : 1 ≤ m) hN40)
+  have hqQ : (6 : ℚ) ≤ (q : ℚ) := by exact_mod_cast hq
+  have hzeOne : z ≤ eOne (2*q) := by
+    have hlarge : (50/27 : ℚ) ≤ eOne (2*q) := by
+      unfold eOne
+      norm_num [Nat.cast_add, Nat.cast_mul]
+      nlinarith
+    exact hzle.trans hlarge
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hfactor :
+      0 ≤ 1 + eOne (2*q) / (m : ℚ) - z / (m : ℚ) := by
+    have hdiff : 0 ≤ (eOne (2*q) - z) / (m : ℚ) :=
+      div_nonneg (sub_nonneg.mpr hzeOne) hmpos.le
+    have hrew :
+        1 + eOne (2*q) / (m : ℚ) - z / (m : ℚ)
+          = 1 + (eOne (2*q) - z) / (m : ℚ) := by
+        ring
+    rw [hrew]
+    positivity
+  have hpow : 0 ≤ (-z)^(2*q) := by
+    have hsq : 0 ≤ ((-z)^2)^q := by positivity
+    simpa [pow_mul] using hsq
+  have hfac : (0 : ℚ) < ((2*q).factorial : ℚ) := by positivity
+  unfold signLockBaseSummand
+  dsimp [z] at hfactor hpow
+  exact mul_nonneg (div_nonneg hpow hfac.le) hfactor
+
+theorem signLockBaseSummand_pair_nonneg
+    {N m q : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ))
+    (hm : 361 ≤ m) (hq : 6 ≤ q) :
+    0 ≤ signLockBaseSummand N m (2*q)
+        + signLockBaseSummand N m (2*q+1) := by
+  let z : ℚ := zetaQ N m
+  have hz0 : 0 ≤ z := by
+    dsimp [z]
+    exact zetaQ_nonneg N m
+  have hzle50 : z ≤ 50/27 := by
+    dsimp [z]
+    simpa [zetaMax] using
+      (zetaQ_le_zetaMax (N := N) (m := m) (by omega : 1 ≤ m) hN40)
+  have hzle2 : z ≤ 2 := by nlinarith
+  have hmpos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast (by omega : 0 < m)
+  have hmQ : (361 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+  have hqQ : (6 : ℚ) ≤ (q : ℚ) := by exact_mod_cast hq
+  have hspos : (0 : ℚ) < ((2*q+1 : Nat) : ℚ) := by positivity
+  have hbracket :
+      0 ≤
+        (1 + eOne (2*q) / (m : ℚ) - z / (m : ℚ))
+          - z / ((2*q+1 : Nat) : ℚ) *
+            (1 + eOne (2*q+1) / (m : ℚ) - z / (m : ℚ)) := by
+    let B : ℚ :=
+      (1 + eOne (2*q) / (m : ℚ) - z / (m : ℚ))
+        - z / ((2*q+1 : Nat) : ℚ) *
+          (1 + eOne (2*q+1) / (m : ℚ) - z / (m : ℚ))
+    have hdenpos : (0 : ℚ) < (m : ℚ) * ((2*q+1 : Nat) : ℚ) :=
+      mul_pos hmpos hspos
+    have hmul : 0 ≤ (m : ℚ) * ((2*q+1 : Nat) : ℚ) * B := by
+      have hzsub : z - 2 ≤ 0 := by linarith
+      have hother :
+          -(m : ℚ) - 2*(q : ℚ)^2 - 5*(q : ℚ) + z ≤ 0 := by
+        nlinarith
+      have hendpoint_mono :
+          0 ≤ (z - 2) * (-(m : ℚ) - 2*(q : ℚ)^2 - 5*(q : ℚ) + z) :=
+        mul_nonneg_of_nonpos_of_nonpos hzsub hother
+      dsimp [B]
+      unfold eOne
+      field_simp [hmpos.ne', hspos.ne']
+      norm_num [Nat.cast_add, Nat.cast_mul]
+      nlinarith
+    have hmul' : 0 ≤ B * ((m : ℚ) * ((2*q+1 : Nat) : ℚ)) := by
+      nlinarith
+    exact nonneg_of_mul_nonneg_left hmul' hdenpos
+  have hpow_even : (-z)^(2*q) = z^(2*q) := by
+    calc
+      (-z)^(2*q) = ((-z)^2)^q := by rw [pow_mul]
+      _ = (z^2)^q := by ring_nf
+      _ = z^(2*q) := by rw [pow_mul]
+  have hpow_odd : (-z)^(2*q+1) = -z^(2*q+1) := by
+    rw [show 2*q+1 = 2*q + 1 by omega, pow_succ, hpow_even, pow_succ]
+    ring
+  have hfac_even : (0 : ℚ) < ((2*q).factorial : ℚ) := by positivity
+  have hfac_succ :
+      (((2*q+1).factorial : Nat) : ℚ)
+        = ((2*q+1 : Nat) : ℚ) * (((2*q).factorial : Nat) : ℚ) := by
+    rw [Nat.factorial_succ]
+    norm_num [Nat.cast_add, Nat.cast_mul]
+  have hfactored :
+      signLockBaseSummand N m (2*q)
+        + signLockBaseSummand N m (2*q+1)
+        =
+      (z^(2*q) / (((2*q).factorial : Nat) : ℚ)) *
+        ((1 + eOne (2*q) / (m : ℚ) - z / (m : ℚ))
+          - z / ((2*q+1 : Nat) : ℚ) *
+            (1 + eOne (2*q+1) / (m : ℚ) - z / (m : ℚ))) := by
+    unfold signLockBaseSummand
+    dsimp [z]
+    rw [hpow_even, hpow_odd, hfac_succ]
+    field_simp [hfac_even.ne', hspos.ne']
+    ring
+  rw [hfactored]
+  exact mul_nonneg (div_nonneg (pow_nonneg hz0 _) hfac_even.le) hbracket
+
+theorem signLockBaseTailFrom12_nonneg
+    {N m : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    0 ≤ signLockBaseTailFrom12 N m := by
+  refine signLockBaseTailFrom12_nonneg_of_pairs ?hpair ?heven
+  · intro q hq hlt
+    exact signLockBaseSummand_pair_nonneg (N := N) (m := m) (q := q)
+      hN40 hm hq
+  · intro q hq hlt
+    exact signLockBaseSummand_even_nonneg (N := N) (m := m) (q := q)
+      hN40 hm hq
+
 theorem neg_Xnorm_eq_signLockNearBase_add_errors
     {N m : Nat} (hN : 1 ≤ N) (hm : 1 ≤ m) :
     -Xnorm N m =

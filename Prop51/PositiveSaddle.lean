@@ -396,6 +396,16 @@ theorem Xnorm_le_neg_signLockMargin_of_signLockBasePrefix_tail
   exact Xnorm_le_neg_final_margin_of_signLockBasePrefix_tail
     (N := N) (m := m) hN hN40 hm hprefix htail
 
+theorem Xnorm_le_neg_signLockMargin_of_signLockBasePrefix
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m)
+    (hprefix :
+      expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12) :
+    Xnorm N m ≤ -signLockMargin m :=
+  Xnorm_le_neg_signLockMargin_of_signLockBasePrefix_tail
+    (N := N) (m := m) hN hN40 hm hprefix
+    (signLockBaseTailFrom12_nonneg (N := N) (m := m) hN40 hm)
+
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
 def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
@@ -948,6 +958,28 @@ theorem Unorm_neg_of_uniform_signLockBasePrefix_tail_and_positiveEnvelope
   intro m hm hNm
   exact signLockNearBase_lower_of_prefix12_tail
     (N := N) (m := m) hm (hprefix m hm hNm) (htail m hm hNm)
+
+/-- Large-`a` assembly after closing the paired alternating tail in §5.  The
+remaining sign-lock input is the 12-term prefix inequality. -/
+theorem Unorm_neg_of_uniform_signLockBasePrefix_and_positiveEnvelope
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hprefix : ∀ m : Nat, 361 ≤ m →
+      (N : ℚ) ≤ (40/3) * (m : ℚ) →
+        expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hpositive : positiveEnvelope a N ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  refine Unorm_neg_of_uniform_signLockBasePrefix_tail_and_positiveEnvelope
+    (a := a) (N := N) ha hrect hprefix ?htail hsmall htempered hpositive
+  intro m hm hNm
+  exact signLockBaseTailFrom12_nonneg (N := N) (m := m) hNm hm
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
