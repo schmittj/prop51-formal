@@ -3063,6 +3063,55 @@ def positiveEntropyShadowBaseStepRawQuotient (a r : Nat) : ℚ :=
       ((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) *
     ((2 : ℚ)^(posJ a r) / (2 : ℚ)^(posJ a r - 1))
 
+theorem ratCast_natSub_selfPow_pos {n d : Nat} (hd : d ≤ n) :
+    (0 : ℚ) < (((n - d : Nat) : ℚ)^(n - d)) := by
+  by_cases hnd : n = d
+  · subst n
+    norm_num
+  · have hbase : (0 : ℚ) < ((n - d : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < n - d)
+    exact pow_pos hbase _
+
+theorem positiveEntropyShadowBaseStepRawQuotient_pos
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
+    0 < positiveEntropyShadowBaseStepRawQuotient a r := by
+  have hsucc : (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < r + 1)
+  have hrQ : (0 : ℚ) < ((r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hrPow : (0 : ℚ) < ((r : Nat) : ℚ)^r :=
+    pow_pos hrQ _
+  have hrPredPow : (0 : ℚ) < (((r - 1 : Nat) : ℚ)^(r - 1)) :=
+    ratCast_natSub_selfPow_pos (n := r) (d := 1) hr1
+  have hj1 : 1 ≤ posJ a r := by omega
+  have hjQ : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r)
+  have hjPredQ : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r - 1)
+  have hjPredPow :
+      (0 : ℚ) < (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) :=
+    ratCast_natSub_selfPow_pos (n := posJ a r) (d := 1) hj1
+  have hjTwoPredPow :
+      (0 : ℚ) < (((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2)) :=
+    ratCast_natSub_selfPow_pos (n := posJ a r) (d := 2) hj2
+  have hdyadic :
+      (0 : ℚ) < (2 : ℚ)^(posJ a r) / (2 : ℚ)^(posJ a r - 1) := by
+    positivity
+  have hnum :
+      (0 : ℚ) <
+        ((r + 1 : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ) *
+          ((r : Nat) : ℚ)^r *
+          ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2) :=
+    mul_pos (mul_pos (mul_pos hsucc hjPredQ) hrPow) hjTwoPredPow
+  have hden :
+      (0 : ℚ) <
+        ((r : Nat) : ℚ) * ((posJ a r : Nat) : ℚ) *
+          ((r - 1 : Nat) : ℚ)^(r - 1) *
+          ((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1) :=
+    mul_pos (mul_pos (mul_pos hrQ hjQ) hrPredPow) hjPredPow
+  simpa [positiveEntropyShadowBaseStepRawQuotient] using
+    mul_pos (div_pos hnum hden) hdyadic
+
 theorem positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul
     (smallExp : Nat → Nat → ℚ) (a k : Nat) :
     positiveSmallEntropyShadowExpMajorantTerm smallExp a k =
@@ -3324,6 +3373,24 @@ theorem positiveTemperedEntropyShadowBaseStepQuotient_eq_raw_of_branch
     unfold posJ at hj2 ⊢
     omega
   exact positiveTemperedEntropyShadowBaseStepQuotient_eq_raw hr1 hj2 hjr1
+
+theorem positiveEntropyShadowBaseStepRawQuotient_pos_of_small_branch
+    {a r : Nat} (ha : 20 ≤ a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    0 < positiveEntropyShadowBaseStepRawQuotient a r := by
+  have hrK : r ≤ posKmax a := by omega
+  exact positiveEntropyShadowBaseStepRawQuotient_pos hr1
+    (two_le_posJ_of_le_posKmax_of_large ha hrK)
+
+theorem positiveEntropyShadowBaseStepRawQuotient_pos_of_tempered_branch
+    {a r : Nat} (ha : 20 ≤ a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a) :
+    0 < positiveEntropyShadowBaseStepRawQuotient a r := by
+  have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+  have hrK : r ≤ posKmax a := by omega
+  exact positiveEntropyShadowBaseStepRawQuotient_pos hr1
+    (two_le_posJ_of_le_posKmax_of_large ha hrK)
 
 theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
     {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
@@ -3649,6 +3716,41 @@ theorem positiveTemperedEntropyShadowExp_step_of_branch_base_exp_quotient
       (by omega : 20 ≤ a)
       (mem_positiveKRange_of_tempered_branch_step hrlo hrhi))
     hExp hquot
+
+theorem positiveSmallEntropyShadowExp_step_of_branch_raw_exp_quotient
+    {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hExp : 0 < smallExp a r)
+    (hquot :
+      positiveEntropyShadowBaseStepRawQuotient a r *
+          (smallExp a (r + 1) / smallExp a r) ≤ q) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1)
+      ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a r * q := by
+  refine positiveSmallEntropyShadowExp_step_of_div_step
+    (positiveSmallEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hr1 hrhi hExp) ?_
+  rw [positiveSmallEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+    ha hr1 hrhi hExp.ne']
+  exact hquot
+
+theorem positiveTemperedEntropyShadowExp_step_of_branch_raw_exp_quotient
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
+    (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a)
+    (hExp : 0 < temperedExp a r)
+    (hquot :
+      positiveEntropyShadowBaseStepRawQuotient a r *
+          (temperedExp a (r + 1) / temperedExp a r) ≤ q) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1)
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r * q := by
+  refine positiveTemperedEntropyShadowExp_step_of_div_step
+    (positiveTemperedEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hrlo hrhi hExp) ?_
+  rw [positiveTemperedEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+    ha hrlo hrhi hExp.ne']
+  exact hquot
 
 theorem positiveSmallEntropyShadowExp_step_of_exp_pos_div_step
     {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
