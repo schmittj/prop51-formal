@@ -594,6 +594,13 @@ Status:
       it only avoids proving separate small and tempered product atoms for
       the same `(a,N)` tables.  In the same sample, one combined atom compiles
       in about 15 seconds, replacing two separate 13-15 second atoms.
+      The large-tail side now also has
+      `PositiveSaddleLargeTailPartsAuditCertificate`, which decomposes the
+      two non-finite certificate fields into product-small, product-tempered,
+      solo, adjacent-step, and unit-reserve subtargets and then reassembles
+      the existing `PositiveSaddleLargeTailAuditCertificate`.  This is not a
+      mathematical change, but it gives the remaining analytic proof work
+      smaller Lean interfaces.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

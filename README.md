@@ -149,7 +149,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   optimization of the same inequalities: the conversion extracts the separate
   small and tempered fields expected by the existing certificate.  In the
   same local sample, one combined product atom replaces the two separate
-  small/tempered product atoms and compiles in about 15 seconds.  When
+  small/tempered product atoms and compiles in about 15 seconds.  The
+  remaining large-tail inputs can also be supplied through
+  `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
+  product-small, product-tempered, solo, adjacent-step, and unit-reserve
+  analytic targets before reassembling the existing
+  `Prop51.PositiveSaddleLargeTailAuditCertificate`.  This is only a
+  proof-production decomposition of the same inequalities.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

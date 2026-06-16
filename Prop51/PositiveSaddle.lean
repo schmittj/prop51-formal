@@ -9643,6 +9643,53 @@ structure PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertifi
           (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
         ≤ 1
 
+/-- Large-tail small-regime product pointwise target, split out so the
+remaining analytic proof can be developed independently of the tempered and
+solo large-tail goals.  This is exactly the small product field of
+`PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate`. -/
+structure PositiveSaddleLargeTailSmallProductRawCertificate : Prop where
+  smallProductRaw :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+
+/-- Large-tail tempered-regime product pointwise target, split out from the
+combined unit-solo pointwise certificate. -/
+structure PositiveSaddleLargeTailTemperedProductRawCertificate : Prop where
+  temperedProductRaw :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+
+/-- Large-tail solo `Y_a(N)` unit-budget target, split out from the product
+pointwise certificate. -/
+structure PositiveSaddleLargeTailSoloYUnitCertificate : Prop where
+  soloYUnit :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+        ≤ 1
+
+/-- Reassembles the split large-tail product/solo targets into the existing
+unit-solo pointwise certificate.  This is only a proof-production
+decomposition; it does not change any TeX-side inequality. -/
+theorem positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
+    (small : PositiveSaddleLargeTailSmallProductRawCertificate)
+    (tempered : PositiveSaddleLargeTailTemperedProductRawCertificate)
+    (solo : PositiveSaddleLargeTailSoloYUnitCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate where
+  smallProductRaw := small.smallProductRaw
+  temperedProductRaw := tempered.temperedProductRaw
+  soloYUnit := solo.soloYUnit
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toProductPointwiseYRawCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
@@ -10338,6 +10385,75 @@ structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUni
             positiveTemperedEntropyShadowExpMajorantTerm
               positiveTemperedLargeExp a (posKmax a))
         ≤ 1
+
+/-- Split target for the three adjacent-step inequalities in the large-tail
+candidate entropy reserve.  These are exactly the step fields of
+`PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate`. -/
+structure PositiveSaddleLargeTailCandidateRawClearedStepCertificate :
+    Prop where
+  smallRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+            positiveSmallLargeExp a (r + 1))
+          ≤ positiveSmallLargeExp a r *
+            positiveEntropyShadowBaseStepRawDenominator a r
+  temperedLowerRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a r *
+              positiveTemperedLargeExp a (r + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveTemperedLargeExp a r *
+              positiveEntropyShadowBaseStepRawDenominator a r
+  temperedUpperReverseRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1) *
+            positiveEntropyShadowBaseStepRawDenominator a (r - 1)
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
+              positiveTemperedLargeExp a r)
+
+/-- Split target for the three unit-scaled first/last reserve inequalities in
+the large-tail candidate entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateUnitReserveCertificate :
+    Prop where
+  smallFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ 1
+  temperedLowerFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1)))
+        ≤ 1
+  temperedUpperLastReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (posKmax a))
+        ≤ 1
+
+/-- Reassembles the split large-tail entropy reserve targets into the existing
+raw-cleared unit-reserve certificate. -/
+theorem positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
+    (steps : PositiveSaddleLargeTailCandidateRawClearedStepCertificate)
+    (reserves : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate where
+  smallRawStepCleared := steps.smallRawStepCleared
+  smallFirstReserveUnit := reserves.smallFirstReserveUnit
+  temperedLowerRawStepCleared := steps.temperedLowerRawStepCleared
+  temperedLowerFirstReserveUnit := reserves.temperedLowerFirstReserveUnit
+  temperedUpperReverseRawStepCleared :=
+    steps.temperedUpperReverseRawStepCleared
+  temperedUpperLastReserveUnit := reserves.temperedUpperLastReserveUnit
 
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toRawClearedBoundsCertificate
     (cert :

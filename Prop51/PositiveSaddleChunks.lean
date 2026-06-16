@@ -5038,6 +5038,29 @@ structure PositiveSaddleLargeTailAuditCertificate : Prop where
   candidateSplitTemperedRawClearedUnitReserve :
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
 
+/-- Large-tail audit certificate with the two remaining analytic inputs split
+into natural subtargets.  The conversion below rebuilds
+`PositiveSaddleLargeTailAuditCertificate`, so this is a proof-production
+interface rather than a different mathematical endpoint. -/
+structure PositiveSaddleLargeTailPartsAuditCertificate : Prop where
+  smallProductRaw : PositiveSaddleLargeTailSmallProductRawCertificate
+  temperedProductRaw : PositiveSaddleLargeTailTemperedProductRawCertificate
+  soloYUnit : PositiveSaddleLargeTailSoloYUnitCertificate
+  candidateRawClearedSteps :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate
+  candidateUnitReserves :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate
+
+theorem PositiveSaddleLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
+    (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
+    PositiveSaddleLargeTailAuditCertificate where
+  productPointwiseYRawUnitSolo :=
+    positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
+      cert.smallProductRaw cert.temperedProductRaw cert.soloYUnit
+  candidateSplitTemperedRawClearedUnitReserve :=
+    positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
+      cert.candidateRawClearedSteps cert.candidateUnitReserves
+
 /-- Table-backed exact raw-product wrapper with the remaining finite
 tangent and edge checks also chunked.
 
