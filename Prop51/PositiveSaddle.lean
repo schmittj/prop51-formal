@@ -2742,6 +2742,33 @@ structure PositiveSaddleTangentProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Row-checked version of the corrected tangent certificate.
+
+This is meant for generated finite certificates: each generated row theorem can
+prove the two booleans `checkPositiveSmallTangentExpEdgeRow a = true` and
+`checkPositiveEdgeBudgetRow a = true`, while the analytic fields remain stated
+as mathematical inequalities. -/
+structure PositiveSaddleTangentCheckedRowsCertificate : Prop where
+  smallXYTangent :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductTangentBound a N k
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -2892,6 +2919,22 @@ theorem PositiveSaddleTangentProductBudgetCertificate.toCombinedProductBudgetCer
   temperedXY := cert.temperedXY
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleTangentCheckedRowsCertificate.toTangentProductBudgetCertificate
+    (cert : PositiveSaddleTangentCheckedRowsCertificate) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := cert.smallXYTangent
+  smallTangentEdge := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact positiveSmallTangentExpEdgeGap_of_checkRow
+      (cert.smallTangentEdgeRows ha ha2000) hrect hk hsmall
+  temperedXY := cert.temperedXY
+  soloY := cert.soloY
+  edgeBudget := by
+    intro a ha ha2000
+    exact positiveEdgeBudget_of_checkPositiveEdgeBudgetRow
+      (cert.edgeBudgetRows ha ha2000)
   entropyTail := cert.entropyTail
 
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
@@ -3075,6 +3118,11 @@ theorem PositiveSaddleTangentProductBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toCombinedProductBudgetCertificate.toCertificate
 
+theorem PositiveSaddleTangentCheckedRowsCertificate.toCertificate
+    (cert : PositiveSaddleTangentCheckedRowsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentProductBudgetCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -3150,6 +3198,11 @@ theorem unorm_tail_of_positiveSaddleCombinedProductBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
     (cert : PositiveSaddleTangentProductBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleTangentCheckedRowsCertificate
+    (cert : PositiveSaddleTangentCheckedRowsCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

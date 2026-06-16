@@ -272,8 +272,10 @@ Status:
       down to this finite-window tangent edge field.  For the separate corrected
       edge budget, Lean exposes
       `checkPositiveEdgeBudgetRow`/`checkPositiveEdgeBudgetRange` and soundness
-      lemmas for the finite corrected-edge budget, intended for generated row
-      chunks or a faster checker rather than one monolithic direct evaluation.
+      lemmas for the finite corrected-edge budget.  The row-oriented interface
+      `PositiveSaddleTangentCheckedRowsCertificate` packages these two boolean
+      row checks together with the remaining analytic fields, matching the
+      intended generated-certificate workflow.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
