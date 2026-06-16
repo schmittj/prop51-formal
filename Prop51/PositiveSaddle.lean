@@ -603,6 +603,19 @@ def positiveTemperedXExponent (a k : Nat) : ℚ :=
 def positiveYExponent (a j : Nat) : ℚ :=
   (1/5) * (j : ℚ) + (29/10) * ((a : ℚ) / (j : ℚ)) + 1
 
+/-- The displayed solo exponent, obtained from `positiveYExponent a j` at
+`j = a`.  This avoids a removable self-division in generated solo
+certificates. -/
+def positiveSoloYExponent (a : Nat) : ℚ :=
+  (1/5) * (a : ℚ) + 39/10
+
+theorem positiveYExponent_self_eq {a : Nat} (ha : 1 ≤ a) :
+    positiveYExponent a a = positiveSoloYExponent a := by
+  unfold positiveYExponent positiveSoloYExponent
+  have haQ : (a : ℚ) ≠ 0 := by exact_mod_cast (by omega : a ≠ 0)
+  field_simp [haQ]
+  ring
+
 /-- TeX small-regime bound target:
 `X_k(N) ≤ 8.9·k/N·exp(1.139 ceilSqrt N)`, with the rational exponential
 surrogate used everywhere in this file. -/
@@ -2038,7 +2051,7 @@ inside `Ynorm`. -/
 def positiveSoloDisplayedYSaddleCleared (a N : Nat) : Prop :=
   (4 : ℚ) * (2 : ℚ)^a * Qq N a ≤
     29 * (a : ℚ) * c a *
-      partialExpUpper (positiveYExponent a a) positiveExpCutoff
+      partialExpUpper (positiveSoloYExponent a) positiveExpCutoff
 
 /-- Boolean point check for the denominator-cleared displayed `Y_a(N)`
 saddle inequality. -/
@@ -2046,7 +2059,7 @@ def checkPositiveSoloDisplayedYSaddleClearedCell (a N : Nat) : Bool :=
   decide
     ((4 : ℚ) * (2 : ℚ)^a * Qq N a ≤
       29 * (a : ℚ) * c a *
-        partialExpUpper (positiveYExponent a a) positiveExpCutoff)
+        partialExpUpper (positiveSoloYExponent a) positiveExpCutoff)
 
 /-- Row check for the denominator-cleared displayed `Y_a(N)` saddle
 inequality over every `N` in the positive rectangle at fixed `a`. -/
@@ -2096,22 +2109,23 @@ theorem Ynorm_le_positiveYBound_of_positiveSoloDisplayedYSaddleCleared
   have hpow : 0 < (2 : ℚ)^a := by positivity
   have hdenpos : 0 < ((N : ℚ) / 2) * c a / (2 : ℚ)^a := by
     positivity
+  rw [positiveYExponent_self_eq ha]
   rw [div_le_iff₀ hdenpos]
   have hscale : 0 < (4 : ℚ) * (2 : ℚ)^a := by positivity
   have hQ :
       Qq N a ≤
         (29 * (a : ℚ) * c a *
-            partialExpUpper (positiveYExponent a a) positiveExpCutoff) /
+            partialExpUpper (positiveSoloYExponent a) positiveExpCutoff) /
           ((4 : ℚ) * (2 : ℚ)^a) := by
     rw [le_div_iff₀ hscale]
     simpa [mul_assoc, mul_left_comm, mul_comm] using h
   calc
     Qq N a
         ≤ (29 * (a : ℚ) * c a *
-            partialExpUpper (positiveYExponent a a) positiveExpCutoff) /
+            partialExpUpper (positiveSoloYExponent a) positiveExpCutoff) /
             ((4 : ℚ) * (2 : ℚ)^a) := hQ
     _ = (29 / 2 * ((a : ℚ) / (N : ℚ)) *
-          partialExpUpper (positiveYExponent a a) positiveExpCutoff) *
+          partialExpUpper (positiveSoloYExponent a) positiveExpCutoff) *
           (((N : ℚ) / 2) * c a / (2 : ℚ)^a) := by
         field_simp [ne_of_gt hNQ, ne_of_gt hpow]
         ring
