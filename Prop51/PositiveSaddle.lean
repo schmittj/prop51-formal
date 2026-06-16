@@ -2143,6 +2143,118 @@ theorem positiveTemperedXplusYProductGcomp_401_2000_of_checkRange
   exact positiveTemperedXplusYProductGcompBound_of_checkRange
     (lo := 401) (len := 1600) h ha (by omega) hrect hk htempered
 
+/-- A list of half-open chunks covers the finite positive-saddle window. -/
+def PositiveSaddleFiniteWindowChunkCover
+    (chunks : List (Nat × Nat)) : Prop :=
+  ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+    ∃ chunk : Nat × Nat,
+      chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2
+
+/-- Generic extraction of one row from a verified range chunk covering it. -/
+theorem checkRow_of_checkRangeChunks
+    {row : Nat → Bool} {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        (List.range' chunk.1 chunk.2).all row = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    row a = true := by
+  rcases hcover with ⟨chunk, hmem, hlo, hhi⟩
+  have hall : ∀ x ∈ List.range' chunk.1 chunk.2, row x = true := by
+    exact List.all_eq_true.mp (hchunks (chunk := chunk) hmem)
+  exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
+
+theorem checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+    {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    checkPositiveSmallXplusYProductGcompRow a = true := by
+  exact checkRow_of_checkRangeChunks
+    (row := checkPositiveSmallXplusYProductGcompRow)
+    (chunks := chunks) (a := a)
+    (by
+      intro chunk hmem
+      simpa [checkPositiveSmallXplusYProductGcompRange]
+        using hchunks (chunk := chunk) hmem)
+    hcover
+
+theorem checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+    {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    checkPositiveTemperedXplusYProductGcompRow a = true := by
+  exact checkRow_of_checkRangeChunks
+    (row := checkPositiveTemperedXplusYProductGcompRow)
+    (chunks := chunks) (a := a)
+    (by
+      intro chunk hmem
+      simpa [checkPositiveTemperedXplusYProductGcompRange]
+        using hchunks (chunk := chunk) hmem)
+    hcover
+
+theorem checkPositiveSmallTangentExpEdgeRow_of_checkRangeChunks
+    {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    checkPositiveSmallTangentExpEdgeRow a = true := by
+  exact checkRow_of_checkRangeChunks
+    (row := checkPositiveSmallTangentExpEdgeRow)
+    (chunks := chunks) (a := a)
+    (by
+      intro chunk hmem
+      simpa [checkPositiveSmallTangentExpEdgeRange]
+        using hchunks (chunk := chunk) hmem)
+    hcover
+
+theorem checkPositiveSoloGcompRow_of_checkRangeChunks
+    {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    checkPositiveSoloGcompRow a = true := by
+  exact checkRow_of_checkRangeChunks
+    (row := checkPositiveSoloGcompRow)
+    (chunks := chunks) (a := a)
+    (by
+      intro chunk hmem
+      simpa [checkPositiveSoloGcompRange]
+        using hchunks (chunk := chunk) hmem)
+    hcover
+
+theorem checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRangeChunks
+    {chunks : List (Nat × Nat)} {a : Nat}
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (hcover :
+      ∃ chunk : Nat × Nat,
+        chunk ∈ chunks ∧ chunk.1 ≤ a ∧ a < chunk.1 + chunk.2) :
+    checkPositiveEdgeBudgetRow a = true := by
+  exact checkRow_of_checkRangeChunks
+    (row := checkPositiveEdgeBudgetRow)
+    (chunks := chunks) (a := a)
+    (by
+      intro chunk hmem
+      simpa [checkPositiveEdgeBudgetRange]
+        using hchunks (chunk := chunk) hmem)
+    hcover
+
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
 `B_k Q_{a-k}/(N c_a) = (N/2) R_{k,a} 2^{-(a-k)} X_k Y_{a-k}`. -/
@@ -5859,6 +5971,75 @@ structure PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
     PositiveSaddleEntropyShadowExpQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Generated finite-window chunks for the most concrete §6 finite path.
+
+Each chunk is a half-open interval `(lo, len)`.  The `cover` field records
+that the chunk list covers every `a` in `401 ≤ a ≤ 2000`; the five boolean
+fields can then be proved independently for each chunk, with chunk sizes
+chosen to match `native_decide` performance. -/
+structure PositiveSaddleXplusGcompTangentFiniteWindowChunks
+    (chunks : List (Nat × Nat)) : Prop where
+  cover : PositiveSaddleFiniteWindowChunkCover chunks
+  smallXplusGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentEdgeChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+      checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true
+  soloGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+      checkPositiveSoloGcompRange chunk.1 chunk.2 = true
+  edgeBudgetChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ chunks →
+      checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true
+
+/-- Chunked finite-window certificate plus a direct entropy-tail field. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeCertificate
+    (chunks : List (Nat × Nat)) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+/-- Chunked finite-window certificate plus the geometric entropy-tail
+certificate for `a > 2000`. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+    (chunks : List (Nat × Nat))
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyGeometric :
+    PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
+/-- Chunked finite-window certificate plus the reserve form of the geometric
+entropy-tail certificate. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+    (chunks : List (Nat × Nat))
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyGeometricReserve :
+    PositiveSaddleEntropyShadowExpGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
+/-- Chunked finite-window certificate plus quotient-ratio reserve checks for
+the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+    (chunks : List (Nat × Nat))
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyQuotientReserve :
+    PositiveSaddleEntropyShadowExpQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -6277,6 +6458,164 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.to
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
+theorem PositiveSaddleXplusGcompTangentFiniteWindowChunks.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    (finite : PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks)
+    (entropyTail :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+      finite.smallXplusGcompChunks (finite.cover (a := a) ha h2000)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+      finite.temperedXplusGcompChunks (finite.cover (a := a) ha h2000)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRangeChunks
+      finite.smallTangentEdgeChunks (finite.cover (a := a) ha h2000)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRangeChunks
+      finite.soloGcompChunks (finite.cover (a := a) ha h2000)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRangeChunks
+      finite.edgeBudgetChunks (finite.cover (a := a) ha h2000)
+  entropyTail := entropyTail
+
+theorem PositiveSaddleXplusGcompTangentFiniteWindowChunks.toRowsEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (finite : PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks)
+    (entropyGeometric :
+      PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+        smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSmallXplusYProductGcompRow_of_checkRangeChunks
+      finite.smallXplusGcompChunks (finite.cover (a := a) ha h2000)
+  temperedXplusGcompRows := by
+    intro a ha h2000
+    exact checkPositiveTemperedXplusYProductGcompRow_of_checkRangeChunks
+      finite.temperedXplusGcompChunks (finite.cover (a := a) ha h2000)
+  smallTangentEdgeRows := by
+    intro a ha h2000
+    exact checkPositiveSmallTangentExpEdgeRow_of_checkRangeChunks
+      finite.smallTangentEdgeChunks (finite.cover (a := a) ha h2000)
+  soloGcompRows := by
+    intro a ha h2000
+    exact checkPositiveSoloGcompRow_of_checkRangeChunks
+      finite.soloGcompChunks (finite.cover (a := a) ha h2000)
+  edgeBudgetRows := by
+    intro a ha h2000
+    exact checkPositiveEdgeBudgetRow_of_checkPositiveEdgeBudgetRangeChunks
+      finite.edgeBudgetChunks (finite.cover (a := a) ha h2000)
+  entropyGeometric := entropyGeometric
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeCertificate chunks) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.finiteChunks.toXplusGcompTangentFullyCheckedRowsCertificate
+    cert.entropyTail
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.finiteChunks.toRowsEntropyGeometricCertificate cert.entropyGeometric
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate.toChunkedRangeEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio where
+  finiteChunks := cert.finiteChunks
+  entropyGeometric :=
+    cert.entropyGeometricReserve.toGeometricBudgetCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate.toRowsEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toChunkedRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate.toChunkedRangeEntropyGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio where
+  finiteChunks := cert.finiteChunks
+  entropyGeometricReserve :=
+    cert.entropyQuotientReserve.toGeometricReserveCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate.toChunkedRangeEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio :=
+  cert.toChunkedRangeEntropyGeometricReserveCertificate.toChunkedRangeEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toChunkedRangeEntropyGeometricCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCombinedProductBudgetCertificate where
@@ -6531,6 +6870,39 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.to
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentChunkedRangeCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeCertificate chunks) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -6679,6 +7051,39 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyQuotientReserve
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeCertificate
+    {chunks : List (Nat × Nat)}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeCertificate chunks) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

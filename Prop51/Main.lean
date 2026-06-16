@@ -340,6 +340,50 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRangeEntropyQuot
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate cert)
 
+/-- Final assembly from generated chunk range checks for the finite window. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeCertificate
+    {chunks : List (Nat × Nat)}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeCertificate chunks) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeCertificate cert)
+
+/-- Final assembly from generated chunk range checks plus the geometric
+entropy-shadow tail certificate for `a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricCertificate cert)
+
+/-- Final assembly from generated chunk range checks plus the reserve form of
+the geometric entropy-shadow tail certificate for `a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyGeometricReserveCertificate cert)
+
+/-- Final assembly from generated chunk range checks plus quotient-ratio
+reserve checks for the large-`a` entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
