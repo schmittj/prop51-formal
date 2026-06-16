@@ -6,7 +6,9 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 This file starts the formalization of the sign-lock argument.  The present
 layer is deliberately algebraic: it splits the linear `c_1 X` term out of
 `B_m(N) = [X^m] C(X)^{-N}` and rewrites the coefficient as a finite sum of
-the nonlinear coefficients `Eminus`.
+the nonlinear coefficients `Eminus`.  The same linear/nonlinear split is also
+recorded for `Q_m(N) = [X^m] C(X/2)^(N/2)`, where the nonlinear coefficients
+are named `Eplus`.
 
 The later error-budget files can estimate this finite decomposition without
 re-proving power-series algebra.
@@ -40,6 +42,110 @@ def DFactor (m s : Nat) : ℚ := d (m-s) / d m
 
 /-- The normalized nonlinear coefficient `-E^-_p(N)/(N c_p)`. -/
 def EminusNorm (N p : Nat) : ℚ := -(Eminus (N : ℚ) p) / ((N : ℚ) * c p)
+
+/-- `E⁺_p(N) = [X^p] exp((N/2) H(X/2))`, the nonlinear part of `Q_p(N)`.
+
+This is the positive-side analogue of `Eminus`.  It is used by the §6
+positive-saddle estimates after splitting off the exact linear exponential
+coming from `c_1 X`. -/
+def Eplus (N : ℚ) (p : Nat) : ℚ :=
+  expCoeff (fun r => N / 2 * Hcoef r / (2 : ℚ)^r) p
+
+theorem Hcoef_nonneg (r : Nat) : 0 ≤ Hcoef r := by
+  unfold Hcoef
+  split
+  · exact c_nonneg r
+  · norm_num
+
+theorem Eplus_nonneg {N : ℚ} (hN : 0 ≤ N) (p : Nat) :
+    0 ≤ Eplus N p := by
+  unfold Eplus
+  refine expCoeff_nonneg ?_ p
+  intro r
+  exact div_nonneg
+    (mul_nonneg (div_nonneg hN (by norm_num)) (Hcoef_nonneg r))
+    (by positivity)
+
+theorem Eplus_nat_nonneg (N p : Nat) : 0 ≤ Eplus (N : ℚ) p :=
+  Eplus_nonneg (Nat.cast_nonneg N) p
+
+private theorem abs_EplusLogCoeff_le {N : ℚ} (hN : 0 ≤ N)
+    {j : Nat} (hj : 2 ≤ j) :
+    |N / 2 * Hcoef j / (2 : ℚ)^j|
+      ≤ (N / 50) * (6^j * ((j-1).factorial : ℚ)) := by
+  rw [Hcoef_of_ge_two hj]
+  have hN2 : 0 ≤ N / 2 := by positivity
+  have hpowpos : (0 : ℚ) < (2 : ℚ)^j := by positivity
+  have hFnonneg : 0 ≤ (6 : ℚ)^j * ((j-1).factorial : ℚ) := by
+    positivity
+  have habs :
+      |N / 2 * c j / (2 : ℚ)^j| =
+        N / 2 * c j / (2 : ℚ)^j := by
+    rw [abs_of_nonneg]
+    exact div_nonneg (mul_nonneg hN2 (c_nonneg j)) hpowpos.le
+  rw [habs]
+  let F : ℚ := (6 : ℚ)^j * ((j-1).factorial : ℚ)
+  have hFnonneg' : 0 ≤ F := hFnonneg
+  have hcub : c j ≤ (4/25) * F := by
+    simpa [F] using c_ub j (by omega : 1 ≤ j)
+  have hcoef :
+      N / 2 * c j / (2 : ℚ)^j
+        ≤ N / 2 * ((4/25) * F) / (2 : ℚ)^j := by
+    exact div_le_div_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hcub hN2) hpowpos.le
+  have hpow4Nat : 4 ≤ 2^j := by
+    calc 4 = 2^2 := rfl
+      _ ≤ 2^j := Nat.pow_le_pow_right (by omega : 1 ≤ 2) hj
+  have hpow4 : (4 : ℚ) ≤ (2 : ℚ)^j := by exact_mod_cast hpow4Nat
+  have hfrac : (4/25 : ℚ) / (2 : ℚ)^j ≤ 1/25 := by
+    rw [div_le_iff₀ hpowpos]
+    nlinarith
+  calc
+    N / 2 * c j / (2 : ℚ)^j
+        ≤ N / 2 * ((4/25) * F) / (2 : ℚ)^j := hcoef
+    _ = (N / 2 * F) * ((4/25 : ℚ) / (2 : ℚ)^j) := by ring
+    _ ≤ (N / 2 * F) * (1/25) := by
+        exact mul_le_mul_of_nonneg_left hfrac
+          (mul_nonneg hN2 hFnonneg')
+    _ = (N / 50) * F := by ring
+
+theorem abs_coeff_pow_Eplus_le {N : ℚ} (hN : 0 ≤ N) (r p : Nat) :
+    |coeff p ((mk (fun j => N / 2 * Hcoef j / (2 : ℚ)^j) : ℚ⟦X⟧) ^ r)|
+      ≤ (N / 50)^r * 6^p * Gcomp r p := by
+  refine abs_coeff_pow_le (fun j => N / 2 * Hcoef j / (2 : ℚ)^j)
+    (N / 50) ?_ ?_ r p
+  · intro j hj
+    change N / 2 * Hcoef j / (2 : ℚ)^j = 0
+    rw [Hcoef_of_lt_two hj]
+    ring
+  · intro j hj
+    exact abs_EplusLogCoeff_le hN hj
+
+theorem Eplus_le_Gcomp_sum {N : ℚ} (hN : 0 ≤ N) (p : Nat) :
+    Eplus N p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          (N / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ) := by
+  have hL0 : (fun j => N / 2 * Hcoef j / (2 : ℚ)^j) 0 = 0 := by
+    change N / 2 * Hcoef 0 / (2 : ℚ)^0 = 0
+    rw [Hcoef_of_lt_two (by omega : 0 < 2)]
+    ring
+  rw [Eplus, expCoeff_eq_sum_pow _ hL0 p]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hcoeff := abs_coeff_pow_Eplus_le hN r p
+  have hleabs :
+      coeff p ((mk (fun j => N / 2 * Hcoef j / (2 : ℚ)^j) : ℚ⟦X⟧) ^ r)
+        ≤
+      |coeff p ((mk (fun j => N / 2 * Hcoef j / (2 : ℚ)^j) : ℚ⟦X⟧) ^ r)| :=
+    le_abs_self _
+  have hfpos : (0 : ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  exact div_le_div_of_nonneg_right (hleabs.trans hcoeff) hfpos.le
+
+theorem Eplus_nat_le_Gcomp_sum (N p : Nat) :
+    Eplus (N : ℚ) p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ) :=
+  Eplus_le_Gcomp_sum (Nat.cast_nonneg N) p
 
 /-- The sign-lock nonlinear residual `ε_p`, defined by
 `E^-_p(N) = -N c_p (1+ε_p)`. -/
@@ -396,6 +502,43 @@ theorem Bq_eq_linear_Eminus_sum (N m : Nat) :
   rw [coeff_BSeriesQ, coeff_mul,
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
   simpa [Eminus, expCoeff_linearExpSeq] using hcoeff
+
+private theorem QSeriesQ_eq_linear_mul_EplusSeries (N : Nat) :
+    expSeries (fun r => (N : ℚ) / 2 * c r / (2 : ℚ)^r)
+      =
+      expSeries (linearExpSeq ((N : ℚ) / 2 * c 1 / 2)) *
+        expSeries (fun r => (N : ℚ) / 2 * Hcoef r / (2 : ℚ)^r) := by
+  rw [expSeries_mul]
+  congr 1
+  funext r
+  rw [c_eq_linear_add_Hcoef r]
+  cases r with
+  | zero =>
+      simp [linearExpSeq, Hcoef]
+  | succ r =>
+      cases r with
+      | zero =>
+          simp [linearExpSeq, Hcoef]
+      | succ r =>
+          simp [linearExpSeq, Hcoef]
+
+/-- Finite decomposition of `Q_m(N)` into its linear exponential and the
+positive-side nonlinear coefficients `Eplus`.
+
+This is the `C(X/2)^(N/2)` analogue of `Bq_eq_linear_Eminus_sum`. -/
+theorem Qq_eq_linear_Eplus_sum (N m : Nat) :
+    Qq N m =
+      ∑ s ∈ Finset.range (m+1),
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          Eplus (N : ℚ) (m-s) := by
+  have hcoeff := congrArg (fun F : ℚ⟦X⟧ => coeff m F)
+    (QSeriesQ_eq_linear_mul_EplusSeries N)
+  change coeff m (expSeries (fun r => (N : ℚ) / 2 * c r / (2 : ℚ)^r)) =
+    coeff m (expSeries (linearExpSeq ((N : ℚ) / 2 * c 1 / 2)) *
+      expSeries (fun r => (N : ℚ) / 2 * Hcoef r / (2 : ℚ)^r)) at hcoeff
+  rw [coeff_expSeries, coeff_mul,
+    Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
+  simpa [Qq, Eplus, expCoeff_linearExpSeq] using hcoeff
 
 /-- Finite decomposition of `-X_m(N)` in the form used by the sign-lock
 argument. -/

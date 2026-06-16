@@ -1247,6 +1247,19 @@ theorem Ynorm_nonneg (N j : Nat) : 0 ≤ Ynorm N j := by
       (mul_nonneg (div_nonneg hN (by norm_num)) (c_nonneg j))
       (by positivity))
 
+/-- The exact positive-side linear/nonlinear decomposition, normalized as
+`Y_j(N)`.  This is the `Y`/`Q` analogue of
+`neg_Xnorm_eq_linear_Eminus_sum`: after the linear `c_1 X/2` exponential is
+split off, the remaining coefficients are `Eplus`. -/
+theorem Ynorm_eq_linear_Eplus_sum (N j : Nat) :
+    Ynorm N j =
+      (∑ s ∈ Finset.range (j+1),
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          Eplus (N : ℚ) (j-s))
+        / (((N : ℚ) / 2) * c j / (2 : ℚ)^j) := by
+  unfold Ynorm
+  rw [Qq_eq_linear_Eplus_sum]
+
 theorem positiveCRatio_nonneg (a k : Nat) : 0 ≤ positiveCRatio a k := by
   unfold positiveCRatio
   exact div_nonneg (mul_nonneg (c_nonneg k) (c_nonneg (posJ a k))) (c_nonneg a)
@@ -1298,6 +1311,22 @@ theorem normalizedSoloTerm_eq_dyadic_Ynorm
     positivity
   unfold normalizedSoloTerm Ynorm positiveDyadicDecay
   field_simp [hNQ, hca, hYden]
+
+/-- The solo `Q_a` contribution after splitting off the linear exponential.
+This is the exact finite-sum target for the remaining §6 solo estimate. -/
+theorem normalizedSoloTerm_eq_linear_Eplus_sum
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    normalizedSoloTerm a N =
+      (∑ s ∈ Finset.range (a+1),
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          Eplus (N : ℚ) (a-s)) / ((N : ℚ) * c a) := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  have hca : c a ≠ 0 := (c_pos a ha).ne'
+  have hpow : (2 : ℚ)^a ≠ 0 := by positivity
+  rw [normalizedSoloTerm_eq_dyadic_Ynorm hN ha,
+    Ynorm_eq_linear_Eplus_sum]
+  unfold positiveDyadicDecay
+  field_simp [hNQ, hca, hpow]
 
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
