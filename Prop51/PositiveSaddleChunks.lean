@@ -2305,6 +2305,84 @@ theorem positiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniform
       |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
         bounds.toRawClearedBoundsCertificate).entropyTail
 
+/-- Fine-grained table-backed product certificate.
+
+The exact raw product checks are too expensive as whole-row booleans.  This
+interface lets generated certificates provide, for each finite-window row
+`a`, a cover of the positive `N`-rectangle by half-open chunks and then check
+each `N`-chunk against the default 20-wide retained-`k` chunks.  The checker
+itself uses shared `c`, `B`, and `Q` tables at each `(a,N)`. -/
+structure PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    (productNChunks : Nat → List (Nat × Nat)) : Prop where
+  productNChunksCover :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      ∃ chunk : Nat × Nat,
+        chunk ∈ productNChunks a ∧ N ∈ List.range' chunk.1 chunk.2
+  smallXYTableChunks :
+    ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      nChunk ∈ productNChunks a → kChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+          a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true
+  temperedXYTableChunks :
+    ∀ {a : Nat} {nChunk kChunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      nChunk ∈ productNChunks a → kChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+          a nChunk.1 nChunk.2 kChunk.1 kChunk.2 = true
+  smallTangentEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate.toTangentProductBudgetCertificate
+    {productNChunks : Nat → List (Nat × Nat)}
+    (cert :
+      PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+        productNChunks) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := by
+    intro a N k ha ha2000 hrect hk hsmall _hB
+    rcases cert.productNChunksCover ha ha2000 hrect with
+      ⟨nChunk, hnChunk, hNmem⟩
+    rcases positiveEdgeDefaultKChunks_cover ha2000 hk with
+      ⟨kChunk, hkChunk, hkMem⟩
+    have hraw : positiveSmallXYProductRawCleared a N k :=
+      positiveSmallXYProductRawCleared_of_checkTableNRangeKChunk
+        (by omega : 1 ≤ a)
+        (cert.smallXYTableChunks ha ha2000 hnChunk hkChunk)
+        hNmem hrect hkMem hk hsmall
+    exact positiveSmallXYProductTangentBound_of_rawCleared
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (by omega : 1 ≤ a) hk hraw
+  smallTangentEdge := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact positiveSmallTangentExpEdgeGap_of_checkCell
+      (cert.smallTangentEdgeCells ha ha2000 hrect hk hsmall)
+  temperedXY := by
+    intro a N k ha ha2000 hrect hk htempered _hB
+    rcases cert.productNChunksCover ha ha2000 hrect with
+      ⟨nChunk, hnChunk, hNmem⟩
+    rcases positiveEdgeDefaultKChunks_cover ha2000 hk with
+      ⟨kChunk, hkChunk, hkMem⟩
+    have hraw : positiveTemperedXYProductRawCleared a N k :=
+      positiveTemperedXYProductRawCleared_of_checkTableNRangeKChunk
+        (by omega : 1 ≤ a)
+        (cert.temperedXYTableChunks ha ha2000 hnChunk hkChunk)
+        hNmem hrect hkMem hk htempered
+    exact positiveTemperedXYProductBound_of_rawCleared
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+      (by omega : 1 ≤ a) hk hraw
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
 /-- Audit target using the same edge unit scale for every default `k`-chunk
 in a fixed row `a`.
 

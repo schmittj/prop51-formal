@@ -28,6 +28,11 @@ def posNhi (a : Nat) : Nat := 12*a - 8
 /-- The positive-part rectangle `6a-7 ≤ N ≤ 12a-8`. -/
 def positiveRectangle (a N : Nat) : Prop := posNlo a ≤ N ∧ N ≤ posNhi a
 
+instance decidablePositiveRectangle (a N : Nat) :
+    Decidable (positiveRectangle a N) := by
+  unfold positiveRectangle
+  infer_instance
+
 /-- Exact integer ceiling of `sqrt n`.
 
 The formula `sqrt (n-1)+1` for `n>0` avoids `Real.ceil`; it is exactly
@@ -2688,6 +2693,84 @@ instance decidablePositiveTemperedXYProductRawCleared (a N k : Nat) :
   unfold positiveTemperedXYProductRawCleared
   infer_instance
 
+/-- Table-backed exact small-regime product check.
+
+The caller supplies a shared `c` table and the corresponding `B`/`Q` exponent
+coefficient tables.  This is definitionally the same inequality as
+`positiveSmallXYProductRawCleared` when those tables are
+`cList a`, `BListQ (cList a) N a`, and `QListQ (cList a) N a`, but it is much
+faster for finite scans because each row computes the coefficient tables once. -/
+def positiveSmallXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * B.getD k 0 * Q.getD (posJ a k) 0
+    ≤
+    (2581/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff *
+        (cl.getD k 0 * cl.getD (posJ a k) 0)
+
+/-- Table-backed exact tempered-regime product check. -/
+def positiveTemperedXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a _N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * B.getD k 0 * Q.getD (posJ a k) 0
+    ≤
+    (2117/20) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+        (cl.getD k 0 * cl.getD (posJ a k) 0)
+
+instance decidablePositiveSmallXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a N k : Nat) :
+    Decidable (positiveSmallXYProductRawClearedTableCell cl B Q a N k) := by
+  unfold positiveSmallXYProductRawClearedTableCell
+  infer_instance
+
+instance decidablePositiveTemperedXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a N k : Nat) :
+    Decidable (positiveTemperedXYProductRawClearedTableCell cl B Q a N k) := by
+  unfold positiveTemperedXYProductRawClearedTableCell
+  infer_instance
+
+/-- Soundness bridge from a shared-table small product cell back to the
+semantic raw-cleared predicate. -/
+theorem positiveSmallXYProductRawCleared_of_tableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      positiveSmallXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k) :
+    positiveSmallXYProductRawCleared a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a := by
+    exact le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hj_le_a : posJ a k ≤ a := by
+    unfold posJ
+    omega
+  unfold positiveSmallXYProductRawClearedTableCell at h
+  rw [BListQ_getD_eq N a k hk_le_a,
+    QListQ_getD_eq N a (posJ a k) hj_le_a,
+    cList_getD_eq k a hk_le_a,
+    cList_getD_eq (posJ a k) a hj_le_a] at h
+  exact h
+
+/-- Soundness bridge from a shared-table tempered product cell back to the
+semantic raw-cleared predicate. -/
+theorem positiveTemperedXYProductRawCleared_of_tableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      positiveTemperedXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k) :
+    positiveTemperedXYProductRawCleared a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a := by
+    exact le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hj_le_a : posJ a k ≤ a := by
+    unfold posJ
+    omega
+  unfold positiveTemperedXYProductRawClearedTableCell at h
+  rw [BListQ_getD_eq N a k hk_le_a,
+    QListQ_getD_eq N a (posJ a k) hj_le_a,
+    cList_getD_eq k a hk_le_a,
+    cList_getD_eq (posJ a k) a hj_le_a] at h
+  exact h
+
 theorem positiveSmallXYProductTangentBound_of_rawCleared
     {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
     (hkRange : k ∈ positiveKRange a)
@@ -2789,6 +2872,16 @@ inequality. -/
 def checkPositiveTemperedXYProductRawClearedCell (a N k : Nat) : Bool :=
   decide (positiveTemperedXYProductRawCleared a N k)
 
+/-- Point check for the table-backed exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Bool :=
+  decide (positiveSmallXYProductRawClearedTableCell cl B Q a N k)
+
+/-- Point check for the table-backed exact tempered product inequality. -/
+def checkPositiveTemperedXYProductRawClearedTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Bool :=
+  decide (positiveTemperedXYProductRawClearedTableCell cl B Q a N k)
+
 /-- Check all small-regime retained `k` for one `(a,N)`. -/
 def checkPositiveSmallXplusYProductGcompAtN (a N : Nat) : Bool :=
   (positiveKRangeList a).all fun k =>
@@ -2831,6 +2924,71 @@ def checkPositiveTemperedXYProductRawClearedAtN (a N : Nat) : Bool :=
       checkPositiveTemperedXYProductRawClearedCell a N k
     else true
 
+/-- Shared-table version of
+`checkPositiveSmallXYProductRawClearedAtN`. -/
+def checkPositiveSmallXYProductRawClearedTableAtN (a N : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then
+      checkPositiveSmallXYProductRawClearedTableCell cl B Q a N k
+    else true
+
+/-- Shared-table version of
+`checkPositiveTemperedXYProductRawClearedAtN`. -/
+def checkPositiveTemperedXYProductRawClearedTableAtN (a N : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (positiveKRangeList a).all fun k =>
+    if ceilSqrt N < k then
+      checkPositiveTemperedXYProductRawClearedTableCell cl B Q a N k
+    else true
+
+/-- Shared-table check over a `k`-chunk at one `(a,N)`, restricted to the
+small regime. -/
+def checkPositiveSmallXYProductRawClearedTableKChunkAtN
+    (a N kLo kLen : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (List.range' kLo kLen).all fun k =>
+    if k ∈ positiveKRange a ∧ k ≤ ceilSqrt N then
+      checkPositiveSmallXYProductRawClearedTableCell cl B Q a N k
+    else true
+
+/-- Shared-table check over a `k`-chunk at one `(a,N)`, restricted to the
+tempered regime. -/
+def checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+    (a N kLo kLen : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (List.range' kLo kLen).all fun k =>
+    if k ∈ positiveKRange a ∧ ceilSqrt N < k then
+      checkPositiveTemperedXYProductRawClearedTableCell cl B Q a N k
+    else true
+
+/-- Shared-table product check over an `N`-range and a `k`-chunk for the small
+regime.  Values of `N` outside the positive rectangle are ignored, so callers
+can use simple half-open `N` chunks. -/
+def checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+    (a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if positiveRectangle a N then
+      checkPositiveSmallXYProductRawClearedTableKChunkAtN a N kLo kLen
+    else true
+
+/-- Shared-table product check over an `N`-range and a `k`-chunk for the
+tempered regime. -/
+def checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+    (a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if positiveRectangle a N then
+      checkPositiveTemperedXYProductRawClearedTableKChunkAtN a N kLo kLen
+    else true
+
 /-- Row check for the small-regime explicit `Xplus*Y` product bound. -/
 def checkPositiveSmallXplusYProductGcompRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
@@ -2861,6 +3019,16 @@ def checkPositiveTemperedXYProductRawClearedRow (a : Nat) : Bool :=
   (positiveNRangeList a).all fun N =>
     checkPositiveTemperedXYProductRawClearedAtN a N
 
+/-- Row check for the table-backed exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedTableRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallXYProductRawClearedTableAtN a N
+
+/-- Row check for the table-backed exact tempered product inequality. -/
+def checkPositiveTemperedXYProductRawClearedTableRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveTemperedXYProductRawClearedTableAtN a N
+
 /-- Range check for the small-regime explicit `Xplus*Y` product bound over
 `a ∈ [lo, lo+len)`. -/
 def checkPositiveSmallXplusYProductGcompRange (lo len : Nat) : Bool :=
@@ -2887,6 +3055,14 @@ def checkPositiveSmallXYProductRawClearedRange (lo len : Nat) : Bool :=
 inequality. -/
 def checkPositiveTemperedXYProductRawClearedRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveTemperedXYProductRawClearedRow
+
+/-- Range check for the table-backed exact small product inequality. -/
+def checkPositiveSmallXYProductRawClearedTableRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallXYProductRawClearedTableRow
+
+/-- Range check for the table-backed exact tempered product inequality. -/
+def checkPositiveTemperedXYProductRawClearedTableRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveTemperedXYProductRawClearedTableRow
 
 /-- Soundness of one denominator-cleared small product point check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkClearedCell
@@ -3175,6 +3351,273 @@ theorem positiveTemperedXYProductBound_of_checkRawClearedRange
     (List.mem_range'_1).mpr ⟨hlo, ha_hi⟩
   exact positiveTemperedXYProductBound_of_checkRawClearedRow
     ha hrect (hall a haMem) hk htempered
+
+/-- One table-backed small product point check implies the semantic
+raw-cleared small product predicate. -/
+theorem positiveSmallXYProductRawCleared_of_checkTableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      checkPositiveSmallXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+        a N k = true) :
+    positiveSmallXYProductRawCleared a N k :=
+  positiveSmallXYProductRawCleared_of_tableCell ha hkRange
+    (of_decide_eq_true h)
+
+/-- One table-backed tempered product point check implies the semantic
+raw-cleared tempered product predicate. -/
+theorem positiveTemperedXYProductRawCleared_of_checkTableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      checkPositiveTemperedXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+        a N k = true) :
+    positiveTemperedXYProductRawCleared a N k :=
+  positiveTemperedXYProductRawCleared_of_tableCell ha hkRange
+    (of_decide_eq_true h)
+
+/-- One table-backed `(a,N)` small product check implies the original
+raw-cleared `(a,N)` check. -/
+theorem checkPositiveSmallXYProductRawClearedAtN_of_checkTableAtN
+    {a N : Nat} (ha : 1 ≤ a)
+    (h : checkPositiveSmallXYProductRawClearedTableAtN a N = true) :
+    checkPositiveSmallXYProductRawClearedAtN a N = true := by
+  apply List.all_eq_true.mpr
+  intro k hkList
+  by_cases hsmall : k ≤ ceilSqrt N
+  · have hall :
+        ∀ x ∈ positiveKRangeList a,
+          (if x ≤ ceilSqrt N then
+              checkPositiveSmallXYProductRawClearedTableCell
+                (cList a) (BListQ (cList a) N a)
+                (QListQ (cList a) N a) a N x
+            else true) = true := by
+      exact List.all_eq_true.mp (by
+        simpa [checkPositiveSmallXYProductRawClearedTableAtN] using h)
+    have hkRange : k ∈ positiveKRange a :=
+      positiveKRange_of_mem_positiveKRangeList hkList
+    have hcell :
+        checkPositiveSmallXYProductRawClearedTableCell
+          (cList a) (BListQ (cList a) N a)
+          (QListQ (cList a) N a) a N k = true := by
+      simpa [hsmall] using hall k hkList
+    have hraw : positiveSmallXYProductRawCleared a N k :=
+      positiveSmallXYProductRawCleared_of_checkTableCell ha hkRange hcell
+    simpa [checkPositiveSmallXYProductRawClearedAtN,
+      checkPositiveSmallXYProductRawClearedCell, hsmall]
+      using (decide_eq_true hraw)
+  · simp [hsmall]
+
+/-- One table-backed `(a,N)` tempered product check implies the original
+raw-cleared `(a,N)` check. -/
+theorem checkPositiveTemperedXYProductRawClearedAtN_of_checkTableAtN
+    {a N : Nat} (ha : 1 ≤ a)
+    (h : checkPositiveTemperedXYProductRawClearedTableAtN a N = true) :
+    checkPositiveTemperedXYProductRawClearedAtN a N = true := by
+  apply List.all_eq_true.mpr
+  intro k hkList
+  by_cases htempered : ceilSqrt N < k
+  · have hall :
+        ∀ x ∈ positiveKRangeList a,
+          (if ceilSqrt N < x then
+              checkPositiveTemperedXYProductRawClearedTableCell
+                (cList a) (BListQ (cList a) N a)
+                (QListQ (cList a) N a) a N x
+            else true) = true := by
+      exact List.all_eq_true.mp (by
+        simpa [checkPositiveTemperedXYProductRawClearedTableAtN] using h)
+    have hkRange : k ∈ positiveKRange a :=
+      positiveKRange_of_mem_positiveKRangeList hkList
+    have hcell :
+        checkPositiveTemperedXYProductRawClearedTableCell
+          (cList a) (BListQ (cList a) N a)
+          (QListQ (cList a) N a) a N k = true := by
+      simpa [htempered] using hall k hkList
+    have hraw : positiveTemperedXYProductRawCleared a N k :=
+      positiveTemperedXYProductRawCleared_of_checkTableCell ha hkRange hcell
+    simpa [checkPositiveTemperedXYProductRawClearedAtN,
+      checkPositiveTemperedXYProductRawClearedCell, htempered]
+      using (decide_eq_true hraw)
+  · simp [htempered]
+
+/-- A checked table-backed small `k`-chunk at one `(a,N)` supplies the
+semantic raw-cleared predicate for every covered small-regime retained `k`. -/
+theorem positiveSmallXYProductRawCleared_of_checkTableKChunkAtN
+    {a N k kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveSmallXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' kLo kLen,
+        (if x ∈ positiveKRange a ∧ x ≤ ceilSqrt N then
+            checkPositiveSmallXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableKChunkAtN] using h)
+  have hkList : k ∈ List.range' kLo kLen := by
+    exact (List.mem_range'_1).mpr (by
+      simpa [Finset.mem_Ico] using hkChunk)
+  have hcell :
+      checkPositiveSmallXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a)
+        (QListQ (cList a) N a) a N k = true := by
+    simpa [hkRange, hsmall] using hall k hkList
+  exact positiveSmallXYProductRawCleared_of_checkTableCell ha hkRange hcell
+
+/-- A checked table-backed tempered `k`-chunk at one `(a,N)` supplies the
+semantic raw-cleared predicate for every covered tempered retained `k`. -/
+theorem positiveTemperedXYProductRawCleared_of_checkTableKChunkAtN
+    {a N k kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    positiveTemperedXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' kLo kLen,
+        (if x ∈ positiveKRange a ∧ ceilSqrt N < x then
+            checkPositiveTemperedXYProductRawClearedTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableKChunkAtN] using h)
+  have hkList : k ∈ List.range' kLo kLen := by
+    exact (List.mem_range'_1).mpr (by
+      simpa [Finset.mem_Ico] using hkChunk)
+  have hcell :
+      checkPositiveTemperedXYProductRawClearedTableCell
+        (cList a) (BListQ (cList a) N a)
+        (QListQ (cList a) N a) a N k = true := by
+    simpa [hkRange, htempered] using hall k hkList
+  exact positiveTemperedXYProductRawCleared_of_checkTableCell
+    ha hkRange hcell
+
+/-- A checked table-backed small `N`-range/`k`-chunk supplies the semantic
+raw-cleared predicate for every covered cell. -/
+theorem positiveSmallXYProductRawCleared_of_checkTableNRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveSmallXYProductRawClearedTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNChunk : N ∈ List.range' nLo nLen)
+    (hrect : positiveRectangle a N)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveSmallXYProductRawClearedTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableNRangeKChunk] using h)
+  have hAtN :
+      checkPositiveSmallXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hall N hNChunk
+  exact positiveSmallXYProductRawCleared_of_checkTableKChunkAtN
+    ha hAtN hkChunk hkRange hsmall
+
+/-- A checked table-backed tempered `N`-range/`k`-chunk supplies the semantic
+raw-cleared predicate for every covered cell. -/
+theorem positiveTemperedXYProductRawCleared_of_checkTableNRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveTemperedXYProductRawClearedTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNChunk : N ∈ List.range' nLo nLen)
+    (hrect : positiveRectangle a N)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (htempered : ceilSqrt N < k) :
+    positiveTemperedXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableNRangeKChunk] using h)
+  have hAtN :
+      checkPositiveTemperedXYProductRawClearedTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hall N hNChunk
+  exact positiveTemperedXYProductRawCleared_of_checkTableKChunkAtN
+    ha hAtN hkChunk hkRange htempered
+
+/-- A table-backed small product row check implies the original raw-cleared
+row check. -/
+theorem checkPositiveSmallXYProductRawClearedRow_of_checkTableRow
+    {a : Nat} (ha : 1 ≤ a)
+    (h : checkPositiveSmallXYProductRawClearedTableRow a = true) :
+    checkPositiveSmallXYProductRawClearedRow a = true := by
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallXYProductRawClearedTableAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableRow] using h)
+  exact checkPositiveSmallXYProductRawClearedAtN_of_checkTableAtN
+    ha (hall N hNmem)
+
+/-- A table-backed tempered product row check implies the original
+raw-cleared row check. -/
+theorem checkPositiveTemperedXYProductRawClearedRow_of_checkTableRow
+    {a : Nat} (ha : 1 ≤ a)
+    (h : checkPositiveTemperedXYProductRawClearedTableRow a = true) :
+    checkPositiveTemperedXYProductRawClearedRow a = true := by
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveTemperedXYProductRawClearedTableAtN a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableRow] using h)
+  exact checkPositiveTemperedXYProductRawClearedAtN_of_checkTableAtN
+    ha (hall N hNmem)
+
+/-- A table-backed small product range check implies the original
+raw-cleared range check. -/
+theorem checkPositiveSmallXYProductRawClearedRange_of_checkTableRange
+    {lo len : Nat} (hlo : 1 ≤ lo)
+    (h : checkPositiveSmallXYProductRawClearedTableRange lo len = true) :
+    checkPositiveSmallXYProductRawClearedRange lo len = true := by
+  apply List.all_eq_true.mpr
+  intro a haMem
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallXYProductRawClearedTableRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallXYProductRawClearedTableRange] using h)
+  have ha_lo : lo ≤ a := (List.mem_range'_1.mp haMem).1
+  exact checkPositiveSmallXYProductRawClearedRow_of_checkTableRow
+    (hlo.trans ha_lo) (hall a haMem)
+
+/-- A table-backed tempered product range check implies the original
+raw-cleared range check. -/
+theorem checkPositiveTemperedXYProductRawClearedRange_of_checkTableRange
+    {lo len : Nat} (hlo : 1 ≤ lo)
+    (h : checkPositiveTemperedXYProductRawClearedTableRange lo len = true) :
+    checkPositiveTemperedXYProductRawClearedRange lo len = true := by
+  apply List.all_eq_true.mpr
+  intro a haMem
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveTemperedXYProductRawClearedTableRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedXYProductRawClearedTableRange] using h)
+  have ha_lo : lo ≤ a := (List.mem_range'_1.mp haMem).1
+  exact checkPositiveTemperedXYProductRawClearedRow_of_checkTableRow
+    (hlo.trans ha_lo) (hall a haMem)
 
 /-- Soundness of one small-regime explicit `Xplus*Y` product check. -/
 theorem positiveSmallXplusYProductGcompBound_of_checkCell {a N k : Nat}

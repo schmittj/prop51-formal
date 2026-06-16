@@ -77,7 +77,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   endpoint is
   `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductClearedChunksUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`:
   it checks the exact denominator-cleared `Bq * Qq` product inequalities
-  against the combined-exponent targets.  The older
+  against the combined-exponent targets.  For generated finite product
+  certificates, the finer-grained table-backed entry point
+  `Prop51.coefficientNegativity_of_positiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`
+  is the practical target: it shares `c`, `B`, and `Q` tables at each
+  `(a,N)` and splits product checks by a row-dependent `N`-chunk cover and
+  the default 20-wide retained-`k` chunks.  The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but
   that route is too strong for the finite window: direct checks already fail

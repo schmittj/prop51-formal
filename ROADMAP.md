@@ -367,7 +367,15 @@ Status:
       `positiveSmallXYProductRawCleared` and
       `positiveTemperedXYProductRawCleared`, which keep the actual
       `Bq * Qq` product and convert directly to
-      `PositiveSaddleTangentProductBudgetCertificate`.  Lean also has
+      `PositiveSaddleTangentProductBudgetCertificate`.  Since whole-row
+      raw-product scans are still too slow, Lean now also has table-backed
+      product checkers that share `cList a`, `BListQ`, and `QListQ` at each
+      `(a,N)` and split the finite product scan by half-open `N` chunks and
+      the default 20-wide `k` chunks:
+      `PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`,
+      exposed by
+      `coefficientNegativity_of_positiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`.
+      Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
       a default 100-row cover of `401 ≤ a ≤ 2000`.  An older concrete final
@@ -450,7 +458,12 @@ Status:
       It chunks the denominator-cleared actual `Bq * Qq` small/tempered
       product checks, keeps tangent-edge checks at cell granularity, and
       checks each default edge `k`-chunk using a row scale bounded below by
-      `positiveEdgeUniformScaleMin`.  The fixed-scale
+      `positiveEdgeUniformScaleMin`.  For actual generated product proofs,
+      prefer the finer
+      `PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate`,
+      where the product side is split by row-dependent `N` chunks and default
+      `k` chunks instead of asking Lean to evaluate a whole product row.  The
+      fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
       route, not as the expected final product certificate.  The remaining
