@@ -123,7 +123,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   still too coarse.  The same script can emit one concrete cacheable chunk
   theorem at a time with `--emit-single-chunk`, which is the practical mode
   for large generated finite witnesses; pass `--use-single-chunk-theorems`
-  to assemble the product-`N` chunked certificate from those names.  When
+  to assemble the product-`N` chunked certificate from those names, or
+  `--emit-single-chunk-suite` to emit the atom theorems and assembled
+  certificate in one Lean module.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

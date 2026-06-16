@@ -18,6 +18,9 @@ Two strategies are available:
     row, uniform product `N`-chunk index, and retained `k` chunk.
   * --emit-single-chunk FIELD: emit one cacheable `native_decide` theorem for
     a concrete product, tangent, solo, or edge chunk.
+  * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
+    product-n-chunked-tangent certificate, followed by the assembled finite
+    certificate.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
     from previously emitted single-chunk theorem names.
 
@@ -118,6 +121,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="assemble product-n-chunked-tangent from single-chunk theorem names",
     )
     parser.add_argument(
+        "--emit-single-chunk-suite",
+        action="store_true",
+        help=(
+            "emit all single-chunk theorems and assemble the "
+            "product-n-chunked-tangent certificate"
+        ),
+    )
+    parser.add_argument(
         "--strategy",
         choices=(
             "all-chunks",
@@ -157,6 +168,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="fixed retained-k/tangent-k chunk index for single chunks",
     )
     args = parser.parse_args(argv)
+    if args.emit_single_chunk_suite and args.emit_single_chunk is not None:
+        parser.error("--emit-single-chunk-suite cannot be combined with --emit-single-chunk")
+    if args.emit_single_chunk_suite and args.use_single_chunk_theorems:
+        parser.error(
+            "--emit-single-chunk-suite cannot be combined with "
+            "--use-single-chunk-theorems"
+        )
+    if args.emit_single_chunk_suite and args.strategy != "product-n-chunked-tangent":
+        parser.error(
+            "--emit-single-chunk-suite is only supported for "
+            "--strategy product-n-chunked-tangent"
+        )
     if args.use_single_chunk_theorems and args.emit_single_chunk is not None:
         parser.error("--use-single-chunk-theorems cannot be combined with --emit-single-chunk")
     if args.use_single_chunk_theorems and args.strategy != "product-n-chunked-tangent":
@@ -336,83 +359,170 @@ def emit_header() -> list[str]:
     ]
 
 
-def emit_single_chunk(args: argparse.Namespace) -> str:
-    field = args.emit_single_chunk
-    name = args.name
-    lines = emit_header()
-    i = args.row_index
-
+def single_chunk_theorem_lines(
+    args: argparse.Namespace,
+    field: str,
+    name: str,
+    row_index: int,
+    n_index: int | None = None,
+    k_index: int | None = None,
+) -> list[str]:
     if field == "product-small":
-        row_lo = 401 + args.product_row_len * i
-        k_lo = 1 + 20 * args.k_index
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk",
-                f"      {args.n_len} {row_lo} {args.product_row_len}",
-                f"      {args.n_index} {k_lo} 20 = true := by",
-                "  native_decide",
-            ]
-        )
-    elif field == "product-tempered":
-        row_lo = 401 + args.product_row_len * i
-        k_lo = 1 + 20 * args.k_index
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk",
-                f"      {args.n_len} {row_lo} {args.product_row_len}",
-                f"      {args.n_index} {k_lo} 20 = true := by",
-                "  native_decide",
-            ]
-        )
-    elif field == "tangent":
-        row_lo = 401 + args.tangent_row_len * i
-        k_lo = 1 + args.tangent_k_len * args.k_index
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveSmallTangentExpEdgeFixedNChunksRowRangeKChunk",
-                f"      {args.tangent_n_len} {row_lo} {args.tangent_row_len}",
-                f"      {k_lo} {args.tangent_k_len} = true := by",
-                "  native_decide",
-            ]
-        )
-    elif field == "solo-saddle":
-        row_lo = 401 + args.solo_saddle_row_len * i
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveSoloDisplayedYSaddleClearedRange",
-                f"      {row_lo} {args.solo_saddle_row_len} = true := by",
-                "  native_decide",
-            ]
-        )
-    elif field == "solo-budget":
-        row_lo = 401 + args.solo_budget_row_len * i
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveSoloDisplayedYBoundUnitRange",
-                f"      {row_lo} {args.solo_budget_row_len} = true := by",
-                "  native_decide",
-            ]
-        )
-    elif field == "edge":
-        row_lo = 401 + args.edge_row_len * i
-        k_lo = 1 + 20 * args.k_index
-        lines.extend(
-            [
-                f"theorem {name} :",
-                "    checkPositiveEdgeMajorantKChunkUnitRowRange",
-                f"      {row_lo} {args.edge_row_len} {k_lo} 20",
-                "      (fun _ => positiveEdgeUniformScaleMin) = true := by",
-                "  native_decide",
-            ]
-        )
-    else:
-        raise AssertionError(f"unhandled single chunk field {field!r}")
+        row_lo = 401 + args.product_row_len * row_index
+        k_lo = 1 + 20 * k_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk",
+            f"      {args.n_len} {row_lo} {args.product_row_len}",
+            f"      {n_index} {k_lo} 20 = true := by",
+            "  native_decide",
+        ]
+    if field == "product-tempered":
+        row_lo = 401 + args.product_row_len * row_index
+        k_lo = 1 + 20 * k_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveTemperedXYProductRawClearedTableFixedNIndexRowRangeKChunk",
+            f"      {args.n_len} {row_lo} {args.product_row_len}",
+            f"      {n_index} {k_lo} 20 = true := by",
+            "  native_decide",
+        ]
+    if field == "tangent":
+        row_lo = 401 + args.tangent_row_len * row_index
+        k_lo = 1 + args.tangent_k_len * k_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveSmallTangentExpEdgeFixedNChunksRowRangeKChunk",
+            f"      {args.tangent_n_len} {row_lo} {args.tangent_row_len}",
+            f"      {k_lo} {args.tangent_k_len} = true := by",
+            "  native_decide",
+        ]
+    if field == "solo-saddle":
+        row_lo = 401 + args.solo_saddle_row_len * row_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveSoloDisplayedYSaddleClearedRange",
+            f"      {row_lo} {args.solo_saddle_row_len} = true := by",
+            "  native_decide",
+        ]
+    if field == "solo-budget":
+        row_lo = 401 + args.solo_budget_row_len * row_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveSoloDisplayedYBoundUnitRange",
+            f"      {row_lo} {args.solo_budget_row_len} = true := by",
+            "  native_decide",
+        ]
+    if field == "edge":
+        row_lo = 401 + args.edge_row_len * row_index
+        k_lo = 1 + 20 * k_index
+        return [
+            f"theorem {name} :",
+            "    checkPositiveEdgeMajorantKChunkUnitRowRange",
+            f"      {row_lo} {args.edge_row_len} {k_lo} 20",
+            "      (fun _ => positiveEdgeUniformScaleMin) = true := by",
+            "  native_decide",
+        ]
+    raise AssertionError(f"unhandled single chunk field {field!r}")
 
+
+def emit_single_chunk(args: argparse.Namespace) -> str:
+    lines = emit_header()
+    lines.extend(
+        single_chunk_theorem_lines(
+            args,
+            args.emit_single_chunk,
+            args.name,
+            args.row_index,
+            args.n_index,
+            args.k_index,
+        )
+    )
+
+    lines.extend(["", "end Prop51", ""])
+    return "\n".join(lines)
+
+
+def single_chunk_specs(
+    args: argparse.Namespace,
+) -> list[tuple[str, int, int | None, int | None, str]]:
+    specs = []
+    for field in ("product-small", "product-tempered"):
+        for i in range(row_count(args.product_row_len)):
+            for n in range(product_n_index_count(args.product_row_len, args.n_len)):
+                for j in range(90):
+                    specs.append(
+                        (
+                            field,
+                            i,
+                            n,
+                            j,
+                            single_chunk_name(args.single_chunk_prefix, field, i, n, j),
+                        )
+                    )
+    for i in range(row_count(args.tangent_row_len)):
+        for j in range(tangent_k_count(args.tangent_k_len)):
+            specs.append(
+                (
+                    "tangent",
+                    i,
+                    None,
+                    j,
+                    single_chunk_name(args.single_chunk_prefix, "tangent", i, None, j),
+                )
+            )
+    for field, row_len in (
+        ("solo-saddle", args.solo_saddle_row_len),
+        ("solo-budget", args.solo_budget_row_len),
+    ):
+        for i in range(row_count(row_len)):
+            specs.append(
+                (
+                    field,
+                    i,
+                    None,
+                    None,
+                    single_chunk_name(args.single_chunk_prefix, field, i),
+                )
+            )
+    for i in range(row_count(args.edge_row_len)):
+        for j in range(90):
+            specs.append(
+                (
+                    "edge",
+                    i,
+                    None,
+                    j,
+                    single_chunk_name(args.single_chunk_prefix, "edge", i, None, j),
+                )
+            )
+    return specs
+
+
+def emit_single_chunk_suite(args: argparse.Namespace) -> str:
+    lines = emit_header()
+    lines.extend(
+        [
+            "",
+            "/-",
+            "Individual finite-window atoms.  These theorem statements are",
+            "cache-friendly: each one can also be emitted independently with",
+            "`--emit-single-chunk`, using the theorem names below.",
+            "-/",
+            "",
+        ]
+    )
+    for field, row_index, n_index, k_index, name in single_chunk_specs(args):
+        lines.extend(
+            single_chunk_theorem_lines(
+                args, field, name, row_index, n_index, k_index
+            )
+        )
+        lines.append("")
+
+    assembly_args = argparse.Namespace(**vars(args))
+    assembly_args.use_single_chunk_theorems = True
+    lines.extend(product_n_chunked_tangent_theorem_lines(assembly_args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
 
@@ -939,7 +1049,7 @@ def emit_chunked_tangent(args: argparse.Namespace) -> str:
     return "\n".join(lines)
 
 
-def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
+def product_n_chunked_tangent_theorem_lines(args: argparse.Namespace) -> list[str]:
     p = args.product_row_len
     t = args.tangent_row_len
     ss = args.solo_saddle_row_len
@@ -951,23 +1061,20 @@ def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
 
-    lines = emit_header()
-    lines.extend(
-        [
-            f"theorem {name} :",
-            "    PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate",
-            f"      {p} {t} {ss} {sb} {e}",
-            f"      {product_n} {tangent_n} {tangent_k} where",
-            "  productRowLenPos := by norm_num",
-            "  tangentRowLenPos := by norm_num",
-            "  soloSaddleRowLenPos := by norm_num",
-            "  soloBudgetRowLenPos := by norm_num",
-            "  edgeRowLenPos := by norm_num",
-            "  productNLenPos := by norm_num",
-            "  tangentNLenPos := by norm_num",
-            "  tangentKLenPos := by norm_num",
-        ]
-    )
+    lines = [
+        f"theorem {name} :",
+        "    PositiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate",
+        f"      {p} {t} {ss} {sb} {e}",
+        f"      {product_n} {tangent_n} {tangent_k} where",
+        "  productRowLenPos := by norm_num",
+        "  tangentRowLenPos := by norm_num",
+        "  soloSaddleRowLenPos := by norm_num",
+        "  soloBudgetRowLenPos := by norm_num",
+        "  edgeRowLenPos := by norm_num",
+        "  productNLenPos := by norm_num",
+        "  tangentNLenPos := by norm_num",
+        "  tangentKLenPos := by norm_num",
+    ]
     if args.use_single_chunk_theorems:
         add_product_row_n_edge_dispatch_field_from_single_chunks(
             lines,
@@ -1063,6 +1170,12 @@ def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
             ]
         )
 
+    return lines
+
+
+def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
+    lines = emit_header()
+    lines.extend(product_n_chunked_tangent_theorem_lines(args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
 
@@ -1070,6 +1183,8 @@ def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
 def emit(args: argparse.Namespace) -> str:
     if args.emit_single_chunk is not None:
         return emit_single_chunk(args)
+    if args.emit_single_chunk_suite:
+        return emit_single_chunk_suite(args)
     if args.strategy == "all-chunks":
         return emit_all_chunks(args)
     if args.strategy == "split-fields":

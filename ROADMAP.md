@@ -563,7 +563,9 @@ Status:
       with `--strategy product-n-chunked-tangent`.  For proof production,
       the same script can emit one cacheable chunk theorem at a time with
       `--emit-single-chunk`; `--use-single-chunk-theorems` then assembles the
-      final finite certificate from those names.
+      final finite certificate from those names, while
+      `--emit-single-chunk-suite` emits the atom theorems and assembled
+      certificate in one Lean module.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
