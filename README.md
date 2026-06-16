@@ -122,7 +122,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--strategy product-n-chunked-tangent` when product row-range checks are
   still too coarse.  The same script can emit one concrete cacheable chunk
   theorem at a time with `--emit-single-chunk`, which is the practical mode
-  for large generated finite witnesses.  When
+  for large generated finite witnesses; pass `--use-single-chunk-theorems`
+  to assemble the product-`N` chunked certificate from those names.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

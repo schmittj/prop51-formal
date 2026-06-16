@@ -18,6 +18,8 @@ Two strategies are available:
     row, uniform product `N`-chunk index, and retained `k` chunk.
   * --emit-single-chunk FIELD: emit one cacheable `native_decide` theorem for
     a concrete product, tangent, solo, or edge chunk.
+  * --use-single-chunk-theorems: assemble the product-n-chunked certificate
+    from previously emitted single-chunk theorem names.
 
 Example:
   scripts/positive_saddle_fixed_finite_template.py \
@@ -105,6 +107,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="also emit a theorem taking a large-tail certificate to CoefficientNegativity",
     )
     parser.add_argument(
+        "--single-chunk-prefix",
+        type=lean_ident,
+        default="positiveSaddleGeneratedChunk",
+        help="prefix for generated/referenced single-chunk theorem names",
+    )
+    parser.add_argument(
+        "--use-single-chunk-theorems",
+        action="store_true",
+        help="assemble product-n-chunked-tangent from single-chunk theorem names",
+    )
+    parser.add_argument(
         "--strategy",
         choices=(
             "all-chunks",
@@ -144,6 +157,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="fixed retained-k/tangent-k chunk index for single chunks",
     )
     args = parser.parse_args(argv)
+    if args.use_single_chunk_theorems and args.emit_single_chunk is not None:
+        parser.error("--use-single-chunk-theorems cannot be combined with --emit-single-chunk")
+    if args.use_single_chunk_theorems and args.strategy != "product-n-chunked-tangent":
+        parser.error(
+            "--use-single-chunk-theorems is only supported for "
+            "--strategy product-n-chunked-tangent"
+        )
     if args.emit_single_chunk is not None:
         if args.row_index is None:
             parser.error("--row-index is required with --emit-single-chunk")
@@ -237,13 +257,29 @@ def validate_single_chunk_indices(
 
 
 def single_chunk_default_name(args: argparse.Namespace) -> str:
-    field = args.emit_single_chunk.replace("-", "_")
-    pieces = [field, f"r{args.row_index}"]
-    if args.n_index is not None:
-        pieces.append(f"n{args.n_index}")
-    if args.k_index is not None:
-        pieces.append(f"k{args.k_index}")
-    return "positiveSaddleGeneratedChunk_" + "_".join(pieces)
+    return single_chunk_name(
+        args.single_chunk_prefix,
+        args.emit_single_chunk,
+        args.row_index,
+        args.n_index,
+        args.k_index,
+    )
+
+
+def single_chunk_name(
+    prefix: str,
+    field: str,
+    row_index: int,
+    n_index: int | None = None,
+    k_index: int | None = None,
+) -> str:
+    field = field.replace("-", "_")
+    pieces = [field, f"r{row_index}"]
+    if n_index is not None:
+        pieces.append(f"n{n_index}")
+    if k_index is not None:
+        pieces.append(f"k{k_index}")
+    return prefix + "_" + "_".join(pieces)
 
 
 def row_count(row_len: int) -> int:
@@ -256,6 +292,33 @@ def tangent_k_count(k_len: int) -> int:
 
 def product_n_index_count(row_len: int, n_len: int) -> int:
     return (6 * (2000 + row_len) + n_len - 1) // n_len
+
+
+def exact_case_tree_lines(
+    variables: list[tuple[str, int]],
+    name_for_indices,
+    indices: tuple[int, ...] = (),
+    indent: str = "    ",
+) -> list[str]:
+    if not variables:
+        return [f"{indent}exact {name_for_indices(*indices)}"]
+    var_name, count = variables[0]
+    lines = [f"{indent}interval_cases {var_name}"]
+    for index in range(count):
+        next_indices = (*indices, index)
+        if len(variables) == 1:
+            lines.append(f"{indent}next => exact {name_for_indices(*next_indices)}")
+        else:
+            lines.append(f"{indent}next =>")
+            lines.extend(
+                exact_case_tree_lines(
+                    variables[1:],
+                    name_for_indices,
+                    next_indices,
+                    indent + "  ",
+                )
+            )
+    return lines
 
 
 def emit_header() -> list[str]:
@@ -388,6 +451,36 @@ def add_row_edge_dispatch_field(
     )
 
 
+def add_row_edge_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    chunk_field: str,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk edgeChunk hedgeChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    rcases (mem_positiveEdgeDefaultKChunks_iff).1 hedgeChunk with",
+            "      ⟨j, hj, rfl⟩",
+            "    have hj' : j < 90 := by simpa using hj",
+            "    clear hj",
+        ]
+    )
+    lines.extend(
+        exact_case_tree_lines(
+            [("i", row_count(row_len)), ("j", 90)],
+            lambda i, j: single_chunk_name(theorem_prefix, chunk_field, i, None, j),
+        )
+    )
+
+
 def add_row_dispatch_field(
     lines: list[str], field_name: str, row_len: int, row_bound: int
 ) -> None:
@@ -402,6 +495,32 @@ def add_row_dispatch_field(
             "    clear hi",
             "    interval_cases i; native_decide",
         ]
+    )
+
+
+def add_row_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    chunk_field: str,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+        ]
+    )
+    lines.extend(
+        exact_case_tree_lines(
+            [("i", row_count(row_len))],
+            lambda i: single_chunk_name(theorem_prefix, chunk_field, i),
+        )
     )
 
 
@@ -424,6 +543,37 @@ def add_tangent_row_k_dispatch_field(
             "    clear hj",
             "    interval_cases i; interval_cases j; native_decide",
         ]
+    )
+
+
+def add_tangent_row_k_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    k_len: int,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk kChunk hkChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    rcases (mem_positiveTangentFixedKChunks_iff",
+            f"        (by norm_num : 0 < {k_len})).1 hkChunk with",
+            "      ⟨j, hj, rfl⟩",
+            f"    have hj' : j < {tangent_k_count(k_len)} := by simpa using hj",
+            "    clear hj",
+        ]
+    )
+    lines.extend(
+        exact_case_tree_lines(
+            [("i", row_count(row_len)), ("j", tangent_k_count(k_len))],
+            lambda i, j: single_chunk_name(theorem_prefix, "tangent", i, None, j),
+        )
     )
 
 
@@ -451,6 +601,49 @@ def add_product_row_n_edge_dispatch_field(
             "    clear hj",
             "    interval_cases i; interval_cases nIndex; interval_cases j; native_decide",
         ]
+    )
+
+
+def add_product_row_n_edge_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    n_len: int,
+    chunk_field: str,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex edgeChunk hedgeChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    have hnIndex' :",
+            f"        nIndex < {product_n_index_count(row_len, n_len)} := by",
+            "      simpa using",
+            "        (mem_positiveProductFixedNChunkIndices_iff",
+            f"          (by norm_num : 0 < {n_len})).1 hnIndex",
+            "    clear hnIndex",
+            "    rcases (mem_positiveEdgeDefaultKChunks_iff).1 hedgeChunk with",
+            "      ⟨j, hj, rfl⟩",
+            "    have hj' : j < 90 := by simpa using hj",
+            "    clear hj",
+        ]
+    )
+    lines.extend(
+        exact_case_tree_lines(
+            [
+                ("i", row_count(row_len)),
+                ("nIndex", product_n_index_count(row_len, n_len)),
+                ("j", 90),
+            ],
+            lambda i, n, j: single_chunk_name(
+                theorem_prefix, chunk_field, i, n, j
+            ),
+        )
     )
 
 
@@ -775,42 +968,88 @@ def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
             "  tangentKLenPos := by norm_num",
         ]
     )
-    add_product_row_n_edge_dispatch_field(
-        lines,
-        "smallXYProductRawClearedTableProductRowRangeNIndexKChunks",
-        p,
-        product_n,
-    )
-    add_product_row_n_edge_dispatch_field(
-        lines,
-        "temperedXYProductRawClearedTableProductRowRangeNIndexKChunks",
-        p,
-        product_n,
-    )
-    add_tangent_row_k_dispatch_field(
-        lines,
-        "smallTangentExpEdgeRowRangeNChunksKChunks",
-        t,
-        tangent_k,
-    )
-    add_row_dispatch_field(
-        lines,
-        "soloYSaddleClearedRowRangeChunks",
-        ss,
-        row_count(ss),
-    )
-    add_row_dispatch_field(
-        lines,
-        "soloYBudgetRowRangeChunks",
-        sb,
-        row_count(sb),
-    )
-    add_row_edge_dispatch_field(
-        lines,
-        "edgeKChunkUnitRowRanges",
-        e,
-        row_count(e),
-    )
+    if args.use_single_chunk_theorems:
+        add_product_row_n_edge_dispatch_field_from_single_chunks(
+            lines,
+            "smallXYProductRawClearedTableProductRowRangeNIndexKChunks",
+            p,
+            product_n,
+            "product-small",
+            args.single_chunk_prefix,
+        )
+        add_product_row_n_edge_dispatch_field_from_single_chunks(
+            lines,
+            "temperedXYProductRawClearedTableProductRowRangeNIndexKChunks",
+            p,
+            product_n,
+            "product-tempered",
+            args.single_chunk_prefix,
+        )
+        add_tangent_row_k_dispatch_field_from_single_chunks(
+            lines,
+            "smallTangentExpEdgeRowRangeNChunksKChunks",
+            t,
+            tangent_k,
+            args.single_chunk_prefix,
+        )
+        add_row_dispatch_field_from_single_chunks(
+            lines,
+            "soloYSaddleClearedRowRangeChunks",
+            ss,
+            "solo-saddle",
+            args.single_chunk_prefix,
+        )
+        add_row_dispatch_field_from_single_chunks(
+            lines,
+            "soloYBudgetRowRangeChunks",
+            sb,
+            "solo-budget",
+            args.single_chunk_prefix,
+        )
+        add_row_edge_dispatch_field_from_single_chunks(
+            lines,
+            "edgeKChunkUnitRowRanges",
+            e,
+            "edge",
+            args.single_chunk_prefix,
+        )
+    else:
+        add_product_row_n_edge_dispatch_field(
+            lines,
+            "smallXYProductRawClearedTableProductRowRangeNIndexKChunks",
+            p,
+            product_n,
+        )
+        add_product_row_n_edge_dispatch_field(
+            lines,
+            "temperedXYProductRawClearedTableProductRowRangeNIndexKChunks",
+            p,
+            product_n,
+        )
+        add_tangent_row_k_dispatch_field(
+            lines,
+            "smallTangentExpEdgeRowRangeNChunksKChunks",
+            t,
+            tangent_k,
+        )
+        add_row_dispatch_field(
+            lines,
+            "soloYSaddleClearedRowRangeChunks",
+            ss,
+            row_count(ss),
+        )
+        add_row_dispatch_field(
+            lines,
+            "soloYBudgetRowRangeChunks",
+            sb,
+            row_count(sb),
+        )
+        add_row_edge_dispatch_field(
+            lines,
+            "edgeKChunkUnitRowRanges",
+            e,
+            row_count(e),
+        )
 
     if args.emit_final:
         lines.extend(

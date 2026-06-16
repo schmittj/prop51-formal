@@ -562,7 +562,8 @@ Status:
       also splits product by a uniform product `N`-chunk index and is emitted
       with `--strategy product-n-chunked-tangent`.  For proof production,
       the same script can emit one cacheable chunk theorem at a time with
-      `--emit-single-chunk`.
+      `--emit-single-chunk`; `--use-single-chunk-theorems` then assembles the
+      final finite certificate from those names.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
