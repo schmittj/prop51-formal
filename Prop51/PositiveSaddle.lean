@@ -2425,6 +2425,70 @@ theorem positiveBinomRatio_le_entropyShadowRatio {a k : Nat}
   simpa [positiveBinomRatioEntropyShadowBound_eq hk hklt]
     using positiveBinomRatio_le_entropyShadowBound hk hklt
 
+/-- The entropy-shadow reciprocal bound in the paper's `j = a-k`
+notation. -/
+def positiveBinomRatioEntropyShadowPosJBound (a k : Nat) : ℚ :=
+  (((k - 1 : Nat) : ℚ)^(k - 1) *
+    ((posJ a k - 1 : Nat) : ℚ)^(posJ a k - 1)) /
+    ((a - 2 : Nat) : ℚ)^(a - 2)
+
+theorem positiveBinomRatio_le_entropyShadowPosJBound {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    positiveBinomRatio a k ≤ positiveBinomRatioEntropyShadowPosJBound a k := by
+  have hcomp : a - 2 - (k - 1) = posJ a k - 1 := by
+    unfold posJ
+    omega
+  simpa [positiveBinomRatioEntropyShadowPosJBound, hcomp]
+    using positiveBinomRatio_le_entropyShadowRatio (a := a) (k := k) hk hklt
+
+/-- Small-regime summand with the binomial reciprocal replaced by the
+entropy-shadow ratio.  This is a rational shell for the large-`a` tail; a
+later step still supplies the appropriate exponential tail majorant. -/
+def positiveSmallEntropyShadowMajorantTerm (a k : Nat) : ℚ :=
+  (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k) *
+    partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- Tempered-regime summand with the binomial reciprocal replaced by the
+entropy-shadow ratio. -/
+def positiveTemperedEntropyShadowMajorantTerm (a k : Nat) : ℚ :=
+  (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatioEntropyShadowPosJBound a k *
+    positiveDyadicDecay (posJ a k) *
+    partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
+theorem positiveSmallMajorantTerm_le_entropyShadowMajorantTerm
+    {a k : Nat} (ha : 1 ≤ a) (hk : 2 ≤ k) (hklt : k < a - 1)
+    (hExp :
+      0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff) :
+    positiveSmallMajorantTerm a k ≤ positiveSmallEntropyShadowMajorantTerm a k := by
+  have hhi : (0 : ℚ) ≤ 65 / (posNhi a : ℚ) := by
+    have hpos : (0 : ℚ) < (posNhi a : ℚ) := by
+      exact_mod_cast posNhi_pos ha
+    positivity
+  rw [positiveSmallMajorantTerm_eq_binomRatio]
+  unfold positiveSmallEntropyShadowMajorantTerm
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_le_entropyShadowPosJBound hk hklt
+
+theorem positiveTemperedMajorantTerm_le_entropyShadowMajorantTerm
+    {a k : Nat} (ha : 2 ≤ a) (hk : 2 ≤ k) (hklt : k < a - 1)
+    (hExp :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff) :
+    positiveTemperedMajorantTerm a k ≤
+      positiveTemperedEntropyShadowMajorantTerm a k := by
+  have hlo : (0 : ℚ) ≤ 96 / (posNlo a : ℚ) := by
+    have hpos : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos ha
+    positivity
+  rw [positiveTemperedMajorantTerm_eq_binomRatio]
+  unfold positiveTemperedEntropyShadowMajorantTerm
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_le_entropyShadowPosJBound hk hklt
+
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.
 The paper records the sharper `9/(5π²)` constant; Lean uses the rational

@@ -86,6 +86,10 @@ surrogate, with the constant degradation absorbed by the sign-lock budget
   `positiveBinomRatio_le_entropyShadowBound` and simplified ratio form
   `positiveBinomRatio_le_entropyShadowRatio`.  The latter records the TeX
   entropy mechanism without introducing real `exp/log` into this layer.
+  The same reciprocal is also available in the paper's `j=a-k` notation as
+  `positiveBinomRatio_le_entropyShadowPosJBound`, with small/tempered
+  summand shells `positiveSmallEntropyShadowMajorantTerm` and
+  `positiveTemperedEntropyShadowMajorantTerm`.
 
 Status:
 
