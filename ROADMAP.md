@@ -257,6 +257,9 @@ Status:
       `positiveEntropyShadowTemperedBranchSum`, and
       `PositiveSaddleEntropyShadowSplitBudgetCertificate.entropyTail`,
       matching the paper's small/tempered entropy-tail decomposition.
+      Lean also has retained-range positivity hooks for the rational
+      entropy-shadow reciprocal and for the small/tempered summands once the
+      final exponential surrogate supplies nonnegativity.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to
