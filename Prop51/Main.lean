@@ -263,6 +263,18 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentFullyCheckedRows
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRowsCertificate cert)
 
+/-- Final assembly from the row-checked `Xplus`/`Gcomp` finite-window
+certificate together with the geometric entropy-shadow tail certificate for
+`a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate

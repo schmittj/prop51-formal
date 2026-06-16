@@ -280,6 +280,11 @@ Status:
       `positiveTemperedBranch_start_le_posKmax_of_large`.  The resulting
       first-term/ratio certificate is
       `PositiveSaddleEntropyShadowExpGeometricBudgetCertificate.entropyTail`.
+      This large-tail certificate is also wired into the most concrete
+      row-checked finite-window path as
+      `PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate`, with
+      final assembly exposed by
+      `coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate`.
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to
