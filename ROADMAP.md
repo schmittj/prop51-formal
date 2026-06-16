@@ -196,7 +196,10 @@ Status:
       formalized, including the exact proof that the margin dominates the
       target for every `a ≥ 401`; the large-`a` `Unorm < 0` assembly is
       reduced to the remaining `Xnorm` lower bound, pointwise saddle
-      estimates, and positive-envelope certificate.
+      estimates, and positive-envelope certificate.  Lean also records the
+      main translation interface from §5 to §6: a single uniform theorem
+      `Xnorm N m ≤ -signLockMargin m` supplies both the main `m = a`
+      negative term and the large-`k` sign-lock exclusion.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

@@ -222,6 +222,19 @@ theorem rectangle_N_le_signLock_range_of_posKmax_lt
     exact_mod_cast h3N_k
   nlinarith
 
+theorem rectangle_N_le_signLock_range_self {a N : Nat}
+    (hrect : positiveRectangle a N) :
+    (N : ℚ) ≤ (40/3) * (a : ℚ) := by
+  have h3N_hi : 3*N ≤ 3*posNhi a :=
+    Nat.mul_le_mul_left 3 hrect.2
+  have h3hi_a : 3*posNhi a ≤ 40*a := by
+    unfold posNhi
+    omega
+  have h3N_a : 3*N ≤ 40*a := h3N_hi.trans h3hi_a
+  have hQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (a : ℚ) := by
+    exact_mod_cast h3N_a
+  nlinarith
+
 /-! ## Executable rational summand majorants -/
 
 /-- The finite-window partial-exp cutoff for the §6 scan.  On
@@ -354,6 +367,13 @@ theorem positiveTarget_lt_signLockMargin_of_ge_401 {m : Nat} (hm : 401 ≤ m) :
     unfold signLockMargin
     linarith
   exact hendpoint.trans_le hlower
+
+theorem Xnorm_nonpos_of_signLockMargin_bound
+    {N m : Nat} (hm : 361 ≤ m)
+    (hX : Xnorm N m ≤ -signLockMargin m) :
+    Xnorm N m ≤ 0 := by
+  have hmargin := signLockMargin_pos_of_ge_361 hm
+  linarith
 
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
@@ -827,6 +847,32 @@ theorem Unorm_neg_of_signLockMargin_and_positiveEnvelope
     (a := a) (N := N) ha hrect hSLlarge hsmall htempered
   have htarget := positiveTarget_lt_signLockMargin_of_ge_401 (m := a) ha
   linarith
+
+/-- Large-`a` assembly from a single uniform sign-lock margin theorem.
+
+This is the interface wanted by §5: the same `Xnorm N m ≤ -signLockMargin m`
+statement handles the main `m = a` term and the discarded `k > 0.9a`
+positive-part summands. -/
+theorem Unorm_neg_of_uniform_signLockMargin_and_positiveEnvelope
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hXbound : ∀ m : Nat, 361 ≤ m →
+      (N : ℚ) ≤ (40/3) * (m : ℚ) → Xnorm N m ≤ -signLockMargin m)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hpositive : positiveEnvelope a N ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  refine Unorm_neg_of_signLockMargin_and_positiveEnvelope
+    (a := a) (N := N) ha hrect ?hSLlarge hsmall htempered ?hXmain hpositive
+  · intro k hk361 hNk
+    exact Xnorm_nonpos_of_signLockMargin_bound hk361 (hXbound k hk361 hNk)
+  · exact hXbound a (by omega : 361 ≤ a)
+      (rectangle_N_le_signLock_range_self (a := a) (N := N) hrect)
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
