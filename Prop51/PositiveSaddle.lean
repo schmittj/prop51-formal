@@ -2081,10 +2081,15 @@ def positiveSoloDisplayedYSaddleCleared (a N : Nat) : Prop :=
       partialExpUpper (positiveSoloYExponent a) positiveExpCutoff
 
 /-- Boolean point check for the denominator-cleared displayed `Y_a(N)`
-saddle inequality. -/
+saddle inequality.
+
+This is mathematically the same predicate as `positiveSoloDisplayedYSaddleCleared`,
+but it evaluates `Qq N a` through the table-backed `QListQ (cList a) N a`.
+That avoids recomputing `cList` inside every logarithmic coefficient during
+finite certificate generation. -/
 def checkPositiveSoloDisplayedYSaddleClearedCell (a N : Nat) : Bool :=
   decide
-    ((4 : ℚ) * (2 : ℚ)^a * Qq N a ≤
+    ((4 : ℚ) * (2 : ℚ)^a * (QListQ (cList a) N a).getD a 0 ≤
       29 * (a : ℚ) * c a *
         partialExpUpper (positiveSoloYExponent a) positiveExpCutoff)
 
@@ -2188,6 +2193,7 @@ theorem positiveSoloDisplayedYSaddleCleared_of_checkCell {a N : Nat}
     positiveSoloDisplayedYSaddleCleared a N := by
   unfold checkPositiveSoloDisplayedYSaddleClearedCell at h
   unfold positiveSoloDisplayedYSaddleCleared
+  rw [← QListQ_getD_eq N a a le_rfl]
   exact of_decide_eq_true h
 
 /-- Soundness of one executable solo-bound row check. -/

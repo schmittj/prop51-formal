@@ -573,10 +573,9 @@ Status:
       profiling result that
       product/edge atoms are viable at one-row/one-`N` or one-row/one-`k`
       granularity, while tangent and solo whole-`N` row atoms remain too
-      large.  A first probe of the new atom shape showed tangent fixed-`N`
-      and displayed-solo budget fixed-`N` atoms compile at single-point
-      granularity, but the displayed-solo saddle fixed-`N` atom is still the
-      next finite-computation bottleneck.
+      large.  The displayed-solo saddle atom now uses the table-backed
+      `QListQ (cList a) N a` evaluator, proved equal to `Qq N a`, which makes
+      the single-point fixed-`N` atom practical.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks
