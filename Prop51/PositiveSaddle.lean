@@ -1431,6 +1431,17 @@ theorem dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRow
   exact (dyadic_Ynorm_le_positiveSoloGcompBound hN (by omega : 1 ≤ a)).trans
     (positiveSoloGcompBound_of_checkRow h hrect)
 
+/-- Normalized explicit `Gcomp` upper bound for the positive `X` majorant
+`\overline X_k(N)`. -/
+def positiveXplusGcompBound (N k : Nat) : ℚ :=
+  BplusqGcompBound N k / ((N : ℚ) * c k)
+
+theorem XplusNorm_le_positiveXplusGcompBound (N k : Nat) :
+    XplusNorm N k ≤ positiveXplusGcompBound N k := by
+  unfold XplusNorm positiveXplusGcompBound
+  exact div_le_div_of_nonneg_right (Bplusq_le_GcompBound N k)
+    (mul_nonneg (Nat.cast_nonneg N) (c_nonneg k))
+
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
 `B_k Q_{a-k}/(N c_a) = (N/2) R_{k,a} 2^{-(a-k)} X_k Y_{a-k}`. -/

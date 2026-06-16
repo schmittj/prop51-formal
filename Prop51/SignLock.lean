@@ -188,6 +188,80 @@ theorem Eplus_nat_le_GcompBound (N p : Nat) :
   unfold EplusGcompBound
   exact Eplus_nat_le_Gcomp_sum N p
 
+/-- Nonlinear part of the positive `B` majorant:
+`[X^p] exp(N H(X))`, where `H(X)=log C(X)-c_1X`. -/
+def BplusNonlinear (N : ℚ) (p : Nat) : ℚ :=
+  expCoeff (fun r => N * Hcoef r) p
+
+theorem BplusNonlinear_nonneg {N : ℚ} (hN : 0 ≤ N) (p : Nat) :
+    0 ≤ BplusNonlinear N p := by
+  unfold BplusNonlinear
+  refine expCoeff_nonneg ?_ p
+  intro r
+  exact mul_nonneg hN (Hcoef_nonneg r)
+
+private theorem abs_BplusNonlinearLogCoeff_le {N : ℚ} (hN : 0 ≤ N)
+    {j : Nat} (hj : 2 ≤ j) :
+    |N * Hcoef j| ≤ (N * (4/25)) * (6^j * ((j-1).factorial : ℚ)) := by
+  rw [Hcoef_of_ge_two hj]
+  have habs : |N * c j| = N * c j := by
+    rw [abs_of_nonneg]
+    exact mul_nonneg hN (c_nonneg j)
+  rw [habs]
+  calc
+    N * c j
+        ≤ N * ((4/25) * ((6 : ℚ)^j * ((j-1).factorial : ℚ))) := by
+          exact mul_le_mul_of_nonneg_left (c_ub j (by omega : 1 ≤ j)) hN
+    _ = (N * (4/25)) * ((6 : ℚ)^j * ((j-1).factorial : ℚ)) := by ring
+
+theorem abs_coeff_pow_BplusNonlinear_le {N : ℚ} (hN : 0 ≤ N) (r p : Nat) :
+    |coeff p ((mk (fun j => N * Hcoef j) : ℚ⟦X⟧) ^ r)|
+      ≤ (N * (4/25))^r * 6^p * Gcomp r p := by
+  refine abs_coeff_pow_le (fun j => N * Hcoef j)
+    (N * (4/25)) ?_ ?_ r p
+  · intro j hj
+    change N * Hcoef j = 0
+    rw [Hcoef_of_lt_two hj]
+    ring
+  · intro j hj
+    exact abs_BplusNonlinearLogCoeff_le hN hj
+
+theorem BplusNonlinear_le_Gcomp_sum {N : ℚ} (hN : 0 ≤ N) (p : Nat) :
+    BplusNonlinear N p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          (N * (4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ) := by
+  have hL0 : (fun j => N * Hcoef j) 0 = 0 := by
+    change N * Hcoef 0 = 0
+    rw [Hcoef_of_lt_two (by omega : 0 < 2)]
+    ring
+  rw [BplusNonlinear, expCoeff_eq_sum_pow _ hL0 p]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hcoeff := abs_coeff_pow_BplusNonlinear_le hN r p
+  have hleabs :
+      coeff p ((mk (fun j => N * Hcoef j) : ℚ⟦X⟧) ^ r)
+        ≤ |coeff p ((mk (fun j => N * Hcoef j) : ℚ⟦X⟧) ^ r)| :=
+    le_abs_self _
+  have hfpos : (0 : ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  exact div_le_div_of_nonneg_right (hleabs.trans hcoeff) hfpos.le
+
+theorem BplusNonlinear_nat_le_Gcomp_sum (N p : Nat) :
+    BplusNonlinear (N : ℚ) p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          ((N : ℚ) * (4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ) :=
+  BplusNonlinear_le_Gcomp_sum (Nat.cast_nonneg N) p
+
+/-- Explicit `Gcomp` upper bound for the nonlinear coefficient
+`BplusNonlinear (N : ℚ) p`. -/
+def BplusNonlinearGcompBound (N p : Nat) : ℚ :=
+  ∑ r ∈ Finset.range (p+1),
+    ((N : ℚ) * (4/25))^r * 6^p * Gcomp r p / (r.factorial : ℚ)
+
+theorem BplusNonlinear_nat_le_GcompBound (N p : Nat) :
+    BplusNonlinear (N : ℚ) p ≤ BplusNonlinearGcompBound N p := by
+  unfold BplusNonlinearGcompBound
+  exact BplusNonlinear_nat_le_Gcomp_sum N p
+
 /-- The sign-lock nonlinear residual `ε_p`, defined by
 `E^-_p(N) = -N c_p (1+ε_p)`. -/
 def epsilonMinus (N p : Nat) : ℚ := EminusNorm N p - 1
@@ -601,6 +675,56 @@ theorem Qq_le_EplusGcompBound (N m : Nat) :
     exact div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _)
   exact mul_le_mul_of_nonneg_left
     (Eplus_nat_le_GcompBound N (m-s)) hlin
+
+/-- Positive `B` majorant split into its exact linear exponential and the
+nonlinear coefficients of `exp(NH)`. -/
+private theorem BplusSeries_eq_linear_mul_BplusNonlinearSeries (N : Nat) :
+    expSeries (fun r => (N : ℚ) * c r)
+      =
+      expSeries (linearExpSeq ((N : ℚ) * c 1)) *
+        expSeries (fun r => (N : ℚ) * Hcoef r) := by
+  rw [expSeries_mul]
+  congr 1
+  funext r
+  rw [linearExpSeq_mul]
+  rw [c_eq_linear_add_Hcoef r]
+  ring
+
+/-- Finite decomposition of `\overline B_m(N)=[X^m]C(X)^N` into the linear
+exponential and the nonlinear `BplusNonlinear` coefficients. -/
+theorem Bplusq_eq_linear_BplusNonlinear_sum (N m : Nat) :
+    Bplusq N m =
+      ∑ s ∈ Finset.range (m+1),
+        (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+          BplusNonlinear (N : ℚ) (m-s) := by
+  have hcoeff := congrArg (fun F : ℚ⟦X⟧ => coeff m F)
+    (BplusSeries_eq_linear_mul_BplusNonlinearSeries N)
+  change coeff m (expSeries (fun r => (N : ℚ) * c r)) =
+    coeff m (expSeries (linearExpSeq ((N : ℚ) * c 1)) *
+      expSeries (fun r => (N : ℚ) * Hcoef r)) at hcoeff
+  rw [coeff_expSeries, coeff_mul,
+    Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
+  simpa [Bplusq, BplusNonlinear, expCoeff_linearExpSeq] using hcoeff
+
+/-- Explicit `Gcomp` upper bound for `Bplusq`, after convolving the exact
+linear exponential with the nonlinear `BplusNonlinearGcompBound`. -/
+def BplusqGcompBound (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (m+1),
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+      BplusNonlinearGcompBound N (m-s)
+
+theorem Bplusq_le_GcompBound (N m : Nat) :
+    Bplusq N m ≤ BplusqGcompBound N m := by
+  rw [Bplusq_eq_linear_BplusNonlinear_sum]
+  unfold BplusqGcompBound
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hbase : 0 ≤ (N : ℚ) * c 1 := by
+    exact mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1)
+  have hlin :
+      0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+    exact div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _)
+  exact mul_le_mul_of_nonneg_left
+    (BplusNonlinear_nat_le_GcompBound N (m-s)) hlin
 
 /-- Finite decomposition of `-X_m(N)` in the form used by the sign-lock
 argument. -/

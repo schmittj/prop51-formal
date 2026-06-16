@@ -286,7 +286,11 @@ Status:
       comparison proves `|Xnorm| ≤ XplusNorm`, and
       `PositiveSaddleXplusTangentFullyCheckedRowsCertificate` lets the
       remaining small/tempered saddle products be proved for
-      `XplusNorm * Ynorm` instead of directly for `Xnorm * Ynorm`.
+      `XplusNorm * Ynorm` instead of directly for `Xnorm * Ynorm`.  The
+      `Xplus` side now also has its own linear/nonlinear split
+      `Bplusq_eq_linear_BplusNonlinear_sum`, a `Gcomp` coefficient majorant,
+      and the normalized executable upper bound
+      `positiveXplusGcompBound`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
