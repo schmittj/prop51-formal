@@ -5958,6 +5958,151 @@ theorem signLockBasePrefix_lower_of_A_and_endpoint361
     exact signLock_prefix_target_of_delta (A := A) (C := C) (E := E)
       (R := R) (d := (m : ℚ)) (by rfl) hdelta
 
+/-- Rational Bernstein basis on `[0,1]`, used only as a finite positivity
+certificate for the twelve-term sign-lock prefix. -/
+private def signLockBernsteinBasis (n i : Nat) (t : ℚ) : ℚ :=
+  (Nat.choose n i : ℚ) * t^i * (1 - t)^(n-i)
+
+private theorem signLockBernsteinBasis_nonneg
+    (n i : Nat) {t : ℚ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    0 ≤ signLockBernsteinBasis n i t := by
+  have hchoose : 0 ≤ (Nat.choose n i : ℚ) := by exact_mod_cast Nat.zero_le _
+  unfold signLockBernsteinBasis
+  exact mul_nonneg (mul_nonneg hchoose (pow_nonneg ht0 i))
+    (pow_nonneg (sub_nonneg.mpr ht1) (n-i))
+
+private def signLockPrefixA12BernsteinCoeff : Nat → ℚ
+  | 0 => 3645605921672600 / 4323713773987629
+  | 1 => 32094787779162250 / 47560851513863919
+  | 2 => 25570665486451150 / 47560851513863919
+  | 3 => 20224204625177800 / 47560851513863919
+  | 4 => 15820935086895325 / 47560851513863919
+  | 5 => 12178326817141225 / 47560851513863919
+  | 6 => 9152872846687375 / 47560851513863919
+  | 7 => 6630803084508775 / 47560851513863919
+  | 8 => 4521281899814800 / 47560851513863919
+  | 9 => 101900775498350 / 1761513019031997
+  | 10 => 34073239295438950 / 1284142990874325813
+  | 11 => 3768920898437500 / 34671860753606796951
+  | _ => 0
+
+private def signLockPrefixA12Bernstein (t : ℚ) : ℚ :=
+  ∑ i ∈ Finset.range 12,
+    signLockPrefixA12BernsteinCoeff i * signLockBernsteinBasis 11 i t
+
+private theorem signLockPrefixA12BernsteinCoeff_nonneg
+    {i : Nat} (hi : i ∈ Finset.range 12) :
+    0 ≤ signLockPrefixA12BernsteinCoeff i := by
+  have hi_lt : i < 12 := by simpa using hi
+  interval_cases i <;> norm_num [signLockPrefixA12BernsteinCoeff]
+
+private theorem signLockPrefixA12Bernstein_nonneg
+    {t : ℚ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    0 ≤ signLockPrefixA12Bernstein t := by
+  unfold signLockPrefixA12Bernstein
+  refine Finset.sum_nonneg fun i hi => ?_
+  exact mul_nonneg (signLockPrefixA12BernsteinCoeff_nonneg hi)
+    (signLockBernsteinBasis_nonneg 11 i ht0 ht1)
+
+private theorem signLockPrefixA12Bernstein_identity (t : ℚ) :
+    signLockPrefixA ((50/27 : ℚ) * t) 12 - expNegLower50 =
+      signLockPrefixA12Bernstein t := by
+  rw [expNegLower50_eq]
+  norm_num [signLockPrefixA, signLockPrefixA12Bernstein,
+    signLockPrefixA12BernsteinCoeff, signLockBernsteinBasis,
+    Finset.sum_range_succ, Nat.factorial, Nat.choose]
+  ring_nf
+
+theorem signLockPrefixA12_ge_expNegLower50_of_zetaMax
+    {z : ℚ} (hz0 : 0 ≤ z) (hzle : z ≤ 50/27) :
+    expNegLower50 ≤ signLockPrefixA z 12 := by
+  let t : ℚ := z / (50/27)
+  have ht0 : 0 ≤ t := div_nonneg hz0 (by norm_num : (0 : ℚ) ≤ 50/27)
+  have ht1 : t ≤ 1 := by
+    dsimp [t]
+    rw [div_le_one₀ (by norm_num : (0 : ℚ) < 50/27)]
+    exact hzle
+  have hz_eq : z = (50/27 : ℚ) * t := by
+    dsimp [t]
+    field_simp
+  have hcert := signLockPrefixA12Bernstein_nonneg ht0 ht1
+  have hid := signLockPrefixA12Bernstein_identity t
+  rw [hz_eq]
+  linarith
+
+private def signLockPrefixScalar361BernsteinCoeff : Nat → ℚ
+  | 0 => 1317419953428438658 / 1560860672409534069
+  | 1 => 113180201401214639 / 164301123411529902
+  | 2 => 9615282900431235563 / 17169467396504874759
+  | 3 => 15541623131977922701 / 34338934793009749518
+  | 4 => 6226909441023482138 / 17169467396504874759
+  | 5 => 4930072403320477613 / 17169467396504874759
+  | 6 => 3837266110487893088 / 17169467396504874759
+  | 7 => 2913658604212775438 / 17169467396504874759
+  | 8 => 2130900305240765288 / 17169467396504874759
+  | 9 => 2931605290832272151 / 34338934793009749518
+  | 10 => 1277971878346486529 / 24398716826612190447
+  | 11 => 606110462641685381929 / 25033083464104107398622
+  | 12 => 37931817191670821404 / 337946626765405449881397
+  | _ => 0
+
+private def signLockPrefixScalar361Bernstein (t : ℚ) : ℚ :=
+  ∑ i ∈ Finset.range 13,
+    signLockPrefixScalar361BernsteinCoeff i * signLockBernsteinBasis 12 i t
+
+private theorem signLockPrefixScalar361BernsteinCoeff_nonneg
+    {i : Nat} (hi : i ∈ Finset.range 13) :
+    0 ≤ signLockPrefixScalar361BernsteinCoeff i := by
+  have hi_lt : i < 13 := by simpa using hi
+  interval_cases i <;> norm_num [signLockPrefixScalar361BernsteinCoeff]
+
+private theorem signLockPrefixScalar361Bernstein_nonneg
+    {t : ℚ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) :
+    0 ≤ signLockPrefixScalar361Bernstein t := by
+  unfold signLockPrefixScalar361Bernstein
+  refine Finset.sum_nonneg fun i hi => ?_
+  exact mul_nonneg (signLockPrefixScalar361BernsteinCoeff_nonneg hi)
+    (signLockBernsteinBasis_nonneg 12 i ht0 ht1)
+
+private theorem signLockPrefixScalar361Bernstein_identity (t : ℚ) :
+    signLockPrefixScalar ((50/27 : ℚ) * t) 361 12
+        - expNegLower50 * (1 - 2/(361 : ℚ)) =
+      signLockPrefixScalar361Bernstein t := by
+  rw [expNegLower50_eq]
+  norm_num [signLockPrefixScalar, signLockPrefixScalar361Bernstein,
+    signLockPrefixScalar361BernsteinCoeff, signLockBernsteinBasis,
+    eOne, Finset.sum_range_succ, Nat.factorial, Nat.choose]
+  ring_nf
+
+theorem signLockPrefixScalar361_ge_expNegLower50_of_zetaMax
+    {z : ℚ} (hz0 : 0 ≤ z) (hzle : z ≤ 50/27) :
+    expNegLower50 * (1 - 2/(361 : ℚ))
+      ≤ signLockPrefixScalar z 361 12 := by
+  let t : ℚ := z / (50/27)
+  have ht0 : 0 ≤ t := div_nonneg hz0 (by norm_num : (0 : ℚ) ≤ 50/27)
+  have ht1 : t ≤ 1 := by
+    dsimp [t]
+    rw [div_le_one₀ (by norm_num : (0 : ℚ) < 50/27)]
+    exact hzle
+  have hz_eq : z = (50/27 : ℚ) * t := by
+    dsimp [t]
+    field_simp
+  have hcert := signLockPrefixScalar361Bernstein_nonneg ht0 ht1
+  have hid := signLockPrefixScalar361Bernstein_identity t
+  rw [hz_eq]
+  linarith
+
+theorem signLockBasePrefix_lower
+    {N m : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockBasePrefix N m 12 := by
+  have hz0 : 0 ≤ zetaQ N m := zetaQ_nonneg N m
+  have hzle : zetaQ N m ≤ 50/27 := by
+    simpa [zetaMax] using
+      (zetaQ_le_zetaMax (N := N) (m := m) (by omega : 1 ≤ m) hN40)
+  exact signLockBasePrefix_lower_of_A_and_endpoint361 (N := N) (m := m) hm
+    (signLockPrefixA12_ge_expNegLower50_of_zetaMax hz0 hzle)
+    (signLockPrefixScalar361_ge_expNegLower50_of_zetaMax hz0 hzle)
+
 /-- Exact rational audit of the endpoint margin. -/
 theorem signLock_final_margin_endpoint :
     (2215 : ℚ) <
@@ -6006,6 +6151,15 @@ theorem signLockNearBase_lower_of_prefix12_tail
   rw [signLockNearBase_eq_prefix12_add_tail N (by omega : 34 ≤ m)]
   linarith
 
+/-- The completed alternating-base lower bound from §5. -/
+theorem signLockNearBase_lower
+    {N m : Nat} (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    expNegLower50 * (1 - 2/(m : ℚ)) ≤ signLockNearBase N m :=
+  signLockNearBase_lower_of_prefix12_tail
+    (N := N) (m := m) hm
+    (signLockBasePrefix_lower (N := N) (m := m) hN40 hm)
+    (signLockBaseTailFrom12_nonneg (N := N) (m := m) hN40 hm)
+
 /-- Final §5 assembly, conditional only on the alternating-base lower bound.
 
 The TeX proof compresses this last step into the sign-lock discussion.  In
@@ -6046,5 +6200,15 @@ theorem Xnorm_le_neg_final_margin_of_signLockBasePrefix_tail
     (N := N) (m := m) hN hN40 hm
     (signLockNearBase_lower_of_prefix12_tail
       (N := N) (m := m) hm hprefix htail)
+
+/-- Final completed §5 sign-lock estimate. -/
+theorem Xnorm_le_neg_final_margin
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    Xnorm N m
+      ≤ -(expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2) :=
+  Xnorm_le_neg_final_margin_of_signLockNearBase
+    (N := N) (m := m) hN hN40 hm
+    (signLockNearBase_lower (N := N) (m := m) hN40 hm)
 
 end Prop51

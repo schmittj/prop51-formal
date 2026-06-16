@@ -184,7 +184,9 @@ Status:
       even/odd pairs.  The 12-term prefix is also split as
       `A(z)+C(z)/m`, with a formal endpoint-denominator reduction showing
       that it remains only to certify the pure prefix `A(z)` and the
-      `m = 361` scalar prefix uniformly for `0 ≤ z ≤ 50/27`.
+      `m = 361` scalar prefix uniformly for `0 ≤ z ≤ 50/27`; both
+      one-variable checks are now certified by explicit rational Bernstein
+      coefficient lists, giving the unconditional `Xnorm` sign-lock theorem.
 - [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
@@ -209,11 +211,10 @@ Status:
       estimates, and positive-envelope certificate.  Lean also records the
       main translation interface from §5 to §6: a single uniform theorem
       `Xnorm N m ≤ -signLockMargin m` supplies both the main `m = a`
-      negative term and the large-`k` sign-lock exclusion.  A second bridge now
-      consumes the remaining `signLockNearBase` lower-bound obligation
-      directly and produces the same large-`a` `Unorm < 0` conclusion; a
-      sharper bridge now exposes only the 12-term prefix obligation, with the
-      paired tail discharged in §5.
+      negative term and the large-`k` sign-lock exclusion.  This bridge now
+      consumes the completed sign-lock theorem directly, while the older
+      conditional bridges exposing `signLockNearBase` and the 12-term prefix
+      obligations are retained for auditability.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

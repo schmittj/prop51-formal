@@ -406,6 +406,13 @@ theorem Xnorm_le_neg_signLockMargin_of_signLockBasePrefix
     (N := N) (m := m) hN hN40 hm hprefix
     (signLockBaseTailFrom12_nonneg (N := N) (m := m) hN40 hm)
 
+theorem Xnorm_le_neg_signLockMargin
+    {N m : Nat} (hN : 1 ≤ N)
+    (hN40 : (N : ℚ) ≤ (40/3) * (m : ℚ)) (hm : 361 ≤ m) :
+    Xnorm N m ≤ -signLockMargin m := by
+  unfold signLockMargin
+  exact Xnorm_le_neg_final_margin (N := N) (m := m) hN hN40 hm
+
 /-- One normalized raw positive summand from `Unorm_eq`, without the positivity
 guard. -/
 def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
@@ -980,6 +987,27 @@ theorem Unorm_neg_of_uniform_signLockBasePrefix_and_positiveEnvelope
     (a := a) (N := N) ha hrect hprefix ?htail hsmall htempered hpositive
   intro m hm hNm
   exact signLockBaseTailFrom12_nonneg (N := N) (m := m) hNm hm
+
+/-- Large-`a` assembly after the completed §5 sign-lock theorem.  The only
+remaining inputs are the positive-saddle majorants and the positive-envelope
+certificate. -/
+theorem Unorm_neg_of_signLock_and_positiveEnvelope
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hpositive : positiveEnvelope a N ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  refine Unorm_neg_of_uniform_signLockMargin_and_positiveEnvelope
+    (a := a) (N := N) ha hrect ?hXbound hsmall htempered hpositive
+  intro m hm hNm
+  exact Xnorm_le_neg_signLockMargin (N := N) (m := m) hN hNm hm
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
