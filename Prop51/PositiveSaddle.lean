@@ -11,6 +11,7 @@ Lean interface rather than an informal convention in the Python script.
 
 import Mathlib.Data.Nat.Sqrt
 import Mathlib.Data.Nat.Choose.Bounds
+import Mathlib.Data.Nat.Choose.Sum
 import Mathlib.Data.Nat.Factorial.BigOperators
 import Prop51.SignLock
 
@@ -1992,6 +1993,294 @@ theorem positiveBinomRatio_le_tail_powBound {a k : Nat} (ha : 3 ≤ a)
         ≤ ((a - 1 : Nat) : ℚ) * (positiveBinomDen a k : ℚ) :=
     mul_le_mul_of_nonneg_left hden_ge ha1_pos.le
   unfold positiveBinomRatioTailPowBound positiveBinomRatio
+  exact one_div_le_one_div_of_le htail_denom_pos hmul_ge
+
+/-! ### Rational entropy-shadow denominator bound
+
+The exact TeX entropy inequality is
+`C(n,k) ≥ exp(n H(k/n))/(n+2)` in the positive-tail parameters.  The following
+log-free rational form is the same denominator-growth mechanism:
+
+`n^n ≤ (n+1) C(n,k) k^k (n-k)^(n-k)`.
+
+It comes from expanding `(k + (n-k))^n` and proving the weighted binomial term
+is maximal at the mode `k`.  The lemmas below isolate the adjacent-ratio part
+of that proof. -/
+
+def weightedChooseTerm (n k i : Nat) : ℚ :=
+  ((n.choose i : Nat) : ℚ) * (k : ℚ)^i * ((n - k : Nat) : ℚ)^(n - i)
+
+theorem weightedChooseTerm_nonneg (n k i : Nat) :
+    0 ≤ weightedChooseTerm n k i := by
+  unfold weightedChooseTerm
+  positivity
+
+theorem weightedChooseTerm_succ_mul {n k i : Nat} (hi : i < n) :
+    weightedChooseTerm n k (i + 1) * ((i + 1 : Nat) : ℚ) * ((n - k : Nat) : ℚ)
+      = weightedChooseTerm n k i * ((n - i : Nat) : ℚ) * (k : ℚ) := by
+  unfold weightedChooseTerm
+  have hchoose := Nat.choose_succ_right_eq n i
+  have hchooseQ :
+      ((n.choose (i + 1) : Nat) : ℚ) * ((i + 1 : Nat) : ℚ)
+        = ((n.choose i : Nat) : ℚ) * ((n - i : Nat) : ℚ) := by
+    exact_mod_cast hchoose
+  have hnisucc : n - (i + 1) + 1 = n - i := by omega
+  have hpowk : (k : ℚ)^(i + 1) = (k : ℚ)^i * (k : ℚ) := by
+    rw [pow_succ]
+  have hpownk :
+      ((n - k : Nat) : ℚ)^(n - (i + 1)) * ((n - k : Nat) : ℚ)
+        = ((n - k : Nat) : ℚ)^(n - i) := by
+    rw [← pow_succ, hnisucc]
+  calc
+    ((n.choose (i + 1) : Nat) : ℚ) * (k : ℚ)^(i + 1) *
+          ((n - k : Nat) : ℚ)^(n - (i + 1)) *
+          ((i + 1 : Nat) : ℚ) * ((n - k : Nat) : ℚ)
+        = (((n.choose (i + 1) : Nat) : ℚ) * ((i + 1 : Nat) : ℚ)) *
+          (k : ℚ)^(i + 1) *
+          (((n - k : Nat) : ℚ)^(n - (i + 1)) * ((n - k : Nat) : ℚ)) := by
+            ring
+    _ = (((n.choose i : Nat) : ℚ) * ((n - i : Nat) : ℚ)) *
+          (k : ℚ)^(i + 1) *
+          (((n - k : Nat) : ℚ)^(n - (i + 1)) * ((n - k : Nat) : ℚ)) := by
+            rw [hchooseQ]
+    _ = ((n.choose i : Nat) : ℚ) * (k : ℚ)^i *
+          ((n - k : Nat) : ℚ)^(n - i) *
+          ((n - i : Nat) : ℚ) * (k : ℚ) := by
+            rw [hpowk, hpownk]
+            ring
+
+theorem weightedChooseTerm_le_succ_of_lt_mode {n k i : Nat}
+    (hkpos : 0 < k) (hkn : k ≤ n) (hi : i < k) :
+    weightedChooseTerm n k i ≤ weightedChooseTerm n k (i + 1) := by
+  have hin : i < n := hi.trans_le hkn
+  have hrec := weightedChooseTerm_succ_mul (n := n) (k := k) (i := i) hin
+  let A : ℚ := ((i + 1 : Nat) : ℚ) * ((n - k : Nat) : ℚ)
+  let B : ℚ := ((n - i : Nat) : ℚ) * (k : ℚ)
+  have hrec' : weightedChooseTerm n k i * B = weightedChooseTerm n k (i + 1) * A := by
+    dsimp [A, B]
+    calc
+      weightedChooseTerm n k i * (↑(n - i) * ↑k)
+          = weightedChooseTerm n k i * ↑(n - i) * ↑k := by ring
+      _ = weightedChooseTerm n k (i + 1) * ↑(i + 1) * ↑(n - k) := hrec.symm
+      _ = weightedChooseTerm n k (i + 1) * (↑(i + 1) * ↑(n - k)) := by ring
+  have hAB : A ≤ B := by
+    have hi1 : (i : ℚ) + 1 ≤ (k : ℚ) := by
+      exact_mod_cast Nat.succ_le_of_lt hi
+    have hgap : 0 ≤ (k : ℚ) - ((i : ℚ) + 1) := by linarith
+    have hnnonneg : 0 ≤ (n : ℚ) := by positivity
+    have hprod : 0 ≤ (n : ℚ) * ((k : ℚ) - ((i : ℚ) + 1)) :=
+      mul_nonneg hnnonneg hgap
+    have hkQnonneg : 0 ≤ (k : ℚ) := by positivity
+    have hdiff : B - A = (n : ℚ) * ((k : ℚ) - ((i : ℚ) + 1)) + (k : ℚ) := by
+      dsimp [A, B]
+      rw [Nat.cast_sub hkn, Nat.cast_sub (by omega : i ≤ n)]
+      push_cast
+      ring
+    have hdiff_nonneg : 0 ≤ B - A := by
+      rw [hdiff]
+      linarith
+    exact sub_nonneg.mp hdiff_nonneg
+  have hBpos : 0 < B := by
+    dsimp [B]
+    have hni : (0 : ℚ) < ((n - i : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < n - i)
+    have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hkpos
+    positivity
+  rw [← mul_le_mul_iff_of_pos_right hBpos]
+  calc
+    weightedChooseTerm n k i * B = weightedChooseTerm n k (i + 1) * A := hrec'
+    _ ≤ weightedChooseTerm n k (i + 1) * B :=
+        mul_le_mul_of_nonneg_left hAB (weightedChooseTerm_nonneg n k (i + 1))
+
+theorem weightedChooseTerm_succ_le_of_mode_le {n k i : Nat}
+    (hkn : k < n) (hki : k ≤ i) (hin : i < n) :
+    weightedChooseTerm n k (i + 1) ≤ weightedChooseTerm n k i := by
+  have hrec := weightedChooseTerm_succ_mul (n := n) (k := k) (i := i) hin
+  let A : ℚ := ((i + 1 : Nat) : ℚ) * ((n - k : Nat) : ℚ)
+  let B : ℚ := ((n - i : Nat) : ℚ) * (k : ℚ)
+  have hrec' : weightedChooseTerm n k (i + 1) * A = weightedChooseTerm n k i * B := by
+    dsimp [A, B]
+    calc
+      weightedChooseTerm n k (i + 1) * (↑(i + 1) * ↑(n - k))
+          = weightedChooseTerm n k (i + 1) * ↑(i + 1) * ↑(n - k) := by ring
+      _ = weightedChooseTerm n k i * ↑(n - i) * ↑k := hrec
+      _ = weightedChooseTerm n k i * (↑(n - i) * ↑k) := by ring
+  have hBA : B ≤ A := by
+    have hkiQ : (k : ℚ) ≤ (i : ℚ) := by exact_mod_cast hki
+    have hknQ : (k : ℚ) < (n : ℚ) := by exact_mod_cast hkn
+    have hgap : 1 ≤ (i : ℚ) + 1 - (k : ℚ) := by linarith
+    have hnnonneg : 0 ≤ (n : ℚ) := by positivity
+    have hprod : (n : ℚ) ≤ (n : ℚ) * ((i : ℚ) + 1 - (k : ℚ)) := by
+      have := mul_le_mul_of_nonneg_left hgap hnnonneg
+      simpa using this
+    have hdiff : A - B = (n : ℚ) * ((i : ℚ) + 1 - (k : ℚ)) - (k : ℚ) := by
+      dsimp [A, B]
+      rw [Nat.cast_sub hkn.le, Nat.cast_sub (by omega : i ≤ n)]
+      push_cast
+      ring
+    have hdiff_nonneg : 0 ≤ A - B := by
+      rw [hdiff]
+      linarith
+    exact sub_nonneg.mp hdiff_nonneg
+  have hApos : 0 < A := by
+    dsimp [A]
+    have hi1 : (0 : ℚ) < ((i + 1 : Nat) : ℚ) := by positivity
+    have hnk : (0 : ℚ) < ((n - k : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < n - k)
+    positivity
+  rw [← mul_le_mul_iff_of_pos_right hApos]
+  calc
+    weightedChooseTerm n k (i + 1) * A = weightedChooseTerm n k i * B := hrec'
+    _ ≤ weightedChooseTerm n k i * A :=
+        mul_le_mul_of_nonneg_left hBA (weightedChooseTerm_nonneg n k i)
+
+theorem weightedChooseTerm_le_mode_of_le {n k i : Nat}
+    (hkpos : 0 < k) (hkn : k ≤ n) (hik : i ≤ k) :
+    weightedChooseTerm n k i ≤ weightedChooseTerm n k k := by
+  let F : Nat → ℚ := fun j =>
+    if j ≤ k then weightedChooseTerm n k j else weightedChooseTerm n k k
+  have hstep : ∀ j, i ≤ j → F j ≤ F (j + 1) := by
+    intro j _hij
+    by_cases hj : j < k
+    · have hjle : j ≤ k := hj.le
+      have hsucc : j + 1 ≤ k := Nat.succ_le_of_lt hj
+      simp [F, hjle, hsucc,
+        weightedChooseTerm_le_succ_of_lt_mode hkpos hkn hj]
+    · have hsucc_not : ¬ j + 1 ≤ k := by omega
+      by_cases hjle : j ≤ k
+      · have hjeq : j = k := le_antisymm hjle (le_of_not_gt hj)
+        simp [F, hjeq]
+      · simp [F, hjle, hsucc_not]
+  have hchain :
+      F i ≤ F k :=
+    Nat.rel_of_forall_rel_succ_of_le_of_le (· ≤ ·) hstep le_rfl hik
+  simpa [F, hik] using hchain
+
+theorem weightedChooseTerm_le_mode_of_mode_le {n k i : Nat}
+    (hkn : k < n) (hki : k ≤ i) (hin : i ≤ n) :
+    weightedChooseTerm n k i ≤ weightedChooseTerm n k k := by
+  let F : Nat → ℚ := fun j =>
+    if j ≤ n then weightedChooseTerm n k j else weightedChooseTerm n k n
+  have hstep : ∀ j, k ≤ j → F (j + 1) ≤ F j := by
+    intro j hkj
+    by_cases hjn : j < n
+    · have hjle : j ≤ n := hjn.le
+      have hsucc : j + 1 ≤ n := Nat.succ_le_of_lt hjn
+      simp [F, hjle, hsucc,
+        weightedChooseTerm_succ_le_of_mode_le hkn hkj hjn]
+    · have hsucc_not : ¬ j + 1 ≤ n := by omega
+      by_cases hjle : j ≤ n
+      · have hjeq : j = n := le_antisymm hjle (le_of_not_gt hjn)
+        simp [F, hjeq]
+      · simp [F, hjle, hsucc_not]
+  have hchain :
+      F i ≤ F k :=
+    Nat.rel_of_forall_rel_succ_of_le_of_le (fun x y => y ≤ x) hstep le_rfl hki
+  simpa [F, hkn.le, hin] using hchain
+
+theorem weightedChooseTerm_le_mode {n k i : Nat}
+    (hkpos : 0 < k) (hkn : k < n) (hin : i ≤ n) :
+    weightedChooseTerm n k i ≤ weightedChooseTerm n k k := by
+  rcases le_total i k with hik | hki
+  · exact weightedChooseTerm_le_mode_of_le hkpos hkn.le hik
+  · exact weightedChooseTerm_le_mode_of_mode_le hkn hki hin
+
+theorem pow_le_card_mul_weightedChooseTerm_mode {n k : Nat}
+    (hkpos : 0 < k) (hkn : k < n) :
+    (n : ℚ)^n ≤ ((n + 1 : Nat) : ℚ) * weightedChooseTerm n k k := by
+  have hsum_eq :
+      (n : ℚ)^n = ∑ i ∈ Finset.range (n + 1), weightedChooseTerm n k i := by
+    have hkn_cast : (k : ℚ) + ((n - k : Nat) : ℚ) = (n : ℚ) := by
+      rw [Nat.cast_sub hkn.le]
+      ring
+    calc
+      (n : ℚ)^n = ((k : ℚ) + ((n - k : Nat) : ℚ))^n := by rw [hkn_cast]
+      _ = ∑ i ∈ Finset.range (n + 1),
+            (k : ℚ)^i * ((n - k : Nat) : ℚ)^(n - i) *
+              ((n.choose i : Nat) : ℚ) := by
+              rw [add_pow]
+      _ = ∑ i ∈ Finset.range (n + 1), weightedChooseTerm n k i := by
+              refine Finset.sum_congr rfl ?_
+              intro i _hi
+              unfold weightedChooseTerm
+              ring
+  have hsum_le :
+      (∑ i ∈ Finset.range (n + 1), weightedChooseTerm n k i)
+        ≤ (Finset.range (n + 1)).card • weightedChooseTerm n k k := by
+    exact Finset.sum_le_card_nsmul _ _ _ fun i hi =>
+      weightedChooseTerm_le_mode hkpos hkn
+        (Nat.lt_succ_iff.mp (Finset.mem_range.mp hi))
+  calc
+    (n : ℚ)^n = ∑ i ∈ Finset.range (n + 1), weightedChooseTerm n k i := hsum_eq
+    _ ≤ (Finset.range (n + 1)).card • weightedChooseTerm n k k := hsum_le
+    _ = ((n + 1 : Nat) : ℚ) * weightedChooseTerm n k k := by
+      simp [Finset.card_range, nsmul_eq_mul]
+
+theorem choose_ge_entropy_shadow {n k : Nat} (hkpos : 0 < k) (hkn : k < n) :
+    (n : ℚ)^n /
+        (((n + 1 : Nat) : ℚ) * (k : ℚ)^k * ((n - k : Nat) : ℚ)^(n - k))
+      ≤ ((n.choose k : Nat) : ℚ) := by
+  have hmain := pow_le_card_mul_weightedChooseTerm_mode (n := n) (k := k) hkpos hkn
+  have hden_pos :
+      0 < ((n + 1 : Nat) : ℚ) * (k : ℚ)^k * ((n - k : Nat) : ℚ)^(n - k) := by
+    have hn1 : (0 : ℚ) < ((n + 1 : Nat) : ℚ) := by positivity
+    have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hkpos
+    have hnkQ : (0 : ℚ) < ((n - k : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < n - k)
+    positivity
+  rw [div_le_iff₀ hden_pos]
+  unfold weightedChooseTerm at hmain
+  nlinarith [hmain]
+
+/-- Rational, log-free specialization of the TeX entropy lower bound for
+`choose(a-2,k-1)`.  The denominator uses `a-1 = (a-2)+1`; this is slightly
+stronger than the printed `1/a` entropy prefactor and avoids real `exp/log`. -/
+def positiveBinomDenEntropyShadowBound (a k : Nat) : ℚ :=
+  ((a - 2 : Nat) : ℚ)^(a - 2) /
+    (((a - 1 : Nat) : ℚ) * ((k - 1 : Nat) : ℚ)^(k - 1) *
+      ((a - 2 - (k - 1) : Nat) : ℚ)^(a - 2 - (k - 1)))
+
+theorem positiveBinomDen_ge_entropyShadowBound {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    positiveBinomDenEntropyShadowBound a k ≤ (positiveBinomDen a k : ℚ) := by
+  unfold positiveBinomDenEntropyShadowBound positiveBinomDen
+  have ha : a - 2 + 1 = a - 1 := by omega
+  simpa [ha] using choose_ge_entropy_shadow (n := a - 2) (k := k - 1)
+    (by omega : 0 < k - 1) (by omega : k - 1 < a - 2)
+
+theorem positiveBinomDenEntropyShadowBound_pos {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    0 < positiveBinomDenEntropyShadowBound a k := by
+  unfold positiveBinomDenEntropyShadowBound
+  have ha2 : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 2)
+  have ha1 : (0 : ℚ) < ((a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 1)
+  have hk1 : (0 : ℚ) < ((k - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < k - 1)
+  have hcomp : (0 : ℚ) < ((a - 2 - (k - 1) : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 2 - (k - 1))
+  positivity
+
+/-- Reciprocal-binomial prefactor bound from the rational entropy shadow. -/
+def positiveBinomRatioEntropyShadowBound (a k : Nat) : ℚ :=
+  1 / (((a - 1 : Nat) : ℚ) * positiveBinomDenEntropyShadowBound a k)
+
+theorem positiveBinomRatio_le_entropyShadowBound {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    positiveBinomRatio a k ≤ positiveBinomRatioEntropyShadowBound a k := by
+  have hEpos := positiveBinomDenEntropyShadowBound_pos hk hklt
+  have ha1_pos : (0 : ℚ) < ((a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < a - 1)
+  have htail_denom_pos :
+      0 < ((a - 1 : Nat) : ℚ) * positiveBinomDenEntropyShadowBound a k :=
+    mul_pos ha1_pos hEpos
+  have hden_ge := positiveBinomDen_ge_entropyShadowBound hk hklt
+  have hmul_ge :
+      ((a - 1 : Nat) : ℚ) * positiveBinomDenEntropyShadowBound a k
+        ≤ ((a - 1 : Nat) : ℚ) * (positiveBinomDen a k : ℚ) :=
+    mul_le_mul_of_nonneg_left hden_ge ha1_pos.le
+  unfold positiveBinomRatioEntropyShadowBound positiveBinomRatio
   exact one_div_le_one_div_of_le htail_denom_pos hmul_ge
 
 /-- Coefficient-ratio bound obtained from the already formalized
