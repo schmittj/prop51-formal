@@ -247,19 +247,13 @@ Status:
       loose half-target budget `positiveSoloBudget = positiveTarget/2`
       (weaker than the TeX `exp(-0.49a)` estimate, and documented in code),
       leaving the finite scan as the single edge obligation
-      `positiveEdgeMajorantSum a ≤ positiveEdgeBudget`.  A further
-      `PositiveSaddleDisplayedBudgetCertificate` fixes the paper's displayed
-      `X`/`Y` saddle-bound shapes with constants `8.9`, `7.3`, and `14.5`;
-      its explicit product fields mark the remaining proof that the product
-      of two rational exponential surrogates fits below the single combined
-      surrogate used by the executable majorants.  Those product obligations
-      are now also factored through `PositiveSaddleExpEdgeBudgetCertificate`,
-      whose remaining fields are the pure exponential/edge inequalities
-      after all common scalar prefactors have been cancelled.  The pure
-      comparisons are finally named as small/tempered product kernels in
-      `PositiveSaddleProductKernelBudgetCertificate`; the small kernel includes
-      the `posNhi/N` denominator-replacement factor, while the tempered kernel
-      is just the product-of-partial-exponentials comparison.
+      `positiveEdgeMajorantSum a ≤ positiveEdgeBudget`.  Lean also keeps
+      audit definitions for the paper's displayed `X`/`Y` saddle-bound shapes
+      with constants `8.9`, `7.3`, and `14.5`, plus normal forms for their
+      products.  These displayed products are not currently exposed as a
+      certificate path: multiplying two independent `partialExpUpper`
+      surrogates is slightly too strong for the executable majorants, so the
+      sound target remains the combined scalar-product estimate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
