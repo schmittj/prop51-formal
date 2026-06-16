@@ -289,15 +289,44 @@ def positivePrefactor (C : ℚ) (a N k : Nat) : ℚ :=
       / (((a-1 : Nat) : ℚ) * (positiveBinomDen a k : ℚ)))
     * positiveDyadicDecay (posJ a k)
 
+/-- The same prefactor written using the reciprocal-binomial ratio that comes
+out of the coefficient-ratio bound. -/
+theorem positivePrefactor_eq_binomRatio (C : ℚ) (a N k : Nat) :
+    positivePrefactor C a N k =
+      (C / (N : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveBinomRatio a k * positiveDyadicDecay (posJ a k) := by
+  unfold positivePrefactor positiveBinomRatio
+  ring
+
 /-- The rationalized small-regime edge majorant for one summand. -/
 def positiveSmallMajorantTerm (a k : Nat) : ℚ :=
   positivePrefactor 65 a (posNhi a) k
     * partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
 
+/-- Small-regime majorant in the same scalar form as the product bridge:
+constant, edge denominator, reciprocal binomial ratio, dyadic decay, and the
+rationalized exponential upper bound. -/
+theorem positiveSmallMajorantTerm_eq_binomRatio (a k : Nat) :
+    positiveSmallMajorantTerm a k =
+      (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+        partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+  unfold positiveSmallMajorantTerm
+  rw [positivePrefactor_eq_binomRatio]
+
 /-- The rationalized tempered-regime edge majorant for one summand. -/
 def positiveTemperedMajorantTerm (a k : Nat) : ℚ :=
   positivePrefactor 96 a (posNlo a) k
     * partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
+/-- Tempered-regime majorant in the same scalar form as the product bridge. -/
+theorem positiveTemperedMajorantTerm_eq_binomRatio (a k : Nat) :
+    positiveTemperedMajorantTerm a k =
+      (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+        partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff := by
+  unfold positiveTemperedMajorantTerm
+  rw [positivePrefactor_eq_binomRatio]
 
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
 use the small formula only when the small regime is possible somewhere in the

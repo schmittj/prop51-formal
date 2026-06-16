@@ -234,6 +234,8 @@ Status:
       existing `c_lb`/`c_ub` estimates, and a product bridge reduces the
       factorized summand to separate `X_k(N)` and `Y_{a-k}(N)` bounds; the
       decomposed interface is packaged as `PositiveSaddleXYCertificate`.
+      The executable small/tempered majorants also have reciprocal-binomial
+      normal forms, matching the scalar shape produced by this bridge.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
