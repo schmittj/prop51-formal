@@ -548,6 +548,14 @@ the TeX proof, the rational `partialExpUpper` surrogate is not submultiplicative
 with enough slack here; the formal certificate therefore targets the combined
 scalar-product bounds directly. -/
 
+/-- Concrete audit witness for the preceding note: at this small-regime point,
+the product of the separate rational exponential surrogates is already larger
+than the combined surrogate used in the executable majorant. -/
+theorem positiveSmallDisplayedExpEdge_not_le_combined_example :
+    ¬ positiveSmallDisplayedExpEdge 401 4762 70 ≤
+      positiveSmallCombinedExpEdge 401 70 := by
+  native_decide
+
 theorem positiveSmallDisplayedProductBound_le_scalar_of_expEdge
     {a N k : Nat} (hN : 1 ≤ N)
     (hexp : positiveSmallDisplayedExpEdge a N k ≤

@@ -253,7 +253,9 @@ Status:
       products.  These displayed products are not currently exposed as a
       certificate path: multiplying two independent `partialExpUpper`
       surrogates is slightly too strong for the executable majorants, so the
-      sound target remains the combined scalar-product estimate.
+      sound target remains the combined scalar-product estimate.  Lean records
+      this with the exact audit witness
+      `positiveSmallDisplayedExpEdge_not_le_combined_example`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
