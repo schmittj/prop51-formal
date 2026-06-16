@@ -147,6 +147,17 @@ theorem Eplus_nat_le_Gcomp_sum (N p : Nat) :
           ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ) :=
   Eplus_le_Gcomp_sum (Nat.cast_nonneg N) p
 
+/-- Explicit `Gcomp` upper bound for the positive-side nonlinear coefficient
+`Eplus (N : ℚ) p`. -/
+def EplusGcompBound (N p : Nat) : ℚ :=
+  ∑ r ∈ Finset.range (p+1),
+    ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ)
+
+theorem Eplus_nat_le_GcompBound (N p : Nat) :
+    Eplus (N : ℚ) p ≤ EplusGcompBound N p := by
+  unfold EplusGcompBound
+  exact Eplus_nat_le_Gcomp_sum N p
+
 /-- The sign-lock nonlinear residual `ε_p`, defined by
 `E^-_p(N) = -N c_p (1+ε_p)`. -/
 def epsilonMinus (N p : Nat) : ℚ := EminusNorm N p - 1
@@ -539,6 +550,27 @@ theorem Qq_eq_linear_Eplus_sum (N m : Nat) :
   rw [coeff_expSeries, coeff_mul,
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
   simpa [Qq, Eplus, expCoeff_linearExpSeq] using hcoeff
+
+/-- The corresponding explicit upper bound for `Qq`, after the exact linear
+exponential is convolved with the `EplusGcompBound` tail. -/
+def QqEplusGcompBound (N m : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (m+1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      EplusGcompBound N (m-s)
+
+theorem Qq_le_EplusGcompBound (N m : Nat) :
+    Qq N m ≤ QqEplusGcompBound N m := by
+  rw [Qq_eq_linear_Eplus_sum]
+  unfold QqEplusGcompBound
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hbase : 0 ≤ (N : ℚ) / 2 * c 1 / 2 := by
+    norm_num [c_one]
+    positivity
+  have hlin :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    exact div_nonneg (pow_nonneg hbase s) (Nat.cast_nonneg _)
+  exact mul_le_mul_of_nonneg_left
+    (Eplus_nat_le_GcompBound N (m-s)) hlin
 
 /-- Finite decomposition of `-X_m(N)` in the form used by the sign-lock
 argument. -/

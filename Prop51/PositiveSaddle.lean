@@ -1328,6 +1328,26 @@ theorem normalizedSoloTerm_eq_linear_Eplus_sum
   unfold positiveDyadicDecay
   field_simp [hNQ, hca, hpow]
 
+/-- Explicit normalized upper bound for the solo `Q_a` term obtained from the
+positive-side `Eplus`/`Gcomp` majorant. -/
+def positiveSoloGcompBound (a N : Nat) : ℚ :=
+  QqEplusGcompBound N a / ((N : ℚ) * c a)
+
+theorem normalizedSoloTerm_le_positiveSoloGcompBound
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    normalizedSoloTerm a N ≤ positiveSoloGcompBound a N := by
+  unfold normalizedSoloTerm positiveSoloGcompBound
+  have hden : 0 ≤ (N : ℚ) * c a := by
+    have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    exact mul_nonneg hNQ.le (c_pos a ha).le
+  exact div_le_div_of_nonneg_right (Qq_le_EplusGcompBound N a) hden
+
+theorem dyadic_Ynorm_le_positiveSoloGcompBound
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloGcompBound a N := by
+  rw [← normalizedSoloTerm_eq_dyadic_Ynorm hN ha]
+  exact normalizedSoloTerm_le_positiveSoloGcompBound hN ha
+
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
 `B_k Q_{a-k}/(N c_a) = (N/2) R_{k,a} 2^{-(a-k)} X_k Y_{a-k}`. -/
