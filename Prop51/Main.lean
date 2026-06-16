@@ -275,6 +275,30 @@ theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyGeome
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate cert)
 
+/-- Final assembly from the row-checked `Xplus`/`Gcomp` finite-window
+certificate together with the reserve form of the geometric entropy-shadow tail
+certificate for `a > 2000`. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyGeometricReserveCertificate cert)
+
+/-- Final assembly from the row-checked `Xplus`/`Gcomp` finite-window
+certificate together with quotient-ratio reserve checks for the large-`a`
+entropy-shadow tail. -/
+theorem coefficientNegativity_of_positiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate cert)
+
 /-- Final assembly from the actual-`N` combined `X*Y` product version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
