@@ -756,6 +756,87 @@ def positiveEdgeMajorantTerm (a k : Nat) : ℚ :=
 def positiveEdgeMajorantSum (a : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, positiveEdgeMajorantTerm a k
 
+/-! ### Custom edge majorants
+
+The finite-window scan uses `positiveSmallMajorantTerm` and
+`positiveTemperedMajorantTerm`, whose rational exponential surrogate is tuned
+for `401 ≤ a ≤ 2000`.  The entropy tail for `a > 2000` needs different
+closed rational summand bounds.  The following parameterized edge reducer
+keeps the corrected two-regime rectangle bookkeeping reusable without
+pretending the finite-window terms are valid outside their range. -/
+
+def positiveCustomEdgeMajorantTerm
+    (smallTerm temperedTerm : Nat → Nat → ℚ) (a k : Nat) : ℚ :=
+  max
+    (if k ≤ posSmallCutoff a then smallTerm a k else 0)
+    (if posTemperedCutoff a < k then temperedTerm a k else 0)
+
+def positiveCustomEdgeMajorantSum
+    (smallTerm temperedTerm : Nat → Nat → ℚ) (a : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a, positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k
+
+@[simp] theorem positiveCustomEdgeMajorantTerm_finite (a k : Nat) :
+    positiveCustomEdgeMajorantTerm positiveSmallMajorantTerm positiveTemperedMajorantTerm a k
+      = positiveEdgeMajorantTerm a k := rfl
+
+@[simp] theorem positiveCustomEdgeMajorantSum_finite (a : Nat) :
+    positiveCustomEdgeMajorantSum positiveSmallMajorantTerm positiveTemperedMajorantTerm a
+      = positiveEdgeMajorantSum a := rfl
+
+theorem positiveSmallCustomTerm_le_edge
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a k : Nat}
+    (hk : k ≤ posSmallCutoff a) :
+    smallTerm a k ≤ positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k := by
+  unfold positiveCustomEdgeMajorantTerm
+  rw [if_pos hk]
+  exact le_max_left _ _
+
+theorem positiveTemperedCustomTerm_le_edge
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a k : Nat}
+    (hk : posTemperedCutoff a < k) :
+    temperedTerm a k ≤ positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k := by
+  unfold positiveCustomEdgeMajorantTerm
+  rw [if_pos hk]
+  exact le_max_right _ _
+
+theorem term_le_positiveCustomEdgeMajorantTerm_of_regime_bounds
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a N k : Nat}
+    {T : ℚ} (hrect : positiveRectangle a N)
+    (hsmall : k ≤ ceilSqrt N → T ≤ smallTerm a k)
+    (htempered : ceilSqrt N < k → T ≤ temperedTerm a k) :
+    T ≤ positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k := by
+  rcases le_or_gt k (ceilSqrt N) with hkSmall | hkTemp
+  · exact (hsmall hkSmall).trans
+      (positiveSmallCustomTerm_le_edge
+        (smallRegime_of_rectangle hrect hkSmall))
+  · exact (htempered hkTemp).trans
+      (positiveTemperedCustomTerm_le_edge
+        (temperedRegime_of_rectangle hrect hkTemp))
+
+theorem sum_le_positiveCustomEdgeMajorantSum
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a : Nat} {F : Nat → ℚ}
+    (hF : ∀ k, k ∈ positiveKRange a →
+      F k ≤ positiveCustomEdgeMajorantTerm smallTerm temperedTerm a k) :
+    (∑ k ∈ positiveKRange a, F k)
+      ≤ positiveCustomEdgeMajorantSum smallTerm temperedTerm a := by
+  unfold positiveCustomEdgeMajorantSum
+  exact Finset.sum_le_sum hF
+
+theorem sum_le_positiveCustomEdgeMajorantSum_of_regime_bounds
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a N : Nat}
+    {F : Nat → ℚ} (hrect : positiveRectangle a N)
+    (hFsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N → F k ≤ smallTerm a k)
+    (hFtempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k → F k ≤ temperedTerm a k) :
+    (∑ k ∈ positiveKRange a, F k)
+      ≤ positiveCustomEdgeMajorantSum smallTerm temperedTerm a :=
+  sum_le_positiveCustomEdgeMajorantSum fun k hk =>
+    term_le_positiveCustomEdgeMajorantTerm_of_regime_bounds hrect
+      (hFsmall k hk) (hFtempered k hk)
+
 /-! ## Large-`a` final margins -/
 
 /-- The positive-part target from paper §6. -/
@@ -865,11 +946,39 @@ tempered saddle estimate as the positive summands, giving
 def positiveEnvelopeBound (a : Nat) (soloBound : ℚ) : ℚ :=
   soloBound + positiveEdgeMajorantSum a
 
+/-- Positive-envelope analogue for a custom pair of small/tempered edge
+majorants, used by the `a > 2000` entropy-tail route. -/
+def positiveCustomEnvelope
+    (smallTerm temperedTerm : Nat → Nat → ℚ) (a N : Nat) : ℚ :=
+  normalizedSoloTerm a N + positiveCustomEdgeMajorantSum smallTerm temperedTerm a
+
+def positiveCustomEnvelopeBound
+    (smallTerm temperedTerm : Nat → Nat → ℚ) (a : Nat) (soloBound : ℚ) : ℚ :=
+  soloBound + positiveCustomEdgeMajorantSum smallTerm temperedTerm a
+
+@[simp] theorem positiveCustomEnvelope_finite (a N : Nat) :
+    positiveCustomEnvelope positiveSmallMajorantTerm positiveTemperedMajorantTerm a N
+      = positiveEnvelope a N := rfl
+
+@[simp] theorem positiveCustomEnvelopeBound_finite (a : Nat) (soloBound : ℚ) :
+    positiveCustomEnvelopeBound positiveSmallMajorantTerm positiveTemperedMajorantTerm
+        a soloBound
+      = positiveEnvelopeBound a soloBound := rfl
+
 theorem positiveEnvelope_le_bound_of_solo
     {a N : Nat} {soloBound : ℚ}
     (hsolo : normalizedSoloTerm a N ≤ soloBound) :
     positiveEnvelope a N ≤ positiveEnvelopeBound a soloBound := by
   unfold positiveEnvelope positiveEnvelopeBound
+  linarith
+
+theorem positiveCustomEnvelope_le_bound_of_solo
+    {smallTerm temperedTerm : Nat → Nat → ℚ}
+    {a N : Nat} {soloBound : ℚ}
+    (hsolo : normalizedSoloTerm a N ≤ soloBound) :
+    positiveCustomEnvelope smallTerm temperedTerm a N
+      ≤ positiveCustomEnvelopeBound smallTerm temperedTerm a soloBound := by
+  unfold positiveCustomEnvelope positiveCustomEnvelopeBound
   linarith
 
 theorem positiveTarget_pos : 0 < positiveTarget := by
@@ -3106,6 +3215,85 @@ theorem normalizedPositiveRetainedSum_le_edge_of_regime_bounds {a N : Nat}
   unfold normalizedPositiveRetainedSum
   exact sum_le_positiveEdgeMajorantSum_of_regime_bounds hrect hsmall htempered
 
+theorem normalizedPositiveRetainedSum_le_customEdge_of_regime_bounds
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {a N : Nat}
+    (hrect : positiveRectangle a N)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ smallTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ temperedTerm a k) :
+    normalizedPositiveRetainedSum a N
+      ≤ positiveCustomEdgeMajorantSum smallTerm temperedTerm a := by
+  unfold normalizedPositiveRetainedSum
+  exact sum_le_positiveCustomEdgeMajorantSum_of_regime_bounds hrect hsmall htempered
+
+theorem Unorm_le_Xnorm_add_solo_add_customEdge_of_large_Xnorm_nonpos
+    {smallTerm temperedTerm : Nat → Nat → ℚ}
+    {a N : Nat} (ha : 1 ≤ a) (hN : 1 ≤ N) (hrect : positiveRectangle a N)
+    (hlarge : ∀ k, k < a → posKmax a < k → 1 ≤ k → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ smallTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ temperedTerm a k) :
+    Unorm a N ≤ Xnorm N a + normalizedSoloTerm a N +
+      positiveCustomEdgeMajorantSum smallTerm temperedTerm a := by
+  rw [Unorm_eq_Xnorm_add_solo_add_retained_of_large_Xnorm_nonpos ha hN hlarge]
+  have hsum := normalizedPositiveRetainedSum_le_customEdge_of_regime_bounds
+    (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+    (a := a) (N := N) hrect hsmall htempered
+  linarith
+
+theorem Unorm_le_Xnorm_add_solo_add_customEdge_of_signLock_nonpos
+    {smallTerm temperedTerm : Nat → Nat → ℚ}
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ smallTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ temperedTerm a k) :
+    Unorm a N ≤ Xnorm N a + normalizedSoloTerm a N +
+      positiveCustomEdgeMajorantSum smallTerm temperedTerm a := by
+  exact Unorm_le_Xnorm_add_solo_add_customEdge_of_large_Xnorm_nonpos
+    (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+    (a := a) (N := N) (by omega : 1 ≤ a)
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) hrect
+    (large_Xnorm_nonpos_of_signLock_nonpos ha hrect hSL)
+    hsmall htempered
+
+theorem Unorm_le_Xnorm_add_customEnvelope_of_signLock_nonpos
+    {smallTerm temperedTerm : Nat → Nat → ℚ}
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hSL : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ smallTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ temperedTerm a k) :
+    Unorm a N ≤ Xnorm N a +
+      positiveCustomEnvelope smallTerm temperedTerm a N := by
+  have hU := Unorm_le_Xnorm_add_solo_add_customEdge_of_signLock_nonpos
+    (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+    (a := a) (N := N) ha hrect hSL hsmall htempered
+  unfold positiveCustomEnvelope
+  linarith
+
 /-- Conditional large-`a` positive-part assembly.  Once sign-lock has excluded
 large `k` and the two saddle estimates bound the retained summands, `Unorm`
 is controlled by `Xnorm`, the solo term, and the corrected two-edge scan. -/
@@ -3330,6 +3518,89 @@ theorem Unorm_neg_of_signLock_and_positiveEnvelopeBound
     (a := a) (N := N) ha hrect hsmall htempered
     ((positiveEnvelope_le_bound_of_solo
       (a := a) (N := N) (soloBound := soloBound) hsolo).trans hpositive)
+
+/-- Large-`a` assembly with custom retained-positive majorants.
+
+This is the entropy-tail analogue of
+`Unorm_neg_of_signLock_and_positiveEnvelopeBound`: it keeps the completed
+sign-lock theorem and solo bookkeeping, but lets the small/tempered retained
+summand majorants be supplied by a different rational tail estimate. -/
+theorem Unorm_neg_of_signLock_and_customEnvelopeBound
+    {smallTerm temperedTerm : Nat → Nat → ℚ}
+    {a N : Nat} {soloBound : ℚ}
+    (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ smallTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ temperedTerm a k)
+    (hsolo : normalizedSoloTerm a N ≤ soloBound)
+    (hpositive :
+      positiveCustomEnvelopeBound smallTerm temperedTerm a soloBound ≤ positiveTarget) :
+    Unorm a N < 0 := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hSLlarge : ∀ k : Nat, 361 ≤ k →
+      (N : ℚ) ≤ (40/3) * (k : ℚ) → Xnorm N k ≤ 0 := by
+    intro k hk361 hNk
+    exact Xnorm_nonpos_of_signLockMargin_bound hk361
+      (Xnorm_le_neg_signLockMargin (N := N) (m := k) hN hNk hk361)
+  have hU := Unorm_le_Xnorm_add_customEnvelope_of_signLock_nonpos
+    (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+    (a := a) (N := N) ha hrect hSLlarge hsmall htempered
+  have hXmain : Xnorm N a ≤ -signLockMargin a :=
+    Xnorm_le_neg_signLockMargin
+      (N := N) (m := a) hN
+      (rectangle_N_le_signLock_range_self (a := a) (N := N) hrect)
+      (by omega : 361 ≤ a)
+  have hpositiveActual :
+      positiveCustomEnvelope smallTerm temperedTerm a N ≤ positiveTarget :=
+    (positiveCustomEnvelope_le_bound_of_solo
+      (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+      (a := a) (N := N) (soloBound := soloBound) hsolo).trans hpositive
+  have htarget := positiveTarget_lt_signLockMargin_of_ge_401 (m := a) ha
+  linarith
+
+/-- Packaged `a > 2000` positive-tail obligations for custom rational
+small/tempered summand majorants.
+
+This isolates the remaining entropy-tail work from the finite-window row
+certificate.  A later proof can instantiate `smallTerm` and `temperedTerm`
+with the entropy-shadow expressions, prove the pointwise saddle bounds and
+the custom envelope budget, and obtain the old direct `entropyTail` field via
+`PositiveSaddleCustomTailCertificate.entropyTail`. -/
+structure PositiveSaddleCustomTailCertificate
+    (smallTerm temperedTerm : Nat → Nat → ℚ) (soloBound : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ smallTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ temperedTerm a k
+  solo :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 2000 < a →
+      positiveCustomEnvelopeBound smallTerm temperedTerm a (soloBound a) ≤ positiveTarget
+
+theorem PositiveSaddleCustomTailCertificate.entropyTail
+    {smallTerm temperedTerm : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (cert : PositiveSaddleCustomTailCertificate smallTerm temperedTerm soloBound) :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0 := by
+  intro a N ha2000 hrect
+  exact Unorm_neg_of_signLock_and_customEnvelopeBound
+    (smallTerm := smallTerm) (temperedTerm := temperedTerm)
+    (a := a) (N := N) (soloBound := soloBound a)
+    (by omega : 401 ≤ a) hrect
+    (fun k hk hsmall => cert.small ha2000 hrect hk hsmall)
+    (fun k hk htempered => cert.tempered ha2000 hrect hk htempered)
+    (cert.solo ha2000 hrect)
+    (cert.envelope ha2000)
 
 /-! ## Packaged remaining §6 certificate interface -/
 
