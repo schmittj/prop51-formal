@@ -109,7 +109,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   at once, `Prop51.PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate`
   packages one Boolean per finite family; `scripts/positive_saddle_fixed_finite_template.py`
   emits either that theorem shape or a `split-fields` version that dispatches
-  each field by fixed row and edge chunk indices.  When
+  each field by fixed row and edge chunk indices.  The
+  `Prop51.PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate` sibling
+  keeps tangent checks at cell granularity, which is the practical shape when
+  tangent row-range booleans are too large for `native_decide`; the same
+  script emits it with `--strategy cell-tangent`.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

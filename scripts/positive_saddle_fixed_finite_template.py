@@ -10,6 +10,8 @@ Two strategies are available:
     `PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate`;
   * split-fields: dispatch each finite field by fixed row and edge chunk
     indices, targeting `PositiveSaddleFixedFiniteWindowAuditCertificate`.
+  * cell-tangent: same fixed product/solo/edge dispatch, but tangent is a
+    theorem argument over `checkPositiveSmallTangentExpEdgeCell`.
 
 Example:
   scripts/positive_saddle_fixed_finite_template.py \
@@ -51,7 +53,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         description="emit a Lean finite-window positive-saddle certificate template",
     )
     parser.add_argument("--product-row-len", type=positive_nat, required=True)
-    parser.add_argument("--tangent-row-len", type=positive_nat, required=True)
+    parser.add_argument(
+        "--tangent-row-len",
+        type=positive_nat,
+        help="required for all-chunks and split-fields; unused for cell-tangent",
+    )
     parser.add_argument("--solo-saddle-row-len", type=positive_nat, required=True)
     parser.add_argument("--solo-budget-row-len", type=positive_nat, required=True)
     parser.add_argument("--edge-row-len", type=positive_nat, required=True)
@@ -69,16 +75,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--strategy",
-        choices=("all-chunks", "split-fields"),
+        choices=("all-chunks", "split-fields", "cell-tangent"),
         default="all-chunks",
         help="finite certificate shape to emit",
     )
     args = parser.parse_args(argv)
+    if args.strategy != "cell-tangent" and args.tangent_row_len is None:
+        parser.error("--tangent-row-len is required unless --strategy cell-tangent")
     if args.name is None:
         if args.strategy == "all-chunks":
             args.name = "positiveSaddleGeneratedFixedFiniteWindowAllChunksCertificate"
-        else:
+        elif args.strategy == "split-fields":
             args.name = "positiveSaddleGeneratedFixedFiniteWindowCertificate"
+        else:
+            args.name = "positiveSaddleGeneratedFixedFiniteWindowCellTangentCertificate"
     return args
 
 
@@ -150,6 +160,20 @@ def add_row_dispatch_field(
             "    interval_cases i; native_decide",
         ]
     )
+
+
+def tangent_cell_provider_binder(with_colon: bool) -> list[str]:
+    last = (
+        "          checkPositiveSmallTangentExpEdgeCell a N k = true) :"
+        if with_colon
+        else "          checkPositiveSmallTangentExpEdgeCell a N k = true)"
+    )
+    return [
+        "    (htangent :",
+        "      \u2200 {a N k : Nat}, 401 \u2264 a \u2192 a \u2264 2000 \u2192 positiveRectangle a N \u2192",
+        "        k \u2208 positiveKRange a \u2192 k \u2264 ceilSqrt N \u2192",
+        last,
+    ]
 
 
 def emit_all_chunks(args: argparse.Namespace) -> str:
@@ -276,10 +300,84 @@ def emit_split_fields(args: argparse.Namespace) -> str:
     return "\n".join(lines)
 
 
+def emit_cell_tangent(args: argparse.Namespace) -> str:
+    p = args.product_row_len
+    ss = args.solo_saddle_row_len
+    sb = args.solo_budget_row_len
+    e = args.edge_row_len
+    n = args.n_len
+    name = args.name
+    final_name = f"coefficientNegativity_of_{name}"
+
+    lines = emit_header()
+    lines.extend(
+        [
+            f"theorem {name}",
+            *tangent_cell_provider_binder(with_colon=True),
+            "    PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate",
+            f"      {p} {ss} {sb} {e} {n} where",
+            "  productRowLenPos := by norm_num",
+            "  soloSaddleRowLenPos := by norm_num",
+            "  soloBudgetRowLenPos := by norm_num",
+            "  edgeRowLenPos := by norm_num",
+            "  nLenPos := by norm_num",
+        ]
+    )
+    add_row_edge_dispatch_field(
+        lines,
+        "smallXYProductRawClearedTableProductRowRangeKChunks",
+        p,
+        row_count(p),
+    )
+    add_row_edge_dispatch_field(
+        lines,
+        "temperedXYProductRawClearedTableProductRowRangeKChunks",
+        p,
+        row_count(p),
+    )
+    lines.append("  smallTangentExpEdgeCells := htangent")
+    add_row_dispatch_field(
+        lines,
+        "soloYSaddleClearedRowRangeChunks",
+        ss,
+        row_count(ss),
+    )
+    add_row_dispatch_field(
+        lines,
+        "soloYBudgetRowRangeChunks",
+        sb,
+        row_count(sb),
+    )
+    add_row_edge_dispatch_field(
+        lines,
+        "edgeKChunkUnitRowRanges",
+        e,
+        row_count(e),
+    )
+
+    if args.emit_final:
+        lines.extend(
+            [
+                "",
+                f"theorem {final_name}",
+                *tangent_cell_provider_binder(with_colon=False),
+                "    (tail : PositiveSaddleLargeTailAuditCertificate) :",
+                "    CoefficientNegativity :=",
+                "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCellTangentAuditCertificate",
+                f"    ({name} htangent) tail",
+            ]
+        )
+
+    lines.extend(["", "end Prop51", ""])
+    return "\n".join(lines)
+
+
 def emit(args: argparse.Namespace) -> str:
     if args.strategy == "all-chunks":
         return emit_all_chunks(args)
-    return emit_split_fields(args)
+    if args.strategy == "split-fields":
+        return emit_split_fields(args)
+    return emit_cell_tangent(args)
 
 
 def main(argv: list[str]) -> int:

@@ -550,7 +550,11 @@ Status:
       `PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate` instead.
       The script `scripts/positive_saddle_fixed_finite_template.py` emits
       both the all-chunks theorem shape and a `split-fields` dispatch shape
-      for fixed row and `N` lengths.
+      for fixed row and `N` lengths.  Since tangent row-range booleans are
+      still too large, the practical sibling
+      `PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate` keeps the
+      tangent proof at cell granularity; the script emits this with
+      `--strategy cell-tangent`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

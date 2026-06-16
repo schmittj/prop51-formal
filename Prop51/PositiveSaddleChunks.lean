@@ -3800,6 +3800,53 @@ structure PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate
   edgeKChunkUnitFixedRowKChunks :
     checkPositiveEdgeMajorantKChunkUnitFixedRowKChunks edgeRowLen = true
 
+/-- Fixed finite-window target with tangent checks kept at cell granularity.
+
+This is the practical split target when tangent row-range booleans are still
+too large for `native_decide`: product, displayed-solo, and edge obligations
+use fixed row chunks, while the tangent finite obligation is supplied as the
+already-supported cell predicate `checkPositiveSmallTangentExpEdgeCell`. -/
+structure PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+    (productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat) :
+    Prop where
+  productRowLenPos : 0 < productRowLen
+  soloSaddleRowLenPos : 0 < soloSaddleRowLen
+  soloBudgetRowLenPos : 0 < soloBudgetRowLen
+  edgeRowLenPos : 0 < edgeRowLen
+  nLenPos : 0 < nLen
+  smallXYProductRawClearedTableProductRowRangeKChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks productRowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveSmallXYProductRawClearedTableFixedNChunksRowRangeKChunk
+          nLen rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2 = true
+  temperedXYProductRawClearedTableProductRowRangeKChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks productRowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveTemperedXYProductRawClearedTableFixedNChunksRowRangeKChunk
+          nLen rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2 = true
+  smallTangentExpEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloYSaddleClearedRowRangeChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+      checkPositiveSoloDisplayedYSaddleClearedRange
+        rowChunk.1 rowChunk.2 = true
+  soloYBudgetRowRangeChunks :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+      checkPositiveSoloDisplayedYBoundUnitRange rowChunk.1 rowChunk.2 = true
+  edgeKChunkUnitRowRanges :
+    ∀ {rowChunk : Nat × Nat},
+      rowChunk ∈ positiveSaddleFixedRowChunks edgeRowLen →
+      ∀ {edgeChunk : Nat × Nat}, edgeChunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnitRowRange
+          rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+            (fun _ => positiveEdgeUniformScaleMin) = true
+
 /-- Large-`a` part shared by the generated fixed finite-window targets. -/
 structure PositiveSaddleLargeTailAuditCertificate : Prop where
   productPointwiseYRawUnitSolo :
@@ -4690,6 +4737,87 @@ theorem PositiveSaddleFixedFiniteWindowAllChunksAuditCertificate.toAuditCertific
       productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen
       edgeRowLen nLen :=
   cert.toFiniteWindowAuditCertificate.toAuditCertificate tail
+
+theorem PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
+    {productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+        productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleRawProductTableChunkedTangentCellEdgeBudgetCertificate
+      (positiveProductFixedNChunks nLen) where
+  productNChunksCover := by
+    intro _a _N _ha _h2000 hrect
+    exact positiveProductFixedNChunks_cover finite.nLenPos hrect
+  smallXYTableChunks := by
+    intro a nChunk kChunk ha h2000 hnChunk hkChunk
+    rcases positiveSaddleFixedRowChunks_cover
+        finite.productRowLenPos ha h2000 with
+      ⟨rowChunk, hrowChunk, hlo, hhi⟩
+    exact
+      checkPositiveSmallXYProductRawClearedTableFixedNChunksKChunk_of_rowRange
+        (finite.smallXYProductRawClearedTableProductRowRangeKChunks
+          (rowChunk := rowChunk) hrowChunk (edgeChunk := kChunk) hkChunk)
+        hlo hhi hnChunk
+  temperedXYTableChunks := by
+    intro a nChunk kChunk ha h2000 hnChunk hkChunk
+    rcases positiveSaddleFixedRowChunks_cover
+        finite.productRowLenPos ha h2000 with
+      ⟨rowChunk, hrowChunk, hlo, hhi⟩
+    exact
+      checkPositiveTemperedXYProductRawClearedTableFixedNChunksKChunk_of_rowRange
+        (finite.temperedXYProductRawClearedTableProductRowRangeKChunks
+          (rowChunk := rowChunk) hrowChunk (edgeChunk := kChunk) hkChunk)
+        hlo hhi hnChunk
+  smallTangentEdgeCells := finite.smallTangentExpEdgeCells
+  soloY :=
+    dyadic_Ynorm_le_positiveSoloBudget_of_displayedYBound_rowChunks
+      (positiveSaddleFixedRowChunks_cover finite.soloSaddleRowLenPos)
+      (positiveSaddleFixedRowChunks_cover finite.soloBudgetRowLenPos)
+      finite.soloYSaddleClearedRowRangeChunks
+      finite.soloYBudgetRowRangeChunks
+  edgeBudget := by
+    intro a ha h2000
+    exact positiveEdgeBudget_of_defaultKChunksUniformUnitChecks_of_scale_ge
+      ha h2000 le_rfl
+      (fun {chunk} hchunk =>
+        checkPositiveEdgeMajorantKChunkUnit_of_rowChunks
+          (positiveSaddleFixedRowChunks_cover finite.edgeRowLenPos)
+          finite.edgeKChunkUnitRowRanges
+          ha h2000 hchunk)
+  entropyTail :=
+    (tail.productPointwiseYRawUnitSolo.toProductPointwiseYRawCertificate
+      |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+        tail.candidateSplitTemperedRawClearedUnitReserve.toRawClearedBoundsCertificate).entropyTail
+
+theorem PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate.toTangentProductBudgetCertificate
+    {productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+        productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleTangentProductBudgetCertificate :=
+  finite.toRawProductTableChunkedTangentCellEdgeBudgetCertificate tail
+    |>.toTangentProductBudgetCertificate
+
+theorem PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate.toCertificate
+    {productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+        productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  (finite.toTangentProductBudgetCertificate tail).toCertificate
+
+theorem unorm_tail_of_positiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+    {productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+        productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
 
 theorem PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedFiniteRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toRawProductTableChunkedTangentCellEdgeBudgetCertificate
     {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen

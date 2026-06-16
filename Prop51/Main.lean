@@ -975,6 +975,20 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowAllChunksAuditCe
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     (cert.toTangentProductBudgetCertificate tail)
 
+/-- Final assembly from the fixed finite-window route with tangent checks
+kept at cell granularity.  This avoids the slow tangent row-range Boolean
+while retaining fixed row chunks for product, displayed-solo, and edge
+finite checks. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+    {productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCellTangentAuditCertificate
+        productRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen nLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
+
 /-- Final assembly from the fully fixed-width product chunk route.  Product
 checks use fixed-width row chunks and fixed-width `N` chunks, while tangent,
 displayed-solo, and edge checks use the default fixed-scale chunk interfaces. -/
