@@ -388,6 +388,19 @@ def positiveTemperedXYProductBound (a N k : Nat) : ℚ :=
   (2117/20) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
+/-! ### Finite-check targets for the remaining positive saddle budgets -/
+
+/-- The scalar exponential gap needed to replace the actual small-regime
+`N`-denominator by the upper rectangle edge.  This is the finite rational
+inequality that remains after cancelling the common positive factors in
+`positiveSmallXYProductAtBound ≤ positiveSmallXYProductBound`. -/
+def positiveSmallExpEdgeGap (a N k : Nat) : Prop :=
+  (posNhi a : ℚ) *
+      partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff
+    ≤
+    (N : ℚ) *
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
 /-! ### Displayed `X`/`Y` saddle-bound shapes -/
 
 /-- The small-regime `X_k(N)` exponent from the TeX display. -/
@@ -627,6 +640,17 @@ def positiveSoloBudget : ℚ := positiveTarget / 2
 corrected two-edge finite scan. -/
 def positiveEdgeBudget : ℚ := positiveTarget / 2
 
+/-- Boolean row check for the corrected two-edge finite budget.  Directly
+evaluating the full range is currently too slow to use as the main certificate;
+this definition is nevertheless useful for generated chunks and small audits. -/
+def checkPositiveEdgeBudgetRow (a : Nat) : Bool :=
+  decide (positiveEdgeMajorantSum a ≤ positiveEdgeBudget)
+
+/-- Boolean range check for the corrected two-edge finite budget over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveEdgeBudgetRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveEdgeBudgetRow
+
 /-- The rational sign-lock margin left after the `2215/m²` error budget. -/
 def signLockMargin (m : Nat) : ℚ :=
   expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2
@@ -668,6 +692,37 @@ theorem positiveEdgeBudget_nonneg : 0 ≤ positiveEdgeBudget := by
 theorem positiveSoloBudget_add_edgeBudget :
     positiveSoloBudget + positiveEdgeBudget = positiveTarget := by
   norm_num [positiveSoloBudget, positiveEdgeBudget, positiveTarget]
+
+/-- Soundness of one executable row check for the corrected two-edge budget. -/
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetRow {a : Nat}
+    (h : checkPositiveEdgeBudgetRow a = true) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  exact of_decide_eq_true h
+
+/-- Soundness of a finite executable range check for the corrected two-edge
+budget.  The range is half-open: `lo ≤ a < lo+len`. -/
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetRange
+    {lo len a : Nat} (h : checkPositiveEdgeBudgetRange lo len = true)
+    (hlo : lo ≤ a) (hhi : a < lo + len) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  apply positiveEdgeBudget_of_checkPositiveEdgeBudgetRow
+  have hall :
+      ∀ x ∈ List.range' lo len, checkPositiveEdgeBudgetRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetRange] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
+
+/-- The full finite-window edge-budget field follows from a single range check
+over `401 ≤ a ≤ 2000`.  In practice this theorem is meant to be used with
+smaller generated chunk theorems or a faster checker rather than one enormous
+`native_decide`. -/
+theorem positiveEdgeBudget_401_2000_of_checkPositiveEdgeBudgetRange
+    (h : checkPositiveEdgeBudgetRange 401 1600 = true) :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  intro a ha h2000
+  exact positiveEdgeBudget_of_checkPositiveEdgeBudgetRange
+    (lo := 401) (len := 1600) h ha (by omega)
 
 theorem positiveEnvelopeBound_le_target_of_budgets
     {a : Nat} {soloBound : ℚ}
@@ -1528,6 +1583,52 @@ theorem positiveSmallXYProductAtBound_nonneg {a N k : Nat}
   unfold positiveSmallXYProductAtBound
   positivity
 
+/-- Convert the pure small-regime exponential gap into the actual finite-edge
+replacement for the combined `X*Y` product target.
+
+After cancelling the common positive factor
+`(2581/20) * k * (a-k)`, the remaining inequality is exactly
+`posNhi a * partialExpUpper(at) ≤ N * partialExpUpper(upper)`. -/
+theorem positiveSmallXYProductAtBound_le_bound_of_expGap {a N k : Nat}
+    (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hgap : positiveSmallExpEdgeGap a N k) :
+    positiveSmallXYProductAtBound a N k ≤ positiveSmallXYProductBound a N k := by
+  let Eat := partialExpUpper (positiveSmallExponentAt a N k) positiveExpCutoff
+  let Eup := partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hNne : (N : ℚ) ≠ 0 := hNpos.ne'
+  have hhiPos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos ha
+  have hhiNe : (posNhi a : ℚ) ≠ 0 := hhiPos.ne'
+  have hgap' : (posNhi a : ℚ) * Eat ≤ (N : ℚ) * Eup := by
+    simpa [positiveSmallExpEdgeGap, Eat, Eup] using hgap
+  have hfrac :
+      Eat / ((N : ℚ)^2) ≤ Eup / ((N : ℚ) * (posNhi a : ℚ)) := by
+    rw [div_le_div_iff₀ (by positivity : (0 : ℚ) < (N : ℚ)^2)
+      (by positivity : (0 : ℚ) < (N : ℚ) * (posNhi a : ℚ))]
+    have hmul := mul_le_mul_of_nonneg_left hgap' hNpos.le
+    nlinarith
+  have hcoef :
+      0 ≤ (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) := by
+    positivity
+  unfold positiveSmallXYProductAtBound positiveSmallXYProductBound
+  change
+    (2581/20 : ℚ) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) * Eat
+      ≤
+    (2581/20 : ℚ) *
+      (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup
+  calc
+    (2581/20 : ℚ) * (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ)^2)) * Eat
+        = (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            (Eat / ((N : ℚ)^2)) := by
+          field_simp [hNne]
+    _ ≤ (2581/20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            (Eup / ((N : ℚ) * (posNhi a : ℚ))) :=
+          mul_le_mul_of_nonneg_left hfrac hcoef
+    _ = (2581/20 : ℚ) *
+          (((k : ℚ) * (posJ a k : ℚ)) / ((N : ℚ) * (posNhi a : ℚ))) * Eup := by
+          field_simp [hNne, hhiNe]
+
 theorem positiveTemperedXYProductBound_nonneg {a N k : Nat}
     (hN : 1 ≤ N) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
     (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
@@ -2153,6 +2254,35 @@ structure PositiveSaddleAtProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Actual-`N` certificate with the small upper-edge replacement reduced to
+the cancellable exponential-gap inequality `positiveSmallExpEdgeGap`.
+
+This is the intended target for finite/generated checks of the small edge: the
+analytic estimate proves the actual `X*Y` product bound, while the edge checker
+only has to compare the two single `partialExpUpper` expressions with the
+linear `N`/`posNhi` factors. -/
+structure PositiveSaddleAtExpBudgetCertificate : Prop where
+  smallXYAt :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductAtBound a N k
+  smallExpEdge :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveSmallExpEdgeGap a N k
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -2205,6 +2335,20 @@ theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertific
     intro a N k ha ha2000 hrect hk hsmall hB
     exact (cert.smallXYAt ha ha2000 hrect hk hsmall hB).trans
       (cert.smallEdge ha ha2000 hrect hk hsmall hB)
+  temperedXY := cert.temperedXY
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleAtExpBudgetCertificate.toAtProductBudgetCertificate
+    (cert : PositiveSaddleAtExpBudgetCertificate) :
+    PositiveSaddleAtProductBudgetCertificate where
+  smallXYAt := cert.smallXYAt
+  smallEdge := by
+    intro a N k ha ha2000 hrect hk hsmall _hB
+    exact positiveSmallXYProductAtBound_le_bound_of_expGap
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
+      (cert.smallExpEdge ha ha2000 hrect hk hsmall)
   temperedXY := cert.temperedXY
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
@@ -2351,6 +2495,11 @@ theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toCombinedProductBudgetCertificate.toCertificate
 
+theorem PositiveSaddleAtExpBudgetCertificate.toCertificate
+    (cert : PositiveSaddleAtExpBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toAtProductBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -2411,6 +2560,11 @@ theorem unorm_tail_of_positiveSaddleCombinedProductBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleAtProductBudgetCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleAtExpBudgetCertificate
+    (cert : PositiveSaddleAtExpBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

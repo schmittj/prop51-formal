@@ -229,6 +229,15 @@ theorem coefficientNegativity_of_positiveSaddleAtProductBudgetCertificate
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleAtProductBudgetCertificate cert)
 
+/-- Final assembly from the actual-`N` combined product certificate whose
+small upper-edge replacement is stated as the cancellable exponential-gap
+inequality. -/
+theorem coefficientNegativity_of_positiveSaddleAtExpBudgetCertificate
+    (cert : PositiveSaddleAtExpBudgetCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleAtExpBudgetCertificate cert)
+
 /-- Final assembly from the decomposed `X`/`Y` saddle-bound version of the
 §6 positive-saddle certificate. -/
 theorem coefficientNegativity_of_positiveSaddleXYCertificate

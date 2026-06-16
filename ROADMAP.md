@@ -262,7 +262,13 @@ Status:
       The actual-`N` version, `PositiveSaddleAtProductBudgetCertificate`,
       separates the analytic small-regime product estimate from the remaining
       upper-edge replacement `positiveSmallXYProductAtBound ≤
-      positiveSmallXYProductBound`.
+      positiveSmallXYProductBound`.  This replacement is now further reduced to
+      the cancellable rational inequality `positiveSmallExpEdgeGap`; the
+      interface `PositiveSaddleAtExpBudgetCertificate` uses that smaller field
+      and converts to the actual-`N` product certificate.  Lean also exposes
+      `checkPositiveEdgeBudgetRow`/`checkPositiveEdgeBudgetRange` and soundness
+      lemmas for the finite corrected-edge budget, intended for generated row
+      chunks or a faster checker rather than one monolithic direct evaluation.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
