@@ -273,7 +273,9 @@ Status:
       `PositiveSaddleAtAnchorBudgetCertificate` asks only for
       `positiveSmallExpEdgeGapAtCeil` at the anchor
       `positiveSmallEdgeAnchor a s`, where
-      `s ∈ positiveSmallCeilRange a`.
+      `s ∈ positiveSmallCeilRange a`.  The matching executable predicates
+      `checkPositiveSmallExpEdgeAnchorCell`/`Ceil`/`Row`/`Range` have soundness
+      lemmas down to the full finite-window certificate field.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

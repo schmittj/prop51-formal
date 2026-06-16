@@ -713,6 +713,39 @@ def checkPositiveEdgeBudgetRow (a : Nat) : Bool :=
 def checkPositiveEdgeBudgetRange (lo len : Nat) : Bool :=
   (List.range' lo len).all checkPositiveEdgeBudgetRow
 
+/-- Executable list form of `positiveKRange a`. -/
+def positiveKRangeList (a : Nat) : List Nat :=
+  List.range' 1 (posKmax a)
+
+/-- Executable list form of `positiveSmallCeilRange a`. -/
+def positiveSmallCeilRangeList (a : Nat) : List Nat :=
+  List.range' (posTemperedCutoff a)
+    (posSmallCutoff a + 1 - posTemperedCutoff a)
+
+instance decidablePositiveSmallExpEdgeGapAtCeil (a s k : Nat) :
+    Decidable (positiveSmallExpEdgeGapAtCeil a s k) := by
+  unfold positiveSmallExpEdgeGapAtCeil
+  infer_instance
+
+/-- Boolean check for one plateau-anchor small-edge exponential gap. -/
+def checkPositiveSmallExpEdgeAnchorCell (a s k : Nat) : Bool :=
+  decide (positiveSmallExpEdgeGapAtCeil a s k)
+
+/-- Boolean check for all retained `k ≤ s` at a fixed `(a,s)` plateau. -/
+def checkPositiveSmallExpEdgeAnchorCeil (a s : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ s then checkPositiveSmallExpEdgeAnchorCell a s k else true
+
+/-- Boolean check for every small-regime plateau at a fixed row `a`. -/
+def checkPositiveSmallExpEdgeAnchorRow (a : Nat) : Bool :=
+  (positiveSmallCeilRangeList a).all fun s =>
+    checkPositiveSmallExpEdgeAnchorCeil a s
+
+/-- Boolean range check for the plateau-anchor small-edge exponential gaps over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveSmallExpEdgeAnchorRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSmallExpEdgeAnchorRow
+
 /-- The rational sign-lock margin left after the `2215/m²` error budget. -/
 def signLockMargin (m : Nat) : ℚ :=
   expNegLower50 * (1 - 2/(m : ℚ)) - 2215 / (m : ℚ)^2
@@ -785,6 +818,85 @@ theorem positiveEdgeBudget_401_2000_of_checkPositiveEdgeBudgetRange
   intro a ha h2000
   exact positiveEdgeBudget_of_checkPositiveEdgeBudgetRange
     (lo := 401) (len := 1600) h ha (by omega)
+
+/-- Membership bridge from the `Finset` retained range to its executable list
+enumerator. -/
+theorem mem_positiveKRangeList_of_mem {a k : Nat}
+    (hk : k ∈ positiveKRange a) :
+    k ∈ positiveKRangeList a := by
+  rcases (mem_positiveKRange.mp hk) with ⟨hk1, hkmax⟩
+  exact (List.mem_range'_1).mpr (by
+    exact ⟨hk1, by omega⟩)
+
+/-- Membership bridge from the `Finset` plateau range to its executable list
+enumerator. -/
+theorem mem_positiveSmallCeilRangeList_of_mem {a s : Nat}
+    (hs : s ∈ positiveSmallCeilRange a) :
+    s ∈ positiveSmallCeilRangeList a := by
+  rcases (Finset.mem_Icc.mp hs) with ⟨hslo, hshi⟩
+  exact (List.mem_range'_1).mpr (by
+    exact ⟨hslo, by omega⟩)
+
+/-- Soundness of one executable plateau-anchor small-edge check. -/
+theorem positiveSmallExpEdgeGapAtCeil_of_checkCell {a s k : Nat}
+    (h : checkPositiveSmallExpEdgeAnchorCell a s k = true) :
+    positiveSmallExpEdgeGapAtCeil a s k := by
+  exact of_decide_eq_true h
+
+/-- Soundness of the executable `(a,s)` plateau check. -/
+theorem positiveSmallExpEdgeGapAtCeil_of_checkCeil {a s k : Nat}
+    (h : checkPositiveSmallExpEdgeAnchorCeil a s = true)
+    (hk : k ∈ positiveKRange a) (hks : k ≤ s) :
+    positiveSmallExpEdgeGapAtCeil a s k := by
+  apply positiveSmallExpEdgeGapAtCeil_of_checkCell
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if x ≤ s then checkPositiveSmallExpEdgeAnchorCell a s x else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallExpEdgeAnchorCeil] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  simpa [hks] using hx
+
+/-- Soundness of the executable small-edge row check. -/
+theorem positiveSmallExpEdgeGapAtCeil_of_checkRow {a s k : Nat}
+    (h : checkPositiveSmallExpEdgeAnchorRow a = true)
+    (hs : s ∈ positiveSmallCeilRange a) (hk : k ∈ positiveKRange a)
+    (hks : k ≤ s) :
+    positiveSmallExpEdgeGapAtCeil a s k := by
+  have hall :
+      ∀ x ∈ positiveSmallCeilRangeList a,
+        checkPositiveSmallExpEdgeAnchorCeil a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallExpEdgeAnchorRow] using h)
+  exact positiveSmallExpEdgeGapAtCeil_of_checkCeil
+    (hall s (mem_positiveSmallCeilRangeList_of_mem hs)) hk hks
+
+/-- Soundness of an executable range check for the plateau-anchor small edge. -/
+theorem positiveSmallExpEdgeGapAtCeil_of_checkRange
+    {lo len a s k : Nat}
+    (h : checkPositiveSmallExpEdgeAnchorRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hs : s ∈ positiveSmallCeilRange a) (hk : k ∈ positiveKRange a)
+    (hks : k ≤ s) :
+    positiveSmallExpEdgeGapAtCeil a s k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallExpEdgeAnchorRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallExpEdgeAnchorRange] using h)
+  exact positiveSmallExpEdgeGapAtCeil_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hs hk hks
+
+/-- The full finite-window `smallExpEdgeAnchor` certificate field follows from
+a range check over `401 ≤ a ≤ 2000`. -/
+theorem positiveSmallExpEdgeAnchor_401_2000_of_checkRange
+    (h : checkPositiveSmallExpEdgeAnchorRange 401 1600 = true) :
+    ∀ {a s k : Nat}, 401 ≤ a → a ≤ 2000 →
+      s ∈ positiveSmallCeilRange a → k ∈ positiveKRange a → k ≤ s →
+        positiveSmallExpEdgeGapAtCeil a s k := by
+  intro a s k ha h2000 hs hk hks
+  exact positiveSmallExpEdgeGapAtCeil_of_checkRange
+    (lo := 401) (len := 1600) h ha (by omega) hs hk hks
 
 theorem positiveEnvelopeBound_le_target_of_budgets
     {a : Nat} {soloBound : ℚ}
