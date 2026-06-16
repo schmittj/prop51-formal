@@ -176,6 +176,16 @@ theorem posJ_pos_of_le_posKmax {a k : Nat} (ha : 1 ≤ a)
   have hka : k < a := lt_self_of_le_posKmax ha hk
   omega
 
+theorem posJ_pos_of_mem_positiveKRange {a k : Nat} (ha : 1 ≤ a)
+    (hk : k ∈ positiveKRange a) :
+    0 < posJ a k := by
+  exact posJ_pos_of_le_posKmax ha (mem_positiveKRange.mp hk).2
+
+theorem one_le_posJ_of_mem_positiveKRange {a k : Nat} (ha : 1 ≤ a)
+    (hk : k ∈ positiveKRange a) :
+    1 ≤ posJ a k :=
+  Nat.succ_le_of_lt (posJ_pos_of_mem_positiveKRange ha hk)
+
 /-- In the retained range, `j=a-k` still has size at least `a/10`. -/
 theorem self_le_ten_mul_posJ_of_le_posKmax {a k : Nat}
     (hk : k ≤ posKmax a) :
@@ -432,6 +442,22 @@ guard. -/
 def normalizedPositiveRawTerm (a N k : Nat) : ℚ :=
   Bq N k * Qq N (a-k) / ((N : ℚ) * c a)
 
+/-- Paper §6's normalized `Y_j(N)`:
+`Q_j(N) = (N/2)c_j 2^{-j}Y_j(N)`.  This is only a definition; the analytic
+upper bounds on `Y_j` are supplied separately by the saddle certificate. -/
+def Ynorm (N j : Nat) : ℚ :=
+  Qq N j / (((N : ℚ) / 2) * c j / (2 : ℚ)^j)
+
+/-- The coefficient ratio `R_{k,a}=c_k c_{a-k}/c_a` from paper §6. -/
+def positiveCRatio (a k : Nat) : ℚ :=
+  c k * c (posJ a k) / c a
+
+/-- The factorized form of a raw positive summand used in paper §6 before
+the small/tempered saddle estimates are inserted. -/
+def positiveFactorizedRawTerm (a N k : Nat) : ℚ :=
+  ((N : ℚ) / 2) * positiveCRatio a k *
+    positiveDyadicDecay (posJ a k) * Xnorm N k * Ynorm N (posJ a k)
+
 /-- One normalized raw positive summand with the same guard as `Unorm_eq`. -/
 def normalizedPositiveIfTerm (a N k : Nat) : ℚ :=
   if 1 ≤ k ∧ 0 < Bq N k then normalizedPositiveRawTerm a N k else 0
@@ -455,6 +481,131 @@ theorem normalizedPositiveIfTerm_le_of_raw_le
     exact hraw hguard.1 hguard.2
   · rw [if_neg hguard]
     exact hM
+
+theorem Qq_nonneg (N j : Nat) : 0 ≤ Qq N j := by
+  unfold Qq
+  refine expCoeff_nonneg ?_ j
+  intro r
+  have hN : 0 ≤ (N : ℚ) := Nat.cast_nonneg N
+  exact div_nonneg
+    (mul_nonneg (div_nonneg hN (by norm_num)) (c_nonneg r))
+    (by positivity)
+
+theorem Ynorm_nonneg (N j : Nat) : 0 ≤ Ynorm N j := by
+  unfold Ynorm
+  have hN : 0 ≤ (N : ℚ) := Nat.cast_nonneg N
+  exact div_nonneg (Qq_nonneg N j)
+    (div_nonneg
+      (mul_nonneg (div_nonneg hN (by norm_num)) (c_nonneg j))
+      (by positivity))
+
+theorem positiveCRatio_nonneg (a k : Nat) : 0 ≤ positiveCRatio a k := by
+  unfold positiveCRatio
+  exact div_nonneg (mul_nonneg (c_nonneg k) (c_nonneg (posJ a k))) (c_nonneg a)
+
+theorem positiveCRatio_pos {a k : Nat} (ha : 1 ≤ a) (hk : 1 ≤ k)
+    (hj : 1 ≤ posJ a k) :
+    0 < positiveCRatio a k := by
+  unfold positiveCRatio
+  exact div_pos (mul_pos (c_pos k hk) (c_pos (posJ a k) hj)) (c_pos a ha)
+
+theorem Qq_eq_yfactor_mul_Ynorm {N j : Nat} (hN : 1 ≤ N) (hj : 1 ≤ j) :
+    Qq N j = ((N : ℚ) / 2) * c j / (2 : ℚ)^j * Ynorm N j := by
+  have hden :
+      ((N : ℚ) / 2) * c j / (2 : ℚ)^j ≠ 0 := by
+    have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hcj : 0 < c j := c_pos j hj
+    positivity
+  unfold Ynorm
+  rw [mul_comm]
+  exact (div_mul_cancel₀ (Qq N j) hden).symm
+
+theorem normalizedPositiveRawTerm_eq_Xnorm_mul_c
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) (hk : 1 ≤ k) :
+    normalizedPositiveRawTerm a N k =
+      Xnorm N k * c k * Qq N (a-k) / c a := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  have hca : c a ≠ 0 := (c_pos a ha).ne'
+  have hck : c k ≠ 0 := (c_pos k hk).ne'
+  unfold normalizedPositiveRawTerm Xnorm
+  field_simp [hNQ, hca, hck]
+
+theorem normalizedSoloTerm_eq_dyadic_Ynorm
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    normalizedSoloTerm a N = positiveDyadicDecay a / 2 * Ynorm N a := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  have hca : c a ≠ 0 := (c_pos a ha).ne'
+  have hYden :
+      ((N : ℚ) / 2) * c a / (2 : ℚ)^a ≠ 0 := by
+    have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hcapos : 0 < c a := c_pos a ha
+    positivity
+  unfold normalizedSoloTerm Ynorm positiveDyadicDecay
+  field_simp [hNQ, hca, hYden]
+
+/-- Exact algebraic form of the raw §6 summand before analytic saddle
+estimates are inserted:
+`B_k Q_{a-k}/(N c_a) = (N/2) R_{k,a} 2^{-(a-k)} X_k Y_{a-k}`. -/
+theorem normalizedPositiveRawTerm_eq_Xnorm_Ynorm
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) (hk : 1 ≤ k)
+    (hj : 1 ≤ posJ a k) :
+    normalizedPositiveRawTerm a N k = positiveFactorizedRawTerm a N k := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  have hca : c a ≠ 0 := (c_pos a ha).ne'
+  have hck : c k ≠ 0 := (c_pos k hk).ne'
+  have hcj : c (posJ a k) ≠ 0 := (c_pos (posJ a k) hj).ne'
+  have hYden :
+      ((N : ℚ) / 2) * c (posJ a k) / (2 : ℚ)^(posJ a k) ≠ 0 := by
+    have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    have hcjpos : 0 < c (posJ a k) := c_pos (posJ a k) hj
+    positivity
+  unfold normalizedPositiveRawTerm
+  change Bq N k * Qq N (posJ a k) / ((N : ℚ) * c a) =
+      positiveFactorizedRawTerm a N k
+  unfold positiveFactorizedRawTerm Xnorm Ynorm positiveCRatio positiveDyadicDecay
+  field_simp [hNQ, hca, hck, hcj, hYden]
+
+theorem normalizedPositiveRawTerm_nonneg_of_Bq_nonneg
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) (hB : 0 ≤ Bq N k) :
+    0 ≤ normalizedPositiveRawTerm a N k := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hca : 0 < c a := c_pos a ha
+  unfold normalizedPositiveRawTerm
+  exact div_nonneg (mul_nonneg hB (Qq_nonneg N (a-k)))
+    (mul_nonneg hNQ.le hca.le)
+
+theorem normalizedPositiveRawTerm_nonpos_of_Bq_nonpos
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) (hB : Bq N k ≤ 0) :
+    normalizedPositiveRawTerm a N k ≤ 0 := by
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hca : 0 < c a := c_pos a ha
+  unfold normalizedPositiveRawTerm
+  exact div_nonpos_of_nonpos_of_nonneg
+    (mul_nonpos_of_nonpos_of_nonneg hB (Qq_nonneg N (a-k)))
+    (mul_nonneg hNQ.le hca.le)
+
+/-- To prove a raw positive summand is below a nonnegative majorant, it is
+enough to prove the factorized §6 bound in the only case that matters,
+`B_k(N)>0`.  If `B_k(N)≤0`, the raw summand is already nonpositive. -/
+theorem normalizedPositiveRawTerm_le_of_factorized_bound
+    {a N k : Nat} {M : ℚ} (hN : 1 ≤ N) (ha : 1 ≤ a) (hk : 1 ≤ k)
+    (hj : 1 ≤ posJ a k) (hM : 0 ≤ M)
+    (hfactor : 0 < Bq N k → positiveFactorizedRawTerm a N k ≤ M) :
+    normalizedPositiveRawTerm a N k ≤ M := by
+  by_cases hB : 0 < Bq N k
+  · rw [normalizedPositiveRawTerm_eq_Xnorm_Ynorm hN ha hk hj]
+    exact hfactor hB
+  · exact (normalizedPositiveRawTerm_nonpos_of_Bq_nonpos hN ha
+      (le_of_not_gt hB)).trans hM
+
+theorem normalizedPositiveIfTerm_nonneg
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    0 ≤ normalizedPositiveIfTerm a N k := by
+  unfold normalizedPositiveIfTerm
+  by_cases hguard : 1 ≤ k ∧ 0 < Bq N k
+  · rw [if_pos hguard]
+    exact normalizedPositiveRawTerm_nonneg_of_Bq_nonneg hN ha hguard.2.le
+  · rw [if_neg hguard]
 
 theorem Bq_pos_iff_Xnorm_pos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k) :
     0 < Bq N k ↔ 0 < Xnorm N k := by
@@ -744,6 +895,33 @@ theorem positiveTemperedMajorantTerm_nonneg {a k : Nat}
     (positivePrefactor_nonneg (by norm_num) (by
       exact Nat.succ_le_of_lt (posNlo_pos (by omega : 2 ≤ a)))
       (by omega : 2 ≤ a) hk1 hkmax) hExp
+
+theorem normalizedPositiveRawTerm_le_smallMajorant_of_factorized_bound
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (hfactor :
+      0 < Bq N k → positiveFactorizedRawTerm a N k ≤ positiveSmallMajorantTerm a k) :
+    normalizedPositiveRawTerm a N k ≤ positiveSmallMajorantTerm a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  exact normalizedPositiveRawTerm_le_of_factorized_bound
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
+    hk1 (one_le_posJ_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange)
+    (positiveSmallMajorantTerm_nonneg ha401 ha2000 hkRange) hfactor
+
+theorem normalizedPositiveRawTerm_le_temperedMajorant_of_factorized_bound
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k)
+    (hfactor :
+      0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveTemperedMajorantTerm a k) :
+    normalizedPositiveRawTerm a N k ≤ positiveTemperedMajorantTerm a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  exact normalizedPositiveRawTerm_le_of_factorized_bound
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)
+    hk1 (one_le_posJ_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange)
+    (positiveTemperedMajorantTerm_nonneg ha401 ha2000 hkRange
+      (temperedRegime_of_rectangle hrect htempered)) hfactor
 
 theorem positiveEdgeMajorantTerm_nonneg {a k : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
