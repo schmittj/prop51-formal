@@ -418,7 +418,10 @@ Status:
       endpoint,
       `PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
       uses one edge unit scale per row and reduces the reciprocal-budget field
-      to the single inequality `90 / scale ≤ positiveEdgeBudget`.
+      to the single inequality `90 / scale ≤ positiveEdgeBudget`; the
+      parallel `PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+      then discharges that rational inequality from the natural threshold
+      `positiveEdgeUniformScaleMin ≤ scale`.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

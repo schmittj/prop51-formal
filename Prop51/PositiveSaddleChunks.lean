@@ -114,6 +114,18 @@ reducers in `PositiveSaddle.lean`. -/
 def positiveEdgeDefaultKChunks : Finset (Nat × Nat) :=
   (Finset.range 90).image fun i => (1 + 20 * i, 20)
 
+/-- Common edge scale threshold sufficient for the 90 default reciprocal
+`k`-chunk budgets to fit inside `positiveEdgeBudget = 1 / 200000000`. -/
+def positiveEdgeUniformScaleMin : Nat := 18000000000
+
+theorem positiveEdgeUniformScaleMin_pos : 0 < positiveEdgeUniformScaleMin := by
+  norm_num [positiveEdgeUniformScaleMin]
+
+theorem positiveEdgeUniformScale_pos_of_scale_ge
+    {scale : Nat} (hscale : positiveEdgeUniformScaleMin ≤ scale) :
+    0 < scale := by
+  exact positiveEdgeUniformScaleMin_pos.trans_le hscale
+
 theorem positiveEdgeDefaultKChunks_card :
     positiveEdgeDefaultKChunks.card = 90 := by
   unfold positiveEdgeDefaultKChunks
@@ -208,6 +220,28 @@ theorem positiveEdgeDefaultKChunks_uniformBudget
   rw [show (90 : ℚ) * (1 / (scale : ℚ)) = (90 : ℚ) / (scale : ℚ) by ring]
   exact hbudget
 
+theorem positiveEdgeUniformBudget_of_scale_ge
+    {scale : Nat} (hscale : positiveEdgeUniformScaleMin ≤ scale) :
+    (90 : ℚ) / (scale : ℚ) ≤ positiveEdgeBudget := by
+  rw [positiveEdgeBudget_eq_inv_200000000]
+  have hscalePosQ : (0 : ℚ) < (scale : ℚ) := by
+    exact_mod_cast positiveEdgeUniformScale_pos_of_scale_ge hscale
+  rw [div_le_iff₀ hscalePosQ]
+  have hscaleQ : (positiveEdgeUniformScaleMin : ℚ) ≤ (scale : ℚ) := by
+    exact_mod_cast hscale
+  have hmul :=
+    mul_le_mul_of_nonneg_left hscaleQ
+      (by norm_num : (0 : ℚ) ≤ 1 / 200000000)
+  norm_num [positiveEdgeUniformScaleMin] at hmul
+  simpa [mul_comm] using hmul
+
+theorem positiveEdgeDefaultKChunks_uniformBudget_of_scale_ge
+    {scale : Nat} (hscale : positiveEdgeUniformScaleMin ≤ scale) :
+    ∑ _chunk ∈ positiveEdgeDefaultKChunks,
+      (1 : ℚ) / (scale : ℚ) ≤ positiveEdgeBudget :=
+  positiveEdgeDefaultKChunks_uniformBudget
+    (positiveEdgeUniformBudget_of_scale_ge hscale)
+
 theorem positiveEdgeBudget_of_defaultKChunksUniformUnitChecks
     {a scale : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) (hscale : 0 < scale)
@@ -222,6 +256,21 @@ theorem positiveEdgeBudget_of_defaultKChunksUniformUnitChecks
     (fun {_chunk} _hchunk => hscale)
     hchunks
     (positiveEdgeDefaultKChunks_uniformBudget hbudget)
+
+theorem positiveEdgeBudget_of_defaultKChunksUniformUnitChecks_of_scale_ge
+    {a scale : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hscale : positiveEdgeUniformScaleMin ≤ scale)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 scale = true) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget :=
+  positiveEdgeBudget_of_defaultKChunksUniformUnitChecks
+    ha401 ha2000
+    (positiveEdgeUniformScale_pos_of_scale_ge hscale)
+    hchunks
+    (positiveEdgeUniformBudget_of_scale_ge hscale)
 
 /-- Constructor for the default chunk cover, leaving only the five families of
 Boolean chunk checks to generated certificates. -/
@@ -1888,6 +1937,44 @@ theorem positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidate
       positiveEdgeDefaultKChunks_uniformBudget (hedgeBudget ha h2000))
     pointwise bounds
 
+theorem positiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          checkPositiveSmallTangentExpEdgeCell a N k = true)
+    (hsolo :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (edgeScale : Nat → Nat)
+    (hedgeScale :
+      ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+        positiveEdgeUniformScaleMin ≤ edgeScale a)
+    (hedgeChunks :
+      ∀ {a : Nat} {chunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+        chunk ∈ positiveEdgeDefaultKChunks →
+          checkPositiveEdgeMajorantKChunkUnit
+            a chunk.1 chunk.2 (edgeScale a) = true)
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate :=
+  positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetCertificate_of_parts
+    hsmall htempered htangent hsolo
+    edgeScale
+    (fun {_a} ha h2000 =>
+      positiveEdgeUniformScale_pos_of_scale_ge (hedgeScale ha h2000))
+    hedgeChunks
+    (fun {_a} ha h2000 =>
+      positiveEdgeUniformBudget_of_scale_ge (hedgeScale ha h2000))
+    pointwise bounds
+
 /-- Audit target using the same edge unit scale for every default `k`-chunk
 in a fixed row `a`.
 
@@ -1927,6 +2014,42 @@ structure PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandida
   candidateSplitTemperedRawClearedUnitReserve :
     PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
 
+/-- Same uniform edge-scale audit target, with the reciprocal-budget field
+replaced by the natural lower bound
+`positiveEdgeUniformScaleMin ≤ edgeScale a`.
+
+This is a Lean-side generated-certificate convenience: the definition of
+`positiveEdgeUniformScaleMin` proves exactly the rational inequality required
+by the sibling uniform-budget endpoint. -/
+structure PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    (edgeScale : Nat → Nat) :
+    Prop where
+  smallXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true
+  temperedXplusYProductGcompChunks :
+    ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+      checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true
+  smallTangentExpEdgeCells :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        checkPositiveSmallTangentExpEdgeCell a N k = true
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeScaleLarge :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeUniformScaleMin ≤ edgeScale a
+  edgeKChunkUnitChecks :
+    ∀ {a : Nat} {chunk : Nat × Nat}, 401 ≤ a → a ≤ 2000 →
+      chunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 (edgeScale a) = true
+  productPointwiseYRawUnitSolo :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
 theorem PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
     {edgeScale : Nat → Nat}
     (cert :
@@ -1945,6 +2068,36 @@ theorem PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidate
     cert.productPointwiseYRawUnitSolo
     cert.candidateSplitTemperedRawClearedUnitReserve
 
+theorem PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toUniformKChunkBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale where
+  smallXplusYProductGcompChunks := cert.smallXplusYProductGcompChunks
+  temperedXplusYProductGcompChunks := cert.temperedXplusYProductGcompChunks
+  smallTangentExpEdgeCells := cert.smallTangentExpEdgeCells
+  soloY := cert.soloY
+  edgeScalePos := by
+    intro a ha h2000
+    exact positiveEdgeUniformScale_pos_of_scale_ge (cert.edgeScaleLarge ha h2000)
+  edgeKChunkUnitChecks := cert.edgeKChunkUnitChecks
+  edgeKChunkBudget := by
+    intro a ha h2000
+    exact positiveEdgeUniformBudget_of_scale_ge (cert.edgeScaleLarge ha h2000)
+  productPointwiseYRawUnitSolo := cert.productPointwiseYRawUnitSolo
+  candidateSplitTemperedRawClearedUnitReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+
+theorem PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleXplusGcompTangentCellEdgeBudgetCertificate :=
+  cert.toUniformKChunkBudgetAuditCertificate.toXplusGcompTangentCellEdgeBudgetCertificate
+
 theorem PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toCertificate
     {edgeScale : Nat → Nat}
     (cert :
@@ -1953,10 +2106,26 @@ theorem PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentCellEdgeBudgetCertificate.toCertificate
 
+theorem PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate.toCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentCellEdgeBudgetCertificate.toCertificate
+
 theorem unorm_tail_of_positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
     {edgeScale : Nat → Nat}
     (cert :
       PositiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+        edgeScale) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
+    {edgeScale : Nat → Nat}
+    (cert :
+      PositiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate
         edgeScale) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate

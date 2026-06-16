@@ -61,7 +61,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate imply full `CoefficientNegativity`.
   The sibling theorem
   `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeUniformKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-  is the same route with one edge unit scale per row.
+  is the same route with one edge unit scale per row; the further sibling
+  `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeUniformLargeScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+  replaces the rational reciprocal-budget proof by the natural lower bound
+  `Prop51.positiveEdgeUniformScaleMin ≤ edgeScale a`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.
