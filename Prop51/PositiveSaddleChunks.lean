@@ -133,6 +133,64 @@ theorem positiveProductSingletonNChunks_cover
       ⟨N, mem_positiveNRangeList_of_rectangle hrect, rfl⟩
   · exact (List.mem_range'_1).mpr ⟨le_rfl, by omega⟩
 
+/-- Fixed-width `N`-chunks for the positive rectangle at a fixed row `a`.
+
+The final chunk is allowed to overrun `posNhi a`; the table-backed product
+range checker ignores values outside `positiveRectangle a`, which keeps this
+cover simple for generated certificates.  Use a positive `nLen`; for
+`nLen = 0` the list is empty. -/
+def positiveProductFixedNChunks (nLen a : Nat) : List (Nat × Nat) :=
+  if nLen = 0 then []
+  else
+    let len := posNhi a + 1 - posNlo a
+    (List.range ((len + nLen - 1) / nLen)).map fun i =>
+      (posNlo a + nLen * i, nLen)
+
+theorem positiveProductFixedNChunks_cover
+    {nLen a N : Nat} (hnLen : 0 < nLen)
+    (hrect : positiveRectangle a N) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveProductFixedNChunks nLen a ∧
+        N ∈ List.range' chunk.1 chunk.2 := by
+  let len := posNhi a + 1 - posNlo a
+  let off := N - posNlo a
+  let i := off / nLen
+  have hNlt : N < posNhi a + 1 := Nat.lt_succ_of_le hrect.2
+  have hlo_le_hi_succ : posNlo a ≤ posNhi a + 1 :=
+    hrect.1.trans hNlt.le
+  have hlen_add : posNlo a + len = posNhi a + 1 := by
+    dsimp [len]
+    exact Nat.add_sub_of_le hlo_le_hi_succ
+  have hoff_add : posNlo a + off = N := by
+    dsimp [off]
+    exact Nat.add_sub_of_le hrect.1
+  have hoff_lt : off < len := by
+    omega
+  have hlen_pos : 0 < len := lt_of_le_of_lt (Nat.zero_le off) hoff_lt
+  have hceil_mul : len ≤ ((len + nLen - 1) / nLen) * nLen := by
+    have hmod := Nat.mod_lt (len + nLen - 1) hnLen
+    have hdiv := Nat.div_add_mod (len + nLen - 1) nLen
+    have hdiv' :
+        ((len + nLen - 1) / nLen) * nLen +
+            (len + nLen - 1) % nLen =
+          len + nLen - 1 := by
+      simpa [Nat.mul_comm] using hdiv
+    omega
+  have hi_lt : i < (len + nLen - 1) / nLen := by
+    rw [Nat.div_lt_iff_lt_mul hnLen]
+    exact hoff_lt.trans_le hceil_mul
+  refine ⟨(posNlo a + nLen * i, nLen), ?_, ?_⟩
+  · unfold positiveProductFixedNChunks
+    simp [hnLen.ne', len, i, hi_lt]
+  · have hdiv_le : nLen * i ≤ off := by
+      simpa [i] using Nat.mul_div_le off nLen
+    have hmod_lt : off % nLen < nLen := Nat.mod_lt off hnLen
+    have hdiv_add : nLen * i + off % nLen = off := by
+      simpa [i] using Nat.div_add_mod off nLen
+    exact (List.mem_range'_1).mpr ⟨by
+      omega, by
+      omega⟩
+
 /-! ## Default edge `k`-chunks
 
 The corrected finite edge budget is expensive as a single row check.  These

@@ -94,7 +94,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   combines that product cover with the tangent-edge, displayed-solo, edge,
   and large-tail chunk fields.  Larger generated `N` chunks can instantiate
   the parameterized
-  `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone directly.
+  `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone directly;
+  `Prop51.positiveProductFixedNChunks` provides a reusable fixed-width cover
+  whose final chunk may harmlessly overrun the positive rectangle.
   The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but

@@ -395,7 +395,9 @@ Status:
       `positiveEdgeUniformScaleMin`.  Larger generated `N` chunks can use
       the parameterized
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-      directly.
+      directly; `positiveProductFixedNChunks` supplies a reusable fixed-width
+      row-dependent cover when generated checks choose a common `N` chunk
+      length.
       Lean also has
       full-range and chunked range-certificate variants for generated
       finite-window proofs, with `Prop51/PositiveSaddleChunks.lean` providing
@@ -492,7 +494,8 @@ Status:
       chunks have been generated.  If product chunks are generated in larger
       row-dependent `N` intervals, use the parameterized
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-      endpoint instead.
+      endpoint instead.  The helper `positiveProductFixedNChunks` proves the
+      corresponding cover for fixed-width `N` chunks.
       The fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
