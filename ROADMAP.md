@@ -565,7 +565,9 @@ Status:
       `--emit-single-chunk`; `--use-single-chunk-theorems` then assembles the
       final finite certificate from those names, while
       `--emit-single-chunk-suite` emits the atom theorems and assembled
-      certificate in one Lean module.  The finer Lean endpoint
+      certificate in one Lean module.  The manifest mode
+      `--emit-single-chunk-manifest` emits the same atom list as JSON for
+      batching and coverage checks.  The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
       `N`-chunk index and is emitted with

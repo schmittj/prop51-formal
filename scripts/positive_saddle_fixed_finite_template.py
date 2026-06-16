@@ -29,6 +29,8 @@ Strategies include:
   * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
     product-n-chunked-tangent certificate, followed by the assembled finite
     certificate.
+  * --emit-single-chunk-manifest: emit the same atom list as JSON for batch
+    proof production.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
     from previously emitted single-chunk theorem names.
 
@@ -49,6 +51,7 @@ Example:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 
@@ -170,6 +173,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--emit-single-chunk-manifest",
+        action="store_true",
+        help=(
+            "emit a JSON manifest of all required single-chunk theorem names "
+            "and indices instead of Lean code"
+        ),
+    )
+    parser.add_argument(
         "--strategy",
         choices=(
             "all-chunks",
@@ -224,6 +235,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.product_k_len = 20
     if args.emit_single_chunk_suite and args.emit_single_chunk is not None:
         parser.error("--emit-single-chunk-suite cannot be combined with --emit-single-chunk")
+    if args.emit_single_chunk_manifest and args.emit_single_chunk is not None:
+        parser.error(
+            "--emit-single-chunk-manifest cannot be combined with --emit-single-chunk"
+        )
+    if args.emit_single_chunk_manifest and args.emit_single_chunk_suite:
+        parser.error(
+            "--emit-single-chunk-manifest cannot be combined with "
+            "--emit-single-chunk-suite"
+        )
     if args.emit_single_chunk_suite and args.use_single_chunk_theorems:
         parser.error(
             "--emit-single-chunk-suite cannot be combined with "
@@ -237,6 +257,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     ):
         parser.error(
             "--emit-single-chunk-suite is only supported for "
+            "--strategy product-n-chunked-tangent or "
+            "--strategy product-tangent-solo-n-chunked or "
+            "--strategy product-nk-tangent-solo-n-chunked or "
+            "--strategy combined-product-nk-tangent-solo-n-chunked"
+        )
+    if args.emit_single_chunk_manifest and args.strategy not in (
+        "product-n-chunked-tangent",
+        "product-tangent-solo-n-chunked",
+        "product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-chunked",
+    ):
+        parser.error(
+            "--emit-single-chunk-manifest is only supported for "
             "--strategy product-n-chunked-tangent or "
             "--strategy product-tangent-solo-n-chunked or "
             "--strategy product-nk-tangent-solo-n-chunked or "
@@ -747,6 +780,82 @@ def single_chunk_specs(
                 )
             )
     return specs
+
+
+def single_chunk_emit_args(
+    args: argparse.Namespace,
+    field: str,
+    row_index: int,
+    n_index: int | None,
+    k_index: int | None,
+    name: str,
+) -> list[str]:
+    emit_args = [
+        "--strategy",
+        args.strategy,
+        "--product-row-len",
+        str(args.product_row_len),
+        "--tangent-row-len",
+        str(args.tangent_row_len),
+        "--solo-saddle-row-len",
+        str(args.solo_saddle_row_len),
+        "--solo-budget-row-len",
+        str(args.solo_budget_row_len),
+        "--edge-row-len",
+        str(args.edge_row_len),
+        "--n-len",
+        str(args.n_len),
+        "--tangent-n-len",
+        str(args.tangent_n_len),
+        "--tangent-k-len",
+        str(args.tangent_k_len),
+        "--solo-saddle-n-len",
+        str(args.solo_saddle_n_len),
+        "--solo-budget-n-len",
+        str(args.solo_budget_n_len),
+        "--product-k-len",
+        str(args.product_k_len),
+        "--emit-single-chunk",
+        field,
+        "--row-index",
+        str(row_index),
+        "--name",
+        name,
+    ]
+    if n_index is not None:
+        emit_args.extend(["--n-index", str(n_index)])
+    if k_index is not None:
+        emit_args.extend(["--k-index", str(k_index)])
+    return emit_args
+
+
+def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
+    specs = single_chunk_specs(args)
+    counts: dict[str, int] = {}
+    chunks = []
+    for field, row_index, n_index, k_index, name in specs:
+        counts[field] = counts.get(field, 0) + 1
+        chunks.append(
+            {
+                "field": field,
+                "row_index": row_index,
+                "n_index": n_index,
+                "k_index": k_index,
+                "theorem": name,
+                "emit_args": single_chunk_emit_args(
+                    args, field, row_index, n_index, k_index, name
+                ),
+            }
+        )
+    manifest = {
+        "strategy": args.strategy,
+        "certificate_theorem": args.name,
+        "single_chunk_prefix": args.single_chunk_prefix,
+        "total": len(specs),
+        "counts": counts,
+        "chunks": chunks,
+    }
+    return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
 
 
 def emit_single_chunk_suite(args: argparse.Namespace) -> str:
@@ -2068,6 +2177,8 @@ def emit_combined_product_nk_tangent_solo_n_chunked(
 def emit(args: argparse.Namespace) -> str:
     if args.emit_single_chunk is not None:
         return emit_single_chunk(args)
+    if args.emit_single_chunk_manifest:
+        return emit_single_chunk_manifest(args)
     if args.emit_single_chunk_suite:
         return emit_single_chunk_suite(args)
     if args.strategy == "all-chunks":

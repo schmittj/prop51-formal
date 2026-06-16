@@ -125,7 +125,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   for large generated finite witnesses; pass `--use-single-chunk-theorems`
   to assemble the product-`N` chunked certificate from those names, or
   `--emit-single-chunk-suite` to emit the atom theorems and assembled
-  certificate in one Lean module.  Lean also exposes
+  certificate in one Lean module.  Use `--emit-single-chunk-manifest` to list
+  the same atom names and indices as JSON for batch proof production.  Lean
+  also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
   index when whole-row `N` scans are too large; emit it with
