@@ -4614,6 +4614,125 @@ theorem positiveTemperedExponentUpper_nonneg {a k : Nat}
   have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hj
   positivity
 
+theorem five_mul_posSmallCutoff_le_self_of_large {a : Nat} (ha : 2000 < a) :
+    5 * posSmallCutoff a ≤ a := by
+  let q := a / 5
+  have hq400 : 400 ≤ q := by
+    dsimp [q]
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 5)]
+    omega
+  have hq_upper : a < 5 * (q + 1) := by
+    have hsucc : a / 5 < q + 1 := by
+      dsimp [q]
+      exact Nat.lt_succ_self _
+    simpa [Nat.mul_comm] using
+      (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 5)).mp hsucc
+  have hq_sq_large : 400 * q ≤ q * q := by
+    simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+      Nat.mul_le_mul_right q hq400
+  have hhi_le_qsq : posNhi a ≤ q * q := by
+    have hlinear : posNhi a ≤ 60 * q + 40 := by
+      unfold posNhi
+      omega
+    have hlinear' : 60 * q + 40 ≤ 400 * q := by
+      omega
+    exact hlinear.trans (hlinear'.trans hq_sq_large)
+  have hcut : posSmallCutoff a ≤ q := by
+    unfold posSmallCutoff
+    exact ceilSqrt_le_of_le_sq hhi_le_qsq
+  have hq_le : 5 * q ≤ a := by
+    dsimp [q]
+    exact Nat.mul_div_le a 5
+  exact (Nat.mul_le_mul_left 5 hcut).trans hq_le
+
+theorem positiveSmallExponentUpper_lt_largeExpCutoff
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    positiveSmallExponentUpper a k < (a : ℚ) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hcut5Nat : 5 * posSmallCutoff a ≤ a :=
+    five_mul_posSmallCutoff_le_self_of_large ha
+  have hcut5 : (5 : ℚ) * (posSmallCutoff a : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast hcut5Nat
+  have hcut : (posSmallCutoff a : ℚ) ≤ (a : ℚ) / 5 := by
+    linarith
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hjle : (posJ a k : ℚ) ≤ (a : ℚ) := by
+    unfold posJ
+    exact_mod_cast Nat.sub_le a k
+  have hratio : (a : ℚ) / (posJ a k : ℚ) ≤ 10 := by
+    have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+    rw [div_le_iff₀ hjQ]
+    exact_mod_cast self_le_ten_mul_posJ_of_le_posKmax hkmax
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  calc
+    positiveSmallExponentUpper a k
+        ≤ (1139/1000) * ((a : ℚ) / 5) + (1/5) * (a : ℚ)
+            + (29/10) * 10 + 1 := by
+          unfold positiveSmallExponentUpper
+          gcongr
+    _ < (a : ℚ) := by
+          nlinarith
+
+theorem positiveTemperedExponentUpper_lt_largeExpCutoff
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    positiveTemperedExponentUpper a k < ((8 * a : Nat) : ℚ) := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk1
+  have hratioK : (a : ℚ) / (k : ℚ) ≤ (a : ℚ) := by
+    rw [div_le_iff₀ hkQ]
+    have hkQge : (1 : ℚ) ≤ (k : ℚ) := by exact_mod_cast hk1
+    nlinarith
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hratioJ : (a : ℚ) / (posJ a k : ℚ) ≤ 10 := by
+    have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+    rw [div_le_iff₀ hjQ]
+    exact_mod_cast self_le_ten_mul_posJ_of_le_posKmax hkmax
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  calc
+    positiveTemperedExponentUpper a k
+        ≤ (1/5) * (a : ℚ) + (57/10) * (a : ℚ)
+            + (29/10) * 10 + 2 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ < ((8 * a : Nat) : ℚ) := by
+          norm_num
+          nlinarith
+
+/-- A concrete variable-cutoff rational exponential factor for the
+large-`a` small branch.  The cutoff grows with `a`, unlike the finite-window
+constant `positiveExpCutoff = 800`. -/
+def positiveSmallLargeExp (a k : Nat) : ℚ :=
+  partialExpUpper (positiveSmallExponentUpper a k) a
+
+/-- A concrete variable-cutoff rational exponential factor for the
+large-`a` tempered branch.  The factor `8a` is deliberately loose; it is used
+only to put the displayed exponent below the cutoff uniformly on the retained
+range. -/
+def positiveTemperedLargeExp (a k : Nat) : ℚ :=
+  partialExpUpper (positiveTemperedExponentUpper a k) (8 * a)
+
+theorem positiveSmallLargeExp_nonneg_of_large
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    0 ≤ positiveSmallLargeExp a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨_hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  exact partialExpUpper_nonneg_of_nonneg_lt
+    (positiveSmallExponentUpper_nonneg hjpos)
+    (positiveSmallExponentUpper_lt_largeExpCutoff ha hkRange)
+
+theorem positiveTemperedLargeExp_nonneg_of_large
+    {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
+    0 ≤ positiveTemperedLargeExp a k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  exact partialExpUpper_nonneg_of_nonneg_lt
+    (positiveTemperedExponentUpper_nonneg hk1 hjpos)
+    (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
+
 theorem posSmallCutoff_le_155 {a : Nat} (ha : a ≤ 2000) :
     posSmallCutoff a ≤ 155 := by
   unfold posSmallCutoff
