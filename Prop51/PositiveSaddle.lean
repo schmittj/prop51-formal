@@ -7971,6 +7971,24 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsC
     cert.temperedUpperReverseRawStepCross
   temperedUpperLastReserve := cert.temperedUpperLastReserve
 
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toCandidateSplitTemperedCrossmulBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate.toBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toSplitTemperedCrossmulBoundsCertificate.toBoundsCertificate
+
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
 `positiveTemperedLargeExp`.
@@ -8162,6 +8180,41 @@ theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpSplitT
       temperedSplit smallRatio temperedLowerRatio temperedUpperReverseRatio :=
   pointwise.toLargeExpSplitTemperedRawQuotientReserveCertificate
     bounds.toBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpPointwiseCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toLargeExpSplitTemperedRawQuotientReserveCertificate
+    bounds.toBoundsCertificate
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toGcompPointwiseCertificate.toPointwiseCertificate
+    |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate.toLargeExpCandidateSplitTemperedLinearReserveCertificate
+    (pointwise :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYCertificate)
+    (bounds :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  pointwise.toProductPointwiseCertificate
+    |>.toLargeExpCandidateSplitTemperedLinearReserveCertificate bounds
 
 theorem PositiveSaddleEntropyShadowLargeExpMixedRawQuotientReserveCertificate.toMixedRawQuotientReserveCertificate
     {smallRatio temperedReverseRatio : Nat → ℚ}
