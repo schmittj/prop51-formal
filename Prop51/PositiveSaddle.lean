@@ -2283,6 +2283,39 @@ theorem positiveBinomRatio_le_entropyShadowBound {a k : Nat}
   unfold positiveBinomRatioEntropyShadowBound positiveBinomRatio
   exact one_div_le_one_div_of_le htail_denom_pos hmul_ge
 
+theorem positiveBinomRatioEntropyShadowBound_eq {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    positiveBinomRatioEntropyShadowBound a k =
+      (((k - 1 : Nat) : ℚ)^(k - 1) *
+        ((a - 2 - (k - 1) : Nat) : ℚ)^(a - 2 - (k - 1))) /
+        ((a - 2 : Nat) : ℚ)^(a - 2) := by
+  have ha1_ne : ((a - 1 : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : a - 1 ≠ 0)
+  have ha2_pow_ne : ((a - 2 : Nat) : ℚ)^(a - 2) ≠ 0 := by
+    have ha2 : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < a - 2)
+    exact (pow_pos ha2 _).ne'
+  have hk1_pow_ne : ((k - 1 : Nat) : ℚ)^(k - 1) ≠ 0 := by
+    have hk1 : (0 : ℚ) < ((k - 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < k - 1)
+    exact (pow_pos hk1 _).ne'
+  have hcomp_pow_ne :
+      ((a - 2 - (k - 1) : Nat) : ℚ)^(a - 2 - (k - 1)) ≠ 0 := by
+    have hcomp : (0 : ℚ) < ((a - 2 - (k - 1) : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < a - 2 - (k - 1))
+    exact (pow_pos hcomp _).ne'
+  unfold positiveBinomRatioEntropyShadowBound positiveBinomDenEntropyShadowBound
+  field_simp [ha1_ne, ha2_pow_ne, hk1_pow_ne, hcomp_pow_ne]
+
+theorem positiveBinomRatio_le_entropyShadowRatio {a k : Nat}
+    (hk : 2 ≤ k) (hklt : k < a - 1) :
+    positiveBinomRatio a k ≤
+      (((k - 1 : Nat) : ℚ)^(k - 1) *
+        ((a - 2 - (k - 1) : Nat) : ℚ)^(a - 2 - (k - 1))) /
+        ((a - 2 : Nat) : ℚ)^(a - 2) := by
+  simpa [positiveBinomRatioEntropyShadowBound_eq hk hklt]
+    using positiveBinomRatio_le_entropyShadowBound hk hklt
+
 /-- Coefficient-ratio bound obtained from the already formalized
 `c_r ≤ (4/25)6^r(r-1)!` and `c_r ≥ (5/36)6^r(r-1)!`.
 The paper records the sharper `9/(5π²)` constant; Lean uses the rational

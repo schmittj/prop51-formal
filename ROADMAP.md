@@ -83,7 +83,8 @@ surrogate, with the constant degradation absorbed by the sign-lock budget
   `choose_ge_entropy_shadow :
    n^n / ((n+1) k^k (n-k)^(n-k)) ≤ C(n,k)`, specialized as
   `positiveBinomDen_ge_entropyShadowBound` with reciprocal majorant
-  `positiveBinomRatio_le_entropyShadowBound`.  The latter records the TeX
+  `positiveBinomRatio_le_entropyShadowBound` and simplified ratio form
+  `positiveBinomRatio_le_entropyShadowRatio`.  The latter records the TeX
   entropy mechanism without introducing real `exp/log` into this layer.
 
 Status:
