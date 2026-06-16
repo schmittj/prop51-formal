@@ -3051,6 +3051,18 @@ def positiveTemperedEntropyShadowBaseStepQuotient (a r : Nat) : ℚ :=
   positiveTemperedEntropyShadowBaseTerm a (r + 1) /
     positiveTemperedEntropyShadowBaseTerm a r
 
+/-- Explicit adjacent quotient for the entropy-shadow base summand, before
+any analytic exponential factor is inserted.  This keeps the quotient audit
+purely rational in `r` and `j = a-r`. -/
+def positiveEntropyShadowBaseStepRawQuotient (a r : Nat) : ℚ :=
+  (((r + 1 : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ) *
+      ((r : Nat) : ℚ)^r *
+      ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2)) /
+    (((r : Nat) : ℚ) * ((posJ a r : Nat) : ℚ) *
+      ((r - 1 : Nat) : ℚ)^(r - 1) *
+      ((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) *
+    ((2 : ℚ)^(posJ a r) / (2 : ℚ)^(posJ a r - 1))
+
 theorem positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul
     (smallExp : Nat → Nat → ℚ) (a k : Nat) :
     positiveSmallEntropyShadowExpMajorantTerm smallExp a k =
@@ -3184,6 +3196,134 @@ theorem positiveTemperedEntropyShadowBaseTerm_pos
   have h := positiveTemperedEntropyShadowExpMajorantTerm_pos
     (temperedExp := fun _ _ => (1 : ℚ)) ha hkRange (by norm_num)
   simpa [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul] using h
+
+theorem positiveSmallEntropyShadowBaseStepQuotient_eq_raw
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (hjr1 : posJ a (r + 1) = posJ a r - 1) :
+    positiveSmallEntropyShadowBaseStepQuotient a r =
+      positiveEntropyShadowBaseStepRawQuotient a r := by
+  have ha2 : 2 ≤ a := by
+    unfold posJ at hj2
+    omega
+  have ha_sub : 0 < a - 2 := by
+    unfold posJ at hj2
+    omega
+  have hhi : ((posNhi a : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by
+      have hpos := posNhi_pos (a := a) (by omega : 1 ≤ a)
+      omega)
+  have hrQ : ((r : Nat) : ℚ) ≠ 0 := by exact_mod_cast (by omega : r ≠ 0)
+  have hjQ : ((posJ a r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r ≠ 0)
+  have hj1Q : (((posJ a r - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r - 1 ≠ 0)
+  have hpow_r1 : (((r - 1 : Nat) : ℚ)^(r - 1)) ≠ 0 := by
+    rcases Nat.eq_or_lt_of_le hr1 with hr | hr
+    · subst r
+      norm_num
+    · have hpos : (0 : ℚ) < ((r - 1 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 0 < r - 1)
+      exact (pow_pos hpos _).ne'
+  have hj1pos : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r - 1)
+  have hpow_j1 : (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) ≠ 0 :=
+    (pow_pos hj1pos _).ne'
+  have hpow_a2 : (((a - 2 : Nat) : ℚ)^(a - 2)) ≠ 0 := by
+    have ha2Q : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast ha_sub
+    exact (pow_pos ha2Q _).ne'
+  have hpow2j : ((2 : ℚ)^(posJ a r)) ≠ 0 := by positivity
+  have hpow2j1 : ((2 : ℚ)^(posJ a r - 1)) ≠ 0 := by positivity
+  have hrpred : r + 1 - 1 = r := by omega
+  have hjpred' : posJ a r - 1 - 1 = posJ a r - 2 := by
+    rw [Nat.sub_sub]
+  unfold positiveSmallEntropyShadowBaseStepQuotient
+    positiveSmallEntropyShadowBaseTerm
+    positiveBinomRatioEntropyShadowPosJBound
+    positiveDyadicDecay
+    positiveEntropyShadowBaseStepRawQuotient
+  rw [hjr1, hrpred]
+  rw [hjpred']
+  field_simp [hhi, hrQ, hjQ, hj1Q, hpow_r1, hpow_j1, hpow_a2,
+    hpow2j, hpow2j1]
+
+theorem positiveTemperedEntropyShadowBaseStepQuotient_eq_raw
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (hjr1 : posJ a (r + 1) = posJ a r - 1) :
+    positiveTemperedEntropyShadowBaseStepQuotient a r =
+      positiveEntropyShadowBaseStepRawQuotient a r := by
+  have ha2 : 2 ≤ a := by
+    unfold posJ at hj2
+    omega
+  have ha_sub : 0 < a - 2 := by
+    unfold posJ at hj2
+    omega
+  have hlo : ((posNlo a : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by
+      have hpos := posNlo_pos (a := a) ha2
+      omega)
+  have hrQ : ((r : Nat) : ℚ) ≠ 0 := by exact_mod_cast (by omega : r ≠ 0)
+  have hjQ : ((posJ a r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r ≠ 0)
+  have hj1Q : (((posJ a r - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r - 1 ≠ 0)
+  have hpow_r1 : (((r - 1 : Nat) : ℚ)^(r - 1)) ≠ 0 := by
+    rcases Nat.eq_or_lt_of_le hr1 with hr | hr
+    · subst r
+      norm_num
+    · have hpos : (0 : ℚ) < ((r - 1 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 0 < r - 1)
+      exact (pow_pos hpos _).ne'
+  have hj1pos : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r - 1)
+  have hpow_j1 : (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) ≠ 0 :=
+    (pow_pos hj1pos _).ne'
+  have hpow_a2 : (((a - 2 : Nat) : ℚ)^(a - 2)) ≠ 0 := by
+    have ha2Q : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast ha_sub
+    exact (pow_pos ha2Q _).ne'
+  have hpow2j : ((2 : ℚ)^(posJ a r)) ≠ 0 := by positivity
+  have hpow2j1 : ((2 : ℚ)^(posJ a r - 1)) ≠ 0 := by positivity
+  have hrpred : r + 1 - 1 = r := by omega
+  have hjpred' : posJ a r - 1 - 1 = posJ a r - 2 := by
+    rw [Nat.sub_sub]
+  unfold positiveTemperedEntropyShadowBaseStepQuotient
+    positiveTemperedEntropyShadowBaseTerm
+    positiveBinomRatioEntropyShadowPosJBound
+    positiveDyadicDecay
+    positiveEntropyShadowBaseStepRawQuotient
+  rw [hjr1, hrpred]
+  rw [hjpred']
+  field_simp [hlo, hrQ, hjQ, hj1Q, hpow_r1, hpow_j1, hpow_a2,
+    hpow2j, hpow2j1]
+
+theorem positiveSmallEntropyShadowBaseStepQuotient_eq_raw_of_branch
+    {a r : Nat} (ha : 20 ≤ a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    positiveSmallEntropyShadowBaseStepQuotient a r =
+      positiveEntropyShadowBaseStepRawQuotient a r := by
+  have hrK : r ≤ posKmax a := by omega
+  have hj2 : 2 ≤ posJ a r :=
+    two_le_posJ_of_le_posKmax_of_large ha hrK
+  have hjr1 : posJ a (r + 1) = posJ a r - 1 := by
+    unfold posJ at hj2 ⊢
+    omega
+  exact positiveSmallEntropyShadowBaseStepQuotient_eq_raw hr1 hj2 hjr1
+
+theorem positiveTemperedEntropyShadowBaseStepQuotient_eq_raw_of_branch
+    {a r : Nat} (ha : 20 ≤ a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a) :
+    positiveTemperedEntropyShadowBaseStepQuotient a r =
+      positiveEntropyShadowBaseStepRawQuotient a r := by
+  have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+  have hrK : r ≤ posKmax a := by omega
+  have hj2 : 2 ≤ posJ a r :=
+    two_le_posJ_of_le_posKmax_of_large ha hrK
+  have hjr1 : posJ a (r + 1) = posJ a r - 1 := by
+    unfold posJ at hj2 ⊢
+    omega
+  exact positiveTemperedEntropyShadowBaseStepQuotient_eq_raw hr1 hj2 hjr1
 
 theorem positiveSmallEntropyShadowMajorantTerm_nonneg_of_exp
     {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a)
@@ -3406,6 +3546,40 @@ theorem positiveTemperedEntropyShadowExp_quotient_eq_base_mul_exp
     positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
   unfold positiveTemperedEntropyShadowBaseStepQuotient
   field_simp [hbase, hExp]
+
+theorem positiveSmallEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+    {smallExp : Nat → Nat → ℚ} {a r : Nat}
+    (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hExp : smallExp a r ≠ 0) :
+    positiveSmallEntropyShadowExpMajorantTerm smallExp a (r + 1) /
+        positiveSmallEntropyShadowExpMajorantTerm smallExp a r =
+      positiveEntropyShadowBaseStepRawQuotient a r *
+        (smallExp a (r + 1) / smallExp a r) := by
+  rw [positiveSmallEntropyShadowExp_quotient_eq_base_mul_exp]
+  · rw [positiveSmallEntropyShadowBaseStepQuotient_eq_raw_of_branch
+      (by omega : 20 ≤ a) hr1 hrhi]
+  · exact (positiveSmallEntropyShadowBaseTerm_pos
+      (by omega : 20 ≤ a)
+      (mem_positiveKRange_of_small_branch_step hr1 hrhi)).ne'
+  · exact hExp
+
+theorem positiveTemperedEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+    {temperedExp : Nat → Nat → ℚ} {a r : Nat}
+    (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < posKmax a) (hExp : temperedExp a r ≠ 0) :
+    positiveTemperedEntropyShadowExpMajorantTerm temperedExp a (r + 1) /
+        positiveTemperedEntropyShadowExpMajorantTerm temperedExp a r =
+      positiveEntropyShadowBaseStepRawQuotient a r *
+        (temperedExp a (r + 1) / temperedExp a r) := by
+  rw [positiveTemperedEntropyShadowExp_quotient_eq_base_mul_exp]
+  · rw [positiveTemperedEntropyShadowBaseStepQuotient_eq_raw_of_branch
+      (by omega : 20 ≤ a) hrlo hrhi]
+  · exact (positiveTemperedEntropyShadowBaseTerm_pos
+      (by omega : 20 ≤ a)
+      (mem_positiveKRange_of_tempered_branch_step hrlo hrhi)).ne'
+  · exact hExp
 
 theorem positiveSmallEntropyShadowExp_step_of_base_exp_quotient
     {smallExp : Nat → Nat → ℚ} {a r : Nat} {q : ℚ}
@@ -5452,6 +5626,128 @@ theorem PositiveSaddleEntropyShadowExpQuotientReserveCertificate.toGeometricBudg
       smallExp temperedExp smallRatio temperedRatio :=
   cert.toGeometricReserveCertificate.toGeometricBudgetCertificate
 
+/-- Raw-base quotient form of the entropy-shadow reserve certificate.
+
+Compared with `PositiveSaddleEntropyShadowExpQuotientReserveCertificate`, the
+successor check has already been reduced to the explicit rational base quotient
+`positiveEntropyShadowBaseStepRawQuotient` times the externally supplied
+exponential quotient.  This is the intended target for generated large-tail
+ratio audits. -/
+structure PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveSmallEntropyShadowExpMajorantTerm smallExp a k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k
+          ≤ positiveTemperedEntropyShadowExpMajorantTerm temperedExp a k
+  soloBudget :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ positiveSoloBudget
+  smallExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ smallExp a k
+  temperedExpNonneg :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      0 ≤ temperedExp a k
+  smallRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ smallRatio a
+  smallRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → smallRatio a < 1
+  smallStepExpPos :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        0 < smallExp a r
+  smallRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (smallExp a (r + 1) / smallExp a r)
+          ≤ smallRatio a
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm smallExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - smallRatio a)
+  temperedRatioNonneg :
+    ∀ {a : Nat}, 2000 < a → 0 ≤ temperedRatio a
+  temperedRatioLtOne :
+    ∀ {a : Nat}, 2000 < a → temperedRatio a < 1
+  temperedStepExpPos :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        0 < temperedExp a r
+  temperedRawStepQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r → r < posKmax a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (temperedExp a (r + 1) / temperedExp a r)
+          ≤ temperedRatio a
+  temperedFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm temperedExp a
+        (max 1 (posTemperedCutoff a + 1))
+          ≤ (positiveEdgeBudget / 2) * (1 - temperedRatio a)
+
+theorem PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate.toQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleEntropyShadowExpQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  small := cert.small
+  tempered := cert.tempered
+  soloBudget := cert.soloBudget
+  smallExpNonneg := cert.smallExpNonneg
+  temperedExpNonneg := cert.temperedExpNonneg
+  smallRatioNonneg := cert.smallRatioNonneg
+  smallRatioLtOne := cert.smallRatioLtOne
+  smallStepTermPos := by
+    intro a r ha hr1 hrhi
+    exact positiveSmallEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hr1 hrhi (cert.smallStepExpPos ha hr1 hrhi)
+  smallStepQuotient := by
+    intro a r ha hr1 hrhi
+    rw [positiveSmallEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+      ha hr1 hrhi (cert.smallStepExpPos ha hr1 hrhi).ne']
+    exact cert.smallRawStepQuotient ha hr1 hrhi
+  smallFirstReserve := cert.smallFirstReserve
+  temperedRatioNonneg := cert.temperedRatioNonneg
+  temperedRatioLtOne := cert.temperedRatioLtOne
+  temperedStepTermPos := by
+    intro a r ha hrlo hrhi
+    exact positiveTemperedEntropyShadowExpMajorantTerm_pos_of_branch_step
+      ha hrlo hrhi (cert.temperedStepExpPos ha hrlo hrhi)
+  temperedStepQuotient := by
+    intro a r ha hrlo hrhi
+    rw [positiveTemperedEntropyShadowExp_quotient_eq_raw_mul_exp_of_branch
+      ha hrlo hrhi (cert.temperedStepExpPos ha hrlo hrhi).ne']
+    exact cert.temperedRawStepQuotient ha hrlo hrhi
+  temperedFirstReserve := cert.temperedFirstReserve
+
+theorem PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate.toGeometricReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleEntropyShadowExpGeometricReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toQuotientReserveCertificate.toGeometricReserveCertificate
+
+theorem PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate.toGeometricBudgetCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleEntropyShadowExpGeometricBudgetCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toGeometricReserveCertificate.toGeometricBudgetCertificate
+
 theorem one_mem_positiveKRange_of_large {a : Nat} (ha : 2 ≤ a) :
     1 ∈ positiveKRange a :=
   mem_positiveKRange.mpr ⟨le_rfl, one_le_posKmax ha⟩
@@ -5894,6 +6190,30 @@ structure PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
     PositiveSaddleEntropyShadowExpQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Row-checked finite-window certificate plus raw-base quotient reserve checks
+for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallXplusYProductGcompRow a = true
+  temperedXplusGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveTemperedXplusYProductGcompRow a = true
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyRawQuotientReserve :
+    PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
 /-- Fully range-checked `Xplus`/`Gcomp` positive-saddle interface.
 
 This is the range-check analogue of
@@ -5971,6 +6291,25 @@ structure PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
     PositiveSaddleEntropyShadowExpQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
+/-- Range-checked finite-window certificate plus raw-base quotient reserve
+checks for the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  smallXplusGcompRange :
+    checkPositiveSmallXplusYProductGcompRange 401 1600 = true
+  temperedXplusGcompRange :
+    checkPositiveTemperedXplusYProductGcompRange 401 1600 = true
+  smallTangentEdgeRange :
+    checkPositiveSmallTangentExpEdgeRange 401 1600 = true
+  soloGcompRange :
+    checkPositiveSoloGcompRange 401 1600 = true
+  edgeBudgetRange :
+    checkPositiveEdgeBudgetRange 401 1600 = true
+  entropyRawQuotientReserve :
+    PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
 /-- Generated finite-window chunks for the most concrete §6 finite path.
 
 Each chunk is a half-open interval `(lo, len)`.  The `cover` field records
@@ -6038,6 +6377,18 @@ structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCerti
     PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
   entropyQuotientReserve :
     PositiveSaddleEntropyShadowExpQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio
+
+/-- Chunked finite-window certificate plus raw-base quotient reserve checks for
+the large-`a` entropy-shadow tail. -/
+structure PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
+    (chunks : List (Nat × Nat))
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop where
+  finiteChunks :
+    PositiveSaddleXplusGcompTangentFiniteWindowChunks chunks
+  entropyRawQuotientReserve :
+    PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio
 
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
@@ -6323,6 +6674,38 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate.toX
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
 
+theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.toRowsEntropyQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRows := cert.smallXplusGcompRows
+  temperedXplusGcompRows := cert.temperedXplusGcompRows
+  smallTangentEdgeRows := cert.smallTangentEdgeRows
+  soloGcompRows := cert.soloGcompRows
+  edgeBudgetRows := cert.edgeBudgetRows
+  entropyQuotientReserve :=
+    cert.entropyRawQuotientReserve.toQuotientReserveCertificate
+
+theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toRowsEntropyQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
 theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate where
@@ -6454,6 +6837,38 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.to
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate.toRangeEntropyQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  smallXplusGcompRange := cert.smallXplusGcompRange
+  temperedXplusGcompRange := cert.temperedXplusGcompRange
+  smallTangentEdgeRange := cert.smallTangentEdgeRange
+  soloGcompRange := cert.soloGcompRange
+  edgeBudgetRange := cert.edgeBudgetRange
+  entropyQuotientReserve :=
+    cert.entropyRawQuotientReserve.toQuotientReserveCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toRangeEntropyQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
@@ -6612,6 +7027,37 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertifi
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
+  cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate.toChunkedRangeEntropyQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio where
+  finiteChunks := cert.finiteChunks
+  entropyQuotientReserve :=
+    cert.entropyRawQuotientReserve.toQuotientReserveCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentRowsEntropyGeometricCertificate
+      smallExp temperedExp smallRatio temperedRatio :=
+  cert.toChunkedRangeEntropyQuotientReserveCertificate.toRowsEntropyGeometricCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleXplusGcompTangentFullyCheckedRowsCertificate :=
   cert.toRowsEntropyGeometricCertificate.toXplusGcompTangentFullyCheckedRowsCertificate
@@ -6841,6 +7287,14 @@ theorem PositiveSaddleXplusGcompTangentRowsEntropyQuotientReserveCertificate.toC
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
 
+theorem PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate.toCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -6866,6 +7320,14 @@ theorem PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate.to
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate.toCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
@@ -6899,6 +7361,15 @@ theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertifi
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
+
+theorem PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate.toCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toXplusGcompTangentFullyCheckedRowsCertificate.toCertificate
@@ -7025,6 +7496,14 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyQuotientReserveC
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRowsEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
 theorem unorm_tail_of_positiveSaddleXplusGcompTangentFullyCheckedRangeCertificate
     (cert : PositiveSaddleXplusGcompTangentFullyCheckedRangeCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
@@ -7050,6 +7529,14 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyQuotientReserve
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentRangeEntropyQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentRangeEntropyRawQuotientReserveCertificate
       smallExp temperedExp smallRatio temperedRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
@@ -7083,6 +7570,15 @@ theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyQuotient
     {smallExp temperedExp : Nat → Nat → ℚ}
     {smallRatio temperedRatio : Nat → ℚ}
     (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
+      chunks smallExp temperedExp smallRatio temperedRatio) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
+    {chunks : List (Nat × Nat)}
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (cert : PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
       chunks smallExp temperedExp smallRatio temperedRatio) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate

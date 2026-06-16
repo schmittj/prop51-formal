@@ -158,6 +158,14 @@ abbrev PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyQuotientReserveC
   PositiveSaddleXplusGcompTangentChunkedRangeEntropyQuotientReserveCertificate
     positiveSaddleDefaultChunks smallExp temperedExp smallRatio temperedRatio
 
+/-- Raw-base quotient reserve entropy-tail certificate specialized to the
+default finite-window chunks. -/
+abbrev PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyRawQuotientReserveCertificate
+    (smallExp temperedExp : Nat → Nat → ℚ)
+    (smallRatio temperedRatio : Nat → ℚ) : Prop :=
+  PositiveSaddleXplusGcompTangentChunkedRangeEntropyRawQuotientReserveCertificate
+    positiveSaddleDefaultChunks smallExp temperedExp smallRatio temperedRatio
+
 theorem positiveSaddleDefaultChunkedRangeCertificate
     (hsmall :
       ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
@@ -265,5 +273,33 @@ theorem positiveSaddleDefaultChunkedRangeEntropyQuotientReserveCertificate
     positiveSaddleDefaultFiniteWindowChunks
       hsmall htempered htangent hsolo hedge
   entropyQuotientReserve := entropyQuotientReserve
+
+theorem positiveSaddleDefaultChunkedRangeEntropyRawQuotientReserveCertificate
+    {smallExp temperedExp : Nat → Nat → ℚ}
+    {smallRatio temperedRatio : Nat → ℚ}
+    (hsmall :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htempered :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveTemperedXplusYProductGcompRange chunk.1 chunk.2 = true)
+    (htangent :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSmallTangentExpEdgeRange chunk.1 chunk.2 = true)
+    (hsolo :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveSoloGcompRange chunk.1 chunk.2 = true)
+    (hedge :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveSaddleDefaultChunks →
+        checkPositiveEdgeBudgetRange chunk.1 chunk.2 = true)
+    (entropyRawQuotientReserve :
+      PositiveSaddleEntropyShadowExpRawQuotientReserveCertificate
+        smallExp temperedExp smallRatio temperedRatio) :
+    PositiveSaddleXplusGcompTangentDefaultChunkedRangeEntropyRawQuotientReserveCertificate
+      smallExp temperedExp smallRatio temperedRatio where
+  finiteChunks :=
+    positiveSaddleDefaultFiniteWindowChunks
+      hsmall htempered htangent hsolo hedge
+  entropyRawQuotientReserve := entropyRawQuotientReserve
 
 end Prop51
