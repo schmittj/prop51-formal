@@ -421,6 +421,34 @@ def positiveTemperedDisplayedProductBound (a N k : Nat) : ℚ :=
     positiveTemperedXBound a N k *
     positiveYBound a N (posJ a k)
 
+/-- Common nonnegative scalar outside the rational exponential comparison in
+the displayed product bounds. -/
+def positiveDisplayedCommonFactor (C : ℚ) (a k : Nat) : ℚ :=
+  C * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatio a k * positiveDyadicDecay (posJ a k)
+
+/-- Pure exponential/edge part of the displayed small-regime product. -/
+def positiveSmallDisplayedExpEdge (a N k : Nat) : ℚ :=
+  (1 / (N : ℚ)) *
+    partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff *
+    partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff
+
+/-- Pure exponential/edge part of the combined small-regime scalar bound. -/
+def positiveSmallCombinedExpEdge (a k : Nat) : ℚ :=
+  (1 / (posNhi a : ℚ)) *
+    partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- Pure exponential/edge part of the displayed tempered-regime product. -/
+def positiveTemperedDisplayedExpEdge (a N k : Nat) : ℚ :=
+  (1 / (N : ℚ)) *
+    partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff *
+    partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff
+
+/-- Pure exponential/edge part of the combined tempered-regime scalar bound. -/
+def positiveTemperedCombinedExpEdge (a N k : Nat) : ℚ :=
+  (1 / (N : ℚ)) *
+    partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
 theorem positiveSmallExponentAt_eq_smallX_add_Y (a N k : Nat) :
     positiveSmallExponentAt a N k =
       positiveSmallXExponentAt N + positiveYExponent a (posJ a k) := by
@@ -450,6 +478,12 @@ theorem positiveTemperedExponentUpper_eq_X_add_Y
   rw [hlin]
   ring
 
+theorem positiveDisplayedCommonFactor_nonneg
+    {C : ℚ} (hC : 0 ≤ C) (a k : Nat) :
+    0 ≤ positiveDisplayedCommonFactor C a k := by
+  unfold positiveDisplayedCommonFactor positiveBinomRatio positiveDyadicDecay
+  positivity
+
 theorem positiveSmallDisplayedProductBound_eq
     {a N k : Nat} (hN : 1 ≤ N) :
     positiveSmallDisplayedProductBound a N k =
@@ -460,6 +494,23 @@ theorem positiveSmallDisplayedProductBound_eq
   have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
   unfold positiveSmallDisplayedProductBound positiveSmallXBound positiveYBound
   field_simp [hNQ]
+  ring
+
+theorem positiveSmallDisplayedProductBound_eq_expEdge
+    {a N k : Nat} (hN : 1 ≤ N) :
+    positiveSmallDisplayedProductBound a N k =
+      positiveDisplayedCommonFactor (2581/40) a k *
+        positiveSmallDisplayedExpEdge a N k := by
+  rw [positiveSmallDisplayedProductBound_eq hN]
+  unfold positiveDisplayedCommonFactor positiveSmallDisplayedExpEdge
+  ring
+
+theorem positiveSmallScalarProductBound_eq_expEdge (a k : Nat) :
+    positiveSmallScalarProductBound a k =
+      positiveDisplayedCommonFactor (2581/40) a k *
+        positiveSmallCombinedExpEdge a k := by
+  unfold positiveSmallScalarProductBound positiveDisplayedCommonFactor
+    positiveSmallCombinedExpEdge
   ring
 
 theorem positiveTemperedDisplayedProductBound_eq
@@ -473,6 +524,45 @@ theorem positiveTemperedDisplayedProductBound_eq
   unfold positiveTemperedDisplayedProductBound positiveTemperedXBound positiveYBound
   field_simp [hNQ]
   ring
+
+theorem positiveTemperedDisplayedProductBound_eq_expEdge
+    {a N k : Nat} (hN : 1 ≤ N) :
+    positiveTemperedDisplayedProductBound a N k =
+      positiveDisplayedCommonFactor (2117/40) a k *
+        positiveTemperedDisplayedExpEdge a N k := by
+  rw [positiveTemperedDisplayedProductBound_eq hN]
+  unfold positiveDisplayedCommonFactor positiveTemperedDisplayedExpEdge
+  ring
+
+theorem positiveTemperedScalarProductBound_eq_expEdge (a N k : Nat) :
+    positiveTemperedScalarProductBound a N k =
+      positiveDisplayedCommonFactor (2117/40) a k *
+        positiveTemperedCombinedExpEdge a N k := by
+  unfold positiveTemperedScalarProductBound positiveDisplayedCommonFactor
+    positiveTemperedCombinedExpEdge
+  ring
+
+theorem positiveSmallDisplayedProductBound_le_scalar_of_expEdge
+    {a N k : Nat} (hN : 1 ≤ N)
+    (hexp : positiveSmallDisplayedExpEdge a N k ≤
+      positiveSmallCombinedExpEdge a k) :
+    positiveSmallDisplayedProductBound a N k ≤
+      positiveSmallScalarProductBound a k := by
+  rw [positiveSmallDisplayedProductBound_eq_expEdge hN,
+    positiveSmallScalarProductBound_eq_expEdge]
+  exact mul_le_mul_of_nonneg_left hexp
+    (positiveDisplayedCommonFactor_nonneg (by norm_num) a k)
+
+theorem positiveTemperedDisplayedProductBound_le_scalar_of_expEdge
+    {a N k : Nat} (hN : 1 ≤ N)
+    (hexp : positiveTemperedDisplayedExpEdge a N k ≤
+      positiveTemperedCombinedExpEdge a N k) :
+    positiveTemperedDisplayedProductBound a N k ≤
+      positiveTemperedScalarProductBound a N k := by
+  rw [positiveTemperedDisplayedProductBound_eq_expEdge hN,
+    positiveTemperedScalarProductBound_eq_expEdge]
+  exact mul_le_mul_of_nonneg_left hexp
+    (positiveDisplayedCommonFactor_nonneg (by norm_num) a k)
 
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
 use the small formula only when the small regime is possible somewhere in the
