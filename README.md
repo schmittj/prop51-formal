@@ -54,12 +54,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksProductRowChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — the current most practical large-`a` conditional capstone: table-backed
   exact finite product chunks using a fixed-width row-dependent `N` cover and
-  the default 20-wide retained-`k` chunks, tangent-edge row chunks,
-  displayed-solo finite chunks, fixed-scale unit-cleared edge row chunks, and
-  the raw-cleared large-tail reserve certificate imply full
+  a separate product row cover, the default 20-wide retained-`k` chunks,
+  tangent-edge row chunks, displayed-solo finite chunks, fixed-scale
+  unit-cleared edge row chunks, and the raw-cleared large-tail reserve
+  certificate imply full
   `CoefficientNegativity`.  The intermediate
   `RawProductTableSingletonNChunksUniformLargeScale...` sibling keeps
   tangent-edge cell checks and a row-dependent edge scale.  The older
@@ -90,11 +91,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `(a,N)` and splits product checks by a row-dependent `N`-chunk cover and
   the default 20-wide retained-`k` chunks.  `Prop51.positiveProductSingletonNChunks`
   provides a built-in singleton `N`-cover.  For generated audits, the
-  `RawProductTableFixedNChunksTangentEdgeChunksFixedScale...` capstone
-  packages row-range product checks using `Prop51.positiveProductFixedNChunks`;
-  its final `N` chunk may harmlessly overrun the positive rectangle.  The
-  fully parameterized `RawProductTableNChunksTangentEdgeChunksFixedScale...`
-  capstone is available for custom row-dependent `N` chunk families.
+  `RawProductTableFixedNChunksProductRowChunksTangentEdgeChunksFixedScale...`
+  capstone packages row-range product checks using
+  `Prop51.positiveProductFixedNChunks`; its final `N` chunk may harmlessly
+  overrun the positive rectangle, and the product row cover can be finer than
+  the default 100-row chunks used elsewhere.  The fully parameterized
+  `RawProductTableNChunksTangentEdgeChunksFixedScale...` capstone is
+  available for custom row-dependent `N` chunk families.
   The older
   `DisplayedSoloProductCleared...`/fixed-scale `Gcomp` wrappers remain in
   Lean as audit interfaces for the stronger independent-majorant route, but
