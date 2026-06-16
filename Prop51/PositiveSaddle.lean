@@ -354,6 +354,20 @@ theorem positiveTemperedMajorantTerm_eq_binomRatio (a k : Nat) :
   unfold positiveTemperedMajorantTerm
   rw [positivePrefactor_eq_binomRatio]
 
+/-- The scalar product of the small-regime `X` and `Y` constants after the
+coefficient-ratio bound and the upper-edge replacement have been inserted. -/
+def positiveSmallScalarProductBound (a k : Nat) : ℚ :=
+  ((2581/40) / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+    partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+
+/-- The scalar product of the tempered-regime `X` and `Y` constants before
+replacing the actual `N` denominator by the lower rectangle edge. -/
+def positiveTemperedScalarProductBound (a N k : Nat) : ℚ :=
+  ((2117/40) / (N : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+    positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+    partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
 use the small formula only when the small regime is possible somewhere in the
 rectangle, use the tempered formula only when the tempered regime is possible
@@ -1175,6 +1189,54 @@ theorem positiveTemperedMajorantTerm_nonneg {a k : Nat}
     (positivePrefactor_nonneg (by norm_num) (by
       exact Nat.succ_le_of_lt (posNlo_pos (by omega : 2 ≤ a)))
       (by omega : 2 ≤ a) hk1 hkmax) hExp
+
+theorem positiveSmallScalarProductBound_le_majorant {a k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    positiveSmallScalarProductBound a k ≤ positiveSmallMajorantTerm a k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hExp : 0 ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveSmallExponentUpper_nonneg hjpos)
+      (positiveSmallExponentUpper_lt_expCutoff (by omega : 1 ≤ a) ha2000 hkmax)
+  rw [positiveSmallMajorantTerm_eq_binomRatio]
+  unfold positiveSmallScalarProductBound
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_nonneg
+  · norm_num
+
+theorem positiveTemperedScalarProductBound_le_majorant {a N k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (htempered : posTemperedCutoff a < k) :
+    positiveTemperedScalarProductBound a N k ≤ positiveTemperedMajorantTerm a k := by
+  rcases (mem_positiveKRange.mp hk) with ⟨hk1, hkmax⟩
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hExp :
+      0 ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff :=
+    partialExpUpper_nonneg_of_nonneg_lt
+      (positiveTemperedExponentUpper_nonneg hk1 hjpos)
+      (positiveTemperedExponentUpper_lt_expCutoff ha401 ha2000 hkmax htempered)
+  have hcoef :
+      (2117/40 : ℚ) / (N : ℚ) ≤ 96 / (posNlo a : ℚ) := by
+    have hstep : (2117/40 : ℚ) / (N : ℚ)
+        ≤ (2117/40 : ℚ) / (posNlo a : ℚ) :=
+      div_natCast_le_div_posNlo_of_rectangle (by norm_num) (by omega : 2 ≤ a) hrect
+    have hlo_pos : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+    have hconst : (2117/40 : ℚ) / (posNlo a : ℚ)
+        ≤ 96 / (posNlo a : ℚ) := by
+      exact div_le_div_of_nonneg_right (by norm_num) hlo_pos.le
+    exact hstep.trans hconst
+  rw [positiveTemperedMajorantTerm_eq_binomRatio]
+  unfold positiveTemperedScalarProductBound
+  gcongr
+  · exact positiveDyadicDecay_nonneg (posJ a k)
+  · exact positiveBinomRatio_nonneg
 
 theorem normalizedPositiveRawTerm_le_smallMajorant_of_factorized_bound
     {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)

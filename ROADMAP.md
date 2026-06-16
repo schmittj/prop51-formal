@@ -239,7 +239,9 @@ Status:
       Lean now also proves monotonicity of the rational `partialExpUpper`
       surrogate and uses it to move the small-regime exponent from the actual
       `N` to the upper rectangle edge; the lower/upper edge denominator
-      comparisons are packaged separately.
+      comparisons are packaged separately.  The products of the displayed
+      small/tempered `X` and `Y` constants are now isolated as scalar bounds
+      and proved to sit below the executable majorant terms.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
