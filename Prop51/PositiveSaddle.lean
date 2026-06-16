@@ -1289,6 +1289,51 @@ structure PositiveSaddleRawCertificate (soloBound : Nat → ℚ) : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- TeX-facing version of the remaining §6 certificate.  The pointwise
+summand fields now use the exact factorized form
+`(N/2) R_{k,a} 2^{-(a-k)} X_k(N)Y_{a-k}(N)` and only need to be proved when
+`B_k(N)>0`; the conversion to raw summands handles the nonpositive `B_k`
+case automatically.  The solo field is likewise stated in terms of
+`2^{-a-1}Y_a(N)`. -/
+structure PositiveSaddleFactorCertificate (soloBound : Nat → ℚ) : Prop where
+  smallFactor :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveSmallMajorantTerm a k
+  temperedFactor :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        positiveFactorizedRawTerm a N k ≤ positiveTemperedMajorantTerm a k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEnvelopeBound a (soloBound a) ≤ positiveTarget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem PositiveSaddleFactorCertificate.toRawCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
+    PositiveSaddleRawCertificate soloBound where
+  smallRaw := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact normalizedPositiveRawTerm_le_smallMajorant_of_factorized_bound
+      ha ha2000 hrect hk
+      (fun hB => cert.smallFactor ha ha2000 hrect hk hsmall hB)
+  temperedRaw := by
+    intro a N k ha ha2000 hrect hk htemp
+    exact normalizedPositiveRawTerm_le_temperedMajorant_of_factorized_bound
+      ha ha2000 hrect hk htemp
+      (fun hB => cert.temperedFactor ha ha2000 hrect hk htemp hB)
+  solo := by
+    intro a N ha ha2000 hrect
+    rw [normalizedSoloTerm_eq_dyadic_Ynorm
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)]
+    exact cert.soloY ha ha2000 hrect
+  envelope := cert.envelope
+  entropyTail := cert.entropyTail
+
 theorem PositiveSaddleRawCertificate.toCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleRawCertificate soloBound) :
     PositiveSaddleCertificate soloBound where
@@ -1309,6 +1354,11 @@ theorem PositiveSaddleRawCertificate.toCertificate
   solo := cert.solo
   envelope := cert.envelope
   entropyTail := cert.entropyTail
+
+theorem PositiveSaddleFactorCertificate.toCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
+    PositiveSaddleCertificate soloBound :=
+  cert.toRawCertificate.toCertificate
 
 theorem Unorm_neg_of_positiveSaddleCertificate_finite
     {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound)
@@ -1336,6 +1386,11 @@ theorem unorm_tail_of_positiveSaddleCertificate
 
 theorem unorm_tail_of_positiveSaddleRawCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleRawCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleFactorCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 

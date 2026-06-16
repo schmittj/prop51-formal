@@ -227,7 +227,9 @@ Status:
       The raw side now has the exact §6 factorization
       `B_k Q_{a-k}/(N c_a) = (N/2)R_{k,a}2^{-(a-k)}X_kY_{a-k}` in Lean,
       together with wrappers reducing the small/tempered raw obligations to
-      factorized bounds only in the case `B_k(N)>0`.
+      factorized bounds only in the case `B_k(N)>0`; this is packaged as
+      `PositiveSaddleFactorCertificate`, which converts to the raw and final
+      certificate interfaces.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

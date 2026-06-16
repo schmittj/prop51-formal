@@ -189,4 +189,12 @@ theorem coefficientNegativity_of_positiveSaddleRawCertificate
   coefficientNegativity_of_unorm_tail
     (unorm_tail_of_positiveSaddleRawCertificate cert)
 
+/-- Final assembly from the factorized TeX-style version of the §6
+positive-saddle certificate. -/
+theorem coefficientNegativity_of_positiveSaddleFactorCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_unorm_tail
+    (unorm_tail_of_positiveSaddleFactorCertificate cert)
+
 end Prop51
