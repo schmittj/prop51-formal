@@ -405,6 +405,22 @@ def positiveYBound (a N j : Nat) : ℚ :=
   (29/2) * ((j : ℚ) / (N : ℚ)) *
     partialExpUpper (positiveYExponent a j) positiveExpCutoff
 
+/-- Product of the displayed small-`X` and `Y` bounds after inserting the
+reciprocal-binomial ratio. -/
+def positiveSmallDisplayedProductBound (a N k : Nat) : ℚ :=
+  ((N : ℚ) / 2) * positiveBinomRatio a k *
+    positiveDyadicDecay (posJ a k) *
+    positiveSmallXBound N k *
+    positiveYBound a N (posJ a k)
+
+/-- Product of the displayed tempered-`X` and `Y` bounds after inserting the
+reciprocal-binomial ratio. -/
+def positiveTemperedDisplayedProductBound (a N k : Nat) : ℚ :=
+  ((N : ℚ) / 2) * positiveBinomRatio a k *
+    positiveDyadicDecay (posJ a k) *
+    positiveTemperedXBound a N k *
+    positiveYBound a N (posJ a k)
+
 theorem positiveSmallExponentAt_eq_smallX_add_Y (a N k : Nat) :
     positiveSmallExponentAt a N k =
       positiveSmallXExponentAt N + positiveYExponent a (posJ a k) := by
@@ -432,6 +448,30 @@ theorem positiveTemperedExponentUpper_eq_X_add_Y
     nlinarith
   unfold positiveTemperedExponentUpper positiveTemperedXExponent positiveYExponent
   rw [hlin]
+  ring
+
+theorem positiveSmallDisplayedProductBound_eq
+    {a N k : Nat} (hN : 1 ≤ N) :
+    positiveSmallDisplayedProductBound a N k =
+      ((2581/40) / (N : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+        partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff *
+        partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  unfold positiveSmallDisplayedProductBound positiveSmallXBound positiveYBound
+  field_simp [hNQ]
+  ring
+
+theorem positiveTemperedDisplayedProductBound_eq
+    {a N k : Nat} (hN : 1 ≤ N) :
+    positiveTemperedDisplayedProductBound a N k =
+      ((2117/40) / (N : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+        partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff *
+        partialExpUpper (positiveYExponent a (posJ a k)) positiveExpCutoff := by
+  have hNQ : (N : ℚ) ≠ 0 := by exact_mod_cast (by omega : N ≠ 0)
+  unfold positiveTemperedDisplayedProductBound positiveTemperedXBound positiveYBound
+  field_simp [hNQ]
   ring
 
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
@@ -1820,11 +1860,8 @@ structure PositiveSaddleDisplayedBudgetCertificate : Prop where
   smallProduct :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
       k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
-        ((N : ℚ) / 2) * positiveBinomRatio a k *
-            positiveDyadicDecay (posJ a k) *
-            positiveSmallXBound N k *
-            positiveYBound a N (posJ a k)
-          ≤ positiveSmallScalarProductBound a k
+        positiveSmallDisplayedProductBound a N k ≤
+          positiveSmallScalarProductBound a k
   temperedX :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
       k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
@@ -1836,11 +1873,8 @@ structure PositiveSaddleDisplayedBudgetCertificate : Prop where
   temperedProduct :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
       k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
-        ((N : ℚ) / 2) * positiveBinomRatio a k *
-            positiveDyadicDecay (posJ a k) *
-            positiveTemperedXBound a N k *
-            positiveYBound a N (posJ a k)
-          ≤ positiveTemperedScalarProductBound a N k
+        positiveTemperedDisplayedProductBound a N k ≤
+          positiveTemperedScalarProductBound a N k
   soloY :
     ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
       positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
