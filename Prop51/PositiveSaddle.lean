@@ -5069,6 +5069,99 @@ theorem positiveTemperedLargeExp_pos_of_large
     (positiveTemperedExponentUpper_nonneg hk1 hjpos)
     (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
 
+/-- Candidate uniform small-branch ratio for the large-exp entropy-shadow
+audit.  The adjacent quotient proof is still a separate rational audit field;
+this definition fixes the intended constant for that field. -/
+def positiveLargeExpSmallRatio (_a : Nat) : ℚ := 1 / 2
+
+/-- Candidate split point for the large-exp tempered entropy-shadow audit.
+
+Floating reconnaissance of the concrete majorant places the turning point very
+close to `a/3`; the `+10` offset gives a simple integer split with visible
+slack at the start of the `a > 2000` range. -/
+def positiveLargeExpTemperedSplit (a : Nat) : Nat := a / 3 + 10
+
+/-- Candidate ratio for both sides of the split tempered large-exp audit.
+It is deliberately loose: the observed adjacent ratios are below
+`1 - c/a`, with `c > 0.6` on the lower side and `c > 4.5` on the upper side;
+`(4a-1)/(4a) = 1 - 1/(4a)` leaves room for a rational proof. -/
+def positiveLargeExpTemperedRatio (a : Nat) : ℚ :=
+  ((4 * a - 1 : Nat) : ℚ) / ((4 * a : Nat) : ℚ)
+
+def positiveLargeExpTemperedLowerRatio (a : Nat) : ℚ :=
+  positiveLargeExpTemperedRatio a
+
+def positiveLargeExpTemperedUpperReverseRatio (a : Nat) : ℚ :=
+  positiveLargeExpTemperedRatio a
+
+theorem positiveLargeExpSmallRatio_nonneg {a : Nat} :
+    0 ≤ positiveLargeExpSmallRatio a := by
+  norm_num [positiveLargeExpSmallRatio]
+
+theorem positiveLargeExpSmallRatio_lt_one {a : Nat} :
+    positiveLargeExpSmallRatio a < 1 := by
+  norm_num [positiveLargeExpSmallRatio]
+
+theorem positiveLargeExpTemperedRatio_nonneg {a : Nat} :
+    0 ≤ positiveLargeExpTemperedRatio a := by
+  unfold positiveLargeExpTemperedRatio
+  positivity
+
+theorem positiveLargeExpTemperedRatio_lt_one {a : Nat} (ha : 0 < a) :
+    positiveLargeExpTemperedRatio a < 1 := by
+  unfold positiveLargeExpTemperedRatio
+  have hden : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  rw [div_lt_iff₀ hden]
+  have hlt : ((4 * a - 1 : Nat) : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 4 * a - 1 < 4 * a)
+  simpa using hlt
+
+theorem positiveLargeExpTemperedLowerRatio_nonneg {a : Nat} :
+    0 ≤ positiveLargeExpTemperedLowerRatio a :=
+  positiveLargeExpTemperedRatio_nonneg
+
+theorem positiveLargeExpTemperedLowerRatio_lt_one {a : Nat} (ha : 0 < a) :
+    positiveLargeExpTemperedLowerRatio a < 1 :=
+  positiveLargeExpTemperedRatio_lt_one ha
+
+theorem positiveLargeExpTemperedUpperReverseRatio_nonneg {a : Nat} :
+    0 ≤ positiveLargeExpTemperedUpperReverseRatio a :=
+  positiveLargeExpTemperedRatio_nonneg
+
+theorem positiveLargeExpTemperedUpperReverseRatio_lt_one
+    {a : Nat} (ha : 0 < a) :
+    positiveLargeExpTemperedUpperReverseRatio a < 1 :=
+  positiveLargeExpTemperedRatio_lt_one ha
+
+theorem positiveLargeExpTemperedSplitLower_of_large
+    {a : Nat} (ha : 2000 < a) :
+    max 1 (posTemperedCutoff a + 1) ≤ positiveLargeExpTemperedSplit a := by
+  unfold positiveLargeExpTemperedSplit
+  have hcut : posTemperedCutoff a ≤ a / 3 + 9 := by
+    unfold posTemperedCutoff
+    apply ceilSqrt_le_of_le_sq
+    unfold posNlo
+    have hdiv : a < 3 * (a / 3 + 1) := by
+      simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+        (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mp
+          (Nat.lt_succ_self (a / 3))
+    have hlin : 6 * a - 7 ≤ 18 * (a / 3) + 11 := by omega
+    have hq : 22 ≤ a / 3 := by
+      rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 3)]
+      omega
+    have hquad :
+        18 * (a / 3) + 11 ≤ (a / 3 + 9) * (a / 3 + 9) := by
+      nlinarith
+    exact hlin.trans hquad
+  omega
+
+theorem positiveLargeExpTemperedSplitUpper_of_large
+    {a : Nat} (ha : 2000 < a) :
+    positiveLargeExpTemperedSplit a < posKmax a := by
+  unfold positiveLargeExpTemperedSplit posKmax
+  omega
+
 /-- Product-level target whose factored summand form is the small-branch
 large-exp entropy-shadow majorant after the reciprocal-binomial entropy
 replacement. -/
@@ -7636,6 +7729,92 @@ theorem PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificat
             rw [div_le_iff₀ hden]
             simpa [mul_assoc, mul_left_comm, mul_comm]
               using cert.temperedUpperReverseRawStepCross ha hrlo hrhi
+  temperedUpperLastReserve := cert.temperedUpperLastReserve
+
+/-- Candidate concrete split-tempered cross-multiplied bounds after fixing the
+split and ratio functions.
+
+This is the intended generated-audit target for the large-exp entropy-shadow
+tail.  The easy side conditions (`ratio ≥ 0`, `ratio < 1`, and split inside
+the tempered interval) are supplied by Lean from the candidate definitions
+above; the fields here are the remaining rational inequalities. -/
+structure PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate :
+    Prop where
+  smallRawStepCross :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveSmallLargeExp a (r + 1)
+          ≤ positiveLargeExpSmallRatio a * positiveSmallLargeExp a r
+  smallFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ (positiveEdgeBudget / 2) * (1 - positiveLargeExpSmallRatio a)
+  temperedLowerRawStepCross :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveTemperedLargeExp a (r + 1)
+          ≤ positiveLargeExpTemperedLowerRatio a *
+            positiveTemperedLargeExp a r
+  temperedLowerFirstReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ (positiveEdgeBudget / 4) *
+          (1 - positiveLargeExpTemperedLowerRatio a)
+  temperedUpperReverseRawStepCross :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        positiveTemperedLargeExp a (r - 1)
+          ≤ positiveLargeExpTemperedUpperReverseRatio a *
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+  temperedUpperLastReserve :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a (posKmax a)
+        ≤ (positiveEdgeBudget / 4) *
+          (1 - positiveLargeExpTemperedUpperReverseRatio a)
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate.toSplitTemperedCrossmulBoundsCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio where
+  smallRatioNonneg := by
+    intro a ha
+    exact positiveLargeExpSmallRatio_nonneg
+  smallRatioLtOne := by
+    intro a ha
+    exact positiveLargeExpSmallRatio_lt_one
+  smallRawStepCross := cert.smallRawStepCross
+  smallFirstReserve := cert.smallFirstReserve
+  temperedSplitLower := by
+    intro a ha
+    exact positiveLargeExpTemperedSplitLower_of_large ha
+  temperedSplitUpper := by
+    intro a ha
+    exact positiveLargeExpTemperedSplitUpper_of_large ha
+  temperedLowerRatioNonneg := by
+    intro a ha
+    exact positiveLargeExpTemperedLowerRatio_nonneg
+  temperedLowerRatioLtOne := by
+    intro a ha
+    exact positiveLargeExpTemperedLowerRatio_lt_one (by omega : 0 < a)
+  temperedLowerRawStepCross := cert.temperedLowerRawStepCross
+  temperedLowerFirstReserve := cert.temperedLowerFirstReserve
+  temperedUpperReverseRatioNonneg := by
+    intro a ha
+    exact positiveLargeExpTemperedUpperReverseRatio_nonneg
+  temperedUpperReverseRatioLtOne := by
+    intro a ha
+    exact positiveLargeExpTemperedUpperReverseRatio_lt_one (by omega : 0 < a)
+  temperedUpperReverseRawStepCross :=
+    cert.temperedUpperReverseRawStepCross
   temperedUpperLastReserve := cert.temperedUpperLastReserve
 
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
