@@ -247,7 +247,12 @@ Status:
       loose half-target budget `positiveSoloBudget = positiveTarget/2`
       (weaker than the TeX `exp(-0.49a)` estimate, and documented in code),
       leaving the finite scan as the single edge obligation
-      `positiveEdgeMajorantSum a ≤ positiveEdgeBudget`.
+      `positiveEdgeMajorantSum a ≤ positiveEdgeBudget`.  A further
+      `PositiveSaddleDisplayedBudgetCertificate` fixes the paper's displayed
+      `X`/`Y` saddle-bound shapes with constants `8.9`, `7.3`, and `14.5`;
+      its explicit product fields mark the remaining proof that the product
+      of two rational exponential surrogates fits below the single combined
+      surrogate used by the executable majorants.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

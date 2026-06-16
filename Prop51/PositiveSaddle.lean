@@ -368,6 +368,72 @@ def positiveTemperedScalarProductBound (a N k : Nat) : ℚ :=
     positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
     partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
 
+/-! ### Displayed `X`/`Y` saddle-bound shapes -/
+
+/-- The small-regime `X_k(N)` exponent from the TeX display. -/
+def positiveSmallXExponentAt (N : Nat) : ℚ :=
+  (1139/1000) * (ceilSqrt N : ℚ)
+
+/-- The upper-edge version of the small-regime `X_k(N)` exponent. -/
+def positiveSmallXExponentUpper (a : Nat) : ℚ :=
+  (1139/1000) * (posSmallCutoff a : ℚ)
+
+/-- The tempered-regime `X_k(N)` exponent from the TeX display. -/
+def positiveTemperedXExponent (a k : Nat) : ℚ :=
+  (1/5) * (k : ℚ) + (57/10) * ((a : ℚ) / (k : ℚ)) + 1
+
+/-- The tempered `Y_j(N)` exponent from the TeX display. -/
+def positiveYExponent (a j : Nat) : ℚ :=
+  (1/5) * (j : ℚ) + (29/10) * ((a : ℚ) / (j : ℚ)) + 1
+
+/-- TeX small-regime bound target:
+`X_k(N) ≤ 8.9·k/N·exp(1.139 ceilSqrt N)`, with the rational exponential
+surrogate used everywhere in this file. -/
+def positiveSmallXBound (N k : Nat) : ℚ :=
+  (89/10) * ((k : ℚ) / (N : ℚ)) *
+    partialExpUpper (positiveSmallXExponentAt N) positiveExpCutoff
+
+/-- TeX tempered-regime bound target:
+`X_k(N) ≤ 7.3·k/N·exp(0.2k + 5.7a/k + 1)`. -/
+def positiveTemperedXBound (a N k : Nat) : ℚ :=
+  (73/10) * ((k : ℚ) / (N : ℚ)) *
+    partialExpUpper (positiveTemperedXExponent a k) positiveExpCutoff
+
+/-- TeX tempered `Y_j(N)` bound target:
+`Y_j(N) ≤ 14.5·j/N·exp(0.2j + 2.9a/j + 1)`. -/
+def positiveYBound (a N j : Nat) : ℚ :=
+  (29/2) * ((j : ℚ) / (N : ℚ)) *
+    partialExpUpper (positiveYExponent a j) positiveExpCutoff
+
+theorem positiveSmallExponentAt_eq_smallX_add_Y (a N k : Nat) :
+    positiveSmallExponentAt a N k =
+      positiveSmallXExponentAt N + positiveYExponent a (posJ a k) := by
+  unfold positiveSmallExponentAt positiveSmallXExponentAt positiveYExponent
+  ring
+
+theorem positiveSmallExponentUpper_eq_smallX_add_Y (a k : Nat) :
+    positiveSmallExponentUpper a k =
+      positiveSmallXExponentUpper a + positiveYExponent a (posJ a k) := by
+  unfold positiveSmallExponentUpper positiveSmallXExponentUpper positiveYExponent
+  ring
+
+theorem positiveTemperedExponentUpper_eq_X_add_Y
+    {a k : Nat} (hk : k ≤ a) :
+    positiveTemperedExponentUpper a k =
+      positiveTemperedXExponent a k + positiveYExponent a (posJ a k) := by
+  have hsum : ((k : ℚ) + (posJ a k : ℚ)) = (a : ℚ) := by
+    have hnat : k + posJ a k = a := by
+      unfold posJ
+      omega
+    exact_mod_cast hnat
+  have hlin :
+      (1/5 : ℚ) * (a : ℚ) =
+        (1/5) * (k : ℚ) + (1/5) * (posJ a k : ℚ) := by
+    nlinarith
+  unfold positiveTemperedExponentUpper positiveTemperedXExponent positiveYExponent
+  rw [hlin]
+  ring
+
 /-- Corrected two-edge summand majorant from `scripts/positive_saddle_scan.py`:
 use the small formula only when the small regime is possible somewhere in the
 rectangle, use the tempered formula only when the tempered regime is possible
@@ -1738,6 +1804,52 @@ structure PositiveSaddleScalarBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Budgeted interface whose analytic fields are the displayed TeX `X` and
+`Y` saddle estimates.  The product fields are kept explicit because Lean must
+still justify that the product of the two rational exponential surrogates is
+below the single combined surrogate used by the executable majorants. -/
+structure PositiveSaddleDisplayedBudgetCertificate : Prop where
+  smallX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k ≤ positiveSmallXBound N k
+  smallY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  smallProduct :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            positiveSmallXBound N k *
+            positiveYBound a N (posJ a k)
+          ≤ positiveSmallScalarProductBound a k
+  temperedX :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k ≤ positiveTemperedXBound a N k
+  temperedY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Ynorm N (posJ a k) ≤ positiveYBound a N (posJ a k)
+  temperedProduct :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        ((N : ℚ) / 2) * positiveBinomRatio a k *
+            positiveDyadicDecay (posJ a k) *
+            positiveTemperedXBound a N k *
+            positiveYBound a N (posJ a k)
+          ≤ positiveTemperedScalarProductBound a N k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 theorem PositiveSaddleScalarCertificate.toFactorCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleScalarCertificate soloBound) :
     PositiveSaddleFactorCertificate soloBound where
@@ -1764,6 +1876,29 @@ theorem PositiveSaddleScalarBudgetCertificate.toScalarCertificate
     intro a ha ha2000
     exact positiveEnvelopeBound_le_target_of_edgeBudget
       (cert.edgeBudget ha ha2000)
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleDisplayedBudgetCertificate.toScalarBudgetCertificate
+    (cert : PositiveSaddleDisplayedBudgetCertificate) :
+    PositiveSaddleScalarBudgetCertificate where
+  smallScalar := by
+    intro a N k ha ha2000 hrect hk hsmall hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact (positiveFactorizedRawTerm_le_of_XY_bounds hN (by omega : 2 ≤ a)
+      hk hB
+      (cert.smallX ha ha2000 hrect hk hsmall hB)
+      (cert.smallY ha ha2000 hrect hk hsmall hB)).trans
+      (cert.smallProduct ha ha2000 hrect hk hsmall hB)
+  temperedScalar := by
+    intro a N k ha ha2000 hrect hk htemp hB
+    have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact (positiveFactorizedRawTerm_le_of_XY_bounds hN (by omega : 2 ≤ a)
+      hk hB
+      (cert.temperedX ha ha2000 hrect hk htemp hB)
+      (cert.temperedY ha ha2000 hrect hk htemp hB)).trans
+      (cert.temperedProduct ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
 
 /-- A still more decomposed §6 interface: prove separate saddle bounds for
@@ -1897,6 +2032,11 @@ theorem PositiveSaddleScalarBudgetCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toScalarCertificate.toCertificate
 
+theorem PositiveSaddleDisplayedBudgetCertificate.toCertificate
+    (cert : PositiveSaddleDisplayedBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toScalarBudgetCertificate.toCertificate
+
 theorem PositiveSaddleXYCertificate.toCertificate
     {soloBound : Nat → ℚ}
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -1947,6 +2087,11 @@ theorem unorm_tail_of_positiveSaddleScalarCertificate
 
 theorem unorm_tail_of_positiveSaddleScalarBudgetCertificate
     (cert : PositiveSaddleScalarBudgetCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleDisplayedBudgetCertificate
+    (cert : PositiveSaddleDisplayedBudgetCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
