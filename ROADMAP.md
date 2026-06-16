@@ -275,7 +275,12 @@ Status:
       lemmas for the finite corrected-edge budget.  The row-oriented interface
       `PositiveSaddleTangentCheckedRowsCertificate` packages these two boolean
       row checks together with the remaining analytic fields, matching the
-      intended generated-certificate workflow.
+      intended generated-certificate workflow.  The solo `Y_a` term now has an
+      analogous exact `Qq` split into the linear exponential and the nonlinear
+      `Eplus` coefficients, an explicit `Eplus`/`Gcomp` upper bound, and
+      `checkPositiveSoloGcompRow`; the stronger
+      `PositiveSaddleTangentFullyCheckedRowsCertificate` replaces the analytic
+      solo field by this row check.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

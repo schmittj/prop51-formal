@@ -1333,6 +1333,20 @@ positive-side `Eplus`/`Gcomp` majorant. -/
 def positiveSoloGcompBound (a N : Nat) : ℚ :=
   QqEplusGcompBound N a / ((N : ℚ) * c a)
 
+/-- Boolean check that the explicit `Eplus`/`Gcomp` solo upper bound stays
+within its half-target budget at one point of the positive rectangle. -/
+def checkPositiveSoloGcompCell (a N : Nat) : Bool :=
+  decide (positiveSoloGcompBound a N ≤ positiveSoloBudget)
+
+/-- Boolean row check for the explicit solo bound over every `N` in the
+positive rectangle at fixed `a`. -/
+def checkPositiveSoloGcompRow (a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N => checkPositiveSoloGcompCell a N
+
+/-- Boolean range check for the explicit solo bound over `a ∈ [lo, lo+len)`. -/
+def checkPositiveSoloGcompRange (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveSoloGcompRow
+
 theorem normalizedSoloTerm_le_positiveSoloGcompBound
     {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
     normalizedSoloTerm a N ≤ positiveSoloGcompBound a N := by
@@ -1347,6 +1361,65 @@ theorem dyadic_Ynorm_le_positiveSoloGcompBound
     positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloGcompBound a N := by
   rw [← normalizedSoloTerm_eq_dyadic_Ynorm hN ha]
   exact normalizedSoloTerm_le_positiveSoloGcompBound hN ha
+
+/-- Soundness of one executable solo-bound point check. -/
+theorem positiveSoloGcompBound_of_checkCell {a N : Nat}
+    (h : checkPositiveSoloGcompCell a N = true) :
+    positiveSoloGcompBound a N ≤ positiveSoloBudget := by
+  exact of_decide_eq_true h
+
+/-- Soundness of one executable solo-bound row check. -/
+theorem positiveSoloGcompBound_of_checkRow {a N : Nat}
+    (h : checkPositiveSoloGcompRow a = true)
+    (hrect : positiveRectangle a N) :
+    positiveSoloGcompBound a N ≤ positiveSoloBudget := by
+  apply positiveSoloGcompBound_of_checkCell
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSoloGcompCell a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloGcompRow] using h)
+  exact hall N (mem_positiveNRangeList_of_rectangle hrect)
+
+/-- Soundness of an executable range check for the solo `Eplus`/`Gcomp` bound. -/
+theorem positiveSoloGcompBound_of_checkRange
+    {lo len a N : Nat}
+    (h : checkPositiveSoloGcompRange lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (hrect : positiveRectangle a N) :
+    positiveSoloGcompBound a N ≤ positiveSoloBudget := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSoloGcompRow x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloGcompRange] using h)
+  exact positiveSoloGcompBound_of_checkRow
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect
+
+/-- The finite-window solo certificate field follows from a single range
+check over `401 ≤ a ≤ 2000`. -/
+theorem dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRange
+    (h : checkPositiveSoloGcompRange 401 1600 = true) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  intro a N ha ha2000 hrect
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  calc
+    positiveDyadicDecay a / 2 * Ynorm N a
+        ≤ positiveSoloGcompBound a N :=
+          dyadic_Ynorm_le_positiveSoloGcompBound hN (by omega : 1 ≤ a)
+    _ ≤ positiveSoloBudget :=
+          positiveSoloGcompBound_of_checkRange
+            (lo := 401) (len := 1600) h ha (by omega) hrect
+
+/-- Row-level solo certificate field from a generated row theorem. -/
+theorem dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRow
+    {a N : Nat} (h : checkPositiveSoloGcompRow a = true)
+    (ha : 401 ≤ a) (hrect : positiveRectangle a N) :
+    positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  exact (dyadic_Ynorm_le_positiveSoloGcompBound hN (by omega : 1 ≤ a)).trans
+    (positiveSoloGcompBound_of_checkRow h hrect)
 
 /-- Exact algebraic form of the raw §6 summand before analytic saddle
 estimates are inserted:
@@ -2818,6 +2891,33 @@ structure PositiveSaddleTangentCheckedRowsCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Row-checked tangent certificate with the solo `Y_a` term also discharged
+by the explicit `Eplus`/`Gcomp` finite row check.
+
+The remaining analytic fields are the small and tempered `X*Y` saddle product
+bounds and the entropy tail; all finite positive-envelope budget checks are
+now represented by row booleans. -/
+structure PositiveSaddleTangentFullyCheckedRowsCertificate : Prop where
+  smallXYTangent :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductTangentBound a N k
+  smallTangentEdgeRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSmallTangentExpEdgeRow a = true
+  temperedXY :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k
+  soloGcompRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveSoloGcompRow a = true
+  edgeBudgetRows :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      checkPositiveEdgeBudgetRow a = true
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Actual-`N` combined-product version of the budgeted §6 interface.  The
 small-regime analytic estimate targets `positiveSmallXYProductAtBound`, and
 the separate `smallEdge` field records the finite/monotone replacement by the
@@ -2984,6 +3084,19 @@ theorem PositiveSaddleTangentCheckedRowsCertificate.toTangentProductBudgetCertif
     intro a ha ha2000
     exact positiveEdgeBudget_of_checkPositiveEdgeBudgetRow
       (cert.edgeBudgetRows ha ha2000)
+  entropyTail := cert.entropyTail
+
+theorem PositiveSaddleTangentFullyCheckedRowsCertificate.toTangentCheckedRowsCertificate
+    (cert : PositiveSaddleTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleTangentCheckedRowsCertificate where
+  smallXYTangent := cert.smallXYTangent
+  smallTangentEdgeRows := cert.smallTangentEdgeRows
+  temperedXY := cert.temperedXY
+  soloY := by
+    intro a N ha ha2000 hrect
+    exact dyadic_Ynorm_le_positiveSoloBudget_of_checkPositiveSoloGcompRow
+      (cert.soloGcompRows ha ha2000) ha hrect
+  edgeBudgetRows := cert.edgeBudgetRows
   entropyTail := cert.entropyTail
 
 theorem PositiveSaddleAtProductBudgetCertificate.toCombinedProductBudgetCertificate
@@ -3172,6 +3285,11 @@ theorem PositiveSaddleTangentCheckedRowsCertificate.toCertificate
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
   cert.toTangentProductBudgetCertificate.toCertificate
 
+theorem PositiveSaddleTangentFullyCheckedRowsCertificate.toCertificate
+    (cert : PositiveSaddleTangentFullyCheckedRowsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  cert.toTangentCheckedRowsCertificate.toCertificate
+
 theorem PositiveSaddleAtProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleAtProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
@@ -3252,6 +3370,11 @@ theorem unorm_tail_of_positiveSaddleTangentProductBudgetCertificate
 
 theorem unorm_tail_of_positiveSaddleTangentCheckedRowsCertificate
     (cert : PositiveSaddleTangentCheckedRowsCertificate) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
+
+theorem unorm_tail_of_positiveSaddleTangentFullyCheckedRowsCertificate
+    (cert : PositiveSaddleTangentFullyCheckedRowsCertificate) :
     ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
   unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
