@@ -214,7 +214,10 @@ Status:
       negative term and the large-`k` sign-lock exclusion.  This bridge now
       consumes the completed sign-lock theorem directly, while the older
       conditional bridges exposing `signLockNearBase` and the 12-term prefix
-      obligations are retained for auditability.
+      obligations are retained for auditability.  The positive-envelope
+      interface now also has a parameterized solo-term bound, matching the
+      TeX split between the retained positive summands and the separate
+      `2^{-a-1}Y_a(N)` saddle estimate.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.
 

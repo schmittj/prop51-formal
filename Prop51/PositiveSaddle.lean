@@ -318,6 +318,20 @@ def normalizedSoloTerm (a N : Nat) : ℚ :=
 def positiveEnvelope (a N : Nat) : ℚ :=
   normalizedSoloTerm a N + positiveEdgeMajorantSum a
 
+/-- A positive-envelope majorant after replacing the solo term by an external
+upper bound.  In the TeX proof this solo bound is supplied by the same
+tempered saddle estimate as the positive summands, giving
+`2^{-a-1}Y_a(N) < exp(-0.49a)`.  Lean keeps that analytic input separate. -/
+def positiveEnvelopeBound (a : Nat) (soloBound : ℚ) : ℚ :=
+  soloBound + positiveEdgeMajorantSum a
+
+theorem positiveEnvelope_le_bound_of_solo
+    {a N : Nat} {soloBound : ℚ}
+    (hsolo : normalizedSoloTerm a N ≤ soloBound) :
+    positiveEnvelope a N ≤ positiveEnvelopeBound a soloBound := by
+  unfold positiveEnvelope positiveEnvelopeBound
+  linarith
+
 theorem positiveTarget_pos : 0 < positiveTarget := by
   norm_num [positiveTarget]
 
@@ -1008,6 +1022,28 @@ theorem Unorm_neg_of_signLock_and_positiveEnvelope
     (a := a) (N := N) ha hrect ?hXbound hsmall htempered hpositive
   intro m hm hNm
   exact Xnorm_le_neg_signLockMargin (N := N) (m := m) hN hNm hm
+
+/-- Same large-`a` assembly, but with the solo contribution already replaced
+by an explicit upper bound.  This is the interface for the remaining
+positive-envelope certificate. -/
+theorem Unorm_neg_of_signLock_and_positiveEnvelopeBound
+    {a N : Nat} {soloBound : ℚ}
+    (ha : 401 ≤ a) (hrect : positiveRectangle a N)
+    (hsmall :
+      ∀ k, k ∈ positiveKRange a →
+        k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (htempered :
+      ∀ k, k ∈ positiveKRange a →
+        ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (hsolo : normalizedSoloTerm a N ≤ soloBound)
+    (hpositive : positiveEnvelopeBound a soloBound ≤ positiveTarget) :
+    Unorm a N < 0 :=
+  Unorm_neg_of_signLock_and_positiveEnvelope
+    (a := a) (N := N) ha hrect hsmall htempered
+    ((positiveEnvelope_le_bound_of_solo
+      (a := a) (N := N) (soloBound := soloBound) hsolo).trans hpositive)
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
