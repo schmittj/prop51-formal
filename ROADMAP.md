@@ -221,7 +221,9 @@ Status:
       now bundled as `PositiveSaddleCertificate`, split into the finite
       window `401 ≤ a ≤ 2000` and the `a > 2000` entropy tail, and
       `Main.lean` exposes the direct capstone
-      `coefficientNegativity_of_positiveSaddleCertificate`.
+      `coefficientNegativity_of_positiveSaddleCertificate`.  There is also
+      a raw-summand variant `PositiveSaddleRawCertificate` that removes the
+      guarded `B_k > 0` bookkeeping from the analytic saddle obligations.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

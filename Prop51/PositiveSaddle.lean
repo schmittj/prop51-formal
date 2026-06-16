@@ -445,6 +445,17 @@ sign-lock exclusion. -/
 def normalizedPositiveRetainedSum (a N : Nat) : ℚ :=
   ∑ k ∈ positiveKRange a, normalizedPositiveIfTerm a N k
 
+theorem normalizedPositiveIfTerm_le_of_raw_le
+    {a N k : Nat} {M : ℚ} (hM : 0 ≤ M)
+    (hraw : 1 ≤ k → 0 < Bq N k → normalizedPositiveRawTerm a N k ≤ M) :
+    normalizedPositiveIfTerm a N k ≤ M := by
+  unfold normalizedPositiveIfTerm
+  by_cases hguard : 1 ≤ k ∧ 0 < Bq N k
+  · rw [if_pos hguard]
+    exact hraw hguard.1 hguard.2
+  · rw [if_neg hguard]
+    exact hM
+
 theorem Bq_pos_iff_Xnorm_pos {N k : Nat} (hN : 1 ≤ N) (hk : 1 ≤ k) :
     0 < Bq N k ↔ 0 < Xnorm N k := by
   have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
@@ -1077,6 +1088,50 @@ structure PositiveSaddleCertificate (soloBound : Nat → ℚ) : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- A more convenient version of `PositiveSaddleCertificate` for the analytic
+saddle work: the pointwise fields bound the raw product
+`B_k Q_{a-k}/(N c_a)`.  The conversion below supplies the `B_k > 0` guard
+automatically, using nonnegativity of the explicit majorants on the finite
+window. -/
+structure PositiveSaddleRawCertificate (soloBound : Nat → ℚ) : Prop where
+  smallRaw :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveRawTerm a N k ≤ positiveSmallMajorantTerm a k
+  temperedRaw :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveRawTerm a N k ≤ positiveTemperedMajorantTerm a k
+  solo :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      normalizedSoloTerm a N ≤ soloBound a
+  envelope :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEnvelopeBound a (soloBound a) ≤ positiveTarget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
+theorem PositiveSaddleRawCertificate.toCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleRawCertificate soloBound) :
+    PositiveSaddleCertificate soloBound where
+  small := by
+    intro a N k ha ha2000 hrect hk hsmall
+    have hnonneg : 0 ≤ positiveSmallMajorantTerm a k :=
+      positiveSmallMajorantTerm_nonneg ha ha2000 hk
+    exact normalizedPositiveIfTerm_le_of_raw_le hnonneg
+      (fun _ _ => cert.smallRaw ha ha2000 hrect hk hsmall)
+  tempered := by
+    intro a N k ha ha2000 hrect hk htemp
+    have hcut : posTemperedCutoff a < k :=
+      temperedRegime_of_rectangle hrect htemp
+    have hnonneg : 0 ≤ positiveTemperedMajorantTerm a k :=
+      positiveTemperedMajorantTerm_nonneg ha ha2000 hk hcut
+    exact normalizedPositiveIfTerm_le_of_raw_le hnonneg
+      (fun _ _ => cert.temperedRaw ha ha2000 hrect hk htemp)
+  solo := cert.solo
+  envelope := cert.envelope
+  entropyTail := cert.entropyTail
+
 theorem Unorm_neg_of_positiveSaddleCertificate_finite
     {soloBound : Nat → ℚ} (cert : PositiveSaddleCertificate soloBound)
     {a N : Nat} (ha : 401 ≤ a) (ha2000 : a ≤ 2000)
@@ -1100,6 +1155,11 @@ theorem unorm_tail_of_positiveSaddleCertificate
   · exact Unorm_neg_of_positiveSaddleCertificate_finite
       (soloBound := soloBound) cert ha ha2000 ⟨hlo, hhi⟩
   · exact cert.entropyTail ha2000 ⟨hlo, hhi⟩
+
+theorem unorm_tail_of_positiveSaddleRawCertificate
+    {soloBound : Nat → ℚ} (cert : PositiveSaddleRawCertificate soloBound) :
+    ∀ a, 401 ≤ a → ∀ N, 6*a - 7 ≤ N → N ≤ 12*a - 8 → Unorm a N < 0 :=
+  unorm_tail_of_positiveSaddleCertificate cert.toCertificate
 
 /-! ## Numerical anchors for the first post-certificate row -/
 
