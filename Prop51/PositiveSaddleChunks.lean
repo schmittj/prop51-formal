@@ -102,6 +102,94 @@ theorem positiveSaddleDefaultChunks_cover :
                                 · omega
                                 · omega
 
+/-! ## Default edge `k`-chunks
+
+The corrected finite edge budget is expensive as a single row check.  These
+fixed 20-wide chunks cover every retained `k` for all `a ≤ 2000`; generated
+audits can prove each chunk separately and then combine them through the
+reducers in `PositiveSaddle.lean`. -/
+
+/-- Default 20-wide `k`-chunks covering `1 ≤ k ≤ 1800`, hence all retained
+`k ∈ positiveKRange a` for `a ≤ 2000`. -/
+def positiveEdgeDefaultKChunks : Finset (Nat × Nat) :=
+  (Finset.range 90).image fun i => (1 + 20 * i, 20)
+
+theorem positiveEdgeDefaultKChunks_disjoint :
+    (positiveEdgeDefaultKChunks : Set (Nat × Nat)).PairwiseDisjoint
+      fun chunk => Finset.Ico chunk.1 (chunk.1 + chunk.2) := by
+  intro chunk hchunk chunk' hchunk' hne
+  have hchunkFin : chunk ∈ positiveEdgeDefaultKChunks := by simpa using hchunk
+  have hchunkFin' : chunk' ∈ positiveEdgeDefaultKChunks := by simpa using hchunk'
+  rcases Finset.mem_image.mp hchunkFin with ⟨i, _hi, rfl⟩
+  rcases Finset.mem_image.mp hchunkFin' with ⟨j, _hj, rfl⟩
+  have hij : i ≠ j := by
+    intro h
+    apply hne
+    simp [h]
+  rcases lt_or_gt_of_ne hij with hijlt | hjilt
+  · simp [Finset.disjoint_left, Finset.mem_Ico]
+    intro x hxi hxj
+    omega
+  · simp [Finset.disjoint_left, Finset.mem_Ico]
+    intro x hxi hxj
+    omega
+
+theorem positiveEdgeDefaultKChunks_cover
+    {a k : Nat} (ha2000 : a ≤ 2000) (hk : k ∈ positiveKRange a) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveEdgeDefaultKChunks ∧
+        k ∈ Finset.Ico chunk.1 (chunk.1 + chunk.2) := by
+  rcases (mem_positiveKRange.mp hk) with ⟨hk1, hkmax⟩
+  have hkhi : k ≤ 1800 := by
+    unfold posKmax at hkmax
+    omega
+  let i := (k - 1) / 20
+  have hi : i < 90 := by
+    dsimp [i]
+    omega
+  refine ⟨(1 + 20 * i, 20), ?_, ?_⟩
+  · exact Finset.mem_image.mpr ⟨i, Finset.mem_range.mpr hi, rfl⟩
+  · simp [Finset.mem_Ico]
+    dsimp [i]
+    constructor <;> omega
+
+theorem positiveEdgeBudget_of_defaultKChunksBounds
+    {a : Nat} {budget : Nat × Nat → ℚ}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeDefaultKChunks →
+        positiveEdgeMajorantKChunkSum a chunk.1 chunk.2 ≤ budget chunk)
+    (hbudget :
+      ∑ chunk ∈ positiveEdgeDefaultKChunks, budget chunk ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget :=
+  positiveEdgeBudget_of_KChunksBounds
+    (a := a) (chunks := positiveEdgeDefaultKChunks)
+    (budget := budget) ha401 ha2000
+    positiveEdgeDefaultKChunks_disjoint
+    (fun hk => positiveEdgeDefaultKChunks_cover ha2000 hk)
+    hchunks hbudget
+
+theorem positiveEdgeBudget_of_defaultKChunksUnitChecks
+    {a : Nat} {scale : Nat × Nat → Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hscale :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeDefaultKChunks →
+        0 < scale chunk)
+    (hchunks :
+      ∀ {chunk : Nat × Nat}, chunk ∈ positiveEdgeDefaultKChunks →
+        checkPositiveEdgeMajorantKChunkUnit
+          a chunk.1 chunk.2 (scale chunk) = true)
+    (hbudget :
+      ∑ chunk ∈ positiveEdgeDefaultKChunks,
+        (1 : ℚ) / (scale chunk : ℚ) ≤ positiveEdgeBudget) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget :=
+  positiveEdgeBudget_of_KChunksUnitChecks
+    (a := a) (chunks := positiveEdgeDefaultKChunks)
+    (scale := scale) ha401 ha2000
+    positiveEdgeDefaultKChunks_disjoint
+    (fun hk => positiveEdgeDefaultKChunks_cover ha2000 hk)
+    hscale hchunks hbudget
+
 /-- Constructor for the default chunk cover, leaving only the five families of
 Boolean chunk checks to generated certificates. -/
 theorem positiveSaddleDefaultFiniteWindowChunks
