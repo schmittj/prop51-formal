@@ -29,7 +29,7 @@ The proof (see `paper/prop51.tex`) has three layers:
 | enumeration | `g ≤ 23` (`a ≤ 8`) | exact rationals over all partitions | **proved** (`CertificateSmall.lean`) |
 | majorant, exact | `9 ≤ a ≤ 60` | exact rationals, 10,764 pairs | **proved** (`CertificateExact.lean`) |
 | majorant, interval | `61 ≤ a ≤ 400` | verified 192-bit dyadic intervals, 470,220 pairs | **proved** (`Prop51Kernel.lean` + `IntervalCert.lean` + 8 `native_decide` chunks) |
-| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + saddle bounds | **in progress** (Layer C, all-rational: §2 estimates + composition lemma done — `BinomRecip`/`DNorm`/`Composition.lean`) |
+| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + positive-saddle audit certificate | **conditional assembly proved** (sign-lock closed; remaining work is a concrete positive-saddle audit certificate) |
 
 ## What is machine-checked today
 
@@ -54,6 +54,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
+* `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
+  — the current most practical large-`a` conditional capstone: default finite
+  product chunks, tangent-edge cell checks, semantic finite solo budgets,
+  default unit-cleared edge `k`-chunks, and the raw-cleared large-tail reserve
+  certificate imply full `CoefficientNegativity`.
 * Spec lemmas (`Prop51/Defs.lean`): the computational definitions satisfy
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.

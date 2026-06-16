@@ -402,6 +402,19 @@ Status:
       divergence from the TeX-style finite audit, recorded in the code; the
       mathematical inequalities consumed downstream are the same
       `positiveSoloBudget` and `positiveEdgeBudget` bounds.
+      The edge side of this staging has now been tightened again: the current
+      preferred edge-budget endpoint is
+      `PositiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`,
+      with final assembly theorem
+      `coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+      It keeps the semantic finite solo bound but replaces the semantic edge
+      budget by default disjoint 20-wide `k`-chunks covering every retained
+      `k` for `a ≤ 2000`; each chunk is proved by a unit-cleared check
+      `checkPositiveEdgeMajorantKChunkUnit`, and the declared reciprocal
+      budgets are summed in Lean.  The remaining finite-window divergence
+      from the TeX-style fully executable audit is therefore concentrated in
+      the solo bound, while the corrected edge scan has a generated-audit
+      path that avoids the slow whole-row boolean.
 - [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
       the final `CoefficientNegativity`.  The combination step itself is now
       formalized as `coefficientNegativity_of_unorm_tail`, so the remaining

@@ -22,8 +22,14 @@ of Proposition 5.1 there).
   interval certificate (`61 ≤ a ≤ 400`, Layer B), and the Layer A majorant
   bridge `b_a(μ) ≤ U_a(N)` (paper eq. 8) together cover every relevant
   genus `g ≤ 1199` and every positive partition.
-* `a ≥ 401` (effective analytic bound): not yet formalized — Layer C of the
-  roadmap; it would upgrade the capstone to full `CoefficientNegativity`.
+* `a ≥ 401` (effective analytic bound): formalized as a family of conditional
+  positive-saddle certificates.  The sign-lock side is closed; the preferred
+  current finite-window interface uses default product chunks, tangent-edge
+  cells, a semantic finite solo budget, and default unit-cleared edge
+  `k`-chunks, with final assembly exposed below by
+  `coefficientNegativity_of_positiveSaddleDefaultCellEdgeKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
+  A concrete instance of that audit certificate would upgrade the capstone to
+  full `CoefficientNegativity`.
 -/
 import Prop51.Defs
 import Prop51.Partitions
