@@ -176,11 +176,17 @@ All Lean proofs are sorry-free.  Headline theorems:
   raw product inequality into separate `Bplus` and `Qplus/Y` saddle bounds
   plus a scalar product comparison.  The solo subtarget similarly has the
   `Prop51.PositiveSaddleLargeTailSoloYBoundCertificate` split between a
-  `Y_a(N)` saddle bound and the dyadic unit budget.  The finer
+  `Y_a(N)` saddle bound and the dyadic unit budget.  For final assembly from
+  these lower-level product and solo proofs,
+  `Prop51.PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those
+  bound certificates with the grouped candidate step/reserve fields.  The finer
   `Prop51.PositiveSaddleLargeTailAtomicPartsAuditCertificate` additionally
   splits the six candidate entropy-reserve fields into separate atomic
-  one-dimensional inequality families.  The finite generator can target these
-  split final-theorem interfaces with `--emit-final --final-tail-parts` or
+  one-dimensional inequality families, while
+  `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate` bundles the
+  product/solo bound certificates with those atomic candidate fields.  The
+  finite generator can target these split final-theorem interfaces with
+  `--emit-final --final-tail-parts` or
   `--emit-final --final-tail-atomic-parts`; use repeated `--extra-import`
   flags when the atom theorems live in separately built Lean modules.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced

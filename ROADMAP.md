@@ -622,14 +622,19 @@ Status:
       and `Qplus/Y` saddle bounds plus a scalar product comparison, matching
       the TeX-style saddle-bound staging more closely.  The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
-      splitting the `Y_a(N)` saddle bound from the dyadic unit budget.  The
+      splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
+      `PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those
+      lower-level product and solo bound certificates with the grouped
+      candidate step/reserve certificates for final assembly.  The
       finite generator emits final theorems against this split interface with
       `--emit-final --final-tail-parts`.
       The still finer
       `PositiveSaddleLargeTailAtomicPartsAuditCertificate` splits the six
       candidate entropy-reserve fields into atomic small-step,
       lower-tempered-step, upper-tempered-step, and three reserve-family
-      certificates; emit final theorems against it with
+      certificates.  `PositiveSaddleLargeTailAtomicBoundsAuditCertificate`
+      is the fully split product/solo/candidate wrapper; emit final theorems
+      against the atomic route with
       `--emit-final --final-tail-atomic-parts`.  If generated atom theorems
       are split over separate Lean modules, pass repeated `--extra-import`
       options when emitting the assembly theorem.  The generator also has
