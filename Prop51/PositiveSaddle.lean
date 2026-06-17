@@ -7643,6 +7643,83 @@ theorem partialExpPrefix_sub_le_shift_partialExpUpper
     _ ≤ (z - y) * partialExpUpper z T :=
         mul_le_mul_of_nonneg_left hprefix_le hd0
 
+/-- If the endpoint is at most `(T-1)/24`, then the penultimate exponential
+term dominates the final prefix term by a factor `24`. -/
+theorem expTerm_last_mul_twentyfour_le_prev_of_le_cutoff_div
+    {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (24 : ℚ) * (z^(T-1) / ((T-1).factorial : ℚ))
+      ≤ z^(T-2) / ((T-2).factorial : ℚ) := by
+  have hpredQpos : (0 : ℚ) < ((T - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < T - 1)
+  have hpredQne : ((T - 1 : Nat) : ℚ) ≠ 0 := hpredQpos.ne'
+  have hpredFac : (((T - 2).factorial : Nat) : ℚ) ≠ 0 := by
+    positivity
+  have hfac : (((T - 1).factorial : Nat) : ℚ) =
+      ((T - 1 : Nat) : ℚ) * (((T - 2).factorial : Nat) : ℚ) := by
+    rw [show T - 1 = (T - 2) + 1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hpow : z^(T-1) = z^(T-2) * z := by
+    calc
+      z^(T-1) = z^((T - 2) + 1) := by
+        exact congrArg (fun n : Nat => z^n)
+          (by omega : T - 1 = (T - 2) + 1)
+      _ = z^(T-2) * z := by rw [pow_succ]
+  have hcoef : (24 : ℚ) * z / ((T - 1 : Nat) : ℚ) ≤ 1 := by
+    rw [div_le_one]
+    · nlinarith
+    · exact hpredQpos
+  have hprev0 :
+      0 ≤ z^(T-2) / ((T-2).factorial : ℚ) := by
+    positivity
+  have halg :
+      (24 : ℚ) * (z^(T-1) / ((T-1).factorial : ℚ))
+        =
+      (z^(T-2) / ((T-2).factorial : ℚ)) *
+        ((24 : ℚ) * z / ((T - 1 : Nat) : ℚ)) := by
+    rw [hfac, hpow]
+    field_simp [hpredQne, hpredFac]
+  rw [halg]
+  simpa using mul_le_mul_of_nonneg_left hcoef hprev0
+
+/-- Under the upper-middle cutoff, the final term in the finite prefix is at
+most one twenty-fifth of the full prefix. -/
+theorem partialExpPrefix_last_term_mul_twentyfive_le
+    {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (25 : ℚ) * (z^(T-1) / ((T-1).factorial : ℚ))
+      ≤ ∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ) := by
+  let term : Nat → ℚ := fun n => z^n / (n.factorial : ℚ)
+  let s : Finset Nat := {T - 2, T - 1}
+  have hsubset : s ⊆ Finset.range T := by
+    intro n hn
+    simp [s] at hn
+    rcases hn with hn | hn <;> subst n
+    · exact Finset.mem_range.mpr (by omega)
+    · exact Finset.mem_range.mpr (by omega)
+  have hnonneg :
+      ∀ n ∈ Finset.range T, n ∉ s → 0 ≤ term n := by
+    intro n _hn _hns
+    dsimp [term]
+    positivity
+  have hpair_le :
+      ∑ n ∈ s, term n ≤ ∑ n ∈ Finset.range T, term n :=
+    Finset.sum_le_sum_of_subset_of_nonneg hsubset hnonneg
+  have hne : T - 2 ≠ T - 1 := by omega
+  have hpair_eq :
+      ∑ n ∈ s, term n = term (T - 2) + term (T - 1) := by
+    simp [s, term, hne, add_comm]
+  have h24 :=
+    expTerm_last_mul_twentyfour_le_prev_of_le_cutoff_div
+      (z := z) (T := T) hT hz0 hzSmall
+  have h25 :
+      (25 : ℚ) * term (T - 1) ≤ term (T - 2) + term (T - 1) := by
+    dsimp [term] at h24 ⊢
+    nlinarith
+  rw [← hpair_eq] at h25
+  exact h25.trans hpair_le
+
 /-- The shifted finite prefix gains enough to cover multiplication by
 `1+d`, up to the final boundary term. -/
 theorem partialExpPrefix_mul_one_add_le_add_top {y d : ℚ} {T : Nat}
