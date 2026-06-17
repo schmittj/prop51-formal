@@ -669,7 +669,11 @@ Status:
       `positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedRawExpRatios`
       now fill this closed small-step atom automatically, leaving the two
       tempered ratio atoms and three reserve atoms as the live refined
-      candidate obligations.  For the lower-tempered
+      candidate obligations.  The wrapper
+      `PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate`
+      and generator flag
+      `--final-tail-tempered-raw-exp-ratio-reserve-bounds` expose exactly
+      this reduced final tail interface.  For the lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
       is too strong near the split.  The remaining official target is the

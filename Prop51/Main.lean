@@ -1212,6 +1212,29 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate
     finite tail.toAtomicBoundsAuditCertificate
 
+/-- Final assembly from the fine fixed-edge route and the reduced refined
+large-tail bounds interface.  This interface exposes exactly the remaining
+candidate obligations after Lean fills the small adjacent-step atom from the
+proved raw-base half certificate. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate
+    finite tail.toRefinedAtomicBoundsAuditCertificate
+
 /-- Final assembly from the fine fixed-edge route and a large-tail bounds
 interface that keeps the candidate proof in the grouped raw-cleared
 unit-reserve form.  This theorem is an ergonomic bridge for proof production;

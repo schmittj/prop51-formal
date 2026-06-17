@@ -231,6 +231,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-tempered-raw-exp-ratio-reserve-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split interface whose live candidate fields are the two "
+            "tempered raw-exp ratio atoms and the three reserve atoms"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -385,6 +394,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_atomic_bounds,
         args.final_tail_raw_cleared_unit_bounds,
         args.final_tail_refined_atomic_bounds,
+        args.final_tail_tempered_raw_exp_ratio_reserve_bounds,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -770,11 +780,17 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "unit-reserve tails with product/solo bound splits.",
         "Pass `--final-tail-refined-atomic-bounds` for the refined raw-exp",
         "ratio step atoms with product/solo bound splits.",
+        "Pass `--final-tail-tempered-raw-exp-ratio-reserve-bounds` after",
+        "the small step is filled by Lean's raw-base half certificate.",
         "-/",
     ]
 
 
 def final_tail_type(args: argparse.Namespace) -> str:
+    if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate"
+        )
     if args.final_tail_refined_atomic_bounds:
         return "PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate"
     if args.final_tail_atomic_bounds:
@@ -796,6 +812,7 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
         or args.final_tail_atomic_bounds
         or args.final_tail_raw_cleared_unit_bounds
         or args.final_tail_refined_atomic_bounds
+        or args.final_tail_tempered_raw_exp_ratio_reserve_bounds
     ):
         return [
             "    {smallXBound smallYBound temperedXBound temperedYBound :",
@@ -812,6 +829,7 @@ def final_tail_arg(args: argparse.Namespace) -> str:
         args.final_tail_atomic_bounds
         or args.final_tail_raw_cleared_unit_bounds
         or args.final_tail_refined_atomic_bounds
+        or args.final_tail_tempered_raw_exp_ratio_reserve_bounds
         or args.final_tail_atomic_parts
         or args.final_tail_bounds_parts
         or args.final_tail_parts
@@ -1107,6 +1125,8 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
         emit_args.append("--final-tail-raw-cleared-unit-bounds")
     if args.final_tail_refined_atomic_bounds:
         emit_args.append("--final-tail-refined-atomic-bounds")
+    if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
+        emit_args.append("--final-tail-tempered-raw-exp-ratio-reserve-bounds")
     return emit_args
 
 
@@ -2813,12 +2833,21 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         )
 
     if args.emit_final:
-        final_theorem = (
-            "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate"
-            if args.final_tail_refined_atomic_bounds
-            else "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
-        )
-        final_arg = "tail" if args.final_tail_refined_atomic_bounds else final_tail_arg(args)
+        if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_refined_atomic_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        else:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
+            )
+            final_arg = final_tail_arg(args)
         lines.extend(
             [
                 "",

@@ -222,7 +222,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedRawExpRatios`
   fill this closed small-step atom automatically, so the live refined
   candidate obligations are the two tempered ratio atoms and the three
-  reserve atoms.  For the lower-tempered
+  reserve atoms.  The corresponding tail wrapper
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate`
+  and final theorem
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate`
+  expose exactly this reduced obligation set.  For the lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
   factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this
   monotonicity is useful bookkeeping, but the pure raw-base ratio alone is
@@ -244,8 +248,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-bounds-parts`,
   `--final-tail-atomic-parts`, `--final-tail-atomic-bounds`, or
   `--final-tail-raw-cleared-unit-bounds`; use
-  `--final-tail-refined-atomic-bounds` for the current proof-facing route
-  above.  Use repeated `--extra-import` flags
+  `--final-tail-refined-atomic-bounds` for the explicit refined atomic route
+  above, or `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
+  reduced live-obligation route that fills the small step in Lean.  Use
+  repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
   emitting a full manifest, run the same command with `--dry-run-counts` to
   print formula-based atom counts without materializing the atom list.

@@ -5795,6 +5795,64 @@ theorem PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate.toLargeTailAu
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
 
+/-- Large-tail bounds certificate whose candidate fields are exactly the
+remaining refined proof obligations: the two tempered raw-exp ratio atoms and
+the three reserve atoms.  The small adjacent-step atom is filled by the
+proved raw-base half certificate during conversion. -/
+structure PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ)
+    (soloYBound : Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound
+  temperedLowerRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate
+  temperedUpperReverseRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate
+  smallFirstReserve :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate
+  temperedLowerFirstReserve :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate
+  temperedUpperLastReserve :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedRawExpRatios
+    cert.productBounds cert.soloY cert.temperedLowerRawExpRatio
+    cert.temperedUpperReverseRawExpRatio cert.smallFirstReserve
+    cert.temperedLowerFirstReserve cert.temperedUpperLastReserve
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate.toLargeTailAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
 /-- Large-tail audit certificate with product and solo bounds split, while the
 candidate entropy-reserve proof is kept in the grouped raw-cleared
 unit-reserve form used by earlier generated-audit targets.
