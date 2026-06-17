@@ -711,7 +711,18 @@ Status:
       positiveTemperedLargeExp(a,r)` and converts it back to the raw-cleared
       field.  The upper-tempered reverse step has the analogous
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate`
-      interface.  If a proof already has the core
+      interface.  Because the small first reserve is now closed, Lean also
+      exposes the reduced candidate/audit wrappers
+      `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`,
+      `PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveBoundsAuditCertificate`,
+      and
+      `PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate`.
+      These leave only the two tempered quotient-step atoms and the two
+      tempered endpoint reserve atoms, or their envelope versions, as live
+      candidate-side inputs.  The generator flags are
+      `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` and
+      `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`.
+      If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass

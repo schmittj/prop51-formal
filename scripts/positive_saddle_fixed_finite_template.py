@@ -240,12 +240,30 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split interface whose live candidate fields are the two "
+            "tempered raw-exp ratio atoms and the two tempered reserve atoms"
+        ),
+    )
+    parser.add_argument(
         "--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds",
         action="store_true",
         help=(
             "with --emit-final, make the final theorem take the product/solo "
             "bound-split interface whose reserve atoms are supplied through "
             "explicit large-exp envelope bounds"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split interface whose remaining tempered reserve atoms "
+            "are supplied through explicit large-exp envelope bounds"
         ),
     )
     parser.add_argument(
@@ -404,7 +422,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_raw_cleared_unit_bounds,
         args.final_tail_refined_atomic_bounds,
         args.final_tail_tempered_raw_exp_ratio_reserve_bounds,
+        args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds,
+        args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -792,8 +812,12 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "ratio step atoms with product/solo bound splits.",
         "Pass `--final-tail-tempered-raw-exp-ratio-reserve-bounds` after",
         "the small step is filled by Lean's raw-base half certificate.",
+        "Pass `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds`",
+        "after the small first reserve is also filled by Lean.",
         "Pass `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`",
         "to split those reserve atoms through explicit exp envelopes.",
+        "Pass `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`",
+        "to split only the remaining tempered reserve atoms.",
         "-/",
     ]
 
@@ -803,9 +827,17 @@ def final_tail_type(args: argparse.Namespace) -> str:
         return (
             "PositiveSaddleLargeTailTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
         )
+    if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate"
+        )
     if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
         return (
             "PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveBoundsAuditCertificate"
         )
     if args.final_tail_refined_atomic_bounds:
         return "PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate"
@@ -829,7 +861,9 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
         or args.final_tail_raw_cleared_unit_bounds
         or args.final_tail_refined_atomic_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_bounds
+        or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds
+        or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds
     ):
         lines = [
             "    {smallXBound smallYBound temperedXBound temperedYBound :",
@@ -844,6 +878,17 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
                     f"    (tail : {final_tail_type(args)}",
                     "      smallXBound smallYBound temperedXBound temperedYBound soloYBound",
                     "      smallFirstExpBound temperedLowerFirstExpBound",
+                    "      temperedUpperLastExpBound) :",
+                ]
+            )
+        elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+            lines.extend(
+                [
+                    "    {temperedLowerFirstExpBound",
+                    "      temperedUpperLastExpBound : Nat → ℚ}",
+                    f"    (tail : {final_tail_type(args)}",
+                    "      smallXBound smallYBound temperedXBound temperedYBound soloYBound",
+                    "      temperedLowerFirstExpBound",
                     "      temperedUpperLastExpBound) :",
                 ]
             )
@@ -864,7 +909,9 @@ def final_tail_arg(args: argparse.Namespace) -> str:
         or args.final_tail_raw_cleared_unit_bounds
         or args.final_tail_refined_atomic_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_bounds
+        or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds
+        or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds
         or args.final_tail_atomic_parts
         or args.final_tail_bounds_parts
         or args.final_tail_parts
@@ -1162,9 +1209,17 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
         emit_args.append("--final-tail-refined-atomic-bounds")
     if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
         emit_args.append("--final-tail-tempered-raw-exp-ratio-reserve-bounds")
+    if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
+        emit_args.append(
+            "--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds"
+        )
     if args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
         emit_args.append(
             "--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds"
+        )
+    if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+        emit_args.append(
+            "--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds"
         )
     return emit_args
 

@@ -250,6 +250,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `(10/7)^a ≤ (3/2)^a`.  The closed reserve-facing wrappers are
   `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound` and
   `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed`.
+  Lean also exposes reduced tail wrappers
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveBoundsAuditCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate`,
+  where the small first-reserve atom is filled automatically and the live
+  reserve inputs are only the two tempered endpoint atoms or envelopes.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
@@ -274,10 +280,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-atomic-parts`, `--final-tail-atomic-bounds`, or
   `--final-tail-raw-cleared-unit-bounds`; use
   `--final-tail-refined-atomic-bounds` for the explicit refined atomic route
-  above, or `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
-  reduced live-obligation route that fills the small step in Lean.  Use
-  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds` when the three
-  reserve atoms are supplied through separate exponential envelope bounds.
+  above, `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
+  route that fills the small step in Lean but still accepts all three reserve
+  atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for
+  the route that also fills the small first reserve in Lean.  Use
+  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds` when all three
+  reserve atoms are supplied through separate exponential envelope bounds, or
+  `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds` when
+  only the two remaining tempered reserve atoms are supplied through
+  envelope bounds.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

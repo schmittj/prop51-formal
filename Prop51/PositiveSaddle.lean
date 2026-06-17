@@ -12121,6 +12121,11 @@ theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_thr
   positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves
     positiveSmallLargeExp_one_le_threeHalvesExpBound
 
+theorem positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :=
+  positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed
+    |>.toSmallFirstReserveCertificate
+
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
@@ -12315,6 +12320,25 @@ theorem PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate.toTemperedUpp
     PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :=
   cert.temperedUpperLast.toTemperedUpperLastReserveCertificate
 
+/-- Combined reserve-envelope constructor after the small first-reserve
+envelope has been closed.  The remaining reserve-envelope inputs are only the
+two tempered endpoint envelopes. -/
+theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_of_temperedEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound
+      temperedLowerFirstExpBound temperedUpperLastExpBound where
+  smallFirst :=
+    positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed
+  temperedLowerFirst := temperedLowerFirst
+  temperedUpperLast := temperedUpperLast
+
 theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
     (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
     PositiveSaddleLargeTailCandidateSmallRawStepCertificate where
@@ -12442,6 +12466,46 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawE
     reserves.toTemperedLowerFirstReserveCertificate
     reserves.toTemperedUpperLastReserveCertificate
 
+/-- Refined candidate constructor after the small adjacent-step and small
+first-reserve atoms have both been closed in Lean.  The remaining candidate
+inputs are the two tempered quotient-step atoms and the two tempered endpoint
+reserve atoms. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios
+    temperedLower temperedUpper
+    positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed
+    temperedLowerFirstReserve temperedUpperLastReserve
+
+/-- Envelope version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
+The solved small first-reserve envelope is filled automatically. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_reserveEnvelopes
+    temperedLower temperedUpper
+    (positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_of_temperedEnvelopes
+      temperedLowerFirst temperedUpperLast)
+
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
 certificate. -/
 theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
@@ -12513,6 +12577,19 @@ theorem positiveSaddleLargeTailCandidateUnitReserveCertificate_of_atomic
     temperedLower.temperedLowerFirstReserveUnit
   temperedUpperLastReserveUnit :=
     temperedUpper.temperedUpperLastReserveUnit
+
+/-- Grouped reserve constructor after the small first-reserve atom has been
+closed.  The remaining direct reserve inputs are the two tempered endpoint
+atoms. -/
+theorem positiveSaddleLargeTailCandidateUnitReserveCertificate_of_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate :=
+  positiveSaddleLargeTailCandidateUnitReserveCertificate_of_atomic
+    positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed
+    temperedLower temperedUpper
 
 theorem PositiveSaddleLargeTailCandidateRefinedAtomicCertificate.toRawClearedStepCertificate
     (cert : PositiveSaddleLargeTailCandidateRefinedAtomicCertificate) :
