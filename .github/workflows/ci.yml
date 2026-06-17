@@ -56,3 +56,9 @@ jobs:
             --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
             --extra-import Prop51.Generated.CIAtoms | \
             grep 'import Prop51.Generated.CIAtoms'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-final --final-tail-bounds-parts | \
+            grep 'PositiveSaddleLargeTailBoundsPartsAuditCertificate'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-final --final-tail-atomic-bounds | \
+            grep 'PositiveSaddleLargeTailAtomicBoundsAuditCertificate'

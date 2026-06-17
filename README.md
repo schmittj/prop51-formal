@@ -186,9 +186,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate` bundles the
   product/solo bound certificates with those atomic candidate fields.  The
   finite generator can target these split final-theorem interfaces with
-  `--emit-final --final-tail-parts` or
-  `--emit-final --final-tail-atomic-parts`; use repeated `--extra-import`
-  flags when the atom theorems live in separately built Lean modules.
+  `--emit-final --final-tail-parts`, `--final-tail-bounds-parts`,
+  `--final-tail-atomic-parts`, or `--final-tail-atomic-bounds`; use repeated
+  `--extra-import` flags when the atom theorems live in separately built Lean
+  modules.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.

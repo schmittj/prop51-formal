@@ -627,7 +627,7 @@ Status:
       lower-level product and solo bound certificates with the grouped
       candidate step/reserve certificates for final assembly.  The
       finite generator emits final theorems against this split interface with
-      `--emit-final --final-tail-parts`.
+      `--emit-final --final-tail-parts` or `--final-tail-bounds-parts`.
       The still finer
       `PositiveSaddleLargeTailAtomicPartsAuditCertificate` splits the six
       candidate entropy-reserve fields into atomic small-step,
@@ -635,9 +635,10 @@ Status:
       certificates.  `PositiveSaddleLargeTailAtomicBoundsAuditCertificate`
       is the fully split product/solo/candidate wrapper; emit final theorems
       against the atomic route with
-      `--emit-final --final-tail-atomic-parts`.  If generated atom theorems
-      are split over separate Lean modules, pass repeated `--extra-import`
-      options when emitting the assembly theorem.  The generator also has
+      `--emit-final --final-tail-atomic-parts` or
+      `--final-tail-atomic-bounds`.  If generated atom theorems are split
+      over separate Lean modules, pass repeated `--extra-import` options when
+      emitting the assembly theorem.  The generator also has
       `--emit-single-chunk-shard --shard-index i --shard-count n` for
       balanced atom modules in the same global order as the manifest.
       If common fixed product-row and tangent-row lengths are enough, use the

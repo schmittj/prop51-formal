@@ -3,11 +3,8 @@
 
 The generated theorem only proves the finite `401 <= a <= 2000` Boolean
 checks.  The large-`a` product/solo and split-tempered reserve inputs are
-supplied separately as a `PositiveSaddleLargeTailAuditCertificate`, or as the
-split `PositiveSaddleLargeTailPartsAuditCertificate` when requested for the
-final theorem.  The still finer
-`PositiveSaddleLargeTailAtomicPartsAuditCertificate` interface can also be
-selected for final theorem emission.
+supplied separately as a `PositiveSaddleLargeTailAuditCertificate`, or as one
+of the split large-tail interfaces when requested for the final theorem.
 
 Strategies include:
   * all-chunks: one Boolean per finite family, targeting
@@ -186,11 +183,29 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-bounds-parts",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split PositiveSaddleLargeTailBoundsPartsAuditCertificate "
+            "interface"
+        ),
+    )
+    parser.add_argument(
         "--final-tail-atomic-parts",
         action="store_true",
         help=(
             "with --emit-final, make the final theorem take the atomic "
             "PositiveSaddleLargeTailAtomicPartsAuditCertificate interface"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-atomic-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split and candidate-atomic "
+            "PositiveSaddleLargeTailAtomicBoundsAuditCertificate interface"
         ),
     )
     parser.add_argument(
@@ -323,11 +338,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--emit-single-chunk-manifest cannot be combined with "
             "--emit-single-chunk-suite"
         )
-    if args.final_tail_parts and args.final_tail_atomic_parts:
-        parser.error(
-            "--final-tail-parts cannot be combined with "
-            "--final-tail-atomic-parts"
-        )
+    final_tail_selectors = (
+        args.final_tail_parts,
+        args.final_tail_bounds_parts,
+        args.final_tail_atomic_parts,
+        args.final_tail_atomic_bounds,
+    )
+    if sum(bool(selector) for selector in final_tail_selectors) > 1:
+        parser.error("--final-tail-* options cannot be combined")
     if args.emit_single_chunk_suite and args.use_single_chunk_theorems:
         parser.error(
             "--emit-single-chunk-suite cannot be combined with "
@@ -688,21 +706,44 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "This proves only the finite Boolean checks.  Combine it with a",
         "`PositiveSaddleLargeTailAuditCertificate` for the final theorem.",
         "Pass `--final-tail-parts` to target the split large-tail interface.",
+        "Pass `--final-tail-bounds-parts` for product/solo bound splits.",
         "Pass `--final-tail-atomic-parts` for the atomic large-tail interface.",
+        "Pass `--final-tail-atomic-bounds` for bound-split atomic tails.",
         "-/",
     ]
 
 
 def final_tail_type(args: argparse.Namespace) -> str:
+    if args.final_tail_atomic_bounds:
+        return "PositiveSaddleLargeTailAtomicBoundsAuditCertificate"
     if args.final_tail_atomic_parts:
         return "PositiveSaddleLargeTailAtomicPartsAuditCertificate"
+    if args.final_tail_bounds_parts:
+        return "PositiveSaddleLargeTailBoundsPartsAuditCertificate"
     if args.final_tail_parts:
         return "PositiveSaddleLargeTailPartsAuditCertificate"
     return "PositiveSaddleLargeTailAuditCertificate"
 
 
+def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
+    if args.final_tail_bounds_parts or args.final_tail_atomic_bounds:
+        return [
+            "    {smallXBound smallYBound temperedXBound temperedYBound :",
+            "      Nat → Nat → Nat → ℚ}",
+            "    {soloYBound : Nat → Nat → ℚ}",
+            f"    (tail : {final_tail_type(args)}",
+            "      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :",
+        ]
+    return [f"    (tail : {final_tail_type(args)}) :"]
+
+
 def final_tail_arg(args: argparse.Namespace) -> str:
-    if args.final_tail_atomic_parts or args.final_tail_parts:
+    if (
+        args.final_tail_atomic_bounds
+        or args.final_tail_atomic_parts
+        or args.final_tail_bounds_parts
+        or args.final_tail_parts
+    ):
         return "tail.toLargeTailAuditCertificate"
     return "tail"
 
@@ -1691,7 +1732,7 @@ def emit_all_chunks(args: argparse.Namespace) -> str:
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowAllChunksAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -1763,7 +1804,7 @@ def emit_split_fields(args: argparse.Namespace) -> str:
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -1835,7 +1876,7 @@ def emit_cell_tangent(args: argparse.Namespace) -> str:
                 "",
                 f"theorem {final_name}",
                 *tangent_cell_provider_binder(with_colon=False),
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCellTangentAuditCertificate",
                 f"    ({name} htangent) {final_tail_arg(args)}",
@@ -1917,7 +1958,7 @@ def emit_chunked_tangent(args: argparse.Namespace) -> str:
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowChunkedTangentAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -2042,7 +2083,7 @@ def product_n_chunked_tangent_theorem_lines(args: argparse.Namespace) -> list[st
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNChunkedTangentAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -2181,7 +2222,7 @@ def product_tangent_solo_n_chunked_theorem_lines(args: argparse.Namespace) -> li
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -2322,7 +2363,7 @@ def product_nk_tangent_solo_n_chunked_theorem_lines(
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowProductNKChunkedTangentSoloNChunkedAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -2447,7 +2488,7 @@ def combined_product_nk_tangent_solo_n_chunked_theorem_lines(
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
@@ -2574,7 +2615,7 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
             [
                 "",
                 f"theorem {final_name}",
-                f"    (tail : {final_tail_type(args)}) :",
+                *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
                 "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate",
                 f"    {name} {final_tail_arg(args)}",
