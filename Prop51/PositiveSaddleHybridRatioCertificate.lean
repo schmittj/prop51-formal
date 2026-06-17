@@ -49,6 +49,25 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
     positiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate
   temperedUpperReverseMiddleExpTarget := upperMiddle
 
+/-- Large-tail wrapper with both adjacent-step sides filled in.
+
+After the upper-middle reverse target is now concrete, this route asks only for
+the product bounds and the solo `Y` envelope. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10 smallXBound smallYBound temperedXBound temperedYBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle
+    product soloY
+    positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+
 /-- Large-tail audit certificate with the lower hybrid ratio side concrete.
 
 This is the proof-facing large-tail target after the current lower-side work:
@@ -68,5 +87,22 @@ theorem positiveSaddleLargeTailAuditCertificate_of_upperMiddle
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle
     product soloY upperMiddle).toLargeTailAuditCertificate
+
+/-- Large-tail audit certificate after both adjacent-step sides are filled.
+
+The remaining analytic inputs are exactly the product bounds and the solo
+`Y` bound. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_product_solo
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    product soloY).toLargeTailAuditCertificate
 
 end Prop51

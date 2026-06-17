@@ -818,7 +818,10 @@ Status:
       avoid quotient divisions in generated or hand-cleared analytic audits.
       The upper reverse target is now closed in Lean on the far upper branch
       `3 * a ≤ 5 * r`, using exponent monotonicity and the exact raw
-      entropy-shadow lower bound.  The reduced certificate
+      entropy-shadow lower bound.  The middle band is also now concrete as
+      `positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`,
+      packaging the analytic shift estimate with the low-half power-product
+      envelope.  The reduced certificate
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`
       asks only for the middle band `5 * r < 3 * a`, and its adapter supplies
       the full upper reverse exp-target certificate.  This is a Lean-side
@@ -892,6 +895,10 @@ Status:
       `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate`
       and
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
+      Since the upper-middle target is now supplied by Lean, the helper
+      `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
+      the product bounds and solo `Y` envelope as large-tail inputs on this
+      route.
       This replaces the earlier constant target `2447/2500`, which is too
       strong for the large-exp quotient near `a = 3000`.  The raw-only budget
       for the entire prefix strip is already proved in

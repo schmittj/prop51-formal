@@ -496,6 +496,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate`;
   the final-style wrapper is
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
+  The upper-middle input to this wrapper is now concrete in Lean as
+  `Prop51.positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`;
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_solo` is the
+  corresponding large-tail audit constructor whose remaining arguments are
+  the product bounds and the solo `Y` envelope.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
