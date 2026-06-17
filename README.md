@@ -444,6 +444,16 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-bounds`,
   its tempered-reserve-envelope and `(10/7)^a` variants, and the most reduced
   `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+  A further Lean-side hybrid lower route is exposed by
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate`.
+  It records the deliberate refinement that the separated lower sharp-offset
+  large-exp target is too strong in the short prefix `2000 < a < 3000`, so
+  that prefix is checked by the original combined raw-exp crossmul inequality,
+  while `3000 ≤ a` uses the separated ten-offset large-exp target.  The
+  corresponding final-style wrapper is
+  `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
+  and the generator flag is
+  `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

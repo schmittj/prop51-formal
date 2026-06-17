@@ -6672,6 +6672,118 @@ theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSh
     positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserveEnvelopes
       temperedLower temperedUpper temperedLowerFirst temperedUpperLast
 
+/-- Bounds-level refined atomic constructor for the hybrid lower ten-offset
+raw-exp target, together with the ordinary upper reverse large-exp target.
+The lower prefix keeps the raw quotient and large-exp factor combined, while
+the large range uses the separated sharp-offset target. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetHybridRawExp_upperExpTarget_temperedReserves
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetHybridRawExp_upperExpTarget_temperedReserves
+      temperedLower temperedUpper temperedLowerFirstReserve
+      temperedUpperLastReserve
+
+/-- Bounds-level refined atomic constructor for the hybrid lower ten-offset
+raw-exp target and the reduced upper reverse middle-band target. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserves
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserves
+      temperedLower temperedUpper temperedLowerFirstReserve
+      temperedUpperLastReserve
+
+/-- Bounds-level refined atomic constructor for the hybrid lower ten-offset
+raw-exp target, with the two remaining tempered reserve atoms supplied
+through envelope bounds. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetHybridRawExp_upperExpTarget_temperedReserveEnvelopes
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetHybridRawExp_upperExpTarget_temperedReserveEnvelopes
+      temperedLower temperedUpper temperedLowerFirst temperedUpperLast
+
+/-- Bounds-level refined atomic constructor for the hybrid lower ten-offset
+raw-exp target and the reduced upper reverse middle-band target, with the two
+remaining tempered reserves supplied through envelope bounds. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserveEnvelopes
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserveEnvelopes
+      temperedLower temperedUpper temperedLowerFirst temperedUpperLast
+
 theorem PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate.toRefinedAtomicPartsAuditCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
       Nat → Nat → Nat → ℚ}
@@ -8514,6 +8626,67 @@ theorem PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTenSeve
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveBoundsAuditCertificate
     |>.toLargeTailAuditCertificate
+
+/-- Hybrid lower-prefix version of the sharp-top-offset upper-middle
+large-tail certificate, with closed `(10/7)^a` endpoint reserves and the solo
+scalar budget fixed to `positiveLargeTailSoloTenSeventhsBound`.
+
+This is the current Lean-facing replacement for the fully separated lower
+sharp-offset route: it asks for a direct combined raw-exp check on the finite
+prefix `2000 < a < 3000`, and the separated ten-offset large-exp check only
+for `3000 ≤ a`. -/
+structure PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N
+  temperedLowerSharpTopOffsetHybridRawExp :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate
+  temperedUpperReverseMiddleExpTarget :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserves
+    cert.productBounds
+    (positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths cert.soloY)
+    cert.temperedLowerSharpTopOffsetHybridRawExp
+    cert.temperedUpperReverseMiddleExpTarget
+    (positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed
+      |>.toTemperedLowerFirstReserveCertificate)
+    (positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed
+      |>.toTemperedUpperLastReserveCertificate)
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toLargeTailAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
 
 /-- Large-tail audit certificate with product and solo bounds split, while the
 candidate entropy-reserve proof is kept in the grouped raw-cleared

@@ -863,6 +863,16 @@ Status:
       Generator support is available through the corresponding
       `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-*`
       flags, including the closed-reserve solo-envelope endpoint.
+      The currently preferred lower-top-strip production route is the hybrid
+      certificate
+      `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate`:
+      it keeps the raw-exp adjacent-step inequality combined on the finite
+      prefix `2000 < a < 3000`, where the fully separated lower sharp-offset
+      large-exp target loses necessary raw-side slack, and uses the separated
+      ten-offset target only for `3000 ≤ a`.  The final-style wrapper is
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
+      with generator flag
+      `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
