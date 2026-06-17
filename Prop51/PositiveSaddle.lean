@@ -7352,6 +7352,187 @@ theorem partialExpUpper_mono_of_nonneg_le_lt {y z : ℚ} {T₀ : Nat}
       (div_nonneg (by norm_num : (0 : ℚ) ≤ 1) hden_y_pos.le)
       (div_nonneg (pow_nonneg hz0 T₀) (by positivity))
 
+/-- First-order lower bound for a shifted nonnegative power. -/
+theorem pow_add_linear_lower {y d : ℚ} {n : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hn : 1 ≤ n) :
+    y^n + (n : ℚ) * d * y^(n-1) ≤ (y+d)^n := by
+  rw [add_pow]
+  let term : Nat → ℚ := fun m => y^m * d^(n-m) * (n.choose m : ℚ)
+  change y^n + (n : ℚ) * d * y^(n-1)
+    ≤ ∑ m ∈ Finset.range (n + 1), term m
+  let s : Finset Nat := {n, n-1}
+  have hsubset : s ⊆ Finset.range (n + 1) := by
+    intro m hm
+    rw [Finset.mem_range]
+    simp [s] at hm
+    rcases hm with hmn | hm <;> omega
+  have hnonneg : ∀ x ∈ Finset.range (n + 1), x ∉ s → 0 ≤ term x := by
+    intro x _hx _hxs
+    dsimp [term]
+    positivity
+  have hpair_le : ∑ m ∈ s, term m ≤ ∑ m ∈ Finset.range (n + 1), term m := by
+    exact Finset.sum_le_sum_of_subset_of_nonneg hsubset hnonneg
+  have hchoosePred : n.choose (n - 1) = n := by
+    rw [show n = (n - 1) + 1 by omega]
+    exact Nat.choose_succ_self_right (n - 1)
+  have hsub : n - (n - 1) = 1 := by omega
+  have hpair_eq : ∑ m ∈ s, term m = y^n + (n : ℚ) * d * y^(n-1) := by
+    have hne : n ≠ n - 1 := by omega
+    have hs : s = insert n ({n - 1} : Finset Nat) := by
+      ext m
+      simp [s]
+    rw [hs, Finset.sum_insert]
+    · simp [term, hchoosePred, hsub]
+      ring
+    · simpa using hne
+  rw [← hpair_eq]
+  exact hpair_le
+
+/-- First-order lower bound for one normalized exponential-series term. -/
+theorem expTerm_add_linear_lower {y d : ℚ} {n : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hn : 1 ≤ n) :
+    y^n / (n.factorial : ℚ) + d * y^(n-1) / ((n-1).factorial : ℚ)
+      ≤ (y+d)^n / (n.factorial : ℚ) := by
+  have hpow := pow_add_linear_lower (y := y) (d := d) (n := n) hy hd hn
+  have hfacPos : (0 : ℚ) < (n.factorial : ℚ) := by positivity
+  have hdiv : (y^n + (n : ℚ) * d * y^(n-1)) / (n.factorial : ℚ)
+      ≤ (y+d)^n / (n.factorial : ℚ) := by
+    exact div_le_div_of_nonneg_right hpow hfacPos.le
+  have hnq : (n : ℚ) ≠ 0 := by exact_mod_cast (by omega : n ≠ 0)
+  have hpredFac : (((n - 1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac : ((n.factorial : Nat) : ℚ) =
+      (n : ℚ) * (((n - 1).factorial : Nat) : ℚ) := by
+    rw [show n = (n - 1) + 1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have halg :
+      y^n / (n.factorial : ℚ) + d * y^(n-1) / ((n-1).factorial : ℚ)
+        = (y^n + (n : ℚ) * d * y^(n-1)) / (n.factorial : ℚ) := by
+    rw [hfac]
+    field_simp [hnq, hpredFac]
+  rw [halg]
+  exact hdiv
+
+/-- The shifted finite prefix gains enough to cover multiplication by
+`1+d`, up to the final boundary term. -/
+theorem partialExpPrefix_mul_one_add_le_add_top {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) :
+    (1 + d) * (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ))
+      ≤ (∑ n ∈ Finset.range T, (y+d)^n / (n.factorial : ℚ))
+          + d * y^(T-1) / ((T-1).factorial : ℚ) := by
+  induction T with
+  | zero => omega
+  | succ T ih =>
+      by_cases hTzero : T = 0
+      · subst T
+        simp
+      · have hTpos : 1 ≤ T := by omega
+        have ihT := ih hTpos
+        rw [Finset.sum_range_succ, Finset.sum_range_succ]
+        have htop := expTerm_add_linear_lower
+          (y := y) (d := d) (n := T) hy hd hTpos
+        have hlast : T + 1 - 1 = T := by omega
+        simp [hlast] at *
+        ring_nf at htop ihT ⊢
+        nlinarith
+
+/-- The geometric tail of `partialExpUpper` pays the boundary term left by
+`partialExpPrefix_mul_one_add_le_add_top`. -/
+theorem partialExpUpper_tail_mul_one_add_le_of_add {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d) * (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))
+        + d * y^(T-1) / ((T-1).factorial : ℚ)
+      ≤ (y+d)^T / (T.factorial : ℚ) *
+          (1 / (1 - (y+d) / (T : ℚ))) := by
+  have hTQpos : (0 : ℚ) < (T : ℚ) := by exact_mod_cast (by omega : 0 < T)
+  have hy_le_yd : y ≤ y + d := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt hy_le_yd hyt
+  have hdenYpos : (0 : ℚ) < 1 - y / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQpos]
+    exact hyT
+  have hdenZpos : (0 : ℚ) < 1 - (y + d) / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQpos]
+    exact hyt
+  have hden_le : 1 - (y + d) / (T : ℚ) ≤ 1 - y / (T : ℚ) := by
+    have hdiv_yz : y / (T : ℚ) ≤ (y + d) / (T : ℚ) :=
+      div_le_div_of_nonneg_right hy_le_yd hTQpos.le
+    linarith
+  have hrecip :
+      1 / (1 - y / (T : ℚ)) ≤ 1 / (1 - (y + d) / (T : ℚ)) :=
+    one_div_le_one_div_of_le hdenZpos hden_le
+  have htop := expTerm_add_linear_lower (y := y) (d := d) (n := T) hy hd hT
+  have hB0 : 0 ≤ 1 / (1 - y / (T : ℚ)) := by positivity
+  have hfactor0 : 0 ≤ (y+d)^T / (T.factorial : ℚ) := by positivity
+  have hle1 :
+      (y^T / (T.factorial : ℚ) + d * y^(T-1) / ((T-1).factorial : ℚ)) *
+          (1 / (1 - y / (T : ℚ)))
+        ≤ ((y+d)^T / (T.factorial : ℚ)) *
+          (1 / (1 - y / (T : ℚ))) := by
+    exact mul_le_mul_of_nonneg_right htop hB0
+  have hle2 :
+      ((y+d)^T / (T.factorial : ℚ)) * (1 / (1 - y / (T : ℚ)))
+        ≤ ((y+d)^T / (T.factorial : ℚ)) *
+          (1 / (1 - (y+d) / (T : ℚ))) := by
+    exact mul_le_mul_of_nonneg_left hrecip hfactor0
+  have hnq : (T : ℚ) ≠ 0 := by exact_mod_cast (by omega : T ≠ 0)
+  have hpredFac : (((T - 1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hTminusY : (T : ℚ) - y ≠ 0 := by linarith [hyT]
+  have hfac : ((T.factorial : Nat) : ℚ) =
+      (T : ℚ) * (((T - 1).factorial : Nat) : ℚ) := by
+    rw [show T = (T - 1) + 1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hpowY : y^T = y^(T-1) * y := by
+    have h := pow_succ y (T - 1)
+    simpa [show (T - 1) + 1 = T by omega] using h
+  let top : ℚ := y^T / (T.factorial : ℚ)
+  let last : ℚ := y^(T-1) / ((T-1).factorial : ℚ)
+  let B : ℚ := 1 / (1 - y / (T : ℚ))
+  have hlastTop : last * (y / (T : ℚ)) = top := by
+    dsimp [last, top]
+    rw [hfac, hpowY]
+    field_simp [hnq, hpredFac]
+  have hgeom : B = 1 + (y / (T : ℚ)) * B := by
+    dsimp [B]
+    field_simp [hnq, hTminusY]
+    ring
+  have hlastB : last * B = last + top * B := by
+    calc
+      last * B = last * (1 + (y / (T : ℚ)) * B) := by
+        exact congrArg (fun x => last * x) hgeom
+      _ = last + (last * (y / (T : ℚ))) * B := by ring
+      _ = last + top * B := by rw [hlastTop]
+  have htarget : (1 + d) * (top * B) + d * last = (top + d * last) * B := by
+    calc
+      (1 + d) * (top * B) + d * last
+          = top * B + d * (top * B) + d * last := by ring
+      _ = top * B + d * (top * B + last) := by ring
+      _ = top * B + d * (last * B) := by rw [hlastB]; ring
+      _ = (top + d * last) * B := by ring
+  have hdlast : d * y^(T-1) / ((T-1).factorial : ℚ)
+      = d * (y^(T-1) / ((T-1).factorial : ℚ)) := by ring
+  have halg :
+    (1 + d) * (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))
+        + d * y^(T-1) / ((T-1).factorial : ℚ)
+      = (y^T / (T.factorial : ℚ) + d * y^(T-1) / ((T-1).factorial : ℚ)) *
+          (1 / (1 - y / (T : ℚ))) := by
+    rw [hdlast]
+    simpa [top, last, B] using htarget
+  rw [halg]
+  exact hle1.trans hle2
+
+/-- `partialExpUpper` grows by at least the factor `1+d` under a nonnegative
+shift by `d`, as long as the shifted exponent stays below the cutoff. -/
+theorem partialExpUpper_mul_one_add_le_of_add {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d) * partialExpUpper y T ≤ partialExpUpper (y+d) T := by
+  unfold partialExpUpper
+  have hpref := partialExpPrefix_mul_one_add_le_add_top
+    (y := y) (d := d) (T := T) hy hd hT
+  have htail := partialExpUpper_tail_mul_one_add_le_of_add
+    (y := y) (d := d) (T := T) hy hd hT hyt
+  nlinarith
+
 /-- Negative-binomial shell used to bound the variable-cutoff
 `partialExpUpper ((a : ℚ) * q) a`.
 
