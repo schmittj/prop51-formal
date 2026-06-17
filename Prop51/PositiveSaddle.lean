@@ -5361,7 +5361,84 @@ theorem positiveEntropyShadowBaseStepRawQuotient_eq_pref_mul_powerProduct
       (((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ)) *
         positiveEntropyShadowBaseStepRawPowerProduct a r * 2 := by
   unfold positiveEntropyShadowBaseStepRawPowerProduct
-  exact positiveEntropyShadowBaseStepRawQuotient_eq_factored hr1 hj2
+  simpa [mul_assoc] using
+    positiveEntropyShadowBaseStepRawQuotient_eq_factored hr1 hj2
+
+theorem positiveEntropyShadowBaseStepRawRPart_eq_one_add_inv_pow
+    {r : Nat} (hr2 : 2 ≤ r) :
+    ((r : ℚ)^r) /
+        ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1))
+      = (1 + 1 / ((r - 1 : Nat) : ℚ))^(r - 1) := by
+  have hpred : (((r - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : r - 1 ≠ 0)
+  have hbase :
+      1 + 1 / ((r - 1 : Nat) : ℚ) =
+        ((r : Nat) : ℚ) / ((r - 1 : Nat) : ℚ) := by
+    field_simp [hpred]
+    exact_mod_cast (by omega : r - 1 + 1 = r)
+  rw [hbase]
+  rw [show r = (r - 1) + 1 by omega,
+    show (r - 1) + 1 - 1 = r - 1 by omega]
+  rw [pow_succ, div_pow]
+  field_simp [hpred]
+
+theorem positiveEntropyShadowBaseStepRawJPart_mul_one_add_inv_pow
+    {j : Nat} (hj3 : 3 ≤ j) :
+    (1 + 1 / ((j - 2 : Nat) : ℚ))^(j - 2) *
+        ((((j - 1 : Nat) : ℚ) *
+            ((j - 2 : Nat) : ℚ)^(j - 2)) /
+          (((j - 1 : Nat) : ℚ)^(j - 1)))
+      = 1 := by
+  have htwo : (((j - 2 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : j - 2 ≠ 0)
+  have hone : (((j - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : j - 1 ≠ 0)
+  have hbase :
+      1 + 1 / ((j - 2 : Nat) : ℚ) =
+        ((j - 1 : Nat) : ℚ) / ((j - 2 : Nat) : ℚ) := by
+    field_simp [htwo]
+    exact_mod_cast (by omega : j - 2 + 1 = j - 1)
+  rw [hbase, div_pow]
+  rw [show j - 1 = (j - 2) + 1 by omega, pow_succ]
+  field_simp [htwo, hone]
+
+theorem positiveEntropyShadowBaseStepRawPowerProduct_le_one_of_pred_le
+    {a r : Nat} (hr2 : 2 ≤ r) (hj3 : 3 ≤ posJ a r)
+    (hle : r - 1 ≤ posJ a r - 2) :
+    positiveEntropyShadowBaseStepRawPowerProduct a r ≤ 1 := by
+  let j := posJ a r
+  let rpart : ℚ :=
+    ((r : ℚ)^r) /
+      ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1))
+  let jpart : ℚ :=
+    ((((j - 1 : Nat) : ℚ) * ((j - 2 : Nat) : ℚ)^(j - 2)) /
+      (((j - 1 : Nat) : ℚ)^(j - 1)))
+  let E : ℚ := (1 + 1 / ((j - 2 : Nat) : ℚ))^(j - 2)
+  have hrEq :
+      rpart = (1 + 1 / ((r - 1 : Nat) : ℚ))^(r - 1) := by
+    dsimp [rpart]
+    exact positiveEntropyShadowBaseStepRawRPart_eq_one_add_inv_pow hr2
+  have hmono :
+      (1 + 1 / ((r - 1 : Nat) : ℚ))^(r - 1) ≤ E := by
+    dsimp [E, j]
+    exact one_add_inv_pow_mono
+      (n := r - 1) (m := posJ a r - 2) (by omega : 1 ≤ r - 1) hle
+  have hr_le : rpart ≤ E := by
+    rw [hrEq]
+    exact hmono
+  have hjEq : E * jpart = 1 := by
+    dsimp [E, jpart, j]
+    exact positiveEntropyShadowBaseStepRawJPart_mul_one_add_inv_pow hj3
+  have hj_nonneg : 0 ≤ jpart := by
+    dsimp [jpart]
+    positivity
+  calc
+    positiveEntropyShadowBaseStepRawPowerProduct a r
+        = rpart * jpart := by
+            dsimp [positiveEntropyShadowBaseStepRawPowerProduct, rpart, jpart, j]
+    _ ≤ E * jpart :=
+        mul_le_mul_of_nonneg_right hr_le hj_nonneg
+    _ = 1 := hjEq
 
 /-- Uniform explicit upper bound for the raw entropy-shadow adjacent quotient.
 
@@ -5416,8 +5493,7 @@ theorem positiveEntropyShadowBaseStepRawQuotient_le_upperBound
   calc
     positiveEntropyShadowBaseStepRawQuotient a r
         = (pref * rpart) * jpart * 2 := by
-          rw [hraw]
-          ring
+          simpa [mul_assoc] using hraw
     _ ≤ ((pref * (68 / 25)) * 1) * 2 :=
           mul_le_mul_of_nonneg_right hprod
             (by norm_num : (0 : ℚ) ≤ 2)
@@ -12859,10 +12935,15 @@ theorem positiveTemperedLowerExpQuotientTarget_ge_one_of_eight_mul_succ_le
     exact_mod_cast hfront
   have haQ : (2 : ℚ) ≤ (a : ℚ) := by
     exact_mod_cast ha
+  have hpredCast :
+      ((4 * a - 1 : Nat) : ℚ) = (4 : ℚ) * (a : ℚ) - 1 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ 4 * a)]
+    norm_num
   unfold positiveTemperedLowerExpQuotientTarget positiveLargeExpTemperedRatio
-  rw [hjCast]
+  rw [hjCast, hpredCast]
   field_simp [hrSuccPos.ne', hdenPos.ne']
-  ring_nf
+  push_cast at hfrontQ haQ ⊢
+  ring_nf at hfrontQ haQ ⊢
   nlinarith
 
 theorem positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le
@@ -12916,9 +12997,9 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate.toTemp
             unfold positiveEntropyShadowBaseStepRawUpperBound
               positiveTemperedLowerExpQuotientTarget
             field_simp [hrSuccPos.ne', hjpos.ne']
-            ring
       _ = ((4 * a - 1 : Nat) : ℚ) :=
             positiveLargeExpTemperedRatio_mul_den (by omega : 0 < a)
+      _ ≤ ((4 * a - 1 : Nat) : ℚ) := le_rfl
 
 theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate.toTemperedLowerRawExpRatioCertificate
     (cert :
@@ -13069,6 +13150,38 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate.
             unfold positiveEntropyShadowBaseStepRawTwoUpperBound
             ring
 
+/-- The lower-tempered raw power-product bound is closed uniformly on the
+large-tail lower split.
+
+This follows the exact adjacent-power comparison: on the lower split,
+`r < a/3 + 10` gives `r - 1 ≤ (a-r) - 2`, while the finite cutoff
+`posTemperedCutoff a ≥ 49` keeps both exponents positive. -/
+theorem positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate where
+  lowerRawPowerProduct := by
+    intro a r ha hrlo hrhi
+    have hcut : 49 ≤ posTemperedCutoff a :=
+      posTemperedCutoff_ge_49 (by omega : 401 ≤ a)
+    have hr50 : 50 ≤ r := by omega
+    have hr2 : 2 ≤ r := by omega
+    have hsplit : 2 * r + 1 ≤ a := by
+      unfold positiveLargeExpTemperedSplit at hrhi
+      have hdiv : 3 * (a / 3) ≤ a := Nat.mul_div_le a 3
+      omega
+    have hj3 : 3 ≤ posJ a r := by
+      unfold posJ
+      omega
+    have hpred : r - 1 ≤ posJ a r - 2 := by
+      unfold posJ
+      omega
+    exact positiveEntropyShadowBaseStepRawPowerProduct_le_one_of_pred_le
+      hr2 hj3 hpred
+
+theorem positiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate_closed :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate :=
+  PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate.toRawTwoUpperCertificate
+    positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate
+
 /-- Large-exp quotient target after using the sharper raw envelope
 `positiveEntropyShadowBaseStepRawTwoUpperBound`. -/
 def positiveTemperedLowerSharpExpQuotientTarget (a r : Nat) : ℚ :=
@@ -13093,7 +13206,6 @@ theorem positiveTemperedLowerSharpExpQuotientTarget_budget
     positiveTemperedLowerSharpExpQuotientTarget
     positiveLargeExpTemperedRatio
   field_simp [hrSuccPos.ne', hjpos.ne', hdenPos.ne']
-  ring
 
 theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
     {a r : Nat} (ha : 0 < a)
@@ -13122,8 +13234,25 @@ theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_three_mul_succ_le
   apply positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
     (by omega : 0 < a)
   have hleA : r ≤ a := by omega
-  unfold posJ
-  omega
+  have hfrontQ : (3 : ℚ) * (((r + 1 : Nat) : ℚ)) ≤ (a : ℚ) := by
+    exact_mod_cast hfront
+  have haQ : (1 : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast ha
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hpredCast :
+      ((4 * a - 1 : Nat) : ℚ) = (4 : ℚ) * (a : ℚ) - 1 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ 4 * a)]
+    norm_num
+  have hgapQ :
+      (2 : ℚ) * (((r + 1 : Nat) : ℚ)) * (((4 * a : Nat) : ℚ))
+        ≤ ((posJ a r : Nat) : ℚ) * ((4 * a - 1 : Nat) : ℚ) := by
+    rw [hjCast, hpredCast]
+    push_cast at hfrontQ haQ ⊢
+    ring_nf at hfrontQ haQ ⊢
+    nlinarith
+  exact_mod_cast hgapQ
 
 theorem positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_target_ge_one
     {a r : Nat} (ha : 2000 < a)
@@ -13237,6 +13366,16 @@ theorem positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_r
             positiveTemperedLowerSharpExpQuotientTarget_budget
               (by omega : 0 < a) hjposNat
 
+/-- Lower-tempered raw-exp ratio after closing the raw power-product side in
+Lean.  The only remaining lower-side input is the sharp top-strip large-exp
+target. -/
+theorem positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_sharpTopExpTarget
+    (exp :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
+  positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_rawTwoUpper_sharpTopExpTarget
+    positiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate_closed exp
+
 /-- Factorized upper-tempered reverse adjacent-step target.
 
 This records the reverse ratio as a product of two one-dimensional factors:
@@ -13305,7 +13444,6 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate.to
           (positiveTemperedLargeExp a (r - 1) /
             positiveTemperedLargeExp a r) := by
       field_simp [hraw.ne', hE.ne', hEprev.ne']
-      ring
     have hprod :
         (1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1)) *
             (positiveTemperedLargeExp a (r - 1) /
@@ -13383,7 +13521,6 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate
           (positiveTemperedLargeExp a (r - 1) /
             positiveTemperedLargeExp a r) := by
       field_simp [hraw.ne', hE.ne', hEprev.ne']
-      ring
     have hrawInv0 :
         0 ≤ 1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1) := by
       positivity
@@ -13404,7 +13541,6 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate
         _ = positiveLargeExpTemperedRatio a := by
               unfold positiveTemperedUpperReverseExpQuotientTarget
               field_simp [hraw.ne']
-              ring
     calc
       ((4 * a : Nat) : ℚ) *
           (1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
@@ -15085,6 +15221,23 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
     rawLower.toRawTwoUpperCertificate temperedLower temperedUpper
     temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Refined candidate constructor after closing the exact lower raw
+power-product bound in Lean.  The remaining lower step input is only the sharp
+top-strip large-exp target. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawPowerProductSharpTopExpTarget_upperExpTarget_temperedReserves
+    positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate
+    temperedLower temperedUpper temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -15253,6 +15406,25 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
   positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawTwoSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
     rawLower.toRawTwoUpperCertificate temperedLower temperedUpper
     temperedLowerFirst temperedUpperLast
+
+/-- Envelope constructor after closing the exact lower raw power-product
+bound in Lean. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawPowerProductSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
+    positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate
+    temperedLower temperedUpper temperedLowerFirst temperedUpperLast
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
 certificate. -/

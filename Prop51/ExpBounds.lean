@@ -167,6 +167,114 @@ theorem one_add_inv_pow_le (n : ℕ) (hn : 1 ≤ n) :
     _ ≤ 1631/600 := sum_inv_factorial_le (n+1)
     _ ≤ 68/25 := by norm_num
 
+/-- Auxiliary one-step estimate for the monotonicity of `(1+1/n)^n`.
+
+The proof is purely rational: expand binomially and dominate the finite sum by
+the geometric series with ratio `1/(n+2)`. -/
+theorem one_add_inv_mul_succ_succ_pow_le_succ_inv (n : ℕ) (hn : 1 ≤ n) :
+    (1 + 1 / ((n : ℚ) * (((n + 2 : ℕ) : ℚ))))^n
+      ≤ 1 + 1 / (((n + 1 : ℕ) : ℚ)) := by
+  let y : ℚ := 1 / ((n : ℚ) * (((n + 2 : ℕ) : ℚ)))
+  have hnpos : (0 : ℚ) < (n : ℚ) := by exact_mod_cast (by omega : 0 < n)
+  have hn1pos : (0 : ℚ) < (((n + 1 : ℕ) : ℚ)) := by positivity
+  have hn2pos : (0 : ℚ) < (((n + 2 : ℕ) : ℚ)) := by positivity
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    positivity
+  have hny_eq : (n : ℚ) * y = 1 / (((n + 2 : ℕ) : ℚ)) := by
+    dsimp [y]
+    field_simp [hnpos.ne', hn2pos.ne']
+  have hny0 : 0 ≤ (n : ℚ) * y := by
+    rw [hny_eq]
+    positivity
+  have hny1 : (n : ℚ) * y < 1 := by
+    rw [hny_eq]
+    rw [div_lt_iff₀ hn2pos]
+    norm_num
+    exact_mod_cast (by omega : 1 < n + 2)
+  have hterm : ∀ m ∈ Finset.range (n + 1),
+      y^m * 1^(n-m) * (n.choose m : ℚ)
+        ≤ ((n : ℚ) * y)^m := by
+    intro m hm
+    have hNatMul : n.choose m * m.factorial ≤ n^m := by
+      calc n.choose m * m.factorial = m.factorial * n.choose m := Nat.mul_comm _ _
+        _ = n.descFactorial m := (Nat.descFactorial_eq_factorial_mul_choose n m).symm
+        _ ≤ n^m := Nat.descFactorial_le_pow n m
+    have hNat : n.choose m ≤ n^m :=
+      (Nat.le_mul_of_pos_right (n.choose m) m.factorial_pos).trans hNatMul
+    have hChoose : (n.choose m : ℚ) ≤ ((n : ℚ)^m) := by
+      exact_mod_cast hNat
+    calc
+      y^m * 1^(n-m) * (n.choose m : ℚ)
+          = y^m * (n.choose m : ℚ) := by rw [one_pow, mul_one]
+      _ ≤ y^m * ((n : ℚ)^m) :=
+          mul_le_mul_of_nonneg_left hChoose (pow_nonneg hy0 m)
+      _ = ((n : ℚ) * y)^m := by
+          rw [mul_pow]
+          ring
+  calc
+    (1 + 1 / ((n : ℚ) * (((n + 2 : ℕ) : ℚ))))^n
+        = (y + 1)^n := by
+            dsimp [y]
+            ring
+    _ = ∑ m ∈ Finset.range (n + 1),
+          y^m * 1^(n-m) * (n.choose m : ℚ) := add_pow _ _ n
+    _ ≤ ∑ m ∈ Finset.range (n + 1), ((n : ℚ) * y)^m :=
+        Finset.sum_le_sum hterm
+    _ ≤ 1 / (1 - (n : ℚ) * y) :=
+        geom_sum_le_inv_one_sub ((n : ℚ) * y) hny0 hny1 (n + 1)
+    _ = 1 + 1 / (((n + 1 : ℕ) : ℚ)) := by
+        rw [hny_eq]
+        have hden :
+            1 - 1 / (((n + 2 : ℕ) : ℚ))
+              = (((n + 1 : ℕ) : ℚ)) / (((n + 2 : ℕ) : ℚ)) := by
+          field_simp [hn2pos.ne']
+          push_cast
+          ring
+        rw [hden]
+        field_simp [hn1pos.ne', hn2pos.ne']
+        push_cast
+        ring_nf
+
+/-- The rational sequence `(1+1/n)^n` is increasing, in one-step form. -/
+theorem one_add_inv_pow_mono_succ (n : ℕ) (hn : 1 ≤ n) :
+    (1 + 1/(n:ℚ))^n
+      ≤ (1 + 1/(((n + 1 : ℕ) : ℚ)))^(n + 1) := by
+  let y : ℚ := 1 / ((n : ℚ) * (((n + 2 : ℕ) : ℚ)))
+  have hnpos : (0 : ℚ) < (n : ℚ) := by exact_mod_cast (by omega : 0 < n)
+  have hn1pos : (0 : ℚ) < (((n + 1 : ℕ) : ℚ)) := by positivity
+  have hn2pos : (0 : ℚ) < (((n + 2 : ℕ) : ℚ)) := by positivity
+  have hratio :
+      1 + 1 / (n : ℚ) =
+        (1 + 1 / (((n + 1 : ℕ) : ℚ))) * (1 + y) := by
+    dsimp [y]
+    field_simp [hnpos.ne', hn1pos.ne', hn2pos.ne']
+    push_cast
+    ring_nf
+  have hsmall :
+      (1 + y)^n ≤ 1 + 1 / (((n + 1 : ℕ) : ℚ)) := by
+    simpa [y] using one_add_inv_mul_succ_succ_pow_le_succ_inv n hn
+  calc
+    (1 + 1/(n:ℚ))^n
+        = ((1 + 1 / (((n + 1 : ℕ) : ℚ))) * (1 + y))^n := by
+            rw [hratio]
+    _ = (1 + 1 / (((n + 1 : ℕ) : ℚ)))^n * (1 + y)^n := by
+        rw [mul_pow]
+    _ ≤ (1 + 1 / (((n + 1 : ℕ) : ℚ)))^n *
+          (1 + 1 / (((n + 1 : ℕ) : ℚ))) :=
+        mul_le_mul_of_nonneg_left hsmall (by positivity)
+    _ = (1 + 1 / (((n + 1 : ℕ) : ℚ)))^(n + 1) := by
+        rw [pow_succ]
+
+/-- The rational sequence `(1+1/n)^n` is increasing on positive naturals. -/
+theorem one_add_inv_pow_mono {n m : ℕ} (hn : 1 ≤ n) (hnm : n ≤ m) :
+    (1 + 1/(n:ℚ))^n ≤ (1 + 1/(m:ℚ))^m := by
+  induction m, hnm using Nat.le_induction with
+  | base =>
+      rfl
+  | succ m hnm ih =>
+      exact ih.trans (one_add_inv_pow_mono_succ m (le_trans hn hnm))
+
 /-! ## The rational Stirling lower bound -/
 
 /-- **Rational Stirling**: `(25r/68)^r ≤ r!` — i.e. `r! ≥ (r/e')^r` with

@@ -371,12 +371,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate`
   and
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate`:
-  the former is the pure raw power-product estimate giving the envelope
-  `2*(r+1)/(a-r)`, and the latter only has to handle the top strip
-  `a < 3 * (r + 1)`.  The raw side can be supplied in its exact local form
-  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
-  whose field is just
-  `positiveEntropyShadowBaseStepRawPowerProduct a r ≤ 1`.
+  the former is now closed in Lean from the exact raw power-product estimate
+  `Prop51.positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
+  and the latter only has to handle the top strip `a < 3 * (r + 1)`.
+  The convenience wrappers
+  `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserves`
+  and
+  `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes`
+  therefore take no separate lower raw-side certificate.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
