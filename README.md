@@ -60,7 +60,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   the corrected fixed-edge combined-product finite-window certificate with
   `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate`, separating
   product bounds, solo bounds, and the six one-dimensional large-tail
-  candidate step/reserve inequalities.  Older long-named capstones below are
+  candidate step/reserve inequalities.  The proof-facing refinement
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`
+  accepts `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate`,
+  where the small step is the raw-base half certificate and the two tempered
+  step atoms are the quotient-form raw-exp ratio targets; it converts back to
+  the canonical atomic-bounds route.  Older long-named capstones below are
   retained as audit and profiling alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — an older table-backed large-`a` conditional capstone: table-backed
@@ -192,7 +197,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   splits the six candidate entropy-reserve fields into separate atomic
   one-dimensional inequality families, while
   `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate` bundles the
-  product/solo bound certificates with those atomic candidate fields.  Existing
+  product/solo bound certificates with those atomic candidate fields.  The
+  proof-facing
+  `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate` bundles
+  the same product/solo bounds with the smaller refined candidate certificate
+  using the small raw-base half and tempered raw-exp ratio atoms.  Existing
   grouped raw-cleared unit-reserve proofs can also be split back into those
   atomic candidate fields; the convenience wrapper
   `Prop51.PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate` accepts

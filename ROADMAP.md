@@ -639,7 +639,12 @@ Status:
       is the fully split product/solo/candidate wrapper; emit final theorems
       against the atomic route with
       `--emit-final --final-tail-atomic-parts` or
-      `--final-tail-atomic-bounds`.  Grouped raw-cleared unit-reserve
+      `--final-tail-atomic-bounds`.  The new proof-facing
+      `PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate` keeps the
+      same product/solo bound split but replaces the raw-cleared step atoms by
+      the closed small raw-base half target and the two tempered raw-exp ratio
+      targets; it converts back to the canonical atomic-bounds route.  Grouped
+      raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
       existing grouped proof production can still feed this final route; the
       convenience wrapper
