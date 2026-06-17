@@ -256,16 +256,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate`,
   where the small first-reserve atom is filled automatically and the live
   reserve inputs are only the two tempered endpoint atoms or envelopes.
-  For the endpoint envelope route, Lean now proves both tempered large-exp
-  bounds against the same `(3/2)^a` envelope, via
-  `Prop51.positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound` and
-  `Prop51.positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound`.
-  The constructors
-  `Prop51.positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves`
+  For the endpoint envelope route, Lean first proves both tempered large-exp
+  bounds against the coarse `(3/2)^a` envelope, but the useful reserve target
+  is the sharper `(10/7)^a` envelope coming from the same
+  negative-binomial shell.  The practical constructors are
+  `Prop51.positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths`
   and
-  `Prop51.positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves`
-  therefore leave only the two explicit endpoint
-  entropy-shadow-base-times-`(3/2)^a` unit budgets.
+  `Prop51.positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`;
+  they leave only the two explicit endpoint
+  entropy-shadow-base-times-`(10/7)^a` unit budgets.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp

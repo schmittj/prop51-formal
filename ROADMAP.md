@@ -723,16 +723,17 @@ Status:
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` and
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`.
       The endpoint envelope variants are now reduced further on the
-      exponential side: Lean proves
-      `positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound` and
-      `positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound`, using a
+      exponential side: Lean proves coarse `(3/2)^a` endpoint bounds, and
+      also the sharper practical `(10/7)^a` bounds
+      `positiveTemperedLargeExp_lowerFirst_le_tenSeventhsExpBound` and
+      `positiveTemperedLargeExp_upperLast_le_tenSeventhsExpBound`, using a
       cutoff-parameterized negative-binomial shell for the `8*a`
       `partialExpUpper` cutoff.  The constructors
-      `positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves`
+      `positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths`
       and
-      `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves`
+      `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`
       leave only the two endpoint
-      entropy-shadow-base-times-`(3/2)^a` unit budgets.
+      entropy-shadow-base-times-`(10/7)^a` unit budgets.
       Lean now also provides cross-multiplied versions of those two tempered
       quotient-step atoms,
       `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`

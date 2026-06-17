@@ -7258,6 +7258,15 @@ theorem partialExpUpper_threeTenths_eight_le_negativeBinomialShellAt
     (a := a) (L := 8 * a) ha (by omega : a ≤ 8 * a)
     (q := (3 / 10 : ℚ)) (by norm_num) (by norm_num)
 
+theorem partialExpUpper_threeTenths_eight_le_tenSevenths_pow
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) (8 * a)
+      ≤ (10 / 7 : ℚ)^a :=
+  (partialExpUpper_threeTenths_eight_le_negativeBinomialShellAt
+    (a := a) ha).trans
+    (partialExpUpperNegativeBinomialShellAt_threeTenths_le_tenSevenths_pow
+      (a := a) (L := 8 * a) ha)
+
 theorem partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
     (hShell :
       ∀ {a : Nat}, 2000 < a →
@@ -12436,6 +12445,14 @@ theorem positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed :
   positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed
     |>.toSmallFirstReserveCertificate
 
+/-- Sharper tempered endpoint exponential envelope.  The coarse `(3/2)^a`
+bound is enough to prove the large-exp side, but the upper endpoint
+base-times-envelope reserve budget is false with that much slack.  The
+negative-binomial shell gives the sharper `(10/7)^a` envelope directly, and
+that is the practical Lean target for the two tempered endpoint reserves. -/
+def positiveTemperedReserveTenSeventhsExpBound (a : Nat) : ℚ :=
+  (10 / 7 : ℚ)^a
+
 /-- At the first retained tempered index, the large-tail tempered exponent is
 at most `0.3a`.
 
@@ -12561,6 +12578,41 @@ theorem positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound
       (partialExpUpper_threeTenths_eight_le_threeHalves_pow
         (a := a) (by omega : 0 < a))
 
+theorem positiveTemperedLargeExp_lowerFirst_le_tenSeventhsExpBound
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+      ≤ positiveTemperedReserveTenSeventhsExpBound a := by
+  let k := max 1 (posTemperedCutoff a + 1)
+  change positiveTemperedLargeExp a k
+      ≤ positiveTemperedReserveTenSeventhsExpBound a
+  have hk1 : 1 ≤ k := by
+    dsimp [k]
+    exact le_max_left _ _
+  have hkmax : k ≤ posKmax a := by
+    dsimp [k]
+    exact positiveTemperedBranch_start_le_posKmax_of_large ha
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hexp_nonneg : 0 ≤ positiveTemperedExponentUpper a k :=
+    positiveTemperedExponentUpper_nonneg hk1 hjpos
+  have hexp_le :
+      positiveTemperedExponentUpper a k ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+    dsimp [k]
+    exact positiveTemperedExponentUpper_lowerFirst_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < ((8 * a : Nat) : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  unfold positiveTemperedLargeExp positiveTemperedReserveTenSeventhsExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans
+      (partialExpUpper_threeTenths_eight_le_tenSevenths_pow
+        (a := a) (by omega : 0 < a))
+
 theorem positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound
     {a : Nat} (ha : 2000 < a) :
     positiveTemperedLargeExp a (posKmax a)
@@ -12587,6 +12639,34 @@ theorem positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound
     (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
       hcutoff).trans
       (partialExpUpper_threeTenths_eight_le_threeHalves_pow
+        (a := a) (by omega : 0 < a))
+
+theorem positiveTemperedLargeExp_upperLast_le_tenSeventhsExpBound
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLargeExp a (posKmax a)
+      ≤ positiveTemperedReserveTenSeventhsExpBound a := by
+  have hk1 : 1 ≤ posKmax a :=
+    one_le_posKmax (by omega : 2 ≤ a)
+  have hjpos : 0 < posJ a (posKmax a) :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) le_rfl
+  have hexp_nonneg : 0 ≤ positiveTemperedExponentUpper a (posKmax a) :=
+    positiveTemperedExponentUpper_nonneg hk1 hjpos
+  have hexp_le :
+      positiveTemperedExponentUpper a (posKmax a)
+        ≤ (3 / 10 : ℚ) * (a : ℚ) :=
+    positiveTemperedExponentUpper_upperLast_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < ((8 * a : Nat) : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  unfold positiveTemperedLargeExp positiveTemperedReserveTenSeventhsExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans
+      (partialExpUpper_threeTenths_eight_le_tenSevenths_pow
         (a := a) (by omega : 0 < a))
 
 /-- Atomic lower-tempered first-term reserve target for the large-tail
@@ -12864,6 +12944,69 @@ theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_threeHalves_o
     (positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves
       hLowerEnvelopeUnit)
     (positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves
+      hUpperEnvelopeUnit)
+
+/-- Practical lower tempered endpoint reserve-envelope constructor using the
+sharper `(10/7)^a` large-exp envelope. -/
+theorem positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths
+    (hEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a
+                (max 1 (posTemperedCutoff a + 1)) *
+                  positiveTemperedReserveTenSeventhsExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+      positiveTemperedReserveTenSeventhsExpBound where
+  temperedLowerFirstLargeExp_le := by
+    intro a ha
+    exact positiveTemperedLargeExp_lowerFirst_le_tenSeventhsExpBound ha
+  temperedLowerFirstEnvelopeUnit := hEnvelopeUnit
+
+/-- Practical upper tempered endpoint reserve-envelope constructor using the
+sharper `(10/7)^a` large-exp envelope.  The coarser `(3/2)^a` constructor
+above is a valid monotonicity wrapper, but this is the one with a realistic
+base-times-envelope budget at `posKmax a`. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths
+    (hEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+                positiveTemperedReserveTenSeventhsExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+      positiveTemperedReserveTenSeventhsExpBound where
+  temperedUpperLastLargeExp_le := by
+    intro a ha
+    exact positiveTemperedLargeExp_upperLast_le_tenSeventhsExpBound ha
+  temperedUpperLastEnvelopeUnit := hEnvelopeUnit
+
+theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_of_endpointEnvelopeUnits
+    (hLowerEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a
+                (max 1 (posTemperedCutoff a + 1)) *
+                  positiveTemperedReserveTenSeventhsExpBound a))
+          ≤ 1)
+    (hUpperEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+                positiveTemperedReserveTenSeventhsExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound
+      positiveTemperedReserveTenSeventhsExpBound
+      positiveTemperedReserveTenSeventhsExpBound :=
+  positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_of_temperedEnvelopes
+    (positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths
+      hLowerEnvelopeUnit)
+    (positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths
       hUpperEnvelopeUnit)
 
 theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
