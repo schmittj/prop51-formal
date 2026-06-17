@@ -34,7 +34,8 @@ Strategies include:
   * --emit-single-chunk-shard: emit one balanced shard of the atom theorem
     list, for independent Lean modules in large proof-production runs.
   * --emit-single-chunk-manifest: emit the same atom list as JSON for batch
-    proof production.
+    proof production; pass --manifest-shard-count to include the balanced
+    shard plan in the JSON.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
     from previously emitted single-chunk theorem names.
 
@@ -235,6 +236,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--manifest-shard-count",
+        type=positive_nat,
+        help=(
+            "with --emit-single-chunk-manifest, include balanced shard "
+            "start/stop metadata for this many shards"
+        ),
+    )
+    parser.add_argument(
         "--strategy",
         choices=(
             "all-chunks",
@@ -340,6 +349,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     elif args.shard_index is not None or args.shard_count is not None:
         parser.error(
             "--shard-index/--shard-count require --emit-single-chunk-shard"
+        )
+    if args.manifest_shard_count is not None and not args.emit_single_chunk_manifest:
+        parser.error(
+            "--manifest-shard-count requires --emit-single-chunk-manifest"
         )
     if args.emit_single_chunk_suite and args.strategy not in (
         "product-n-chunked-tangent",
@@ -938,14 +951,7 @@ def single_chunk_specs(
     return specs
 
 
-def single_chunk_emit_args(
-    args: argparse.Namespace,
-    field: str,
-    row_index: int,
-    n_index: int | None,
-    k_index: int | None,
-    name: str,
-) -> list[str]:
+def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
     emit_args = [
         "--strategy",
         args.strategy,
@@ -973,6 +979,22 @@ def single_chunk_emit_args(
         str(args.product_k_len),
         "--edge-k-len",
         str(args.edge_k_len),
+    ]
+    for module in args.extra_import:
+        emit_args.extend(["--extra-import", module])
+    return emit_args
+
+
+def single_chunk_emit_args(
+    args: argparse.Namespace,
+    field: str,
+    row_index: int,
+    n_index: int | None,
+    k_index: int | None,
+    name: str,
+) -> list[str]:
+    emit_args = [
+        *common_finite_emit_args(args),
         "--emit-single-chunk",
         field,
         "--row-index",
@@ -987,14 +1009,30 @@ def single_chunk_emit_args(
     return emit_args
 
 
+def single_chunk_shard_emit_args(
+    args: argparse.Namespace, shard_index: int, shard_count: int
+) -> list[str]:
+    return [
+        *common_finite_emit_args(args),
+        "--single-chunk-prefix",
+        args.single_chunk_prefix,
+        "--emit-single-chunk-shard",
+        "--shard-index",
+        str(shard_index),
+        "--shard-count",
+        str(shard_count),
+    ]
+
+
 def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
     specs = single_chunk_specs(args)
     counts: dict[str, int] = {}
     chunks = []
-    for field, row_index, n_index, k_index, name in specs:
+    for index, (field, row_index, n_index, k_index, name) in enumerate(specs):
         counts[field] = counts.get(field, 0) + 1
         chunks.append(
             {
+                "index": index,
                 "field": field,
                 "row_index": row_index,
                 "n_index": n_index,
@@ -1014,6 +1052,22 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "counts": counts,
         "chunks": chunks,
     }
+    if args.manifest_shard_count is not None:
+        shard_count = args.manifest_shard_count
+        manifest["shards"] = [
+            {
+                "shard_index": shard_index,
+                "shard_count": shard_count,
+                "start": start,
+                "stop": stop,
+                "count": stop - start,
+                "emit_args": single_chunk_shard_emit_args(
+                    args, shard_index, shard_count
+                ),
+            }
+            for shard_index in range(shard_count)
+            for start, stop in [shard_bounds(len(specs), shard_index, shard_count)]
+        ]
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
 
 

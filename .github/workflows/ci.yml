@@ -44,7 +44,11 @@ jobs:
             --name ciSmokeCert
           )
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
-            --emit-single-chunk-manifest | grep '"total": 5'
+            --emit-single-chunk-manifest --manifest-shard-count 2 | grep '"total": 5'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-single-chunk-manifest --manifest-shard-count 2 | grep '"count": 3'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-single-chunk-manifest --manifest-shard-count 2 | grep '"index": 4'
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
             --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
             --extra-import Prop51.Generated.CIAtoms | grep 'Shard 2 of 2'

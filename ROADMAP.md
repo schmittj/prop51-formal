@@ -566,8 +566,10 @@ Status:
       final finite certificate from those names, while
       `--emit-single-chunk-suite` emits the atom theorems and assembled
       certificate in one Lean module.  The manifest mode
-      `--emit-single-chunk-manifest` emits the same atom list as JSON for
-      batching and coverage checks.  The finer Lean endpoint
+      `--emit-single-chunk-manifest` emits the same atom list as JSON with
+      global atom indices and per-atom emit commands for batching and coverage
+      checks; add `--manifest-shard-count n` to include the balanced shard
+      start/stop plan in that JSON.  The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
       `N`-chunk index and is emitted with
@@ -625,7 +627,7 @@ Status:
       are split over separate Lean modules, pass repeated `--extra-import`
       options when emitting the assembly theorem.  The generator also has
       `--emit-single-chunk-shard --shard-index i --shard-count n` for
-      balanced atom modules in the same order as the manifest.
+      balanced atom modules in the same global order as the manifest.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

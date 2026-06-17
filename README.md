@@ -126,7 +126,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   to assemble the product-`N` chunked certificate from those names, or
   `--emit-single-chunk-suite` to emit the atom theorems and assembled
   certificate in one Lean module.  Use `--emit-single-chunk-manifest` to list
-  the same atom names and indices as JSON for batch proof production.  Lean
+  the same atom names, global atom indices, and per-atom emit commands as JSON
+  for batch proof production; add `--manifest-shard-count n` to include the
+  balanced shard start/stop plan in the same file.  Lean
   also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
@@ -176,7 +178,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--emit-final --final-tail-atomic-parts`; use repeated `--extra-import`
   flags when the atom theorems live in separately built Lean modules.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
-  atom modules using the same ordering as `--emit-single-chunk-manifest`.
+  atom modules using the same global ordering as
+  `--emit-single-chunk-manifest`.
   When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
