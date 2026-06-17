@@ -15150,6 +15150,32 @@ the rational exponent by at most `45/a` throughout the middle band. -/
 def positiveTemperedUpperMiddleExpShiftBudget (a : Nat) : ℚ :=
   (45 : ℚ) / (a : ℚ)
 
+/-- Analytic factor reserved for the upper-middle `partialExpUpper` shift.
+
+The intended later proof is a first-order Taylor/geometric-tail estimate of
+the form `P(E+45/a) ≤ (1 - (11/10)*(45/a))⁻¹ P(E)`.  The raw quotient target is
+kept separate below so the remaining work is not an opaque mixed inequality. -/
+def positiveTemperedUpperMiddleExpShiftFactor (a : Nat) : ℚ :=
+  1 / (1 - (11 / 10 : ℚ) *
+    positiveTemperedUpperMiddleExpShiftBudget a)
+
+theorem positiveTemperedUpperMiddleExpShiftFactor_den_pos
+    {a : Nat} (ha : 2000 < a) :
+    0 <
+      1 - (11 / 10 : ℚ) *
+        positiveTemperedUpperMiddleExpShiftBudget a := by
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  unfold positiveTemperedUpperMiddleExpShiftBudget
+  field_simp [show (a : ℚ) ≠ 0 by nlinarith]
+  nlinarith
+
+theorem positiveTemperedUpperMiddleExpShiftFactor_pos
+    {a : Nat} (ha : 2000 < a) :
+    0 < positiveTemperedUpperMiddleExpShiftFactor a := by
+  have hden := positiveTemperedUpperMiddleExpShiftFactor_den_pos ha
+  unfold positiveTemperedUpperMiddleExpShiftFactor
+  exact div_pos zero_lt_one hden
+
 theorem positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
     {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
     (hrhi : r ≤ posKmax a) :
@@ -15183,6 +15209,63 @@ theorem positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
     _ < ((8 * a : Nat) : ℚ) := by
           norm_num
           nlinarith
+
+theorem positiveTemperedExponentUpper_upperMiddleShiftBudget_le_cutoff_div_twentyfour
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hrhi : r ≤ posKmax a) (hmid : 5 * r < 3 * a) :
+    positiveTemperedExponentUpper a r
+        + positiveTemperedUpperMiddleExpShiftBudget a
+      ≤ ((8 * a - 1 : Nat) : ℚ) / 24 := by
+  have hr1 : 1 ≤ r := by omega
+  have hrQ : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hr1
+  have hsplitLower : a / 3 + 12 ≤ r := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hdiv : a < 3 * (a / 3 + 1) := by
+    simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+      (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mp
+        (Nat.lt_succ_self (a / 3))
+  have hratioK : (a : ℚ) / (r : ℚ) ≤ 3 := by
+    rw [div_le_iff₀ hrQ]
+    have hleNat : a ≤ 3 * r := by omega
+    exact_mod_cast hleNat
+  have hleA : r ≤ a := by
+    unfold posKmax at hrhi
+    omega
+  have hjpos : 0 < posJ a r :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hrhi
+  have hjQ : (0 : ℚ) < (posJ a r : ℚ) := by exact_mod_cast hjpos
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hratioJ : (a : ℚ) / (posJ a r : ℚ) ≤ 5 / 2 := by
+    rw [div_le_iff₀ hjQ]
+    rw [hjCast]
+    have hmidQ : (5 : ℚ) * (r : ℚ) < 3 * (a : ℚ) := by
+      exact_mod_cast hmid
+    nlinarith
+  have hbudget : positiveTemperedUpperMiddleExpShiftBudget a ≤ 1 := by
+    unfold positiveTemperedUpperMiddleExpShiftBudget
+    rw [div_le_one]
+    · exact_mod_cast (by omega : 45 ≤ a)
+    · exact_mod_cast (by omega : 0 < a)
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have hone : 1 ≤ 8 * a := by omega
+  calc
+    positiveTemperedExponentUpper a r
+        + positiveTemperedUpperMiddleExpShiftBudget a
+        ≤ ((1/5) * (a : ℚ) + (57/10) * 3
+            + (29/10) * (5 / 2) + 2) + 1 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ ≤ ((8 * a : Nat) : ℚ) / 24 - 1 / 24 := by
+          norm_num
+          nlinarith
+    _ = ((8 * a - 1 : Nat) : ℚ) / 24 := by
+          rw [Nat.cast_sub hone]
+          norm_num
+          ring
 
 set_option maxHeartbeats 800000 in
 /-- Uniform exponent-gap estimate on the remaining upper-middle band.
@@ -15521,6 +15604,64 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetC
           ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
             partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
 
+/-- Upper-middle shift estimate with the analytic exponential factor exposed.
+
+This is the `partialExpUpper`-only part of the remaining middle-band proof. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate :
+    Prop where
+  upperMiddleShiftFactor :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a →
+        partialExpUpper
+            (positiveTemperedExponentUpper a r
+              + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+          ≤ positiveTemperedUpperMiddleExpShiftFactor a *
+            partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
+
+/-- Raw-quotient scalar margin for the upper-middle shift factor.
+
+The TeX proof treats this margin together with the Taylor/geometric estimate.
+Lean keeps it as a separate one-dimensional rational target: the raw quotient
+must absorb the factor used by the `partialExpUpper` shift estimate. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate :
+    Prop where
+  upperMiddleShiftFactor_le_target :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a →
+        positiveTemperedUpperMiddleExpShiftFactor a
+          ≤ positiveTemperedUpperReverseExpQuotientTarget a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate.toMiddleShiftBudgetCertificate
+    (factorCert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate)
+    (scalarCert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate where
+  upperMiddleShiftBudgetCrossmul := by
+    intro a r ha hrlo hrhi hmid
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    have hExp0 :
+        0 ≤ partialExpUpper (positiveTemperedExponentUpper a r) (8 * a) := by
+      change 0 ≤ positiveTemperedLargeExp a r
+      exact (positiveTemperedLargeExp_pos_of_large ha hrMem).le
+    have hshift :=
+      factorCert.upperMiddleShiftFactor ha hrlo hrhi hmid
+    have hscalar :=
+      scalarCert.upperMiddleShiftFactor_le_target ha hrlo hrhi hmid
+    calc
+      partialExpUpper
+          (positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+          ≤ positiveTemperedUpperMiddleExpShiftFactor a *
+              partialExpUpper (positiveTemperedExponentUpper a r) (8 * a) :=
+            hshift
+      _ ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
+            partialExpUpper (positiveTemperedExponentUpper a r) (8 * a) :=
+            mul_le_mul_of_nonneg_right hscalar hExp0
+
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate.toMiddleExpTargetCrossmulCertificate
     (cert :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate) :
@@ -15566,6 +15707,15 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCer
       _ = positiveTemperedUpperReverseExpQuotientTarget a r *
             positiveTemperedLargeExp a r := by
             rfl
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate.toMiddleExpTargetCrossmulCertificate
+    (factorCert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate)
+    (scalarCert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate :=
+  (factorCert.toMiddleShiftBudgetCertificate scalarCert)
+    |>.toMiddleExpTargetCrossmulCertificate
 
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate.toTemperedUpperReverseExpTargetCrossmulCertificate
     (cert :
