@@ -17563,6 +17563,110 @@ that is the practical Lean target for the two tempered endpoint reserves. -/
 def positiveTemperedReserveTenSeventhsExpBound (a : Nat) : ℚ :=
   (10 / 7 : ℚ)^a
 
+/-- The solo `Y_a` displayed exponent is below the common `0.3a`
+negative-binomial envelope used for the tempered endpoint reserves. -/
+theorem positiveSoloYExponent_le_three_tenths_self
+    {a : Nat} (ha : 2000 < a) :
+    positiveSoloYExponent a ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  unfold positiveSoloYExponent
+  nlinarith
+
+/-- Variable-cutoff large-tail solo exponential envelope.
+
+The fixed finite-window cutoff `positiveExpCutoff = 800` is not the right
+large-`a` object.  For the large tail, the solo exponent is compared with
+`0.3a` and then with the same negative-binomial shell that supplies the
+tempered endpoint `(10/7)^a` envelope. -/
+theorem partialExpUpper_positiveSoloYExponent_eight_le_tenSevenths_pow
+    {a : Nat} (ha : 2000 < a) :
+    partialExpUpper (positiveSoloYExponent a) (8 * a)
+      ≤ positiveTemperedReserveTenSeventhsExpBound a := by
+  have hexp_nonneg : 0 ≤ positiveSoloYExponent a := by
+    unfold positiveSoloYExponent
+    positivity
+  have hexp_le :
+      positiveSoloYExponent a ≤ (3 / 10 : ℚ) * (a : ℚ) :=
+    positiveSoloYExponent_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < ((8 * a : Nat) : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  unfold positiveTemperedReserveTenSeventhsExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans
+      (partialExpUpper_threeTenths_eight_le_tenSevenths_pow
+        (a := a) (by omega : 0 < a))
+
+/-- Denominator-cleared large-tail solo `Gcomp` saddle target.
+
+This is the variable-cutoff analogue of
+`positiveSoloDisplayedYSaddleCleared`, but for the stronger
+`QqEplusGcompBound` majorant used by the product/solo large-tail interface. -/
+def positiveLargeTailSoloGcompSaddleCleared (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * QqEplusGcompBound N a
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpper (positiveSoloYExponent a) (8 * a)
+
+/-- Convert the cleared solo `Gcomp` saddle estimate into the practical
+`(10/7)^a` large-tail solo envelope. -/
+theorem positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
+    {a N : Nat} (hN : 1 ≤ N) (ha : 2000 < a)
+    (h : positiveLargeTailSoloGcompSaddleCleared a N) :
+    positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hcapos : 0 < c a := c_pos a (by omega : 1 ≤ a)
+  have hpowpos : 0 < (2 : ℚ)^a := by positivity
+  have hscale : 0 < (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hdenpos : 0 < ((N : ℚ) / 2) * c a / (2 : ℚ)^a := by
+    positivity
+  have hQ_exp :
+      QqEplusGcompBound N a
+        ≤ (29 * (a : ℚ) * c a *
+            partialExpUpper (positiveSoloYExponent a) (8 * a)) /
+          ((4 : ℚ) * (2 : ℚ)^a) := by
+    rw [le_div_iff₀ hscale]
+    simpa [positiveLargeTailSoloGcompSaddleCleared, mul_assoc, mul_left_comm,
+      mul_comm] using h
+  have hcoef_nonneg : 0 ≤ 29 * (a : ℚ) * c a := by
+    positivity
+  have hQ_pow :
+      QqEplusGcompBound N a
+        ≤ (29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+          ((4 : ℚ) * (2 : ℚ)^a) := by
+    have hnum :
+        29 * (a : ℚ) * c a *
+            partialExpUpper (positiveSoloYExponent a) (8 * a)
+          ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a :=
+      mul_le_mul_of_nonneg_left
+        (partialExpUpper_positiveSoloYExponent_eight_le_tenSevenths_pow ha)
+        hcoef_nonneg
+    exact hQ_exp.trans (div_le_div_of_nonneg_right hnum hscale.le)
+  unfold positiveYgcompBound
+  rw [div_le_iff₀ hdenpos]
+  convert hQ_pow using 1
+  · unfold positiveLargeTailSoloTenSeventhsBound
+    field_simp [hNpos.ne', hpowpos.ne']
+    ring
+
+/-- Large-tail solo certificate reduced to the denominator-cleared `Gcomp`
+saddle estimate above. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompSaddleCleared
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompSaddleCleared a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths
+    (fun {a N} ha hrect =>
+      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+        (hY ha hrect))
+
 /-- At the first retained tempered index, the large-tail tempered exponent is
 at most `0.3a`.
 
