@@ -616,8 +616,13 @@ Status:
       solo, adjacent-step, and unit-reserve subtargets and then reassembles
       the existing `PositiveSaddleLargeTailAuditCertificate`.  This is not a
       mathematical change, but it gives the remaining analytic proof work
-      smaller Lean interfaces.  The finite generator emits final theorems
-      against this split interface with `--emit-final --final-tail-parts`.
+      smaller Lean interfaces.  The large-tail product fields can now be
+      supplied through `PositiveSaddleLargeTailProductBoundsCertificate`,
+      which further splits each raw product inequality into separate `Bplus`
+      and `Qplus/Y` saddle bounds plus a scalar product comparison, matching
+      the TeX-style saddle-bound staging more closely.  The finite generator
+      emits final theorems against this split interface with
+      `--emit-final --final-tail-parts`.
       The still finer
       `PositiveSaddleLargeTailAtomicPartsAuditCertificate` splits the six
       candidate entropy-reserve fields into atomic small-step,

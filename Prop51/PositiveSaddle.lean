@@ -9678,6 +9678,162 @@ structure PositiveSaddleLargeTailSoloYUnitCertificate : Prop where
           (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
         ≤ 1
 
+/-- Reassemble a small-regime large-tail raw product inequality from separate
+upper bounds for the positive `B` and `Q` majorants plus the scalar product
+comparison.  This is a proof-production split of the same raw inequality used
+by `PositiveSaddleLargeTailSmallProductRawCertificate`. -/
+theorem positiveSmallLargeProductRaw_of_BQ_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : BplusqGcompBound N k ≤ XBound)
+    (hQ : QqEplusGcompBound N (posJ a k) ≤ YBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) * XBound * YBound
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+        BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+      ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveSmallLargeExp a k *
+          ((N : ℚ) * c k * c (posJ a k)) := by
+  have hBnonneg : 0 ≤ BplusqGcompBound N k :=
+    BplusqGcompBound_nonneg N k
+  have hQnonneg : 0 ≤ QqEplusGcompBound N (posJ a k) :=
+    QqEplusGcompBound_nonneg N (posJ a k)
+  have hXnonneg : 0 ≤ XBound := hBnonneg.trans hB
+  have hBQ :
+      BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ XBound * YBound :=
+    mul_le_mul hB hQ hQnonneg hXnonneg
+  have hcommon :
+      0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          XBound * YBound := by
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      mul_le_mul_of_nonneg_left hBQ hcommon
+  exact hleft.trans hprod
+
+/-- Reassemble a tempered-regime large-tail raw product inequality from
+separate positive `B` and `Q` majorant bounds plus the scalar product
+comparison. -/
+theorem positiveTemperedLargeProductRaw_of_BQ_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : BplusqGcompBound N k ≤ XBound)
+    (hQ : QqEplusGcompBound N (posJ a k) ≤ YBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) * XBound * YBound
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+        BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+      ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveTemperedLargeExp a k *
+          ((N : ℚ) * c k * c (posJ a k)) := by
+  have hBnonneg : 0 ≤ BplusqGcompBound N k :=
+    BplusqGcompBound_nonneg N k
+  have hQnonneg : 0 ≤ QqEplusGcompBound N (posJ a k) :=
+    QqEplusGcompBound_nonneg N (posJ a k)
+  have hXnonneg : 0 ≤ XBound := hBnonneg.trans hB
+  have hBQ :
+      BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ XBound * YBound :=
+    mul_le_mul hB hQ hQnonneg hXnonneg
+  have hcommon :
+      0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          XBound * YBound := by
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      mul_le_mul_of_nonneg_left hBQ hcommon
+  exact hleft.trans hprod
+
+/-- Large-tail product pointwise target with the `B` and `Q` saddle estimates
+split before the final scalar comparison.  This is a TeX-shaped staging
+interface for the remaining analytic product proof; it reassembles to the
+raw product fields already consumed downstream. -/
+structure PositiveSaddleLargeTailProductBoundsCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ) : Prop where
+  smallX :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        BplusqGcompBound N k ≤ smallXBound a N k
+  smallY :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        QqEplusGcompBound N (posJ a k) ≤ smallYBound a N k
+  smallProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            smallXBound a N k * smallYBound a N k
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+  temperedX :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        BplusqGcompBound N k ≤ temperedXBound a N k
+  temperedY :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        QqEplusGcompBound N (posJ a k) ≤ temperedYBound a N k
+  temperedProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            temperedXBound a N k * temperedYBound a N k
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailSmallProductRawCertificate where
+  smallProductRaw := by
+    intro a N k ha hrect hk hsmall
+    exact positiveSmallLargeProductRaw_of_BQ_bounds
+      (cert.smallX ha hrect hk hsmall)
+      (cert.smallY ha hrect hk hsmall)
+      (cert.smallProduct ha hrect hk hsmall)
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.toTemperedProductRawCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailTemperedProductRawCertificate where
+  temperedProductRaw := by
+    intro a N k ha hrect hk htempered
+    exact positiveTemperedLargeProductRaw_of_BQ_bounds
+      (cert.temperedX ha hrect hk htempered)
+      (cert.temperedY ha hrect hk htempered)
+      (cert.temperedProduct ha hrect hk htempered)
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.toProductPointwiseYRawUnitSoloCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYUnitCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate where
+  smallProductRaw :=
+    cert.toSmallProductRawCertificate.smallProductRaw
+  temperedProductRaw :=
+    cert.toTemperedProductRawCertificate.temperedProductRaw
+  soloYUnit := solo.soloYUnit
+
 /-- Reassembles the split large-tail product/solo targets into the existing
 unit-solo pointwise certificate.  This is only a proof-production
 decomposition; it does not change any TeX-side inequality. -/

@@ -5314,6 +5314,21 @@ structure PositiveSaddleLargeTailPartsAuditCertificate : Prop where
   candidateUnitReserves :
     PositiveSaddleLargeTailCandidateUnitReserveCertificate
 
+theorem positiveSaddleLargeTailPartsAuditCertificate_of_productBounds
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYUnitCertificate)
+    (steps : PositiveSaddleLargeTailCandidateRawClearedStepCertificate)
+    (reserves : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleLargeTailPartsAuditCertificate where
+  smallProductRaw := product.toSmallProductRawCertificate
+  temperedProductRaw := product.toTemperedProductRawCertificate
+  soloYUnit := solo
+  candidateRawClearedSteps := steps
+  candidateUnitReserves := reserves
+
 theorem PositiveSaddleLargeTailPartsAuditCertificate.toProductPointwiseYRawUnitSoloCertificate
     (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
     PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :=
@@ -5362,6 +5377,33 @@ structure PositiveSaddleLargeTailAtomicPartsAuditCertificate : Prop where
     PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate
   candidateTemperedUpperLastReserve :
     PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate
+
+theorem positiveSaddleLargeTailAtomicPartsAuditCertificate_of_productBounds
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYUnitCertificate)
+    (smallStep : PositiveSaddleLargeTailCandidateSmallRawStepCertificate)
+    (temperedLowerStep :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate)
+    (temperedUpperStep :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate)
+    (smallReserve : PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate)
+    (temperedLowerReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailAtomicPartsAuditCertificate where
+  smallProductRaw := product.toSmallProductRawCertificate
+  temperedProductRaw := product.toTemperedProductRawCertificate
+  soloYUnit := solo
+  candidateSmallRawStep := smallStep
+  candidateTemperedLowerRawStep := temperedLowerStep
+  candidateTemperedUpperReverseRawStep := temperedUpperStep
+  candidateSmallFirstReserve := smallReserve
+  candidateTemperedLowerFirstReserve := temperedLowerReserve
+  candidateTemperedUpperLastReserve := temperedUpperReserve
 
 theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateAtomicCertificate
     (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
