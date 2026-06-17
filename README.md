@@ -199,6 +199,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   product/solo bounds together with that grouped raw-cleared unit-reserve
   proof and converts to the atomic-bounds route.  The core large-tail audit
   certificate also exposes reverse parts and atomic-parts views for audit.
+  The small adjacent-step atom can be supplied in the still smaller
+  `Prop51.PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate` form:
+  Lean proves the small large-exp factor decreases across the small branch,
+  so the proof producer only has to show the pure raw-base half-quotient
+  inequality.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

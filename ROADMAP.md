@@ -646,8 +646,15 @@ Status:
       `PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate` bundles
       product/solo bounds with that grouped candidate proof and is available
       to generated final theorems through
-      `--final-tail-raw-cleared-unit-bounds`.  If a proof already has the
-      core `PositiveSaddleLargeTailAuditCertificate`,
+      `--final-tail-raw-cleared-unit-bounds`.  The small adjacent-step atom
+      has also been reduced further:
+      `PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate` asks only
+      for the pure raw-base half-quotient inequality
+      `2 * positiveEntropyShadowBaseStepRawNumerator a r ≤
+      positiveEntropyShadowBaseStepRawDenominator a r`; Lean proves that the
+      small large-exp factor is decreasing on the branch and restores the
+      original raw-cleared small-step field.  If a proof already has the core
+      `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass
       repeated `--extra-import` options when emitting the assembly theorem.

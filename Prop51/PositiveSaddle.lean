@@ -4968,6 +4968,11 @@ theorem positiveEntropyShadowBaseStepRawDenominator_pos
   unfold positiveEntropyShadowBaseStepRawDenominator
   positivity
 
+theorem positiveEntropyShadowBaseStepRawNumerator_nonneg (a r : Nat) :
+    0 ≤ positiveEntropyShadowBaseStepRawNumerator a r := by
+  unfold positiveEntropyShadowBaseStepRawNumerator
+  positivity
+
 theorem positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den
     {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
     positiveEntropyShadowBaseStepRawQuotient a r =
@@ -6772,6 +6777,72 @@ theorem positiveSmallExponentUpper_lt_largeExpCutoff
     _ < (a : ℚ) := by
           nlinarith
 
+/-- On the large-tail small branch, the concrete small exponent decreases as
+`k` advances.  This is a Lean-side helper for the raw-cleared small step: it
+lets that atom use only the raw entropy-shadow quotient slack, without an
+additional growth allowance for `positiveSmallLargeExp`. -/
+theorem positiveSmallExponentUpper_succ_le_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    positiveSmallExponentUpper a (r + 1)
+      ≤ positiveSmallExponentUpper a r := by
+  have hrK : r ≤ posKmax a := by omega
+  have hcut5 : 5 * posSmallCutoff a ≤ a :=
+    five_mul_posSmallCutoff_le_self_of_large ha
+  have hrCut : r + 1 ≤ posSmallCutoff a := by omega
+  have h5r : 5 * (r + 1) ≤ a :=
+    (Nat.mul_le_mul_left 5 hrCut).trans hcut5
+  have hj2 : 2 ≤ posJ a r :=
+    two_le_posJ_of_le_posKmax_of_large (by omega : 20 ≤ a) hrK
+  have hjSucc : posJ a (r + 1) = posJ a r - 1 := by
+    unfold posJ at hj2 ⊢
+    omega
+  have hjQpos : (0 : ℚ) < (posJ a r : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r)
+  have hjm1Qpos : (0 : ℚ) < (posJ a r : ℚ) - 1 := by
+    have hjgt : (1 : ℚ) < (posJ a r : ℚ) := by
+      exact_mod_cast (by omega : 1 < posJ a r)
+    linarith
+  have h5rQ : (5 : ℚ) * ((r : ℚ) + 1) ≤ (a : ℚ) := by
+    exact_mod_cast h5r
+  have hjLower :
+      (4 / 5 : ℚ) * (a : ℚ) + 1 ≤ (posJ a r : ℚ) := by
+    unfold posJ
+    have hrle : (r : ℚ) ≤ (a : ℚ) / 5 - 1 := by
+      nlinarith
+    have hleA : r ≤ a := by omega
+    rw [Nat.cast_sub hleA]
+    nlinarith
+  have hjm1Lower :
+      (4 / 5 : ℚ) * (a : ℚ) ≤ (posJ a r : ℚ) - 1 := by
+    linarith
+  have hmulLower :
+      ((4 / 5 : ℚ) * (a : ℚ) + 1) *
+          ((4 / 5 : ℚ) * (a : ℚ))
+        ≤ (posJ a r : ℚ) * ((posJ a r : ℚ) - 1) := by
+    exact mul_le_mul hjLower hjm1Lower
+      (by positivity) (by positivity)
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have hquad :
+      (29 : ℚ) * (a : ℚ)
+        ≤ 2 * ((posJ a r : ℚ) * ((posJ a r : ℚ) - 1)) := by
+    have htarget :
+        (29 : ℚ) * (a : ℚ)
+          ≤ 2 * (((4 / 5 : ℚ) * (a : ℚ) + 1) *
+            ((4 / 5 : ℚ) * (a : ℚ))) := by
+      nlinarith
+    nlinarith
+  unfold positiveSmallExponentUpper
+  rw [hjSucc]
+  have hjm1Cast :
+      ((posJ a r - 1 : Nat) : ℚ) = (posJ a r : ℚ) - 1 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ posJ a r)]
+    norm_num
+  rw [hjm1Cast]
+  field_simp [hjQpos.ne', hjm1Qpos.ne']
+  ring_nf
+  nlinarith
+
 theorem positiveTemperedExponentUpper_lt_largeExpCutoff
     {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
     positiveTemperedExponentUpper a k < ((8 * a : Nat) : ℚ) := by
@@ -6850,6 +6921,82 @@ theorem positiveTemperedLargeExp_pos_of_large
   exact partialExpUpper_pos_of_nonneg_lt
     (positiveTemperedExponentUpper_nonneg hk1 hjpos)
     (positiveTemperedExponentUpper_lt_largeExpCutoff ha hkRange)
+
+theorem positiveSmallLargeExp_succ_le_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    positiveSmallLargeExp a (r + 1) ≤ positiveSmallLargeExp a r := by
+  have hrK : r ≤ posKmax a := by omega
+  have hsuccK : r + 1 ≤ posKmax a := by omega
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨hr1, hrK⟩
+  have hsuccMem : r + 1 ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨by omega, hsuccK⟩
+  have hsuccJ : 0 < posJ a (r + 1) :=
+    posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hsuccMem
+  unfold positiveSmallLargeExp
+  exact partialExpUpper_mono_of_nonneg_le_lt
+    (positiveSmallExponentUpper_nonneg hsuccJ)
+    (positiveSmallExponentUpper_succ_le_of_small_branch ha hr1 hrhi)
+    (positiveSmallExponentUpper_lt_largeExpCutoff ha hrMem)
+
+theorem positiveSmallLargeExp_succ_div_le_one_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    positiveSmallLargeExp a (r + 1) / positiveSmallLargeExp a r ≤ 1 := by
+  have hrK : r ≤ posKmax a := by omega
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨hr1, hrK⟩
+  have hpos : 0 < positiveSmallLargeExp a r :=
+    positiveSmallLargeExp_pos_of_large ha hrMem
+  rw [div_le_iff₀ hpos]
+  simpa using positiveSmallLargeExp_succ_le_of_small_branch ha hr1 hrhi
+
+/-- If the raw entropy-shadow base quotient has the simple half-ratio slack,
+then the full small large-exp raw step follows automatically.  This removes
+the `partialExpUpper` quotient from the small adjacent-step proof. -/
+theorem positiveSmallLargeExp_rawStepCleared_of_base_half
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a))
+    (hraw :
+      2 * positiveEntropyShadowBaseStepRawNumerator a r
+        ≤ positiveEntropyShadowBaseStepRawDenominator a r) :
+    2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+        positiveSmallLargeExp a (r + 1))
+      ≤ positiveSmallLargeExp a r *
+        positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hExpLe :
+      positiveSmallLargeExp a (r + 1) ≤ positiveSmallLargeExp a r :=
+    positiveSmallLargeExp_succ_le_of_small_branch ha hr1 hrhi
+  have hExp0 : 0 ≤ positiveSmallLargeExp a r := by
+    have hrK : r ≤ posKmax a := by omega
+    exact (positiveSmallLargeExp_pos_of_large ha
+      (mem_positiveKRange.mpr ⟨hr1, hrK⟩)).le
+  have hnum0 : 0 ≤ positiveEntropyShadowBaseStepRawNumerator a r :=
+    positiveEntropyShadowBaseStepRawNumerator_nonneg a r
+  have hleft :
+      (2 * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveSmallLargeExp a (r + 1)
+        ≤ (2 * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveSmallLargeExp a r :=
+    mul_le_mul_of_nonneg_left hExpLe (by nlinarith)
+  have hright :
+      (2 * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveSmallLargeExp a r
+        ≤ positiveEntropyShadowBaseStepRawDenominator a r *
+          positiveSmallLargeExp a r :=
+    mul_le_mul_of_nonneg_right hraw hExp0
+  calc
+    2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+        positiveSmallLargeExp a (r + 1))
+        = (2 * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveSmallLargeExp a (r + 1) := by ring
+    _ ≤ (2 * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveSmallLargeExp a r := hleft
+    _ ≤ positiveEntropyShadowBaseStepRawDenominator a r *
+          positiveSmallLargeExp a r := hright
+    _ = positiveSmallLargeExp a r *
+        positiveEntropyShadowBaseStepRawDenominator a r := by ring
 
 /-- Candidate uniform small-branch ratio for the large-exp entropy-shadow
 audit.  The adjacent quotient proof is still a separate rational audit field;
@@ -10680,6 +10827,26 @@ structure PositiveSaddleLargeTailCandidateSmallRawStepCertificate :
           ≤ positiveSmallLargeExp a r *
             positiveEntropyShadowBaseStepRawDenominator a r
 
+/-- Smaller small-regime adjacent-step target after using monotonicity of the
+large-tail small exponential factor.  The remaining inequality is the pure
+raw entropy-shadow base quotient bound `raw quotient ≤ 1/2`, with the common
+positive denominator cleared. -/
+structure PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate :
+    Prop where
+  smallRawBaseHalf :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * positiveEntropyShadowBaseStepRawNumerator a r
+          ≤ positiveEntropyShadowBaseStepRawDenominator a r
+
+theorem PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate.toSmallRawStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate) :
+    PositiveSaddleLargeTailCandidateSmallRawStepCertificate where
+  smallRawStepCleared := by
+    intro a r ha hr1 hrhi
+    exact positiveSmallLargeExp_rawStepCleared_of_base_half
+      ha hr1 hrhi (cert.smallRawBaseHalf ha hr1 hrhi)
+
 /-- Atomic lower-tempered adjacent-step target for the large-tail candidate
 entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate :
@@ -10806,6 +10973,18 @@ theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
     temperedLower.temperedLowerRawStepCleared
   temperedUpperReverseRawStepCleared :=
     temperedUpper.temperedUpperReverseRawStepCleared
+
+/-- Reassembles grouped candidate adjacent-step targets when the small branch
+is supplied by the reduced raw-base half-quotient certificate. -/
+theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHalf
+    (small : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    small.toSmallRawStepCertificate temperedLower temperedUpper
 
 /-- Reassembles atomic candidate reserve targets into the grouped reserve
 certificate. -/
