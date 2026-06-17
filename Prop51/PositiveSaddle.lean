@@ -11646,6 +11646,114 @@ theorem PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate.toS
         (by norm_num : (0 : ℚ) ≤ 800000000)).trans
         (cert.smallFirstEnvelopeUnit ha)
 
+/-- The concrete exponential envelope targeted for the first small reserve.
+The remaining analytic estimate is
+`positiveSmallLargeExp a 1 ≤ (3/2)^a`; once that is known, the theorem below
+closes the unit reserve budget. -/
+def positiveSmallFirstReserveThreeHalvesExpBound (a : Nat) : ℚ :=
+  (3 / 2 : ℚ)^a
+
+theorem positiveSmallEntropyShadowBaseTerm_one_eq {a : Nat} (ha : 3 ≤ a) :
+    positiveSmallEntropyShadowBaseTerm a 1 =
+      (65 / ((12 * a - 8 : Nat) : ℚ)) *
+        ((a - 1 : Nat) : ℚ) * (1 / (2 : ℚ)^(a - 1)) := by
+  have hbinom := positiveBinomRatioEntropyShadowPosJBound_one (a := a) ha
+  have hj : posJ a 1 = a - 1 := by
+    unfold posJ
+    omega
+  unfold positiveSmallEntropyShadowBaseTerm positiveDyadicDecay posNhi
+  rw [hbinom, hj]
+  ring
+
+def positiveSmallFirstReserveThreeHalvesEnvelopeTerm (a : Nat) : ℚ :=
+  (800000000 : ℚ) *
+    (positiveSmallEntropyShadowBaseTerm a 1 *
+      positiveSmallFirstReserveThreeHalvesExpBound a)
+
+theorem positiveSmallFirstReserveThreeHalvesEnvelopeTerm_succ_le
+    {a : Nat} (ha : 3 ≤ a) :
+    positiveSmallFirstReserveThreeHalvesEnvelopeTerm (a + 1)
+      ≤ positiveSmallFirstReserveThreeHalvesEnvelopeTerm a := by
+  have hbase_a :=
+    positiveSmallEntropyShadowBaseTerm_one_eq (a := a) ha
+  have hbase_succ :=
+    positiveSmallEntropyShadowBaseTerm_one_eq (a := a + 1)
+      (by omega : 3 ≤ a + 1)
+  have hpow3 :
+      positiveSmallFirstReserveThreeHalvesExpBound (a + 1) =
+        positiveSmallFirstReserveThreeHalvesExpBound a * (3 / 2 : ℚ) := by
+    unfold positiveSmallFirstReserveThreeHalvesExpBound
+    rw [pow_succ]
+  have hsuccSub : a + 1 - 1 = a := by omega
+  have hpow2 :
+      (2 : ℚ)^(a + 1 - 1) = (2 : ℚ)^(a - 1) * 2 := by
+    rw [show a + 1 - 1 = (a - 1) + 1 by omega, pow_succ]
+  have hdenA : (0 : ℚ) < ((12 * a - 8 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 12 * a - 8)
+  have hdenS : (0 : ℚ) < ((12 * (a + 1) - 8 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 12 * (a + 1) - 8)
+  have hpowA : (0 : ℚ) < (2 : ℚ)^(a - 1) := by positivity
+  have hpowB : (0 : ℚ) < positiveSmallFirstReserveThreeHalvesExpBound a := by
+    unfold positiveSmallFirstReserveThreeHalvesExpBound
+    positivity
+  have hcastPred : (((a - 1 : Nat) : ℚ)) = (a : ℚ) - 1 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ a)]
+    norm_num
+  have hcastDenA : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+    rw [Nat.cast_sub (by omega : 8 ≤ 12 * a)]
+    norm_num
+  have hcastDenS :
+      (((12 * (a + 1) - 8 : Nat) : ℚ)) =
+        12 * ((a : ℚ) + 1) - 8 := by
+    rw [Nat.cast_sub (by omega : 8 ≤ 12 * (a + 1))]
+    norm_num
+  rw [positiveSmallFirstReserveThreeHalvesEnvelopeTerm,
+    positiveSmallFirstReserveThreeHalvesEnvelopeTerm, hbase_a, hbase_succ,
+    hpow3, hpow2, hsuccSub]
+  field_simp [hdenA.ne', hdenS.ne', hpowA.ne', hpowB.ne']
+  simp only [hcastPred, hcastDenA, hcastDenS] at *
+  ring_nf at *
+  have haQ : (3 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+  nlinarith
+
+theorem positiveSmallFirstReserveThreeHalvesEnvelopeTerm_le_one
+    {a : Nat} (ha : 2000 < a) :
+    positiveSmallFirstReserveThreeHalvesEnvelopeTerm a ≤ 1 := by
+  have hbase :
+      positiveSmallFirstReserveThreeHalvesEnvelopeTerm 2001 ≤ 1 := by
+    -- Finite rational base check for the subsequent symbolic monotonicity
+    -- argument over all `a ≥ 2001`.
+    native_decide
+  have ha2001 : 2001 ≤ a := by omega
+  exact Nat.le_induction
+    (m := 2001)
+    (P := fun n _ => positiveSmallFirstReserveThreeHalvesEnvelopeTerm n ≤ 1)
+    hbase
+    (fun n hn ih =>
+      (positiveSmallFirstReserveThreeHalvesEnvelopeTerm_succ_le
+        (a := n) (by omega : 3 ≤ n)).trans ih)
+    a ha2001
+
+theorem positiveSmallFirstReserveThreeHalvesEnvelopeUnit
+    {a : Nat} (ha : 2000 < a) :
+    (800000000 : ℚ) *
+        (positiveSmallEntropyShadowBaseTerm a 1 *
+          positiveSmallFirstReserveThreeHalvesExpBound a)
+      ≤ 1 := by
+  exact positiveSmallFirstReserveThreeHalvesEnvelopeTerm_le_one ha
+
+theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves
+    (hExp :
+      ∀ {a : Nat}, 2000 < a →
+        positiveSmallLargeExp a 1
+          ≤ positiveSmallFirstReserveThreeHalvesExpBound a) :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound where
+  smallFirstLargeExp_le := hExp
+  smallFirstEnvelopeUnit := by
+    intro a ha
+    exact positiveSmallFirstReserveThreeHalvesEnvelopeUnit ha
+
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :

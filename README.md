@@ -233,7 +233,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   bounds and entropy-shadow base-times-envelope unit budgets; this records the
   reserve-envelope estimate that is implicit in the TeX write-up as a named
   Lean obligation.  Generated final assemblies can target it with
-  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`.  For the
+  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`.  The small
+  first-reserve budget side is partially closed: Lean proves
+  `Prop51.positiveSmallFirstReserveThreeHalvesEnvelopeUnit`, so the theorem
+  `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves`
+  reduces that atom to the single exponential-envelope estimate
+  `positiveSmallLargeExp a 1 ≤ (3/2)^a`.  For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
   factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this

@@ -680,7 +680,13 @@ Status:
       `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`; this
       records the TeX reserve-envelope step as separate exponential-envelope
       and base-times-envelope unit-budget obligations before converting back
-      to the same reduced tail route.  For the lower-tempered
+      to the same reduced tail route.  The small first-reserve budget side is
+      now closed under the concrete envelope `(3/2)^a` by
+      `positiveSmallFirstReserveThreeHalvesEnvelopeUnit`; the constructor
+      `positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves`
+      leaves only the analytic bound
+      `positiveSmallLargeExp a 1 ≤ (3/2)^a` for that reserve atom.  For the
+      lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
       is too strong near the split.  The remaining official target is the
