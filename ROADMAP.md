@@ -860,6 +860,9 @@ Status:
       The new upper-middle constructors can be used when the remaining atom
       theorem proves only `5 * r < 3 * a`; the far upper branch is supplied by
       Lean before reassembling the same refined atomic bounds audit.
+      Generator support is available through the corresponding
+      `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-*`
+      flags, including the closed-reserve solo-envelope endpoint.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

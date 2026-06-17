@@ -395,6 +395,51 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the sharp-top "
+            "offset interface whose upper reverse exp target only covers the "
+            "middle band, with direct tempered reserve atoms"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-envelope-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the sharp-top "
+            "offset upper-middle exp-target interface with tempered reserve "
+            "envelopes"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-reserve-envelope-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the sharp-top "
+            "offset upper-middle exp-target interface with concrete "
+            "(10/7)^a endpoint envelopes"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the sharp-top "
+            "offset upper-middle exp-target interface after the concrete "
+            "endpoint reserve budgets are closed in Lean"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the sharp-top "
+            "offset upper-middle exp-target interface after endpoint reserves "
+            "and the solo scalar budget are closed in Lean"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -603,6 +648,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_reserve_envelope_bounds,
         args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_bounds,
         args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds,
+        args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds,
+        args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds,
+        args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds,
+        args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds,
+        args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -1120,6 +1170,9 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "Pass `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`",
         "after the endpoint reserves and solo scalar budget are closed for",
         "those exp targets.",
+        "Pass `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-bounds`",
+        "or its envelope, concrete `(10/7)^a`, closed-reserve, or solo-envelope",
+        "variants when the upper reverse exp target only covers the middle band.",
         "-/",
     ]
 
@@ -1193,6 +1246,26 @@ def final_tail_type(args: argparse.Namespace) -> str:
         return (
             "PositiveSaddleLargeTailTemperedSharpTopOffsetExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
         )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveEnvelopeBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsReserveEnvelopeBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
+        )
     if args.final_tail_refined_atomic_bounds:
         return "PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate"
     if args.final_tail_atomic_bounds:
@@ -1231,11 +1304,17 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_reserve_envelope_bounds
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_bounds
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
     ):
         if (
             args.final_tail_tempered_raw_exp_ratio_ten_sevenths_closed_reserve_solo_envelope_bounds
             or args.final_tail_tempered_raw_exp_crossmul_ten_sevenths_closed_reserve_solo_envelope_bounds
             or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
+            or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
         ):
             return [
                 "    {smallXBound smallYBound temperedXBound temperedYBound :",
@@ -1273,6 +1352,7 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
         elif (
             args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds
             or args.final_tail_tempered_sharp_top_offset_exp_target_tempered_reserve_envelope_bounds
+            or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds
         ):
             lines.extend(
                 [
@@ -1317,6 +1397,11 @@ def final_tail_arg(args: argparse.Namespace) -> str:
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_reserve_envelope_bounds
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_bounds
         or args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds
+        or args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds
         or args.final_tail_atomic_parts
         or args.final_tail_bounds_parts
         or args.final_tail_parts
@@ -1837,6 +1922,26 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
     if args.final_tail_tempered_sharp_top_offset_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds:
         emit_args.append(
             "--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-envelope-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-reserve-envelope-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds"
         )
     return emit_args
 
@@ -4233,6 +4338,21 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
                 )
                 final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
             elif args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
@@ -4253,6 +4373,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTemperedReserveEnvelopeBoundsAuditCertificate"
                 )
                 final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
             elif args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate"
@@ -4271,6 +4396,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
             elif args.final_tail_tempered_sharp_top_offset_exp_target_tempered_reserve_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTemperedReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveBoundsAuditCertificate"
                 )
                 final_arg = "tail"
             elif args.final_tail_raw_cleared_unit_bounds:
@@ -4353,6 +4483,21 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
             )
             final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_reserve_envelope_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsReserveEnvelopeBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
+            )
+            final_arg = "tail"
         elif args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
@@ -4373,6 +4518,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTemperedReserveEnvelopeBoundsAuditCertificate"
             )
             final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_envelope_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveEnvelopeBoundsAuditCertificate"
+            )
+            final_arg = "tail"
         elif args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate"
@@ -4391,6 +4541,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         elif args.final_tail_tempered_sharp_top_offset_exp_target_tempered_reserve_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetExpTargetTemperedReserveBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_upper_middle_exp_target_tempered_reserve_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetUpperMiddleExpTargetTemperedReserveBoundsAuditCertificate"
             )
             final_arg = "tail"
         elif args.final_tail_refined_atomic_bounds:

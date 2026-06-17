@@ -440,6 +440,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserves`,
   its envelope analogue, and the corresponding bounds-level wrappers; these
   replace the full upper exp-target field by the middle-band-only field above.
+  The generator exposes these reduced upper-middle wrappers with
+  `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-tempered-reserve-bounds`,
+  its tempered-reserve-envelope and `(10/7)^a` variants, and the most reduced
+  `--final-tail-tempered-sharp-top-offset-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
