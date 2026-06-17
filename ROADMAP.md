@@ -663,7 +663,13 @@ Status:
       `positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch`, packages it
       as `positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`, and
       then uses decreasingness of the small large-exp factor to restore the
-      original raw-cleared small-step field.  For the lower-tempered
+      original raw-cleared small-step field.  The constructors
+      `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios`
+      and
+      `positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedRawExpRatios`
+      now fill this closed small-step atom automatically, leaving the two
+      tempered ratio atoms and three reserve atoms as the live refined
+      candidate obligations.  For the lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
       is too strong near the split.  The remaining official target is the

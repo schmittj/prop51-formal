@@ -216,7 +216,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   and packages it as
   `Prop51.positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`.  The
   conversion theorem then restores the original raw-cleared small-step field
-  using monotonicity of the small large-exp factor.  For the lower-tempered
+  using monotonicity of the small large-exp factor.  Constructors such as
+  `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios`
+  and
+  `Prop51.positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedRawExpRatios`
+  fill this closed small-step atom automatically, so the live refined
+  candidate obligations are the two tempered ratio atoms and the three
+  reserve atoms.  For the lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
   factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this
   monotonicity is useful bookkeeping, but the pure raw-base ratio alone is
