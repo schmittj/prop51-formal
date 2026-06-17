@@ -7533,6 +7533,63 @@ theorem partialExpUpper_mul_one_add_le_of_add {y d : ℚ} {T : Nat}
     (y := y) (d := d) (T := T) hy hd hT hyt
   nlinarith
 
+/-- Three equal first-order shifts give a quadratic-strength growth estimate
+for `partialExpUpper`, close enough to the true exponential behavior for the
+large top-offset quotient budgets. -/
+theorem partialExpUpper_mul_one_add_third_pow_three_le_of_add
+    {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d / 3)^3 * partialExpUpper y T ≤ partialExpUpper (y+d) T := by
+  let e : ℚ := d / 3
+  have he0 : 0 ≤ e := by
+    dsimp [e]
+    positivity
+  have hbase1 : y + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase2 : y + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase3 : y + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hy1 : 0 ≤ y + e := add_nonneg hy he0
+  have hy2 : 0 ≤ y + e + e := add_nonneg hy1 he0
+  have hstep0 :
+      (1 + e) * partialExpUpper y T ≤ partialExpUpper (y + e) T :=
+    partialExpUpper_mul_one_add_le_of_add
+      (y := y) (d := e) (T := T) hy he0 hT hbase1
+  have hstep1 :
+      (1 + e) * partialExpUpper (y + e) T
+        ≤ partialExpUpper (y + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e) (d := e) (T := T) hy1 he0 hT hbase2
+  have hstep2 :
+      (1 + e) * partialExpUpper (y + e + e) T
+        ≤ partialExpUpper (y + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e) (d := e) (T := T) hy2 he0 hT hbase3
+  have hfactor0 : 0 ≤ 1 + e := by linarith
+  have hfactorSq0 : 0 ≤ (1 + e)^2 := sq_nonneg (1 + e)
+  calc
+    (1 + d / 3)^3 * partialExpUpper y T
+        = (1 + e)^2 * ((1 + e) * partialExpUpper y T) := by
+            dsimp [e]
+            ring
+    _ ≤ (1 + e)^2 * partialExpUpper (y + e) T :=
+          mul_le_mul_of_nonneg_left hstep0 hfactorSq0
+    _ = (1 + e) * ((1 + e) * partialExpUpper (y + e) T) := by
+          ring
+    _ ≤ (1 + e) * partialExpUpper (y + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep1 hfactor0
+    _ ≤ partialExpUpper (y + e + e + e) T := hstep2
+    _ = partialExpUpper (y+d) T := by
+          congr 1
+          dsimp [e]
+          ring
+
 /-- Negative-binomial shell used to bound the variable-cutoff
 `partialExpUpper ((a : ℚ) * q) a`.
 
