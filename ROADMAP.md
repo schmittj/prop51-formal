@@ -897,16 +897,16 @@ Status:
       for the entire prefix strip is already proved in
       `PositiveSaddlePrefixRawBudget.lean` as
       `positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate`
-      with one chunk `(aLen,tLen) = (999,10)`.  The remaining prefix-side
-      obligation is therefore the separate large-exp quotient certificate;
-      proof production for that side now has the reduced checker
+      with one chunk `(aLen,tLen) = (999,10)`.  The separate prefix-side
+      large-exp quotient certificate is also now proved; proof production for
+      that side uses the reduced checker
       `checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk` and the
       converter
       `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`.
       The checker uses a cutoff-`700` numerator majorant and an `800`-term
       denominator prefix instead of expanding the full `8a` quotient shell.
       `PositiveSaddlePrefixExpRatio.lean`,
-      `PositiveSaddlePrefixExpRatio2.lean`, and
+      `PositiveSaddlePrefixExpRatio2.lean`,
       `PositiveSaddlePrefixExpRatio3.lean`,
       `PositiveSaddlePrefixExpRatio4.lean`, and
       `PositiveSaddlePrefixExpRatio5.lean` now contain all twenty generated

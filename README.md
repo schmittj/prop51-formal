@@ -480,15 +480,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate`
   for one chunk covering `a = 2001..2999`, `t = 0..9`.  The target is
   deliberately row-dependent: the earlier constant `2447/2500` is too strong
-  for the large-exp quotient near `a = 3000`.  The remaining
-  prefix input on this route is the explicit large-exp quotient certificate.
-  It now has a reduced proof-production checker
+  for the large-exp quotient near `a = 3000`.  The corresponding explicit
+  large-exp quotient certificate now has a reduced proof-production checker
   `Prop51.checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk`,
   which compares a cutoff-`700` numerator majorant to the target times an
   `800`-term denominator prefix and converts through
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`;
   `Prop51.PositiveSaddlePrefixExpRatio`,
-  `Prop51.PositiveSaddlePrefixExpRatio2`, and
+  `Prop51.PositiveSaddlePrefixExpRatio2`,
   `Prop51.PositiveSaddlePrefixExpRatio3`,
   `Prop51.PositiveSaddlePrefixExpRatio4`, and
   `Prop51.PositiveSaddlePrefixExpRatio5` contain all twenty generated 50-row
