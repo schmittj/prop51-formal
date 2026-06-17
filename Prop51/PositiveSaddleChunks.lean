@@ -6324,6 +6324,107 @@ theorem PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsA
   cert.toTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
     |>.toLargeTailAuditCertificate
 
+/-- Concrete endpoint-envelope version of
+`PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate`.
+
+The two tempered endpoint exponential envelopes are fixed to the sharp
+`(10/7)^a` bound supplied in `PositiveSaddle.lean`, so generated proof atoms
+only need to provide the two remaining base-times-envelope unit budgets. -/
+structure PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ)
+    (soloYBound : Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound
+  temperedLowerRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate
+  temperedUpperReverseRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate
+  temperedLowerFirstEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a
+              (max 1 (posTemperedCutoff a + 1)) *
+                positiveTemperedReserveTenSeventhsExpBound a))
+        ≤ 1
+  temperedUpperLastEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+              positiveTemperedReserveTenSeventhsExpBound a))
+        ≤ 1
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate.toTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound
+      positiveTemperedReserveTenSeventhsExpBound
+      positiveTemperedReserveTenSeventhsExpBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  temperedLowerRawExpRatio := cert.temperedLowerRawExpRatio
+  temperedUpperReverseRawExpRatio := cert.temperedUpperReverseRawExpRatio
+  temperedLowerFirstEnvelope :=
+    positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths
+      cert.temperedLowerFirstEnvelopeUnit
+  temperedUpperLastEnvelope :=
+    positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths
+      cert.temperedUpperLastEnvelopeUnit
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate.toTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate
+    |>.toTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+    |>.toRefinedAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate.toLargeTailAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
 /-- Large-tail bounds certificate with cross-multiplied tempered adjacent-step
 atoms and with the small first-reserve atom filled automatically.
 
@@ -6507,6 +6608,126 @@ theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoun
       PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
         smallXBound smallYBound temperedXBound temperedYBound soloYBound
         temperedLowerFirstExpBound temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
+/-- Concrete `(10/7)^a` endpoint-envelope version of
+`PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`.
+
+This is the current most convenient generated large-tail shape: the two
+tempered adjacent-step atoms are denominator-cleared, and the two endpoint
+reserve atoms only need the remaining base-times-`(10/7)^a` unit budgets. -/
+structure PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ)
+    (soloYBound : Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound
+  temperedLowerRawExpCrossmul :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate
+  temperedUpperReverseRawExpCrossmul :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate
+  temperedLowerFirstEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a
+              (max 1 (posTemperedCutoff a + 1)) *
+                positiveTemperedReserveTenSeventhsExpBound a))
+        ≤ 1
+  temperedUpperLastEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+              positiveTemperedReserveTenSeventhsExpBound a))
+        ≤ 1
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound
+      positiveTemperedReserveTenSeventhsExpBound
+      positiveTemperedReserveTenSeventhsExpBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  temperedLowerRawExpCrossmul := cert.temperedLowerRawExpCrossmul
+  temperedUpperReverseRawExpCrossmul := cert.temperedUpperReverseRawExpCrossmul
+  temperedLowerFirstEnvelope :=
+    positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths
+      cert.temperedLowerFirstEnvelopeUnit
+  temperedUpperLastEnvelope :=
+    positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths
+      cert.temperedUpperLastEnvelopeUnit
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
+    |>.toTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  temperedLowerRawExpRatio :=
+    cert.temperedLowerRawExpCrossmul.toTemperedLowerRawExpRatioCertificate
+  temperedUpperReverseRawExpRatio :=
+    cert.temperedUpperReverseRawExpCrossmul
+      |>.toTemperedUpperReverseRawExpRatioCertificate
+  temperedLowerFirstEnvelopeUnit := cert.temperedLowerFirstEnvelopeUnit
+  temperedUpperLastEnvelopeUnit := cert.temperedUpperLastEnvelopeUnit
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
+    |>.toRefinedAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate.toLargeTailAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
 

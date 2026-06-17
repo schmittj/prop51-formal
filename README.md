@@ -265,6 +265,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`;
   they leave only the two explicit endpoint
   entropy-shadow-base-times-`(10/7)^a` unit budgets.
+  The audit-facing wrappers
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
+  expose exactly those two endpoint unit-budget fields, with quotient-form or
+  denominator-cleared tempered adjacent-step atoms respectively.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
@@ -308,7 +314,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds` or
   `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds`
   for the same reduced tail routes with denominator-cleared tempered
-  adjacent-step atoms.
+  adjacent-step atoms.  Use
+  `--final-tail-tempered-raw-exp-ratio-ten-sevenths-reserve-envelope-bounds`
+  or
+  `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-reserve-envelope-bounds`
+  for the concrete `(10/7)^a` endpoint-envelope variants.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

@@ -734,6 +734,12 @@ Status:
       `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`
       leave only the two endpoint
       entropy-shadow-base-times-`(10/7)^a` unit budgets.
+      The audit-facing wrappers
+      `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
+      and
+      `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
+      now expose exactly those two endpoint unit-budget fields, using either
+      quotient-form or denominator-cleared tempered adjacent-step atoms.
       Lean now also provides cross-multiplied versions of those two tempered
       quotient-step atoms,
       `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`
@@ -746,6 +752,10 @@ Status:
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
       `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds`, and
       `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds`.
+      The concrete endpoint-envelope generator flags are
+      `--final-tail-tempered-raw-exp-ratio-ten-sevenths-reserve-envelope-bounds`
+      and
+      `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-reserve-envelope-bounds`.
       If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
