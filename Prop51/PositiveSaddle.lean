@@ -13587,10 +13587,12 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCe
 
 Lean note: the fully separated sharp ten-offset large-exp target is slightly
 too strong in the short prefix just above `a = 2000`.  This interface keeps
-the original raw-exp adjacent-step inequality combined on `a < 3000`, where
-the raw power-product slack is needed, and uses the separated sharp
-ten-offset target only for `3000 ≤ a`.  The public output is still the same
-raw-exp ratio certificate consumed by the atomic tail audit. -/
+the original raw-exp adjacent-step inequality combined on the top strip of
+`a < 3000`, where the raw power-product slack is needed, and uses the
+separated sharp ten-offset target only for `3000 ≤ a`.  The front subrange is
+still filled in Lean by the proved `3 * (r+1) ≤ a` monotonicity target.  The
+public output is the same raw-exp ratio certificate consumed by the atomic
+tail audit. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate :
     Prop where
   lowerSharpTopOffsetExpQuotientTargetCrossmulLarge :
@@ -13599,15 +13601,14 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawEx
         positiveTemperedLargeExp a (a / 3 + t + 1)
           ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
             positiveTemperedLargeExp a (a / 3 + t)
-  lowerPrefixRawExpCrossmul :
-    ∀ {a r : Nat}, 2000 < a → a < 3000 →
-      max 1 (posTemperedCutoff a + 1) ≤ r →
-      r < positiveLargeExpTemperedSplit a →
+  lowerPrefixTopOffsetRawExpCrossmul :
+    ∀ {a t : Nat}, 2000 < a → a < 3000 → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
         ((4 * a : Nat) : ℚ) *
-            (positiveEntropyShadowBaseStepRawQuotient a r *
-              positiveTemperedLargeExp a (r + 1))
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              positiveTemperedLargeExp a (a / 3 + t + 1))
           ≤ ((4 * a - 1 : Nat) : ℚ) *
-            positiveTemperedLargeExp a r
+            positiveTemperedLargeExp a (a / 3 + t)
 
 theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate.toSharpExpQuotient_of_large
     (cert :
@@ -13739,27 +13740,49 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpC
   temperedLowerRawExpRatio := by
     intro a r ha hrlo hrhi
     by_cases hprefix : a < 3000
-    · have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
-      have hrMem : r ∈ positiveKRange a :=
-        mem_positiveKRange.mpr
-          ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
-      have hEpos : 0 < positiveTemperedLargeExp a r :=
-        positiveTemperedLargeExp_pos_of_large ha hrMem
-      calc
-        ((4 * a : Nat) : ℚ) *
-            (positiveEntropyShadowBaseStepRawQuotient a r *
-              (positiveTemperedLargeExp a (r + 1) /
-                positiveTemperedLargeExp a r))
-            =
-          (((4 * a : Nat) : ℚ) *
-            (positiveEntropyShadowBaseStepRawQuotient a r *
-              positiveTemperedLargeExp a (r + 1))) /
-            positiveTemperedLargeExp a r := by
-              ring
-        _ ≤ ((4 * a - 1 : Nat) : ℚ) := by
-              rw [div_le_iff₀ hEpos]
-              simpa [mul_assoc, mul_left_comm, mul_comm] using
-                cert.lowerPrefixRawExpCrossmul ha hprefix hrlo hrhi
+    · by_cases hfront : 3 * (r + 1) ≤ a
+      · exact positiveTemperedLowerRawExpRatio_of_rawTwoUpper_sharpExpQuotient
+          ha hrlo hrhi
+          (positiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate_closed
+            |>.lowerRawTwoUpper ha hrlo hrhi)
+          (positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_three_mul_succ_le
+            ha hrlo hrhi hfront)
+      · have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+        have hrMem : r ∈ positiveKRange a :=
+          mem_positiveKRange.mpr
+            ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+        have hEpos : 0 < positiveTemperedLargeExp a r :=
+          positiveTemperedLargeExp_pos_of_large ha hrMem
+        let t := r - a / 3
+        have htop : a < 3 * (r + 1) := by omega
+        have hdivlt : a / 3 < r + 1 := by
+          exact (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mpr
+            (by simpa [Nat.mul_comm] using htop)
+        have hqle : a / 3 ≤ r := by omega
+        have hr_eq : r = a / 3 + t := by
+          dsimp [t]
+          omega
+        have ht : t < 10 := by
+          dsimp [t]
+          unfold positiveLargeExpTemperedSplit at hrhi
+          omega
+        have hrlo' : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t := by
+          simpa [hr_eq] using hrlo
+        calc
+          ((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawQuotient a r *
+                (positiveTemperedLargeExp a (r + 1) /
+                  positiveTemperedLargeExp a r))
+              =
+            (((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawQuotient a r *
+                positiveTemperedLargeExp a (r + 1))) /
+              positiveTemperedLargeExp a r := by
+                ring
+          _ ≤ ((4 * a - 1 : Nat) : ℚ) := by
+                rw [div_le_iff₀ hEpos]
+                simpa [hr_eq, mul_assoc, mul_left_comm, mul_comm] using
+                  cert.lowerPrefixTopOffsetRawExpCrossmul ha hprefix ht hrlo'
     · have haLarge : 3000 ≤ a := by omega
       exact positiveTemperedLowerRawExpRatio_of_rawTwoUpper_sharpExpQuotient
         ha hrlo hrhi

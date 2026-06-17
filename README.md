@@ -448,8 +448,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate`.
   It records the deliberate refinement that the separated lower sharp-offset
   large-exp target is too strong in the short prefix `2000 < a < 3000`, so
-  that prefix is checked by the original combined raw-exp crossmul inequality,
-  while `3000 ≤ a` uses the separated ten-offset large-exp target.  The
+  the finite-prefix top strip is checked by the original combined raw-exp
+  crossmul inequality, while the front subrange is filled in Lean and
+  `3000 ≤ a` uses the separated ten-offset large-exp target.  The
   corresponding final-style wrapper is
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
   and the generator flag is
