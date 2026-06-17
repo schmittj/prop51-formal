@@ -367,6 +367,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeExpTemperedSplit`.  For that reduced obligation use
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate`,
   whose adapter fills the front subrange automatically.
+  A sharper lower route is also exposed through
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate`:
+  the former is the pure raw power-product estimate giving the envelope
+  `2*(r+1)/(a-r)`, and the latter only has to handle the top strip
+  `a < 3 * (r + 1)`.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

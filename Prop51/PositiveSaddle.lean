@@ -5398,6 +5398,22 @@ theorem positiveEntropyShadowBaseStepRawQuotient_le_upperBound
           dsimp [positiveEntropyShadowBaseStepRawUpperBound, pref]
           ring
 
+/-- Sharper conjectural/proof-production envelope for the raw entropy-shadow
+adjacent quotient.
+
+Compared with `positiveEntropyShadowBaseStepRawUpperBound`, this keeps the
+power-ratio product at its expected `≤ 1` size instead of bounding one side by
+the global `68/25` surrogate.  The actual proof of this sharper envelope is
+kept as a separate certificate field below. -/
+def positiveEntropyShadowBaseStepRawTwoUpperBound (a r : Nat) : ℚ :=
+  (2 : ℚ) * (((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ))
+
+theorem positiveEntropyShadowBaseStepRawTwoUpperBound_nonneg
+    (a r : Nat) :
+    0 ≤ positiveEntropyShadowBaseStepRawTwoUpperBound a r := by
+  unfold positiveEntropyShadowBaseStepRawTwoUpperBound
+  positivity
+
 theorem mul_rawQuotient_mul_le_of_mul_num_le
     {a r : Nat} {q x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
     (h :
@@ -12969,6 +12985,186 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulC
     PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
   cert.toTemperedLowerExpTargetCrossmulCertificate.toTemperedLowerRawExpRatioCertificate
 
+/-- Proof-production certificate for the sharper lower-branch raw quotient
+envelope.  This is separated from the large-exp quotient estimate because it
+is a pure rational power-product bound, independent of `partialExpUpper`. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate :
+    Prop where
+  lowerRawTwoUpper :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        positiveEntropyShadowBaseStepRawQuotient a r
+          ≤ positiveEntropyShadowBaseStepRawTwoUpperBound a r
+
+/-- Large-exp quotient target after using the sharper raw envelope
+`positiveEntropyShadowBaseStepRawTwoUpperBound`. -/
+def positiveTemperedLowerSharpExpQuotientTarget (a r : Nat) : ℚ :=
+  (1 / 2 : ℚ) *
+    (((posJ a r : Nat) : ℚ) / ((r + 1 : Nat) : ℚ)) *
+      positiveLargeExpTemperedRatio a
+
+theorem positiveTemperedLowerSharpExpQuotientTarget_budget
+    {a r : Nat} (ha : 0 < a) (hrj : 0 < posJ a r) :
+    ((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawTwoUpperBound a r *
+          positiveTemperedLowerSharpExpQuotientTarget a r)
+      = ((4 * a - 1 : Nat) : ℚ) := by
+  have hrSuccPos :
+      (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hjpos : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast hrj
+  have hdenPos :
+      (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  unfold positiveEntropyShadowBaseStepRawTwoUpperBound
+    positiveTemperedLowerSharpExpQuotientTarget
+    positiveLargeExpTemperedRatio
+  field_simp [hrSuccPos.ne', hjpos.ne', hdenPos.ne']
+  ring
+
+theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
+    {a r : Nat} (ha : 0 < a)
+    (hgap :
+      2 * (r + 1) * (4 * a)
+        ≤ posJ a r * (4 * a - 1)) :
+    1 ≤ positiveTemperedLowerSharpExpQuotientTarget a r := by
+  have hrSuccPos :
+      (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hdenPos :
+      (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  have hgapQ :
+      (2 : ℚ) * ((r + 1 : Nat) : ℚ) * ((4 * a : Nat) : ℚ)
+        ≤ ((posJ a r : Nat) : ℚ) * ((4 * a - 1 : Nat) : ℚ) := by
+    exact_mod_cast hgap
+  unfold positiveTemperedLowerSharpExpQuotientTarget
+    positiveLargeExpTemperedRatio
+  field_simp [hrSuccPos.ne', hdenPos.ne']
+  ring_nf at hgapQ ⊢
+  exact hgapQ
+
+theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_three_mul_succ_le
+    {a r : Nat} (ha : 1 ≤ a) (hfront : 3 * (r + 1) ≤ a) :
+    1 ≤ positiveTemperedLowerSharpExpQuotientTarget a r := by
+  apply positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
+    (by omega : 0 < a)
+  have hleA : r ≤ a := by omega
+  unfold posJ
+  omega
+
+theorem positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_target_ge_one
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (htarget : 1 ≤ positiveTemperedLowerSharpExpQuotientTarget a r) :
+    positiveTemperedLargeExp a (r + 1) /
+        positiveTemperedLargeExp a r
+      ≤ positiveTemperedLowerSharpExpQuotientTarget a r :=
+  (positiveTemperedLargeExp_succ_div_le_one_of_lower_branch
+    ha hrlo hrhi).trans htarget
+
+theorem positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_three_mul_succ_le
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (hfront : 3 * (r + 1) ≤ a) :
+    positiveTemperedLargeExp a (r + 1) /
+        positiveTemperedLargeExp a r
+      ≤ positiveTemperedLowerSharpExpQuotientTarget a r :=
+  positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_target_ge_one
+    ha hrlo hrhi
+    (positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_three_mul_succ_le
+      (by omega : 1 ≤ a) hfront)
+
+/-- Denominator-cleared lower large-exp target using the sharper raw envelope.
+The front subrange `3 * (r+1) ≤ a` is closed automatically by monotonicity;
+the field is only the constant-width top strip next to
+`positiveLargeExpTemperedSplit`. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate :
+    Prop where
+  lowerSharpTopExpQuotientTargetCrossmul :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+      a < 3 * (r + 1) →
+        positiveTemperedLargeExp a (r + 1)
+          ≤ positiveTemperedLowerSharpExpQuotientTarget a r *
+            positiveTemperedLargeExp a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate.toSharpExpQuotient
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate) :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        positiveTemperedLargeExp a (r + 1) /
+            positiveTemperedLargeExp a r
+          ≤ positiveTemperedLowerSharpExpQuotientTarget a r := by
+  intro a r ha hrlo hrhi
+  by_cases hfront : 3 * (r + 1) ≤ a
+  · exact positiveTemperedLargeExp_lowerSharpExpQuotientTarget_of_three_mul_succ_le
+      ha hrlo hrhi hfront
+  · have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    rw [div_le_iff₀ hEpos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using
+      cert.lowerSharpTopExpQuotientTargetCrossmul ha hrlo hrhi (by omega)
+
+theorem positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_rawTwoUpper_sharpTopExpTarget
+    (raw :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate)
+    (exp :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate where
+  temperedLowerRawExpRatio := by
+    intro a r ha hrlo hrhi
+    have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨hr1, by omega⟩
+    have hsuccMem : r + 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    have hjposNat : 0 < posJ a r :=
+      posJ_pos_of_le_posKmax (by omega : 1 ≤ a) (by omega : r ≤ posKmax a)
+    have hraw0 :
+        0 ≤ positiveEntropyShadowBaseStepRawTwoUpperBound a r :=
+      positiveEntropyShadowBaseStepRawTwoUpperBound_nonneg a r
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    have hEsucc0 : 0 ≤ positiveTemperedLargeExp a (r + 1) :=
+      positiveTemperedLargeExp_nonneg_of_large ha hsuccMem
+    have hExpQuot0 :
+        0 ≤ positiveTemperedLargeExp a (r + 1) /
+          positiveTemperedLargeExp a r :=
+      div_nonneg hEsucc0 hEpos.le
+    have hprod :
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r)
+          ≤ positiveEntropyShadowBaseStepRawTwoUpperBound a r *
+            positiveTemperedLowerSharpExpQuotientTarget a r :=
+      mul_le_mul
+        (raw.lowerRawTwoUpper ha hrlo hrhi)
+        (exp.toSharpExpQuotient ha hrlo hrhi)
+        hExpQuot0 hraw0
+    calc
+      ((4 * a : Nat) : ℚ) *
+          (positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r))
+          ≤ ((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawTwoUpperBound a r *
+                positiveTemperedLowerSharpExpQuotientTarget a r) :=
+            mul_le_mul_of_nonneg_left hprod (by positivity)
+      _ = ((4 * a - 1 : Nat) : ℚ) :=
+            positiveTemperedLowerSharpExpQuotientTarget_budget
+              (by omega : 0 < a) hjposNat
+
 /-- Factorized upper-tempered reverse adjacent-step target.
 
 This records the reverse ratio as a product of two one-dimensional factors:
@@ -14776,6 +14972,29 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
     temperedUpper
     temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Refined candidate constructor using the sharper lower raw envelope.
+
+The lower tempered step is split into a pure raw quotient envelope
+`positiveEntropyShadowBaseStepRawTwoUpperBound` and a sharp large-exp target
+whose front range `3 * (r+1) ≤ a` is closed automatically. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawTwoSharpTopExpTarget_upperExpTarget_temperedReserves
+    (rawLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves
+    (positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_rawTwoUpper_sharpTopExpTarget
+      rawLower temperedLower)
+    temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
+    temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -14899,6 +15118,29 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
   positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserveEnvelopes
     temperedLower.toTemperedLowerExpTargetCrossmulCertificate
     temperedUpper
+    temperedLowerFirst temperedUpperLast
+
+/-- Envelope version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawTwoSharpTopExpTarget_upperExpTarget_temperedReserves`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawTwoSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (rawLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserveEnvelopes
+    (positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_rawTwoUpper_sharpTopExpTarget
+      rawLower temperedLower)
+    temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
     temperedLowerFirst temperedUpperLast
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
