@@ -10441,6 +10441,145 @@ structure PositiveSaddleLargeTailCandidateUnitReserveCertificate :
               positiveTemperedLargeExp a (posKmax a))
         ≤ 1
 
+/-- Atomic small-regime adjacent-step target for the large-tail candidate
+entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateSmallRawStepCertificate :
+    Prop where
+  smallRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a → 1 ≤ r →
+      r < min (posKmax a) (posSmallCutoff a) →
+        2 * (positiveEntropyShadowBaseStepRawNumerator a r *
+            positiveSmallLargeExp a (r + 1))
+          ≤ positiveSmallLargeExp a r *
+            positiveEntropyShadowBaseStepRawDenominator a r
+
+/-- Atomic lower-tempered adjacent-step target for the large-tail candidate
+entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate :
+    Prop where
+  temperedLowerRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a r *
+              positiveTemperedLargeExp a (r + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveTemperedLargeExp a r *
+              positiveEntropyShadowBaseStepRawDenominator a r
+
+/-- Atomic upper-tempered reverse adjacent-step target for the large-tail
+candidate entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate :
+    Prop where
+  temperedUpperReverseRawStepCleared :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1) *
+            positiveEntropyShadowBaseStepRawDenominator a (r - 1)
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
+              positiveTemperedLargeExp a r)
+
+/-- Atomic small-regime first-term reserve target for the large-tail candidate
+entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :
+    Prop where
+  smallFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+        ≤ 1
+
+/-- Atomic lower-tempered first-term reserve target for the large-tail
+candidate entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
+    Prop where
+  temperedLowerFirstReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1)))
+        ≤ 1
+
+/-- Atomic upper-tempered last-term reserve target for the large-tail candidate
+entropy reserve. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :
+    Prop where
+  temperedUpperLastReserveUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (posKmax a))
+        ≤ 1
+
+/-- Atomic candidate large-tail entropy reserve interface.  This is only a
+proof-production split of the six fields in
+`PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate`;
+each field is one displayed one-dimensional inequality family. -/
+structure PositiveSaddleLargeTailCandidateAtomicCertificate :
+    Prop where
+  smallRawStep :
+    PositiveSaddleLargeTailCandidateSmallRawStepCertificate
+  temperedLowerRawStep :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate
+  temperedUpperReverseRawStep :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate
+  smallFirstReserve :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate
+  temperedLowerFirstReserve :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate
+  temperedUpperLastReserve :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate
+
+/-- Reassembles atomic candidate adjacent-step targets into the grouped step
+certificate. -/
+theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    (small : PositiveSaddleLargeTailCandidateSmallRawStepCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate where
+  smallRawStepCleared := small.smallRawStepCleared
+  temperedLowerRawStepCleared :=
+    temperedLower.temperedLowerRawStepCleared
+  temperedUpperReverseRawStepCleared :=
+    temperedUpper.temperedUpperReverseRawStepCleared
+
+/-- Reassembles atomic candidate reserve targets into the grouped reserve
+certificate. -/
+theorem positiveSaddleLargeTailCandidateUnitReserveCertificate_of_atomic
+    (small : PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate where
+  smallFirstReserveUnit := small.smallFirstReserveUnit
+  temperedLowerFirstReserveUnit :=
+    temperedLower.temperedLowerFirstReserveUnit
+  temperedUpperLastReserveUnit :=
+    temperedUpper.temperedUpperLastReserveUnit
+
+/-- Reassembles the atomic candidate adjacent-step fields. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    cert.smallRawStep cert.temperedLowerRawStep
+    cert.temperedUpperReverseRawStep
+
+/-- Reassembles the atomic candidate reserve fields. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toUnitReserveCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate :=
+  positiveSaddleLargeTailCandidateUnitReserveCertificate_of_atomic
+    cert.smallFirstReserve cert.temperedLowerFirstReserve
+    cert.temperedUpperLastReserve
+
 /-- Reassembles the split large-tail entropy reserve targets into the existing
 raw-cleared unit-reserve certificate. -/
 theorem positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
@@ -10454,6 +10593,14 @@ theorem positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitR
   temperedUpperReverseRawStepCleared :=
     steps.temperedUpperReverseRawStepCleared
   temperedUpperLastReserveUnit := reserves.temperedUpperLastReserveUnit
+
+/-- Reassembles the atomic candidate entropy-reserve target into the existing
+raw-cleared unit-reserve certificate. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedUnitReserveBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate :=
+  positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
+    cert.toRawClearedStepCertificate cert.toUnitReserveCertificate
 
 theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toRawClearedBoundsCertificate
     (cert :

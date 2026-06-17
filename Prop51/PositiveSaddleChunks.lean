@@ -5324,6 +5324,53 @@ theorem PositiveSaddleLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
     positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
       cert.candidateRawClearedSteps cert.candidateUnitReserves
 
+/-- Large-tail audit certificate with the six candidate entropy-reserve
+families split into atomic one-dimensional targets.  This refines
+`PositiveSaddleLargeTailPartsAuditCertificate` only as a proof-production
+interface; the reassembled mathematical certificate is unchanged. -/
+structure PositiveSaddleLargeTailAtomicPartsAuditCertificate : Prop where
+  smallProductRaw : PositiveSaddleLargeTailSmallProductRawCertificate
+  temperedProductRaw : PositiveSaddleLargeTailTemperedProductRawCertificate
+  soloYUnit : PositiveSaddleLargeTailSoloYUnitCertificate
+  candidateSmallRawStep :
+    PositiveSaddleLargeTailCandidateSmallRawStepCertificate
+  candidateTemperedLowerRawStep :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate
+  candidateTemperedUpperReverseRawStep :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate
+  candidateSmallFirstReserve :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate
+  candidateTemperedLowerFirstReserve :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate
+  candidateTemperedUpperLastReserve :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateAtomicCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleLargeTailCandidateAtomicCertificate where
+  smallRawStep := cert.candidateSmallRawStep
+  temperedLowerRawStep := cert.candidateTemperedLowerRawStep
+  temperedUpperReverseRawStep := cert.candidateTemperedUpperReverseRawStep
+  smallFirstReserve := cert.candidateSmallFirstReserve
+  temperedLowerFirstReserve := cert.candidateTemperedLowerFirstReserve
+  temperedUpperLastReserve := cert.candidateTemperedUpperLastReserve
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailPartsAuditCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleLargeTailPartsAuditCertificate where
+  smallProductRaw := cert.smallProductRaw
+  temperedProductRaw := cert.temperedProductRaw
+  soloYUnit := cert.soloYUnit
+  candidateRawClearedSteps :=
+    cert.toCandidateAtomicCertificate.toRawClearedStepCertificate
+  candidateUnitReserves :=
+    cert.toCandidateAtomicCertificate.toUnitReserveCertificate
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailAuditCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
+
 /-- Table-backed exact raw-product wrapper with the remaining finite
 tangent and edge checks also chunked.
 

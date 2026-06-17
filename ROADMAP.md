@@ -616,6 +616,12 @@ Status:
       mathematical change, but it gives the remaining analytic proof work
       smaller Lean interfaces.  The finite generator emits final theorems
       against this split interface with `--emit-final --final-tail-parts`.
+      The still finer
+      `PositiveSaddleLargeTailAtomicPartsAuditCertificate` splits the six
+      candidate entropy-reserve fields into atomic small-step,
+      lower-tempered-step, upper-tempered-step, and three reserve-family
+      certificates; emit final theorems against it with
+      `--emit-final --final-tail-atomic-parts`.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

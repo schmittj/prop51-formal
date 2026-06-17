@@ -5,7 +5,9 @@ The generated theorem only proves the finite `401 <= a <= 2000` Boolean
 checks.  The large-`a` product/solo and split-tempered reserve inputs are
 supplied separately as a `PositiveSaddleLargeTailAuditCertificate`, or as the
 split `PositiveSaddleLargeTailPartsAuditCertificate` when requested for the
-final theorem.
+final theorem.  The still finer
+`PositiveSaddleLargeTailAtomicPartsAuditCertificate` interface can also be
+selected for final theorem emission.
 
 Strategies include:
   * all-chunks: one Boolean per finite family, targeting
@@ -162,6 +164,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-atomic-parts",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the atomic "
+            "PositiveSaddleLargeTailAtomicPartsAuditCertificate interface"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -255,6 +265,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         parser.error(
             "--emit-single-chunk-manifest cannot be combined with "
             "--emit-single-chunk-suite"
+        )
+    if args.final_tail_parts and args.final_tail_atomic_parts:
+        parser.error(
+            "--final-tail-parts cannot be combined with "
+            "--final-tail-atomic-parts"
         )
     if args.emit_single_chunk_suite and args.use_single_chunk_theorems:
         parser.error(
@@ -575,18 +590,21 @@ def emit_header() -> list[str]:
         "This proves only the finite Boolean checks.  Combine it with a",
         "`PositiveSaddleLargeTailAuditCertificate` for the final theorem.",
         "Pass `--final-tail-parts` to target the split large-tail interface.",
+        "Pass `--final-tail-atomic-parts` for the atomic large-tail interface.",
         "-/",
     ]
 
 
 def final_tail_type(args: argparse.Namespace) -> str:
+    if args.final_tail_atomic_parts:
+        return "PositiveSaddleLargeTailAtomicPartsAuditCertificate"
     if args.final_tail_parts:
         return "PositiveSaddleLargeTailPartsAuditCertificate"
     return "PositiveSaddleLargeTailAuditCertificate"
 
 
 def final_tail_arg(args: argparse.Namespace) -> str:
-    if args.final_tail_parts:
+    if args.final_tail_atomic_parts or args.final_tail_parts:
         return "tail.toLargeTailAuditCertificate"
     return "tail"
 

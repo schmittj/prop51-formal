@@ -1083,6 +1083,22 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate
     finite tail.toLargeTailAuditCertificate
 
+/-- Final assembly from the combined-product finite route and the atomic
+large-tail audit interface. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAtomicPartsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen)
+    (tail : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
 /-- Final assembly from the combined-product finite route with fine fixed
 edge `k`-chunks.  The edge atoms are consumed directly through
 `positiveEdgeFixedKChunks`, rather than being assembled back into the older
@@ -1113,6 +1129,22 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
         productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
         tangentKLen edgeKLen)
     (tail : PositiveSaddleLargeTailPartsAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
+/-- Final assembly from the fine fixed-edge route and the atomic large-tail
+audit interface. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicPartsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite tail.toLargeTailAuditCertificate
