@@ -487,9 +487,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   which compares a cutoff-`700` numerator majorant to the target times an
   `800`-term denominator prefix and converts through
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`;
-  `Prop51.PositiveSaddlePrefixExpRatio` and
-  `Prop51.PositiveSaddlePrefixExpRatio2` currently contain the first eight
-  generated 50-row chunks, covering `a = 2001..2400`, `t = 0..9`;
+  `Prop51.PositiveSaddlePrefixExpRatio`,
+  `Prop51.PositiveSaddlePrefixExpRatio2`, and
+  `Prop51.PositiveSaddlePrefixExpRatio3` currently contain the first twelve
+  generated 50-row chunks, covering `a = 2001..2600`, `t = 0..9`;
   the final-style wrapper is
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
   Use
