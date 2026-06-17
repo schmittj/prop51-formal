@@ -177,6 +177,248 @@ theorem positiveSaddleDefaultChunks_lo_ge_401
   rcases hchunk with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
     | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> norm_num
 
+/-! ## Large-tail lower-prefix top-offset chunks -/
+
+/-- Fixed-width `a` chunks for the finite lower hybrid prefix
+`2000 < a < 3000`.
+
+The final chunk may overrun `2999`; the Boolean checker below ignores
+out-of-prefix values. -/
+def positiveLargeTailLowerPrefixAChunks (aLen : Nat) : List (Nat × Nat) :=
+  if aLen = 0 then []
+  else
+    (List.range ((999 + aLen - 1) / aLen)).map fun i =>
+      (2001 + aLen * i, aLen)
+
+theorem mem_positiveLargeTailLowerPrefixAChunks_iff
+    {aLen : Nat} (haLen : 0 < aLen) {chunk : Nat × Nat} :
+    chunk ∈ positiveLargeTailLowerPrefixAChunks aLen ↔
+      ∃ i, i < (999 + aLen - 1) / aLen ∧
+        chunk = (2001 + aLen * i, aLen) := by
+  unfold positiveLargeTailLowerPrefixAChunks
+  rw [if_neg haLen.ne']
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, List.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi, rfl⟩
+
+theorem positiveLargeTailLowerPrefixAChunks_cover
+    {aLen a : Nat} (haLen : 0 < aLen)
+    (ha : 2000 < a) (haPrefix : a < 3000) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveLargeTailLowerPrefixAChunks aLen ∧
+        a ∈ List.range' chunk.1 chunk.2 := by
+  let off := a - 2001
+  let i := off / aLen
+  have hoff_add : 2001 + off = a := by
+    dsimp [off]
+    exact Nat.add_sub_of_le (by omega : 2001 ≤ a)
+  have hoff_lt : off < 999 := by omega
+  have hceil_mul :
+      999 ≤ ((999 + aLen - 1) / aLen) * aLen := by
+    have hmod := Nat.mod_lt (999 + aLen - 1) haLen
+    have hdiv := Nat.div_add_mod (999 + aLen - 1) aLen
+    have hdiv' :
+        ((999 + aLen - 1) / aLen) * aLen +
+            (999 + aLen - 1) % aLen =
+          999 + aLen - 1 := by
+      simpa [Nat.mul_comm] using hdiv
+    omega
+  have hi_lt : i < (999 + aLen - 1) / aLen := by
+    rw [Nat.div_lt_iff_lt_mul haLen]
+    exact hoff_lt.trans_le hceil_mul
+  refine ⟨(2001 + aLen * i, aLen), ?_, ?_⟩
+  · unfold positiveLargeTailLowerPrefixAChunks
+    rw [if_neg haLen.ne']
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi_lt, rfl⟩
+  · have hdiv_le : aLen * i ≤ off := by
+      simpa [i] using Nat.mul_div_le off aLen
+    have hmod_lt : off % aLen < aLen := Nat.mod_lt off haLen
+    have hdiv_add : aLen * i + off % aLen = off := by
+      simpa [i] using Nat.div_add_mod off aLen
+    exact (List.mem_range'_1).mpr ⟨by omega, by omega⟩
+
+/-- Fixed-width chunks for the ten top-offset families `t < 10`. -/
+def positiveLargeTailLowerTopOffsetTChunks (tLen : Nat) :
+    List (Nat × Nat) :=
+  if tLen = 0 then []
+  else
+    (List.range ((10 + tLen - 1) / tLen)).map fun i =>
+      (tLen * i, tLen)
+
+theorem mem_positiveLargeTailLowerTopOffsetTChunks_iff
+    {tLen : Nat} (htLen : 0 < tLen) {chunk : Nat × Nat} :
+    chunk ∈ positiveLargeTailLowerTopOffsetTChunks tLen ↔
+      ∃ i, i < (10 + tLen - 1) / tLen ∧
+        chunk = (tLen * i, tLen) := by
+  unfold positiveLargeTailLowerTopOffsetTChunks
+  rw [if_neg htLen.ne']
+  constructor
+  · intro h
+    rcases List.mem_map.mp h with ⟨i, hi, rfl⟩
+    exact ⟨i, List.mem_range.mp hi, rfl⟩
+  · rintro ⟨i, hi, rfl⟩
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi, rfl⟩
+
+theorem positiveLargeTailLowerTopOffsetTChunks_cover
+    {tLen t : Nat} (htLen : 0 < tLen) (ht : t < 10) :
+    ∃ chunk : Nat × Nat,
+      chunk ∈ positiveLargeTailLowerTopOffsetTChunks tLen ∧
+        t ∈ List.range' chunk.1 chunk.2 := by
+  let i := t / tLen
+  have hceil_mul :
+      10 ≤ ((10 + tLen - 1) / tLen) * tLen := by
+    have hmod := Nat.mod_lt (10 + tLen - 1) htLen
+    have hdiv := Nat.div_add_mod (10 + tLen - 1) tLen
+    have hdiv' :
+        ((10 + tLen - 1) / tLen) * tLen +
+            (10 + tLen - 1) % tLen =
+          10 + tLen - 1 := by
+      simpa [Nat.mul_comm] using hdiv
+    omega
+  have hi_lt : i < (10 + tLen - 1) / tLen := by
+    rw [Nat.div_lt_iff_lt_mul htLen]
+    exact ht.trans_le hceil_mul
+  refine ⟨(tLen * i, tLen), ?_, ?_⟩
+  · unfold positiveLargeTailLowerTopOffsetTChunks
+    rw [if_neg htLen.ne']
+    exact List.mem_map.mpr ⟨i, List.mem_range.mpr hi_lt, rfl⟩
+  · have hdiv_le : tLen * i ≤ t := by
+      simpa [i] using Nat.mul_div_le t tLen
+    have hmod_lt : t % tLen < tLen := Nat.mod_lt t htLen
+    have hdiv_add : tLen * i + t % tLen = t := by
+      simpa [i] using Nat.div_add_mod t tLen
+    exact (List.mem_range'_1).mpr ⟨hdiv_le, by omega⟩
+
+/-- Boolean atom for the combined raw-exp lower hybrid prefix inequality. -/
+def checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul
+    (a t : Nat) : Bool :=
+  decide
+    (((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+          positiveTemperedLargeExp a (a / 3 + t + 1))
+      ≤ ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a (a / 3 + t))
+
+/-- Boolean chunk for the combined raw-exp lower hybrid prefix inequality.
+
+Rows and offsets outside the live prefix/top-offset domain are skipped, so
+chunks may harmlessly overrun both endpoint covers. -/
+def checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk
+    (aLo aLen tLo tLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' tLo tLen).all fun t =>
+      if 2000 < a ∧ a < 3000 ∧ t < 10 ∧
+          max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t then
+        checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul a t
+      else
+        true
+
+theorem checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul_of_chunk
+    {aLo aLen tLo tLen a t : Nat}
+    (h :
+      checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk
+        aLo aLen tLo tLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (ht_mem : t ∈ List.range' tLo tLen)
+    (ha : 2000 < a) (haPrefix : a < 3000) (ht : t < 10)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t) :
+    ((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+          positiveTemperedLargeExp a (a / 3 + t + 1))
+      ≤ ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a (a / 3 + t) := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' tLo tLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y < 10 ∧
+              max 1 (posTemperedCutoff x + 1) ≤ x / 3 + y then
+            checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk]
+        using h)
+  have htAll :
+      ∀ y ∈ List.range' tLo tLen,
+        (if 2000 < a ∧ a < 3000 ∧ y < 10 ∧
+              max 1 (posTemperedCutoff a + 1) ≤ a / 3 + y then
+            checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul a t = true := by
+    have hcond :
+        2000 < a ∧ a < 3000 ∧ t < 10 ∧
+          max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t :=
+      ⟨ha, haPrefix, ht, hrlo⟩
+    have hline := htAll t ht_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  exact of_decide_eq_true (by
+    simpa [checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul]
+      using hcheck)
+
+structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate
+    (aLen tLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  tLenPos : 0 < tLen
+  lowerPrefixTopOffsetRawExpChunk :
+    ∀ {aChunk tChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      tChunk ∈ positiveLargeTailLowerTopOffsetTChunks tLen →
+        checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk
+          aChunk.1 aChunk.2 tChunk.1 tChunk.2 = true
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate.lowerPrefixTopOffsetRawExpCrossmul
+    {aLen tLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate
+        aLen tLen) :
+    ∀ {a t : Nat}, 2000 < a → a < 3000 → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              positiveTemperedLargeExp a (a / 3 + t + 1))
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveTemperedLargeExp a (a / 3 + t) := by
+  intro a t ha haPrefix ht hrlo
+  rcases positiveLargeTailLowerPrefixAChunks_cover
+      cert.aLenPos ha haPrefix with
+    ⟨aChunk, haChunk, haMem⟩
+  rcases positiveLargeTailLowerTopOffsetTChunks_cover
+      cert.tLenPos ht with
+    ⟨tChunk, htChunk, htMem⟩
+  exact checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmul_of_chunk
+    (cert.lowerPrefixTopOffsetRawExpChunk haChunk htChunk)
+    haMem htMem ha haPrefix ht hrlo
+
+structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate
+    (aLen tLen : Nat) : Prop where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge :
+    ∀ {a t : Nat}, 2000 < a → 3000 ≤ a → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        positiveTemperedLargeExp a (a / 3 + t + 1)
+          ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
+            positiveTemperedLargeExp a (a / 3 + t)
+  lowerPrefixTopOffsetRawExpChunks :
+    PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate
+      aLen tLen
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate.toHybridRawExpCertificate
+    {aLen tLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate
+        aLen tLen) :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge :=
+    cert.lowerSharpTopOffsetExpQuotientTargetCrossmulLarge
+  lowerPrefixTopOffsetRawExpCrossmul :=
+    cert.lowerPrefixTopOffsetRawExpChunks.lowerPrefixTopOffsetRawExpCrossmul
+
 /-! ## Row-dependent product `N`-chunks -/
 
 /-- Canonical singleton `N`-chunks for the positive rectangle at a fixed row
@@ -8685,6 +8927,66 @@ theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpT
     (cert :
       PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
         smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
+/-- Chunked-prefix version of the hybrid lower-prefix upper-middle large-tail
+certificate.  The finite `2000 < a < 3000`, `t < 10` lower raw-exp checks
+are supplied through Boolean `(a,t)` chunks, while the large `3000 ≤ a`
+ten-offset lower target remains a direct analytic field. -/
+structure PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    (aLen tLen : Nat)
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N
+  temperedLowerSharpTopOffsetHybridRawExpChunked :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate
+      aLen tLen
+  temperedUpperReverseMiddleExpTarget :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {aLen tLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  temperedLowerSharpTopOffsetHybridRawExp :=
+    cert.temperedLowerSharpTopOffsetHybridRawExpChunked
+      |>.toHybridRawExpCertificate
+  temperedUpperReverseMiddleExpTarget :=
+    cert.temperedUpperReverseMiddleExpTarget
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    {aLen tLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  cert.toTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    |>.toRefinedAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate.toLargeTailAuditCertificate
+    {aLen tLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
 

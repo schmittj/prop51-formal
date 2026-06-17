@@ -455,6 +455,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
   and the generator flag is
   `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+  Certificate producers can also split the finite prefix through the Boolean
+  `(a,t)` chunk checker
+  `Prop51.checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk`, with
+  assembly by
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate`.
+  The corresponding final wrapper is
+  `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
+  exposed by
+  `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

@@ -874,6 +874,14 @@ Status:
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`,
       with generator flag
       `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+      The finite prefix can now be supplied through explicit Boolean `(a,t)`
+      chunks via
+      `checkPositiveTemperedLowerPrefixTopOffsetRawExpCrossmulChunk` and
+      `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate`;
+      the final-style wrapper and generator flag are
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
+      and
+      `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
