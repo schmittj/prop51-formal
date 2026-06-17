@@ -882,6 +882,21 @@ Status:
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
       and
       `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+      The preferred prefix production route now splits this combined atom
+      once more.  It fixes the prefix large-exp quotient target to
+      `positiveTemperedLowerPrefixTopOffsetExpRatioTarget = 2447/2500`,
+      checks the raw-only budget through
+      `checkPositiveTemperedLowerPrefixTopOffsetRawBudgetChunk`, and
+      reassembles with
+      `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate`
+      and
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
+      The raw-only budget for the entire prefix strip is already proved in
+      `PositiveSaddlePrefixRawBudget.lean` as
+      `positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate`
+      with one chunk `(aLen,tLen) = (999,10)`.  The remaining prefix-side
+      obligation is therefore the separate large-exp quotient certificate
+      `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate`.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

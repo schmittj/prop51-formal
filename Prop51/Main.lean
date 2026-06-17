@@ -1767,6 +1767,26 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite tail.toLargeTailAuditCertificate
 
+/-- Final assembly from the row-active finite route and the chunked-prefix
+hybrid ratio/raw-budget upper-middle large-tail interface. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen aLen tLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
 /-- Final assembly from the fine fixed-edge route and the split large-tail
 audit interface. -/
 theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedPartsAuditCertificate
@@ -2380,6 +2400,26 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
         tangentKLen edgeKLen)
     (tail :
       PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
+/-- Final assembly from the fine fixed-edge route and the chunked-prefix
+hybrid ratio/raw-budget upper-middle large-tail interface. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen aLen tLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
         aLen tLen smallXBound smallYBound temperedXBound temperedYBound) :
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate

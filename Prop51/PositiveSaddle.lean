@@ -8178,6 +8178,71 @@ theorem positiveTemperedExponentUpper_lt_largeExpCutoff
           norm_num
           nlinarith
 
+/-- Tail-recursive state for fast evaluation of the finite exponential shell.
+
+The arguments are the number of remaining terms, the current index, the
+accumulated prefix sum, and the current term.  This avoids the deep recursive
+call chain that the first proof-production evaluator created under
+`native_decide` on cutoffs of size `8a`. -/
+def partialExpUpperStateAux (y : ℚ) : Nat → Nat → ℚ → ℚ → ℚ × ℚ
+  | 0, _t, acc, term => (acc, term)
+  | n + 1, t, acc, term =>
+      partialExpUpperStateAux y n (t + 1) (acc + term)
+        (term * y / ((t + 1 : Nat) : ℚ))
+
+theorem partialExpUpperState_next_term (y : ℚ) (t : Nat) :
+    (y^t / (t.factorial : ℚ)) * y / ((t + 1 : Nat) : ℚ) =
+      y^(t + 1) / ((t + 1).factorial : ℚ) := by
+  have hfac : (((t + 1).factorial : Nat) : ℚ) =
+      ((t + 1 : Nat) : ℚ) * (t.factorial : ℚ) := by
+    norm_num [Nat.factorial_succ]
+  have ht_ne : ((t.factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hsucc_ne : (((t + 1 : Nat) : ℚ)) ≠ 0 := by positivity
+  rw [hfac, pow_succ]
+  field_simp [ht_ne, hsucc_ne]
+
+theorem partialExpUpperStateAux_eq (y acc : ℚ) :
+    ∀ n t : Nat,
+      partialExpUpperStateAux y n t acc (y^t / (t.factorial : ℚ)) =
+        (acc + ∑ i ∈ Finset.range n,
+            y^(t + i) / ((t + i).factorial : ℚ),
+          y^(t + n) / ((t + n).factorial : ℚ))
+  | 0, t => by simp [partialExpUpperStateAux]
+  | n + 1, t => by
+      rw [partialExpUpperStateAux]
+      rw [partialExpUpperState_next_term]
+      rw [partialExpUpperStateAux_eq y
+        (acc + y^t / (t.factorial : ℚ)) n (t + 1)]
+      ext
+      · rw [Finset.sum_range_succ' (fun i =>
+          y^(t + i) / ((t + i).factorial : ℚ)) n]
+        ring_nf
+      · simp [Nat.add_comm, Nat.add_left_comm]
+
+/-- Fast evaluator state specialized to the ordinary zero-based prefix. -/
+def partialExpUpperState (y : ℚ) (n : Nat) : ℚ × ℚ :=
+  partialExpUpperStateAux y n 0 0 1
+
+theorem partialExpUpperState_eq (y : ℚ) (n : Nat) :
+    partialExpUpperState y n =
+      ((∑ t ∈ Finset.range n, y^t / (t.factorial : ℚ)),
+        y^n / (n.factorial : ℚ)) := by
+  unfold partialExpUpperState
+  simpa using partialExpUpperStateAux_eq y 0 n 0
+
+/-- Recurrence-based evaluator for `partialExpUpper`.
+
+This is used only for proof production.  The theorem
+`partialExpUpperFast_eq` rewrites it back to the canonical definition. -/
+def partialExpUpperFast (y : ℚ) (T₀ : Nat) : ℚ :=
+  let state := partialExpUpperState y T₀
+  state.1 + state.2 * (1 / (1 - y / (T₀ : ℚ)))
+
+theorem partialExpUpperFast_eq (y : ℚ) (T₀ : Nat) :
+    partialExpUpperFast y T₀ = partialExpUpper y T₀ := by
+  rw [partialExpUpperFast, partialExpUpperState_eq]
+  simp [partialExpUpper]
+
 /-- A concrete variable-cutoff rational exponential factor for the
 large-`a` small branch.  The cutoff grows with `a`, unlike the finite-window
 constant `positiveExpCutoff = 800`. -/
@@ -8190,6 +8255,16 @@ only to put the displayed exponent below the cutoff uniformly on the retained
 range. -/
 def positiveTemperedLargeExp (a k : Nat) : ℚ :=
   partialExpUpper (positiveTemperedExponentUpper a k) (8 * a)
+
+/-- Fast evaluator for `positiveTemperedLargeExp`, definitionally suitable
+for generated Boolean checks. -/
+def positiveTemperedLargeExpFast (a k : Nat) : ℚ :=
+  partialExpUpperFast (positiveTemperedExponentUpper a k) (8 * a)
+
+theorem positiveTemperedLargeExpFast_eq (a k : Nat) :
+    positiveTemperedLargeExpFast a k = positiveTemperedLargeExp a k := by
+  simp [positiveTemperedLargeExpFast, positiveTemperedLargeExp,
+    partialExpUpperFast_eq]
 
 theorem positiveSmallLargeExp_nonneg_of_large
     {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
@@ -13609,6 +13684,128 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawEx
               positiveTemperedLargeExp a (a / 3 + t + 1))
           ≤ ((4 * a - 1 : Nat) : ℚ) *
             positiveTemperedLargeExp a (a / 3 + t)
+
+/-- Uniform prefix-strip large-exp quotient target.
+
+Lean note: the exact prefix raw-exp atoms are too large for `native_decide`
+because they expand `partialExpUpper` with cutoff `8a`.  The official split
+below records the intended replacement: a raw-only finite budget against the
+constant `2447/2500`, plus a separate proof that the large-exp quotient on the
+same ten-offset strip is bounded by this constant. -/
+def positiveTemperedLowerPrefixTopOffsetExpRatioTarget : ℚ :=
+  2447 / 2500
+
+/-- Prefix top-strip large-exp quotient bound left as the analytic/numeric
+input after extracting the raw-only finite budget. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate :
+    Prop where
+  lowerPrefixTopOffsetExpRatio :
+    ∀ {a t : Nat}, 2000 < a → a < 3000 → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        positiveTemperedLargeExp a (a / 3 + t + 1) /
+            positiveTemperedLargeExp a (a / 3 + t)
+          ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget
+
+/-- Raw-only prefix top-strip budget against
+`positiveTemperedLowerPrefixTopOffsetExpRatioTarget`.  Unlike
+`lowerPrefixTopOffsetRawExpCrossmul`, this field contains no
+`partialExpUpper` factor and is therefore a feasible finite Boolean target. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetCertificate :
+    Prop where
+  lowerPrefixTopOffsetRawBudget :
+    ∀ {a t : Nat}, 2000 < a → a < 3000 → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              positiveTemperedLowerPrefixTopOffsetExpRatioTarget)
+          ≤ ((4 * a - 1 : Nat) : ℚ)
+
+/-- Hybrid lower-tempered target with the prefix strip split into a raw finite
+budget and a separate large-exp quotient bound. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCertificate :
+    Prop where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge :
+    ∀ {a t : Nat}, 2000 < a → 3000 ≤ a → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        positiveTemperedLargeExp a (a / 3 + t + 1)
+          ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
+            positiveTemperedLargeExp a (a / 3 + t)
+  lowerPrefixTopOffsetExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate
+  lowerPrefixTopOffsetRawBudget :
+    PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetCertificate
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCertificate.toHybridRawExpCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge :=
+    cert.lowerSharpTopOffsetExpQuotientTargetCrossmulLarge
+  lowerPrefixTopOffsetRawExpCrossmul := by
+    intro a t ha hprefix ht hrlo
+    have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hrMem : a / 3 + t ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨le_trans (le_max_left _ _) hrlo, by
+          unfold positiveLargeExpTemperedSplit at hsplitUpper
+          omega⟩
+    have hEpos : 0 < positiveTemperedLargeExp a (a / 3 + t) :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    have hr1 : 1 ≤ a / 3 + t := le_trans (le_max_left _ _) hrlo
+    have hj2 : 2 ≤ posJ a (a / 3 + t) :=
+      two_le_posJ_of_le_posKmax_of_large
+        (by omega : 20 ≤ a) (mem_positiveKRange.mp hrMem).2
+    have hraw0 :
+        0 ≤ positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) :=
+      (positiveEntropyShadowBaseStepRawQuotient_pos hr1 hj2).le
+    have hquot :
+        positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+            (positiveTemperedLargeExp a (a / 3 + t + 1) /
+              positiveTemperedLargeExp a (a / 3 + t))
+          ≤ positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              positiveTemperedLowerPrefixTopOffsetExpRatioTarget :=
+      mul_le_mul_of_nonneg_left
+        (cert.lowerPrefixTopOffsetExpRatio.lowerPrefixTopOffsetExpRatio
+          ha hprefix ht hrlo) hraw0
+    have hratio :
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              (positiveTemperedLargeExp a (a / 3 + t + 1) /
+                positiveTemperedLargeExp a (a / 3 + t)))
+          ≤ ((4 * a - 1 : Nat) : ℚ) := by
+      calc
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              (positiveTemperedLargeExp a (a / 3 + t + 1) /
+                positiveTemperedLargeExp a (a / 3 + t)))
+            ≤ ((4 * a : Nat) : ℚ) *
+                (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+                  positiveTemperedLowerPrefixTopOffsetExpRatioTarget) :=
+              mul_le_mul_of_nonneg_left hquot (by positivity)
+        _ ≤ ((4 * a - 1 : Nat) : ℚ) :=
+              cert.lowerPrefixTopOffsetRawBudget.lowerPrefixTopOffsetRawBudget
+                ha hprefix ht hrlo
+    have hdiv :
+        (((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+              positiveTemperedLargeExp a (a / 3 + t + 1))) /
+          positiveTemperedLargeExp a (a / 3 + t)
+          ≤ ((4 * a - 1 : Nat) : ℚ) := by
+      have hrewrite :
+          (((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+                positiveTemperedLargeExp a (a / 3 + t + 1))) /
+            positiveTemperedLargeExp a (a / 3 + t)
+            =
+          ((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
+                (positiveTemperedLargeExp a (a / 3 + t + 1) /
+                  positiveTemperedLargeExp a (a / 3 + t))) := by
+        field_simp [hEpos.ne']
+      rw [hrewrite]
+      exact hratio
+    rw [div_le_iff₀ hEpos] at hdiv
+    simpa [mul_assoc, mul_left_comm, mul_comm] using hdiv
 
 theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate.toSharpExpQuotient_of_large
     (cert :
