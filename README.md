@@ -174,7 +174,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   subtargets can now be supplied through
   `Prop51.PositiveSaddleLargeTailProductBoundsCertificate`, which splits each
   raw product inequality into separate `Bplus` and `Qplus/Y` saddle bounds
-  plus a scalar product comparison.  The finer
+  plus a scalar product comparison.  The solo subtarget similarly has the
+  `Prop51.PositiveSaddleLargeTailSoloYBoundCertificate` split between a
+  `Y_a(N)` saddle bound and the dyadic unit budget.  The finer
   `Prop51.PositiveSaddleLargeTailAtomicPartsAuditCertificate` additionally
   splits the six candidate entropy-reserve fields into separate atomic
   one-dimensional inequality families.  The finite generator can target these

@@ -9678,6 +9678,48 @@ structure PositiveSaddleLargeTailSoloYUnitCertificate : Prop where
           (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
         ≤ 1
 
+/-- Reassemble the unit-scaled large-tail solo target from a separate
+`Y_a(N)` majorant and the scalar dyadic budget for that majorant. -/
+theorem positiveLargeTailSoloYUnit_of_Y_bound
+    {a N : Nat} {YBound : ℚ}
+    (hY : positiveYgcompBound N a ≤ YBound)
+    (hscalar :
+      (200000000 : ℚ) * (positiveDyadicDecay a / 2 * YBound) ≤ 1) :
+    (200000000 : ℚ) *
+        (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+      ≤ 1 := by
+  have hcoef : 0 ≤ positiveDyadicDecay a / 2 := by
+    exact div_nonneg (positiveDyadicDecay_nonneg a) (by norm_num)
+  have hterm :
+      positiveDyadicDecay a / 2 * positiveYgcompBound N a
+        ≤ positiveDyadicDecay a / 2 * YBound :=
+    mul_le_mul_of_nonneg_left hY hcoef
+  exact
+    (mul_le_mul_of_nonneg_left hterm
+      (by norm_num : (0 : ℚ) ≤ 200000000)).trans hscalar
+
+/-- Large-tail solo target with the analytic `Y_a(N)` saddle estimate split
+from the scalar dyadic/unit budget. -/
+structure PositiveSaddleLargeTailSoloYBoundCertificate
+    (soloYBound : Nat → Nat → ℚ) : Prop where
+  soloY :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      positiveYgcompBound N a ≤ soloYBound a N
+  soloScalar :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      (200000000 : ℚ) * (positiveDyadicDecay a / 2 * soloYBound a N)
+        ≤ 1
+
+theorem PositiveSaddleLargeTailSoloYBoundCertificate.toSoloYUnitCertificate
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound) :
+    PositiveSaddleLargeTailSoloYUnitCertificate where
+  soloYUnit := by
+    intro a N ha hrect
+    exact positiveLargeTailSoloYUnit_of_Y_bound
+      (cert.soloY ha hrect)
+      (cert.soloScalar ha hrect)
+
 /-- Reassemble a small-regime large-tail raw product inequality from separate
 upper bounds for the positive `B` and `Q` majorants plus the scalar product
 comparison.  This is a proof-production split of the same raw inequality used
@@ -9833,6 +9875,17 @@ theorem PositiveSaddleLargeTailProductBoundsCertificate.toProductPointwiseYRawUn
   temperedProductRaw :=
     cert.toTemperedProductRawCertificate.temperedProductRaw
   soloYUnit := solo.soloYUnit
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.toProductPointwiseYRawUnitSoloCertificate_of_soloYBound
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :=
+  cert.toProductPointwiseYRawUnitSoloCertificate
+    solo.toSoloYUnitCertificate
 
 /-- Reassembles the split large-tail product/solo targets into the existing
 unit-solo pointwise certificate.  This is only a proof-production
