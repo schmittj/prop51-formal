@@ -816,6 +816,11 @@ Status:
       and
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
       avoid quotient divisions in generated or hand-cleared analytic audits.
+      The lower exp target is closed immediately on the front subrange
+      `8 * (r + 1) ≤ a` by
+      `positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
+      only the nearer-split lower cells need a genuinely sharper
+      `partialExpUpper` quotient estimate.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

@@ -360,6 +360,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   and
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
   are also available for generated or denominator-cleared analytic audits.
+  The lower target is already closed on the front subrange
+  `8 * (r + 1) ≤ a` by
+  `Prop51.positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
+  the hard lower work is therefore concentrated closer to
+  `Prop51.positiveLargeExpTemperedSplit`.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

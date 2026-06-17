@@ -12754,6 +12754,87 @@ def positiveTemperedLowerExpQuotientTarget (a r : Nat) : ℚ :=
     (((posJ a r : Nat) : ℚ) / ((r + 1 : Nat) : ℚ)) *
       positiveLargeExpTemperedRatio a
 
+theorem positiveTemperedLowerExpQuotientTarget_ge_one_of_gap
+    {a r : Nat} (ha : 0 < a)
+    (hgap :
+      136 * (r + 1) * (4 * a)
+        ≤ 25 * posJ a r * (4 * a - 1)) :
+    1 ≤ positiveTemperedLowerExpQuotientTarget a r := by
+  have hrSuccPos :
+      (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hdenPos :
+      (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  have hgapQ :
+      (136 : ℚ) * ((r + 1 : Nat) : ℚ) * ((4 * a : Nat) : ℚ)
+        ≤ 25 * ((posJ a r : Nat) : ℚ) * ((4 * a - 1 : Nat) : ℚ) := by
+    exact_mod_cast hgap
+  unfold positiveTemperedLowerExpQuotientTarget positiveLargeExpTemperedRatio
+  field_simp [hrSuccPos.ne', hdenPos.ne']
+  ring_nf at hgapQ ⊢
+  exact hgapQ
+
+theorem positiveTemperedLargeExp_lowerExpQuotientTarget_of_target_ge_one
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (htarget : 1 ≤ positiveTemperedLowerExpQuotientTarget a r) :
+    positiveTemperedLargeExp a (r + 1) /
+        positiveTemperedLargeExp a r
+      ≤ positiveTemperedLowerExpQuotientTarget a r :=
+  (positiveTemperedLargeExp_succ_div_le_one_of_lower_branch
+    ha hrlo hrhi).trans htarget
+
+theorem positiveTemperedLargeExp_lowerExpQuotientTarget_of_gap
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (hgap :
+      136 * (r + 1) * (4 * a)
+        ≤ 25 * posJ a r * (4 * a - 1)) :
+    positiveTemperedLargeExp a (r + 1) /
+        positiveTemperedLargeExp a r
+      ≤ positiveTemperedLowerExpQuotientTarget a r :=
+  positiveTemperedLargeExp_lowerExpQuotientTarget_of_target_ge_one
+    ha hrlo hrhi
+    (positiveTemperedLowerExpQuotientTarget_ge_one_of_gap
+      (by omega : 0 < a) hgap)
+
+theorem positiveTemperedLowerExpQuotientTarget_ge_one_of_eight_mul_succ_le
+    {a r : Nat} (ha : 2 ≤ a) (hfront : 8 * (r + 1) ≤ a) :
+    1 ≤ positiveTemperedLowerExpQuotientTarget a r := by
+  have hleA : r ≤ a := by omega
+  have hrSuccPos :
+      (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hdenPos :
+      (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hfrontQ : (8 : ℚ) * (((r + 1 : Nat) : ℚ)) ≤ (a : ℚ) := by
+    exact_mod_cast hfront
+  have haQ : (2 : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast ha
+  unfold positiveTemperedLowerExpQuotientTarget positiveLargeExpTemperedRatio
+  rw [hjCast]
+  field_simp [hrSuccPos.ne', hdenPos.ne']
+  ring_nf
+  nlinarith
+
+theorem positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (hfront : 8 * (r + 1) ≤ a) :
+    positiveTemperedLargeExp a (r + 1) /
+        positiveTemperedLargeExp a r
+      ≤ positiveTemperedLowerExpQuotientTarget a r :=
+  positiveTemperedLargeExp_lowerExpQuotientTarget_of_target_ge_one
+    ha hrlo hrhi
+    (positiveTemperedLowerExpQuotientTarget_ge_one_of_eight_mul_succ_le
+      (by omega : 2 ≤ a) hfront)
+
 /-- Lower-tempered adjacent-step target reduced to a single large-exp quotient
 estimate.  This is the smallest current Lean-facing lower-step obligation;
 the raw entropy-shadow quotient and the scalar budget are discharged by the
