@@ -16719,6 +16719,25 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCer
   (factorCert.toMiddleShiftBudgetCertificate scalarCert)
     |>.toMiddleExpTargetCrossmulCertificate
 
+/-- Once the scalar upper-middle margin is supplied, the analytic
+`partialExpUpper` shift factor is now filled by the concrete certificate above. -/
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate.toMiddleExpTargetCrossmulCertificate
+    (scalarCert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate :=
+  positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate
+    |>.toMiddleExpTargetCrossmulCertificate scalarCert
+
+/-- Remaining low-half scalar power-product input, assembled all the way to
+the upper-middle reverse large-exp cross-multiplied target. -/
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate.toMiddleExpTargetCrossmulCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate :=
+  cert.toPowerProductScalarCertificate
+    |>.toMiddleShiftScalarCertificate
+    |>.toMiddleExpTargetCrossmulCertificate
+
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate.toTemperedUpperReverseExpTargetCrossmulCertificate
     (cert :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate) :
