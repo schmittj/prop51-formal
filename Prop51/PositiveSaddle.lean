@@ -7243,7 +7243,7 @@ theorem positiveSmallLargeExp_rawStepCleared_of_base_half
     _ ≤ positiveEntropyShadowBaseStepRawDenominator a r *
           positiveSmallLargeExp a r := hright
     _ = positiveSmallLargeExp a r *
-        positiveEntropyShadowBaseStepRawDenominator a r := by ring
+          positiveEntropyShadowBaseStepRawDenominator a r := by ring
 
 /-- Candidate uniform small-branch ratio for the large-exp entropy-shadow
 audit.  The adjacent quotient proof is still a separate rational audit field;
@@ -7381,6 +7381,228 @@ theorem positiveLargeExpTemperedSplitUpper_of_large
     positiveLargeExpTemperedSplit a < posKmax a := by
   unfold positiveLargeExpTemperedSplit posKmax
   omega
+
+theorem positiveTemperedExponentUpper_succ_le_of_lower_branch
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a) :
+    positiveTemperedExponentUpper a (r + 1)
+      ≤ positiveTemperedExponentUpper a r := by
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hrposNat : 0 < r := by omega
+  have hrK : r ≤ posKmax a := by omega
+  have hj2 : 2 ≤ posJ a r :=
+    two_le_posJ_of_le_posKmax_of_large (by omega : 20 ≤ a) hrK
+  have hjSucc : posJ a (r + 1) = posJ a r - 1 := by
+    unfold posJ at hj2 ⊢
+    omega
+  have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hrposNat
+  have hrsQpos : (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hjQpos : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r)
+  have hjm1Qpos : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < posJ a r - 1)
+  have hsplit : 3 * r ≤ a + 27 := by
+    unfold positiveLargeExpTemperedSplit at hrhi
+    have hdiv : 3 * (a / 3) ≤ a := Nat.mul_div_le a 3
+    omega
+  have hr50 : 50 ≤ r := by
+    have hcut : 49 ≤ posTemperedCutoff a := by
+      have hlt : 48 < posTemperedCutoff a := by
+        unfold posTemperedCutoff
+        apply lt_ceilSqrt_of_sq_lt
+        unfold posNlo
+        omega
+      omega
+    omega
+  have hquadQ :
+      (29 : ℚ) * (r : ℚ) * ((r + 1 : Nat) : ℚ)
+        ≤ 57 * ((posJ a r : Nat) : ℚ) *
+          ((posJ a r - 1 : Nat) : ℚ) := by
+    have hsplitQ : (3 : ℚ) * (r : ℚ) ≤ (a : ℚ) + 27 := by
+      exact_mod_cast hsplit
+    have hr50Q : (50 : ℚ) ≤ (r : ℚ) := by
+      exact_mod_cast hr50
+    have hleA : r ≤ a := by omega
+    have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+      unfold posJ
+      rw [Nat.cast_sub hleA]
+    have hjm1Cast :
+        ((posJ a r - 1 : Nat) : ℚ) = ((posJ a r : Nat) : ℚ) - 1 := by
+      rw [Nat.cast_sub (by omega : 1 ≤ posJ a r)]
+      norm_num
+    have hjLower : (2 : ℚ) * (r : ℚ) - 27 ≤ ((posJ a r : Nat) : ℚ) := by
+      rw [hjCast]
+      nlinarith
+    have hjm1Lower :
+        (2 : ℚ) * (r : ℚ) - 28 ≤ ((posJ a r - 1 : Nat) : ℚ) := by
+      rw [hjm1Cast]
+      nlinarith
+    have hleft_nonneg : 0 ≤ (2 : ℚ) * (r : ℚ) - 28 := by
+      nlinarith
+    have hj_nonneg : 0 ≤ ((posJ a r : Nat) : ℚ) := by positivity
+    have hprodLower :
+        ((2 : ℚ) * (r : ℚ) - 27) * ((2 : ℚ) * (r : ℚ) - 28)
+          ≤ ((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ) :=
+      mul_le_mul hjLower hjm1Lower hleft_nonneg hj_nonneg
+    have hpoly :
+        (29 : ℚ) * (r : ℚ) * ((r + 1 : Nat) : ℚ)
+          ≤ 57 * (((2 : ℚ) * (r : ℚ) - 27) *
+            ((2 : ℚ) * (r : ℚ) - 28)) := by
+      norm_num
+      nlinarith
+    have hquad' :
+        (29 : ℚ) * (r : ℚ) * ((r + 1 : Nat) : ℚ)
+          ≤ 57 * (((posJ a r : Nat) : ℚ) *
+            ((posJ a r - 1 : Nat) : ℚ)) :=
+      hpoly.trans
+        (mul_le_mul_of_nonneg_left hprodLower
+          (by norm_num : (0 : ℚ) ≤ 57))
+    simpa [mul_assoc] using hquad'
+  have hrecip :
+      (57 / 10 : ℚ) * ((a : ℚ) / ((r + 1 : Nat) : ℚ)) +
+          (29 / 10 : ℚ) *
+            ((a : ℚ) / ((posJ a r - 1 : Nat) : ℚ))
+        ≤ (57 / 10 : ℚ) * ((a : ℚ) / (r : ℚ)) +
+          (29 / 10 : ℚ) * ((a : ℚ) / (posJ a r : ℚ)) := by
+    have hdenCore :
+        (29 : ℚ) /
+            (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ))
+          ≤ 57 / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) := by
+      have hprodR : (0 : ℚ) < (r : ℚ) * ((r + 1 : Nat) : ℚ) :=
+        mul_pos hrQpos hrsQpos
+      have hprodJ :
+          (0 : ℚ) <
+            ((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ) :=
+        mul_pos hjQpos hjm1Qpos
+      rw [div_le_div_iff₀ hprodJ hprodR]
+      ring_nf at hquadQ ⊢
+      nlinarith
+    have hscaled :
+        ((a : ℚ) / 10) *
+            ((29 : ℚ) /
+              (((posJ a r : Nat) : ℚ) *
+                ((posJ a r - 1 : Nat) : ℚ)))
+          ≤ ((a : ℚ) / 10) *
+            (57 / ((r : ℚ) * ((r + 1 : Nat) : ℚ))) :=
+      mul_le_mul_of_nonneg_left hdenCore (by positivity)
+    have hleft :
+        (29 / 10 : ℚ) *
+            ((a : ℚ) / ((posJ a r - 1 : Nat) : ℚ)) -
+          (29 / 10 : ℚ) * ((a : ℚ) / (posJ a r : ℚ)) =
+        ((a : ℚ) / 10) *
+          ((29 : ℚ) /
+            (((posJ a r : Nat) : ℚ) *
+              ((posJ a r - 1 : Nat) : ℚ))) := by
+      field_simp [hjQpos.ne', hjm1Qpos.ne']
+      rw [show ((posJ a r - 1 : Nat) : ℚ) =
+          ((posJ a r : Nat) : ℚ) - 1 by
+        rw [Nat.cast_sub (by omega : 1 ≤ posJ a r)]
+        norm_num]
+      ring
+    have hright :
+        (57 / 10 : ℚ) * ((a : ℚ) / (r : ℚ)) -
+          (57 / 10 : ℚ) *
+            ((a : ℚ) / ((r + 1 : Nat) : ℚ)) =
+        ((a : ℚ) / 10) *
+          (57 / ((r : ℚ) * ((r + 1 : Nat) : ℚ))) := by
+      field_simp [hrQpos.ne', hrsQpos.ne']
+      rw [show ((r + 1 : Nat) : ℚ) = (r : ℚ) + 1 by norm_num]
+      ring
+    linarith
+  unfold positiveTemperedExponentUpper
+  rw [hjSucc]
+  nlinarith
+
+theorem positiveTemperedLargeExp_succ_le_of_lower_branch
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a) :
+    positiveTemperedLargeExp a (r + 1) ≤ positiveTemperedLargeExp a r := by
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hrK : r ≤ posKmax a := by omega
+  have hsuccK : r + 1 ≤ posKmax a := by omega
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨le_trans (le_max_left _ _) hrlo, hrK⟩
+  have hsuccMem : r + 1 ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨by omega, hsuccK⟩
+  rcases (mem_positiveKRange.mp hsuccMem) with ⟨hsucc1, hsuccMax⟩
+  have hsuccJ : 0 < posJ a (r + 1) :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hsuccMax
+  unfold positiveTemperedLargeExp
+  exact partialExpUpper_mono_of_nonneg_le_lt
+    (positiveTemperedExponentUpper_nonneg hsucc1 hsuccJ)
+    (positiveTemperedExponentUpper_succ_le_of_lower_branch ha hrlo hrhi)
+    (positiveTemperedExponentUpper_lt_largeExpCutoff ha hrMem)
+
+theorem positiveTemperedLargeExp_succ_div_le_one_of_lower_branch
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a) :
+    positiveTemperedLargeExp a (r + 1) / positiveTemperedLargeExp a r ≤ 1 := by
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr
+      ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+  have hpos : 0 < positiveTemperedLargeExp a r :=
+    positiveTemperedLargeExp_pos_of_large ha hrMem
+  rw [div_le_iff₀ hpos]
+  simpa using positiveTemperedLargeExp_succ_le_of_lower_branch ha hrlo hrhi
+
+theorem positiveTemperedLargeExp_lower_rawStepCleared_of_base_ratio
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (hraw :
+      ((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r
+        ≤ ((4 * a - 1 : Nat) : ℚ) *
+          positiveEntropyShadowBaseStepRawDenominator a r) :
+    ((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawNumerator a r *
+          positiveTemperedLargeExp a (r + 1))
+      ≤ ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a r *
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hExpLe :
+      positiveTemperedLargeExp a (r + 1) ≤ positiveTemperedLargeExp a r :=
+    positiveTemperedLargeExp_succ_le_of_lower_branch ha hrlo hrhi
+  have hExp0 : 0 ≤ positiveTemperedLargeExp a r := by
+    have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    exact (positiveTemperedLargeExp_pos_of_large ha
+      (mem_positiveKRange.mpr
+        ⟨le_trans (le_max_left _ _) hrlo, by omega⟩)).le
+  have hcoefNum0 :
+      0 ≤ ((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r := by
+    exact mul_nonneg (by positivity)
+      (positiveEntropyShadowBaseStepRawNumerator_nonneg a r)
+  have hleft :
+      (((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveTemperedLargeExp a (r + 1)
+        ≤ (((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveTemperedLargeExp a r :=
+    mul_le_mul_of_nonneg_left hExpLe hcoefNum0
+  have hright :
+      (((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveTemperedLargeExp a r
+        ≤ (((4 * a - 1 : Nat) : ℚ) *
+            positiveEntropyShadowBaseStepRawDenominator a r) *
+          positiveTemperedLargeExp a r :=
+    mul_le_mul_of_nonneg_right hraw hExp0
+  calc
+    ((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawNumerator a r *
+          positiveTemperedLargeExp a (r + 1))
+        = (((4 * a : Nat) : ℚ) *
+            positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveTemperedLargeExp a (r + 1) := by ring
+    _ ≤ (((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r) *
+          positiveTemperedLargeExp a r := hleft
+    _ ≤ (((4 * a - 1 : Nat) : ℚ) *
+            positiveEntropyShadowBaseStepRawDenominator a r) *
+          positiveTemperedLargeExp a r := hright
+    _ = ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a r *
+          positiveEntropyShadowBaseStepRawDenominator a r := by ring
 
 /-- Product-level target whose factored summand form is the small-branch
 large-exp entropy-shadow majorant after the reciprocal-binomial entropy
@@ -11115,6 +11337,28 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate :
             positiveTemperedLargeExp a r *
               positiveEntropyShadowBaseStepRawDenominator a r
 
+/-- Smaller lower-tempered adjacent-step target after using monotonicity of
+the large-tail tempered exponential factor on the lower side of the split.
+The remaining inequality is the pure raw-base ratio
+`raw quotient ≤ (4a-1)/(4a)`, with the common positive denominator cleared. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate :
+    Prop where
+  temperedLowerRawBaseRatio :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r
+          ≤ ((4 * a - 1 : Nat) : ℚ) *
+            positiveEntropyShadowBaseStepRawDenominator a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate.toTemperedLowerRawStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate where
+  temperedLowerRawStepCleared := by
+    intro a r ha hrlo hrhi
+    exact positiveTemperedLargeExp_lower_rawStepCleared_of_base_ratio
+      ha hrlo hrhi (cert.temperedLowerRawBaseRatio ha hrlo hrhi)
+
 /-- Atomic upper-tempered reverse adjacent-step target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate :
@@ -11238,6 +11482,18 @@ theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHa
     PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
   positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
     small.toSmallRawStepCertificate temperedLower temperedUpper
+
+theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_baseRatioParts
+    (small : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    small.toSmallRawStepCertificate
+    temperedLower.toTemperedLowerRawStepCertificate
+    temperedUpper
 
 /-- Reassembles atomic candidate reserve targets into the grouped reserve
 certificate. -/
