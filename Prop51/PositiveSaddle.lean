@@ -15633,6 +15633,101 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarC
         positiveTemperedUpperMiddleExpShiftFactor a
           ≤ positiveTemperedUpperReverseExpQuotientTarget a r
 
+/-- Power-product threshold sufficient for the upper-middle scalar margin.
+
+For the reverse step from `r` to `r-1`, the raw quotient factors as
+`(2*r / posJ a (r-1))` times
+`positiveEntropyShadowBaseStepRawPowerProduct a (r-1)`.  This target is
+exactly the amount of that power product needed to absorb the shift factor and
+the tempered ratio loss `(4a-1)/(4a)`. -/
+def positiveTemperedUpperMiddleShiftPowerProductTarget (a r : Nat) : ℚ :=
+  positiveTemperedUpperMiddleExpShiftFactor a *
+    (((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ)) *
+      (((posJ a (r - 1) : Nat) : ℚ) / (2 * (r : ℚ)))
+
+/-- Raw power-product form of the upper-middle scalar margin. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate :
+    Prop where
+  upperMiddleShiftPowerProductTarget :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a →
+        positiveTemperedUpperMiddleShiftPowerProductTarget a r
+          ≤ positiveEntropyShadowBaseStepRawPowerProduct a (r - 1)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate.toMiddleShiftScalarCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftScalarCertificate where
+  upperMiddleShiftFactor_le_target := by
+    intro a r ha hrlo hrhi hmid
+    have hr1 : 1 ≤ r := by omega
+    have hprev1 : 1 ≤ r - 1 := by omega
+    have hj2 : 2 ≤ posJ a (r - 1) :=
+      two_le_posJ_of_le_posKmax_of_large
+        (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+    have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hr1
+    have hjQpos : (0 : ℚ) < (posJ a (r - 1) : ℚ) := by
+      exact_mod_cast (by omega : 0 < posJ a (r - 1))
+    have hfourApos : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < 4 * a)
+    have hfourApredpos : (0 : ℚ) < ((4 * a - 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < 4 * a - 1)
+    have hfactorTarget :=
+      cert.upperMiddleShiftPowerProductTarget ha hrlo hrhi hmid
+    have hpref0 :
+        0 ≤ ((r : ℚ) / (posJ a (r - 1) : ℚ)) := by
+      exact div_nonneg hrQpos.le hjQpos.le
+    have hrawFactored :
+        positiveEntropyShadowBaseStepRawQuotient a (r - 1) =
+          ((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+            positiveEntropyShadowBaseStepRawPowerProduct a (r - 1) * 2 := by
+      have h :=
+        positiveEntropyShadowBaseStepRawQuotient_eq_pref_mul_powerProduct
+          (a := a) (r := r - 1) hprev1 hj2
+      simpa [Nat.sub_add_cancel hr1] using h
+    have hrawLower :
+        ((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+            positiveTemperedUpperMiddleShiftPowerProductTarget a r * 2
+          ≤ positiveEntropyShadowBaseStepRawQuotient a (r - 1) := by
+      have hmul :
+          ((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+              positiveTemperedUpperMiddleShiftPowerProductTarget a r
+            ≤
+          ((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+              positiveEntropyShadowBaseStepRawPowerProduct a (r - 1) :=
+        mul_le_mul_of_nonneg_left hfactorTarget hpref0
+      have hmul2 := mul_le_mul_of_nonneg_right hmul
+        (by norm_num : (0 : ℚ) ≤ 2)
+      simpa [hrawFactored, mul_assoc, mul_left_comm, mul_comm] using hmul2
+    have hratio0 : 0 ≤ positiveLargeExpTemperedRatio a :=
+      positiveLargeExpTemperedRatio_nonneg
+    have hwithRatio :
+        (((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+            positiveTemperedUpperMiddleShiftPowerProductTarget a r * 2) *
+            positiveLargeExpTemperedRatio a
+          ≤ positiveTemperedUpperReverseExpQuotientTarget a r := by
+      calc
+        (((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+            positiveTemperedUpperMiddleShiftPowerProductTarget a r * 2) *
+            positiveLargeExpTemperedRatio a
+            ≤ positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+                positiveLargeExpTemperedRatio a :=
+              mul_le_mul_of_nonneg_right hrawLower hratio0
+        _ = positiveTemperedUpperReverseExpQuotientTarget a r := by
+              rfl
+    have hfactorEq :
+        positiveTemperedUpperMiddleExpShiftFactor a =
+          (((r : ℚ) / (posJ a (r - 1) : ℚ)) *
+            positiveTemperedUpperMiddleShiftPowerProductTarget a r * 2) *
+            positiveLargeExpTemperedRatio a := by
+      unfold positiveTemperedUpperMiddleShiftPowerProductTarget
+        positiveLargeExpTemperedRatio
+      field_simp [hrQpos.ne', hjQpos.ne', hfourApos.ne',
+        hfourApredpos.ne']
+    rw [hfactorEq]
+    exact hwithRatio
+
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate.toMiddleShiftBudgetCertificate
     (factorCert :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate)
