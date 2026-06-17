@@ -5129,6 +5129,30 @@ theorem mul_rawQuotient_mul_le_of_mul_num_le
   rw [div_le_iff₀ hden]
   simpa [mul_assoc, mul_left_comm, mul_comm] using h
 
+/-- Clear the positive raw entropy-shadow denominator in the forward
+direction.  This is the converse bookkeeping step to
+`mul_rawQuotient_mul_le_of_mul_num_le`. -/
+theorem mul_num_le_of_mul_rawQuotient_mul_le
+    {a r : Nat} {q x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (h : q * (positiveEntropyShadowBaseStepRawQuotient a r * x) ≤ y) :
+    q * (positiveEntropyShadowBaseStepRawNumerator a r * x)
+      ≤ y * positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawDenominator a r :=
+    positiveEntropyShadowBaseStepRawDenominator_pos hr1 hj2
+  have hrewrite :
+      q * (positiveEntropyShadowBaseStepRawQuotient a r * x) =
+        (q * (positiveEntropyShadowBaseStepRawNumerator a r * x)) /
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+    rw [positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den hr1 hj2]
+    field_simp [hden.ne']
+  have h' :
+      (q * (positiveEntropyShadowBaseStepRawNumerator a r * x)) /
+          positiveEntropyShadowBaseStepRawDenominator a r ≤ y := by
+    simpa [hrewrite] using h
+  rw [div_le_iff₀ hden] at h'
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h'
+
 theorem mul_le_mul_rawQuotient_mul_of_mul_den_le
     {a r : Nat} {q p x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
     (h :
@@ -7548,6 +7572,69 @@ theorem positiveTemperedLargeExp_succ_div_le_one_of_lower_branch
     positiveTemperedLargeExp_pos_of_large ha hrMem
   rw [div_le_iff₀ hpos]
   simpa using positiveTemperedLargeExp_succ_le_of_lower_branch ha hrlo hrhi
+
+/-- Honest quotient-form bridge for the lower-tempered adjacent step.
+
+Unlike the pure raw-base ratio, this hypothesis keeps the quantitative
+decrease of the large-exp factor.  It is therefore the natural analytic or
+generated target for the lower side of the tempered split. -/
+theorem positiveTemperedLargeExp_lower_rawStepCleared_of_raw_exp_ratio
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
+    (hrhi : r < positiveLargeExpTemperedSplit a)
+    (hratio :
+      ((4 * a : Nat) : ℚ) *
+          (positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r))
+        ≤ ((4 * a - 1 : Nat) : ℚ)) :
+    ((4 * a : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawNumerator a r *
+          positiveTemperedLargeExp a (r + 1))
+      ≤ ((4 * a - 1 : Nat) : ℚ) *
+        positiveTemperedLargeExp a r *
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+  have hrK : r ≤ posKmax a := by omega
+  have hj2 : 2 ≤ posJ a r :=
+    two_le_posJ_of_le_posKmax_of_large (by omega : 20 ≤ a) hrK
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨hr1, by omega⟩
+  have hEpos : 0 < positiveTemperedLargeExp a r :=
+    positiveTemperedLargeExp_pos_of_large ha hrMem
+  have hquotCross :
+      ((4 * a : Nat) : ℚ) *
+          (positiveEntropyShadowBaseStepRawQuotient a r *
+            positiveTemperedLargeExp a (r + 1))
+        ≤ ((4 * a - 1 : Nat) : ℚ) *
+          positiveTemperedLargeExp a r := by
+    have hdiv :
+        (((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveTemperedLargeExp a (r + 1))) /
+            positiveTemperedLargeExp a r
+          ≤ ((4 * a - 1 : Nat) : ℚ) := by
+      calc
+        (((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a r *
+              positiveTemperedLargeExp a (r + 1))) /
+            positiveTemperedLargeExp a r
+            =
+          ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a r *
+              (positiveTemperedLargeExp a (r + 1) /
+                positiveTemperedLargeExp a r)) := by
+              field_simp [hEpos.ne']
+        _ ≤ ((4 * a - 1 : Nat) : ℚ) := hratio
+    rwa [div_le_iff₀ hEpos] at hdiv
+  exact mul_num_le_of_mul_rawQuotient_mul_le
+    (a := a) (r := r) (q := ((4 * a : Nat) : ℚ))
+    (x := positiveTemperedLargeExp a (r + 1))
+    (y := ((4 * a - 1 : Nat) : ℚ) *
+      positiveTemperedLargeExp a r)
+    hr1 hj2 (by
+      simpa [mul_assoc, mul_left_comm, mul_comm] using hquotCross)
 
 /-- Convenience bridge from a pure lower-tempered raw-base ratio to the
 raw-cleared lower step.
@@ -11343,6 +11430,33 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate :
             positiveTemperedLargeExp a r *
               positiveEntropyShadowBaseStepRawDenominator a r
 
+/-- Quotient-form lower-tempered adjacent-step target.
+
+This is the useful reduced target on the lower side of the tempered split:
+the raw entropy-shadow quotient is multiplied by the quantitative quotient of
+the large-exp factor.  This matches the math argument more closely than the
+too-strong pure raw-base ratio. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :
+    Prop where
+  temperedLowerRawExpRatio :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawQuotient a r *
+              (positiveTemperedLargeExp a (r + 1) /
+                positiveTemperedLargeExp a r))
+          ≤ ((4 * a - 1 : Nat) : ℚ)
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate.toTemperedLowerRawStepCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate where
+  temperedLowerRawStepCleared := by
+    intro a r ha hrlo hrhi
+    exact positiveTemperedLargeExp_lower_rawStepCleared_of_raw_exp_ratio
+      ha hrlo hrhi (cert.temperedLowerRawExpRatio ha hrlo hrhi)
+
 /-- Atomic upper-tempered reverse adjacent-step target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate :
@@ -11466,6 +11580,21 @@ theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHa
     PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
   positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
     small.toSmallRawStepCertificate temperedLower temperedUpper
+
+/-- Reassembles grouped candidate adjacent-step targets when the small branch
+uses the raw-base half-quotient certificate and the lower-tempered branch is
+supplied in the honest raw-quotient-times-large-exp-ratio form. -/
+theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHalf_lowerRawExpRatio
+    (small : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    small.toSmallRawStepCertificate
+    temperedLower.toTemperedLowerRawStepCertificate
+    temperedUpper
 
 /-- Reassembles atomic candidate reserve targets into the grouped reserve
 certificate. -/

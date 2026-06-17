@@ -215,7 +215,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   still the raw-cleared field
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate`,
   where the quantitative decrease of the large-exp factor must be used
-  together with the entropy-shadow raw quotient.
+  together with the entropy-shadow raw quotient.  The equivalent proof-facing
+  reduced target is now exposed as
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate`;
+  its field is the honest quotient inequality for
+  `rawQuotient * positiveTemperedLargeExp(a,r+1) /
+  positiveTemperedLargeExp(a,r)`, and Lean converts it back to the
+  raw-cleared step.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
