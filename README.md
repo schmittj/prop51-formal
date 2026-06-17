@@ -183,7 +183,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   consumes `Prop51.positiveEdgeFixedKChunks` directly; emit it with
   `--strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked` and
   choose `--edge-k-len` independently.  This avoids reconstructing the older
-  default 20-wide edge booleans from fine edge atoms.  The
+  default 20-wide edge booleans from fine edge atoms.  Lean also now exposes
+  the row-active sibling
+  `PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate`:
+  its product/tangent/solo `N` indices and product/edge retained-`k` chunks
+  are local to each row range, then reduce to the same tangent-product budget
+  certificate.  This records a proof-production optimization beyond the
+  TeX-style fixed global cover; the generator manifest still uses the global
+  atom order until active manifests are implemented.  The
   remaining large-tail inputs can also be supplied through
   `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
   product-small, product-tempered, solo, adjacent-step, and unit-reserve
@@ -364,7 +371,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   emitting a full manifest, run the same command with `--dry-run-counts` to
   print formula-based atom counts without materializing the atom list, or with
   `--dry-run-active-counts` to also report the row-local active-geometry
-  estimate and the skipped-vs-global totals.
+  estimate and the skipped-vs-global totals.  Those active estimates now have
+  a matching Lean certificate interface, but not yet a first-class active
+  manifest/shard emitter.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.

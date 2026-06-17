@@ -577,6 +577,13 @@ Status:
       `k` lengths before committing to a global manifest.  Shard emission now
       uses direct global-index slicing, so large `--emit-single-chunk-shard`
       jobs no longer build the full atom list before selecting their slice.
+      Lean now also has the row-active finite-window wrapper
+      `PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate`,
+      whose `N` and retained-`k` covers are local to each row range and then
+      reduce to the same `PositiveSaddleTangentProductBudgetCertificate`.
+      This is a documented Lean proof-production divergence from the
+      TeX-style fixed global chunk cover; generator manifests still use the
+      global atom order until active manifest/shard emission is implemented.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
