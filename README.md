@@ -374,6 +374,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   the former is now closed in Lean from the exact raw power-product estimate
   `Prop51.positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
   and the latter only has to handle the top strip `a < 3 * (r + 1)`.
+  This top-strip target also has the constant-width offset form
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate`,
+  whose adapter reduces it to the ten families `r = a/3 + t`, `t < 10`.
   The convenience wrappers
   `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserves`
   and

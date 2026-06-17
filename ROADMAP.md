@@ -832,7 +832,9 @@ Status:
       `a < 3 * (r + 1)`.  The raw certificate is now closed in Lean by
       `positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
       and the reduced sharp-top wrappers therefore no longer ask for a
-      separate lower raw-side certificate.
+      separate lower raw-side certificate.  The top strip is also exposed as
+      `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate`,
+      reducing it to the ten offset families `r = a/3 + t`, `t < 10`.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

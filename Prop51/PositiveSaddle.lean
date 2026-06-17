@@ -13293,6 +13293,43 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmul
           ≤ positiveTemperedLowerSharpExpQuotientTarget a r *
             positiveTemperedLargeExp a r
 
+/-- Constant-width offset form of the sharp lower top-strip target.
+
+The hypotheses `r < a/3+10` and `a < 3*(r+1)` force
+`r = a/3 + t` with `t < 10`; this certificate records exactly those ten
+offset families. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate :
+    Prop where
+  lowerSharpTopOffsetExpQuotientTargetCrossmul :
+    ∀ {a t : Nat}, 2000 < a → t < 10 →
+      max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
+        positiveTemperedLargeExp a (a / 3 + t + 1)
+          ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
+            positiveTemperedLargeExp a (a / 3 + t)
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate.toSharpTopExpTargetCrossmulCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate where
+  lowerSharpTopExpQuotientTargetCrossmul := by
+    intro a r ha hrlo hrhi htop
+    let t := r - a / 3
+    have hdivlt : a / 3 < r + 1 := by
+      exact (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mpr
+        (by simpa [Nat.mul_comm] using htop)
+    have hqle : a / 3 ≤ r := by omega
+    have hr_eq : r = a / 3 + t := by
+      dsimp [t]
+      omega
+    have ht : t < 10 := by
+      dsimp [t]
+      unfold positiveLargeExpTemperedSplit at hrhi
+      omega
+    have hrlo' : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t := by
+      simpa [hr_eq] using hrlo
+    simpa [hr_eq] using
+      cert.lowerSharpTopOffsetExpQuotientTargetCrossmul ha ht hrlo'
+
 theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate.toSharpExpQuotient
     (cert :
       PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate) :
@@ -13375,6 +13412,13 @@ theorem positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_s
     PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
   positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_rawTwoUpper_sharpTopExpTarget
     positiveSaddleLargeTailCandidateTemperedLowerRawTwoUpperCertificate_closed exp
+
+theorem positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_sharpTopOffsetExpTarget
+    (exp :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
+  positiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate_of_sharpTopExpTarget
+    exp.toSharpTopExpTargetCrossmulCertificate
 
 /-- Factorized upper-tempered reverse adjacent-step target.
 
@@ -15238,6 +15282,22 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
     positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate
     temperedLower temperedUpper temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Refined candidate constructor for the ten-offset lower sharp top-strip
+target. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperExpTarget_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserves
+    temperedLower.toSharpTopExpTargetCrossmulCertificate
+    temperedUpper temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -15425,6 +15485,24 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowe
   positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerRawPowerProductSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
     positiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate
     temperedLower temperedUpper temperedLowerFirst temperedUpperLast
+
+/-- Envelope constructor for the ten-offset lower sharp top-strip target. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperExpTarget_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes
+    temperedLower.toSharpTopExpTargetCrossmulCertificate
+    temperedUpper temperedLowerFirst temperedUpperLast
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
 certificate. -/
