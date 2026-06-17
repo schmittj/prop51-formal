@@ -144,7 +144,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   balanced shard start/stop plan in the same file.  Use
   `--dry-run-active-counts` before manifest production to estimate how many
   row-local atoms can actually meet the finite positive rectangle; this is a
-  planning estimate and does not change the generated global atom order.  Lean
+  planning estimate and does not change the generated global atom order.
+  Shard emission now computes its `[start, stop)` slice directly from the
+  global index formulas, so `--emit-single-chunk-shard` does not materialize
+  the full manifest first.  Lean
   also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk

@@ -1267,7 +1267,13 @@ def emit_single_chunk(args: argparse.Namespace) -> str:
 def single_chunk_specs(
     args: argparse.Namespace,
 ) -> list[tuple[str, int, int | None, int | None, str]]:
-    specs = []
+    return list(single_chunk_specs_slice(args, 0, single_chunk_total_count(args)))
+
+
+def single_chunk_shapes(
+    args: argparse.Namespace,
+) -> list[tuple[str, int, int | None, int | None]]:
+    shapes = []
     product_fields = (
         ("product-combined",)
         if args.strategy in (
@@ -1277,81 +1283,49 @@ def single_chunk_specs(
         else ("product-small", "product-tempered")
     )
     for field in product_fields:
-        for i in range(row_count(args.product_row_len)):
-            for n in range(product_n_index_count(args.product_row_len, args.n_len)):
-                for j in range(active_product_k_count(args)):
-                    specs.append(
-                        (
-                            field,
-                            i,
-                            n,
-                            j,
-                            single_chunk_name(args.single_chunk_prefix, field, i, n, j),
-                        )
-                    )
+        shapes.append(
+            (
+                field,
+                row_count(args.product_row_len),
+                product_n_index_count(args.product_row_len, args.n_len),
+                active_product_k_count(args),
+            )
+        )
     if args.strategy in (
         "product-tangent-solo-n-chunked",
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
     ):
-        for i in range(row_count(args.tangent_row_len)):
-            for n in range(product_n_index_count(args.tangent_row_len, args.tangent_n_len)):
-                for j in range(tangent_k_count(args.tangent_k_len)):
-                    specs.append(
-                        (
-                            "tangent-n",
-                            i,
-                            n,
-                            j,
-                            single_chunk_name(
-                                args.single_chunk_prefix, "tangent-n", i, n, j
-                            ),
-                        )
-                    )
+        shapes.append(
+            (
+                "tangent-n",
+                row_count(args.tangent_row_len),
+                product_n_index_count(args.tangent_row_len, args.tangent_n_len),
+                tangent_k_count(args.tangent_k_len),
+            )
+        )
         for field, row_len, n_len in (
             ("solo-saddle-n", args.solo_saddle_row_len, args.solo_saddle_n_len),
             ("solo-budget-n", args.solo_budget_row_len, args.solo_budget_n_len),
         ):
-            for i in range(row_count(row_len)):
-                for n in range(product_n_index_count(row_len, n_len)):
-                    specs.append(
-                        (
-                            field,
-                            i,
-                            n,
-                            None,
-                            single_chunk_name(args.single_chunk_prefix, field, i, n),
-                        )
-                    )
+            shapes.append(
+                (field, row_count(row_len), product_n_index_count(row_len, n_len), None)
+            )
     else:
-        for i in range(row_count(args.tangent_row_len)):
-            for j in range(tangent_k_count(args.tangent_k_len)):
-                specs.append(
-                    (
-                        "tangent",
-                        i,
-                        None,
-                        j,
-                        single_chunk_name(
-                            args.single_chunk_prefix, "tangent", i, None, j
-                        ),
-                    )
-                )
+        shapes.append(
+            (
+                "tangent",
+                row_count(args.tangent_row_len),
+                None,
+                tangent_k_count(args.tangent_k_len),
+            )
+        )
         for field, row_len in (
             ("solo-saddle", args.solo_saddle_row_len),
             ("solo-budget", args.solo_budget_row_len),
         ):
-            for i in range(row_count(row_len)):
-                specs.append(
-                    (
-                        field,
-                        i,
-                        None,
-                        None,
-                        single_chunk_name(args.single_chunk_prefix, field, i),
-                    )
-                )
+            shapes.append((field, row_count(row_len), None, None))
     edge_field = (
         "edge-fixed"
         if args.strategy
@@ -1359,18 +1333,71 @@ def single_chunk_specs(
         else "edge"
     )
     edge_count = edge_k_count(args.edge_k_len) if edge_field == "edge-fixed" else 90
-    for i in range(row_count(args.edge_row_len)):
-        for j in range(edge_count):
-            specs.append(
-                (
-                    edge_field,
-                    i,
-                    None,
-                    j,
-                    single_chunk_name(args.single_chunk_prefix, edge_field, i, None, j),
-                )
-            )
-    return specs
+    shapes.append((edge_field, row_count(args.edge_row_len), None, edge_count))
+    return shapes
+
+
+def single_chunk_shape_count(
+    shape: tuple[str, int, int | None, int | None],
+) -> int:
+    _field, rows, n_count, k_count = shape
+    total = rows
+    if n_count is not None:
+        total *= n_count
+    if k_count is not None:
+        total *= k_count
+    return total
+
+
+def single_chunk_total_count(args: argparse.Namespace) -> int:
+    return sum(single_chunk_shape_count(shape) for shape in single_chunk_shapes(args))
+
+
+def single_chunk_spec_from_local_index(
+    args: argparse.Namespace,
+    shape: tuple[str, int, int | None, int | None],
+    local_index: int,
+) -> tuple[str, int, int | None, int | None, str]:
+    field, _rows, n_count, k_count = shape
+    if n_count is None and k_count is None:
+        row_index = local_index
+        n_index = None
+        k_index = None
+    elif n_count is None:
+        assert k_count is not None
+        row_index = local_index // k_count
+        n_index = None
+        k_index = local_index % k_count
+    elif k_count is None:
+        row_index = local_index // n_count
+        n_index = local_index % n_count
+        k_index = None
+    else:
+        per_row = n_count * k_count
+        row_index = local_index // per_row
+        row_rem = local_index % per_row
+        n_index = row_rem // k_count
+        k_index = row_rem % k_count
+    name = single_chunk_name(
+        args.single_chunk_prefix, field, row_index, n_index, k_index
+    )
+    return field, row_index, n_index, k_index, name
+
+
+def single_chunk_specs_slice(
+    args: argparse.Namespace,
+    start: int,
+    stop: int,
+):
+    offset = 0
+    for shape in single_chunk_shapes(args):
+        shape_total = single_chunk_shape_count(shape)
+        local_start = max(0, start - offset)
+        local_stop = min(shape_total, stop - offset)
+        if local_start < local_stop:
+            for local_index in range(local_start, local_stop):
+                yield single_chunk_spec_from_local_index(args, shape, local_index)
+        offset += shape_total
 
 
 def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
@@ -1882,8 +1909,8 @@ def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, i
 
 
 def emit_single_chunk_shard(args: argparse.Namespace) -> str:
-    specs = single_chunk_specs(args)
-    start, stop = shard_bounds(len(specs), args.shard_index, args.shard_count)
+    total = single_chunk_total_count(args)
+    start, stop = shard_bounds(total, args.shard_index, args.shard_count)
     lines = emit_header(args)
     lines.extend(
         [
@@ -1891,12 +1918,14 @@ def emit_single_chunk_shard(args: argparse.Namespace) -> str:
             "/-",
             "Individual finite-window atom shard.",
             f"Shard {args.shard_index + 1} of {args.shard_count}; "
-            f"atoms {start} <= i < {stop} out of {len(specs)}.",
+            f"atoms {start} <= i < {stop} out of {total}.",
             "-/",
             "",
         ]
     )
-    for field, row_index, n_index, k_index, name in specs[start:stop]:
+    for field, row_index, n_index, k_index, name in single_chunk_specs_slice(
+        args, start, stop
+    ):
         lines.extend(
             single_chunk_theorem_lines(
                 args, field, name, row_index, n_index, k_index
