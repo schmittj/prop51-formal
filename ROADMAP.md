@@ -647,12 +647,13 @@ Status:
       product/solo bounds with that grouped candidate proof and is available
       to generated final theorems through
       `--final-tail-raw-cleared-unit-bounds`.  The small adjacent-step atom
-      has also been reduced further:
-      `PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate` asks only
-      for the pure raw-base half-quotient inequality
+      has also been closed further: Lean proves the pure raw-base
+      half-quotient inequality
       `2 * positiveEntropyShadowBaseStepRawNumerator a r ≤
-      positiveEntropyShadowBaseStepRawDenominator a r`; Lean proves that the
-      small large-exp factor is decreasing on the branch and restores the
+      positiveEntropyShadowBaseStepRawDenominator a r` in
+      `positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch`, packages it
+      as `positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`, and
+      then uses decreasingness of the small large-exp factor to restore the
       original raw-cleared small-step field.  If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If

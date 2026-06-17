@@ -4994,6 +4994,122 @@ theorem positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den
     positiveEntropyShadowBaseStepRawDenominator
   field_simp [hrQ, hjQ, hpow_r1, hpow_j1, hpow2j1]
 
+theorem positiveEntropyShadowBaseStepRawBaseHalf_of_quotient_le_half
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (hquot : positiveEntropyShadowBaseStepRawQuotient a r ≤ 1 / 2) :
+    2 * positiveEntropyShadowBaseStepRawNumerator a r
+      ≤ positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawDenominator a r :=
+    positiveEntropyShadowBaseStepRawDenominator_pos hr1 hj2
+  have hquot' :
+      positiveEntropyShadowBaseStepRawNumerator a r /
+          positiveEntropyShadowBaseStepRawDenominator a r ≤ 1 / 2 := by
+    simpa [positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den hr1 hj2]
+      using hquot
+  have hcleared :
+      positiveEntropyShadowBaseStepRawNumerator a r
+        ≤ (1 / 2 : ℚ) * positiveEntropyShadowBaseStepRawDenominator a r := by
+    rwa [div_le_iff₀ hden] at hquot'
+  nlinarith
+
+theorem positiveEntropyShadowBaseStepRawRRatioPow_le_expBound
+    {r : Nat} (hr2 : 2 ≤ r) :
+    (((r : Nat) : ℚ) / ((r - 1 : Nat) : ℚ))^(r - 1) ≤ 68 / 25 := by
+  have hn1 : 1 ≤ r - 1 := by omega
+  have hnpos : (((r - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : r - 1 ≠ 0)
+  have hbase :
+      1 + 1 / ((r - 1 : Nat) : ℚ) =
+        ((r : Nat) : ℚ) / ((r - 1 : Nat) : ℚ) := by
+    field_simp [hnpos]
+    exact_mod_cast (by omega : r - 1 + 1 = r)
+  rw [← hbase]
+  exact one_add_inv_pow_le (r - 1) hn1
+
+theorem positiveEntropyShadowBaseStepRawJRatioPow_le_one
+    {j : Nat} (hj2 : 2 ≤ j) :
+    (((j - 2 : Nat) : ℚ)^(j - 2)) /
+        (((j - 1 : Nat) : ℚ)^(j - 2)) ≤ 1 := by
+  have hden : 0 < (((j - 1 : Nat) : ℚ)^(j - 2)) := by
+    have hbase : (0 : ℚ) < ((j - 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < j - 1)
+    exact pow_pos hbase _
+  rw [div_le_iff₀ hden]
+  simpa using
+    pow_le_pow_left₀
+      (by positivity : (0 : ℚ) ≤ ((j - 2 : Nat) : ℚ))
+      (by exact_mod_cast (by omega : j - 2 ≤ j - 1))
+      (j - 2)
+
+theorem positiveEntropyShadowBaseStepRawRPart_le_expBound
+    {r : Nat} (hr1 : 1 ≤ r) :
+    ((r : ℚ)^r) /
+        ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1)) ≤ 68 / 25 := by
+  rcases Nat.eq_or_lt_of_le hr1 with hr | hrgt
+  · subst r
+    norm_num
+  · have hr2 : 2 ≤ r := by omega
+    have hpred : (((r - 1 : Nat) : ℚ)) ≠ 0 := by
+      exact_mod_cast (by omega : r - 1 ≠ 0)
+    have hrewrite :
+        ((r : ℚ)^r) /
+            ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1)) =
+          (((r : Nat) : ℚ) / ((r - 1 : Nat) : ℚ))^(r - 1) := by
+      rw [show r = (r - 1) + 1 by omega,
+        show (r - 1) + 1 - 1 = r - 1 by omega]
+      rw [pow_succ, div_pow]
+      field_simp [hpred]
+    rw [hrewrite]
+    exact positiveEntropyShadowBaseStepRawRRatioPow_le_expBound hr2
+
+theorem positiveEntropyShadowBaseStepRawJPart_le_one
+    {j : Nat} (hj2 : 2 ≤ j) :
+    (((j - 1 : Nat) : ℚ) * ((j - 2 : Nat) : ℚ)^(j - 2)) /
+        (((j - 1 : Nat) : ℚ)^(j - 1)) ≤ 1 := by
+  have hbase : (((j - 1 : Nat) : ℚ)) ≠ 0 := by
+    exact_mod_cast (by omega : j - 1 ≠ 0)
+  have hrewrite :
+      (((j - 1 : Nat) : ℚ) * ((j - 2 : Nat) : ℚ)^(j - 2)) /
+          (((j - 1 : Nat) : ℚ)^(j - 1)) =
+        (((j - 2 : Nat) : ℚ)^(j - 2)) /
+          (((j - 1 : Nat) : ℚ)^(j - 2)) := by
+    rw [show j - 1 = (j - 2) + 1 by omega, pow_succ]
+    field_simp [hbase]
+  rw [hrewrite]
+  exact positiveEntropyShadowBaseStepRawJRatioPow_le_one hj2
+
+theorem positiveEntropyShadowBaseStepRawQuotient_eq_factored
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
+    positiveEntropyShadowBaseStepRawQuotient a r =
+      (((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ)) *
+        (((r : Nat) : ℚ)^r /
+          (((r : Nat) : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1))) *
+        ((((posJ a r - 1 : Nat) : ℚ) *
+            ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2)) /
+          (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1))) *
+        2 := by
+  have hrQ : ((r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : r ≠ 0)
+  have hjQ : ((posJ a r : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast (by omega : posJ a r ≠ 0)
+  have hrPredPow : (((r - 1 : Nat) : ℚ)^(r - 1)) ≠ 0 := by
+    exact (ratCast_natSub_selfPow_pos (n := r) (d := 1) hr1).ne'
+  have hj1 : 1 ≤ posJ a r := by omega
+  have hjPredPow :
+      (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1)) ≠ 0 :=
+    (ratCast_natSub_selfPow_pos (n := posJ a r) (d := 1) hj1).ne'
+  have hpow2j1 : ((2 : ℚ)^(posJ a r - 1)) ≠ 0 := by positivity
+  have hdyadic :
+      (2 : ℚ)^(posJ a r) / (2 : ℚ)^(posJ a r - 1) = 2 := by
+    rw [show posJ a r = (posJ a r - 1) + 1 by omega]
+    rw [show (posJ a r - 1) + 1 - 1 = posJ a r - 1 by omega]
+    rw [pow_succ]
+    field_simp [hpow2j1]
+  unfold positiveEntropyShadowBaseStepRawQuotient
+  rw [hdyadic]
+  field_simp [hrQ, hjQ, hrPredPow, hjPredPow, hpow2j1]
+
 theorem mul_rawQuotient_mul_le_of_mul_num_le
     {a r : Nat} {q x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
     (h :
@@ -6747,6 +6863,137 @@ theorem five_mul_posSmallCutoff_le_self_of_large {a : Nat} (ha : 2000 < a) :
     dsimp [q]
     exact Nat.mul_div_le a 5
   exact (Nat.mul_le_mul_left 5 hcut).trans hq_le
+
+theorem twelve_mul_posSmallCutoff_le_self_of_large {a : Nat} (ha : 2000 < a) :
+    12 * posSmallCutoff a ≤ a := by
+  let q := a / 12
+  have hq166 : 166 ≤ q := by
+    dsimp [q]
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 12)]
+    omega
+  have hq_upper : a < 12 * (q + 1) := by
+    have hsucc : a / 12 < q + 1 := by
+      dsimp [q]
+      exact Nat.lt_succ_self _
+    simpa [Nat.mul_comm] using
+      (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 12)).mp hsucc
+  have hq_sq_large : 166 * q ≤ q * q := by
+    simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+      Nat.mul_le_mul_right q hq166
+  have hhi_le_qsq : posNhi a ≤ q * q := by
+    have hlinear : posNhi a ≤ 144 * q + 136 := by
+      unfold posNhi
+      omega
+    have hlinear' : 144 * q + 136 ≤ 166 * q := by
+      omega
+    exact hlinear.trans (hlinear'.trans hq_sq_large)
+  have hcut : posSmallCutoff a ≤ q := by
+    unfold posSmallCutoff
+    exact ceilSqrt_le_of_le_sq hhi_le_qsq
+  have hq_le : 12 * q ≤ a := by
+    dsimp [q]
+    exact Nat.mul_div_le a 12
+  exact (Nat.mul_le_mul_left 12 hcut).trans hq_le
+
+theorem posJ_ge_eleven_mul_succ_of_small_branch
+    {a r : Nat} (ha : 2000 < a)
+    (hrhi : r < posSmallCutoff a) :
+    11 * (r + 1) + 1 ≤ posJ a r := by
+  have hcut12 : 12 * posSmallCutoff a ≤ a :=
+    twelve_mul_posSmallCutoff_le_self_of_large ha
+  have hr12 : 12 * (r + 1) ≤ a := by
+    exact (Nat.mul_le_mul_left 12 (by omega : r + 1 ≤ posSmallCutoff a)).trans
+      hcut12
+  unfold posJ
+  omega
+
+theorem rawSmallLinearGap_of_small_branch
+    {a r : Nat} (ha : 2000 < a)
+    (hrhi : r < posSmallCutoff a) :
+    272 * (r + 1) ≤ 25 * posJ a r := by
+  have hj := posJ_ge_eleven_mul_succ_of_small_branch ha hrhi
+  nlinarith
+
+theorem positiveEntropyShadowBaseStepRawQuotient_linearHalf_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hrhi : r < posSmallCutoff a) :
+    2 * (((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ)) * (68 / 25)
+      ≤ 1 / 2 := by
+  have hgapNat : 272 * (r + 1) ≤ 25 * posJ a r :=
+    rawSmallLinearGap_of_small_branch ha hrhi
+  have hgapQ : (272 : ℚ) * ((r + 1 : Nat) : ℚ) ≤
+      25 * ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast hgapNat
+  have hjpos : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    have hjNat : 0 < posJ a r := by
+      have hj := posJ_ge_eleven_mul_succ_of_small_branch ha hrhi
+      omega
+    exact_mod_cast hjNat
+  field_simp [hjpos.ne']
+  linarith
+
+theorem positiveEntropyShadowBaseStepRawQuotient_le_half_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    positiveEntropyShadowBaseStepRawQuotient a r ≤ 1 / 2 := by
+  have hsmall : r < posSmallCutoff a := by omega
+  have hj2 : 2 ≤ posJ a r := by
+    have hj := posJ_ge_eleven_mul_succ_of_small_branch ha hsmall
+    omega
+  let pref : ℚ := ((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ)
+  let rpart : ℚ :=
+    ((r : ℚ)^r) /
+      ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1))
+  let jpart : ℚ :=
+    (((posJ a r - 1 : Nat) : ℚ) *
+        ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2)) /
+      (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1))
+  have hraw :
+      positiveEntropyShadowBaseStepRawQuotient a r =
+        pref * rpart * jpart * 2 := by
+    dsimp [pref, rpart, jpart]
+    exact positiveEntropyShadowBaseStepRawQuotient_eq_factored hr1 hj2
+  have hA_nonneg : 0 ≤ 2 * pref := by positivity
+  have hR : rpart ≤ 68 / 25 := by
+    dsimp [rpart]
+    exact positiveEntropyShadowBaseStepRawRPart_le_expBound hr1
+  have hJ : jpart ≤ 1 := by
+    dsimp [jpart]
+    exact positiveEntropyShadowBaseStepRawJPart_le_one hj2
+  have hJ_nonneg : 0 ≤ jpart := by
+    dsimp [jpart]
+    positivity
+  have hstepR : (2 * pref) * rpart ≤ (2 * pref) * (68 / 25) :=
+    mul_le_mul_of_nonneg_left hR hA_nonneg
+  have hright_nonneg : 0 ≤ (2 * pref) * (68 / 25) := by positivity
+  have hprod :
+      ((2 * pref) * rpart) * jpart ≤
+        ((2 * pref) * (68 / 25)) * 1 :=
+    mul_le_mul hstepR hJ hJ_nonneg hright_nonneg
+  have hlin : 2 * pref * (68 / 25) ≤ 1 / 2 := by
+    dsimp [pref]
+    exact positiveEntropyShadowBaseStepRawQuotient_linearHalf_of_small_branch ha
+      hsmall
+  calc
+    positiveEntropyShadowBaseStepRawQuotient a r
+        = ((2 * pref) * rpart) * jpart := by
+          rw [hraw]
+          ring
+    _ ≤ ((2 * pref) * (68 / 25)) * 1 := hprod
+    _ ≤ 1 / 2 := by
+          simpa [mul_assoc] using hlin
+
+theorem positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r < min (posKmax a) (posSmallCutoff a)) :
+    2 * positiveEntropyShadowBaseStepRawNumerator a r
+      ≤ positiveEntropyShadowBaseStepRawDenominator a r := by
+  have hsmall : r < posSmallCutoff a := by omega
+  have hj2 : 2 ≤ posJ a r := by
+    have hj := posJ_ge_eleven_mul_succ_of_small_branch ha hsmall
+    omega
+  exact positiveEntropyShadowBaseStepRawBaseHalf_of_quotient_le_half hr1 hj2
+    (positiveEntropyShadowBaseStepRawQuotient_le_half_of_small_branch ha hr1
+      hrhi)
 
 theorem positiveSmallExponentUpper_lt_largeExpCutoff
     {a k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a) :
@@ -10846,6 +11093,12 @@ theorem PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate.toSmallRawSt
     intro a r ha hr1 hrhi
     exact positiveSmallLargeExp_rawStepCleared_of_base_half
       ha hr1 hrhi (cert.smallRawBaseHalf ha hr1 hrhi)
+
+theorem positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate :
+    PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate where
+  smallRawBaseHalf := by
+    intro a r ha hr1 hrhi
+    exact positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch ha hr1 hrhi
 
 /-- Atomic lower-tempered adjacent-step target for the large-tail candidate
 entropy reserve. -/

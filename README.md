@@ -201,9 +201,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate also exposes reverse parts and atomic-parts views for audit.
   The small adjacent-step atom can be supplied in the still smaller
   `Prop51.PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate` form:
-  Lean proves the small large-exp factor decreases across the small branch,
-  so the proof producer only has to show the pure raw-base half-quotient
-  inequality.
+  Lean now proves the pure raw-base half-quotient theorem
+  `Prop51.positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch` directly
+  from the rational `(1+1/n)^n ≤ 68/25` bound and the small-cutoff linear gap,
+  and packages it as
+  `Prop51.positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`.  The
+  conversion theorem then restores the original raw-cleared small-step field
+  using monotonicity of the small large-exp factor.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
