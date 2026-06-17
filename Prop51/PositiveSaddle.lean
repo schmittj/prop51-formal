@@ -7413,6 +7413,136 @@ theorem expTerm_add_linear_lower {y d : ℚ} {n : Nat}
   rw [halg]
   exact hdiv
 
+/-- Upper-endpoint first-order bound for the increase of a nonnegative power. -/
+theorem pow_sub_le_mul_sub_mul_pow_pred {y z : ℚ} :
+    ∀ {n : Nat}, 1 ≤ n → 0 ≤ y → y ≤ z →
+      z^n - y^n ≤ (n : ℚ) * (z - y) * z^(n-1)
+  | 0, hn, _, _ => by omega
+  | n + 1, _hn, hy, hyz => by
+      by_cases hn0 : n = 0
+      · subst n
+        simp
+      · have hnpos : 1 ≤ n := by omega
+        have hz0 : 0 ≤ z := hy.trans hyz
+        have hd0 : 0 ≤ z - y := by linarith
+        have ih := pow_sub_le_mul_sub_mul_pow_pred
+          (y := y) (z := z) (n := n) hnpos hy hyz
+        have hterm :
+            z * (z^n - y^n) + y^n * (z - y)
+              ≤ z * ((n : ℚ) * (z - y) * z^(n-1))
+                  + z^n * (z - y) := by
+          have h1 := mul_le_mul_of_nonneg_left ih hz0
+          have h2 :=
+            mul_le_mul_of_nonneg_right
+              (pow_le_pow_left₀ hy hyz n) hd0
+          nlinarith
+        have halg :
+            z^(n+1) - y^(n+1)
+              = z * (z^n - y^n) + y^n * (z - y) := by
+          rw [pow_succ, pow_succ]
+          ring
+        rw [halg]
+        calc
+          z * (z^n - y^n) + y^n * (z - y)
+              ≤ z * ((n : ℚ) * (z - y) * z^(n-1))
+                  + z^n * (z - y) := hterm
+          _ = ((n + 1 : Nat) : ℚ) * (z - y) *
+                z^((n + 1) - 1) := by
+              have hpowzn : z^n = z^(n-1) * z := by
+                calc
+                  z^n = z^((n - 1) + 1) := by
+                    exact congrArg (fun m : Nat => z^m)
+                      (by omega : n = (n - 1) + 1)
+                  _ = z^(n-1) * z := by
+                    rw [pow_succ]
+              rw [show (n + 1) - 1 = n by omega]
+              rw [hpowzn]
+              push_cast
+              ring
+
+/-- Normalized exponential-series term version of
+`pow_sub_le_mul_sub_mul_pow_pred`. -/
+theorem expTerm_sub_le_shift_deriv_upper {y z : ℚ} {n : Nat}
+    (hy : 0 ≤ y) (hyz : y ≤ z) (hn : 1 ≤ n) :
+    z^n / (n.factorial : ℚ) - y^n / (n.factorial : ℚ)
+      ≤ (z - y) * z^(n-1) / ((n-1).factorial : ℚ) := by
+  have hpow := pow_sub_le_mul_sub_mul_pow_pred
+    (y := y) (z := z) (n := n) hn hy hyz
+  have hfacPos : (0 : ℚ) < (n.factorial : ℚ) := by positivity
+  have hdiv :
+      (z^n - y^n) / (n.factorial : ℚ)
+        ≤ ((n : ℚ) * (z - y) * z^(n-1)) /
+            (n.factorial : ℚ) :=
+    div_le_div_of_nonneg_right hpow hfacPos.le
+  have hnq : (n : ℚ) ≠ 0 := by exact_mod_cast (by omega : n ≠ 0)
+  have hpredFac : (((n - 1).factorial : Nat) : ℚ) ≠ 0 := by
+    positivity
+  have hfac : ((n.factorial : Nat) : ℚ) =
+      (n : ℚ) * (((n - 1).factorial : Nat) : ℚ) := by
+    rw [show n = (n - 1) + 1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hleft :
+      z^n / (n.factorial : ℚ) - y^n / (n.factorial : ℚ)
+        = (z^n - y^n) / (n.factorial : ℚ) := by
+    ring
+  have hright :
+      ((n : ℚ) * (z - y) * z^(n-1)) / (n.factorial : ℚ)
+        = (z - y) * z^(n-1) / ((n-1).factorial : ℚ) := by
+    rw [hfac]
+    field_simp [hnq, hpredFac]
+  rw [hleft]
+  exact hdiv.trans_eq hright
+
+theorem expTerm_le_partialExpUpper
+    {z : ℚ} {m T : Nat} (hmT : m < T)
+    (hz0 : 0 ≤ z) (hzT : z < (T : ℚ)) :
+    z^m / (m.factorial : ℚ) ≤ partialExpUpper z T := by
+  have hterm_nonneg :
+      ∀ t ∈ Finset.range T,
+        0 ≤ z^t / (t.factorial : ℚ) := by
+    intro t _ht
+    positivity
+  have hmem : m ∈ Finset.range T := Finset.mem_range.mpr hmT
+  have hsingle :
+      z^m / (m.factorial : ℚ)
+        ≤ ∑ t ∈ Finset.range T, z^t / (t.factorial : ℚ) :=
+    Finset.single_le_sum hterm_nonneg hmem
+  have hTpos : 0 < T := by omega
+  have hTQ : (0 : ℚ) < (T : ℚ) := by exact_mod_cast hTpos
+  have hden : 0 < 1 - z / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hzT
+  have htail0 :
+      0 ≤ (z^T / (T.factorial : ℚ)) *
+          (1 / (1 - z / (T : ℚ))) := by
+    positivity
+  unfold partialExpUpper
+  linarith
+
+theorem expTerm_sub_le_shift_partialExpUpper
+    {y z : ℚ} {n T : Nat}
+    (hy : 0 ≤ y) (hyz : y ≤ z) (hn : 1 ≤ n) (hnT : n ≤ T)
+    (hzT : z < (T : ℚ)) :
+    z^n / (n.factorial : ℚ) - y^n / (n.factorial : ℚ)
+      ≤ (z - y) * partialExpUpper z T := by
+  have hz0 : 0 ≤ z := hy.trans hyz
+  have hd0 : 0 ≤ z - y := by linarith
+  have hder :=
+    expTerm_sub_le_shift_deriv_upper
+      (y := y) (z := z) (n := n) hy hyz hn
+  have hterm :
+      z^(n-1) / ((n-1).factorial : ℚ) ≤ partialExpUpper z T :=
+    expTerm_le_partialExpUpper
+      (z := z) (m := n - 1) (T := T)
+      (by omega : n - 1 < T) hz0 hzT
+  calc
+    z^n / (n.factorial : ℚ) - y^n / (n.factorial : ℚ)
+        ≤ (z - y) * z^(n-1) / ((n-1).factorial : ℚ) := hder
+    _ = (z - y) * (z^(n-1) / ((n-1).factorial : ℚ)) := by ring
+    _ ≤ (z - y) * partialExpUpper z T :=
+        mul_le_mul_of_nonneg_left hterm hd0
+
 /-- The shifted finite prefix gains enough to cover multiplication by
 `1+d`, up to the final boundary term. -/
 theorem partialExpPrefix_mul_one_add_le_add_top {y d : ℚ} {T : Nat}
