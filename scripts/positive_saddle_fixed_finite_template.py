@@ -37,6 +37,8 @@ Strategies include:
     materializing the full atom manifest.
   * --dry-run-active-counts: emit row-local active-geometry count estimates,
     again without materializing the full atom manifest.
+  * --active-row-covers: target the row-active Lean finite-window wrapper,
+    using row-local `N` and retained-`k` covers for emitted atoms/manifests.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
     from previously emitted single-chunk theorem names.
 
@@ -405,6 +407,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--active-row-covers",
+        action="store_true",
+        help=(
+            "for the fixed-edge combined strategy, emit the row-active Lean "
+            "certificate whose N and retained-k covers are local to each row"
+        ),
+    )
+    parser.add_argument(
         "--manifest-shard-count",
         type=positive_nat,
         help=(
@@ -494,6 +504,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         )
     if args.dry_run_counts and args.dry_run_active_counts:
         parser.error("--dry-run-counts cannot be combined with --dry-run-active-counts")
+    if (
+        args.active_row_covers
+        and args.strategy
+        != "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+    ):
+        parser.error(
+            "--active-row-covers is only supported for --strategy "
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        )
     if args.dry_run_counts and (
         args.emit_single_chunk is not None
         or args.emit_single_chunk_suite
@@ -731,9 +750,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                 "positiveSaddleGeneratedFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedCertificate"
             )
         else:
-            args.name = (
-                "positiveSaddleGeneratedFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedCertificate"
-            )
+            if args.active_row_covers:
+                args.name = (
+                    "positiveSaddleGeneratedFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedCertificate"
+                )
+            else:
+                args.name = (
+                    "positiveSaddleGeneratedFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedCertificate"
+                )
     return args
 
 
@@ -753,6 +777,22 @@ def validate_single_chunk_indices(
     field = args.emit_single_chunk
     if field in ("product-small", "product-tempered", "product-combined"):
         validate_lt(parser, "--row-index", args.row_index, row_count(args.product_row_len))
+        if args.active_row_covers:
+            validate_lt(
+                parser,
+                "--n-index",
+                args.n_index,
+                active_n_index_count(args.product_row_len, args.n_len, args.row_index),
+            )
+            validate_lt(
+                parser,
+                "--k-index",
+                args.k_index,
+                active_k_chunk_count(
+                    args.product_row_len, active_product_k_len(args), args.row_index
+                ),
+            )
+            return
         validate_lt(
             parser,
             "--n-index",
@@ -765,6 +805,17 @@ def validate_single_chunk_indices(
         validate_lt(parser, "--k-index", args.k_index, tangent_k_count(args.tangent_k_len))
     elif field == "tangent-n":
         validate_lt(parser, "--row-index", args.row_index, row_count(args.tangent_row_len))
+        if args.active_row_covers:
+            validate_lt(
+                parser,
+                "--n-index",
+                args.n_index,
+                active_n_index_count(
+                    args.tangent_row_len, args.tangent_n_len, args.row_index
+                ),
+            )
+            validate_lt(parser, "--k-index", args.k_index, tangent_k_count(args.tangent_k_len))
+            return
         validate_lt(
             parser,
             "--n-index",
@@ -786,6 +837,18 @@ def validate_single_chunk_indices(
             args.row_index,
             row_count(args.solo_saddle_row_len),
         )
+        if args.active_row_covers:
+            validate_lt(
+                parser,
+                "--n-index",
+                args.n_index,
+                active_n_index_count(
+                    args.solo_saddle_row_len,
+                    args.solo_saddle_n_len,
+                    args.row_index,
+                ),
+            )
+            return
         validate_lt(
             parser,
             "--n-index",
@@ -806,6 +869,18 @@ def validate_single_chunk_indices(
             args.row_index,
             row_count(args.solo_budget_row_len),
         )
+        if args.active_row_covers:
+            validate_lt(
+                parser,
+                "--n-index",
+                args.n_index,
+                active_n_index_count(
+                    args.solo_budget_row_len,
+                    args.solo_budget_n_len,
+                    args.row_index,
+                ),
+            )
+            return
         validate_lt(
             parser,
             "--n-index",
@@ -817,6 +892,14 @@ def validate_single_chunk_indices(
         validate_lt(parser, "--k-index", args.k_index, 90)
     elif field == "edge-fixed":
         validate_lt(parser, "--row-index", args.row_index, row_count(args.edge_row_len))
+        if args.active_row_covers:
+            validate_lt(
+                parser,
+                "--k-index",
+                args.k_index,
+                active_k_chunk_count(args.edge_row_len, args.edge_k_len, args.row_index),
+            )
+            return
         validate_lt(parser, "--k-index", args.k_index, edge_k_count(args.edge_k_len))
     else:
         raise AssertionError(f"unhandled single chunk field {field!r}")
@@ -862,6 +945,22 @@ def product_k_count(k_len: int) -> int:
 
 def edge_k_count(k_len: int) -> int:
     return (1800 + k_len - 1) // k_len
+
+
+def finite_row_lo(row_len: int, row_index: int) -> int:
+    return 401 + row_len * row_index
+
+
+def active_row_bound_a(row_len: int, row_index: int) -> int:
+    return finite_row_lo(row_len, row_index) + row_len
+
+
+def active_n_index_count(row_len: int, n_len: int, row_index: int) -> int:
+    return ceil_div(6 * active_row_bound_a(row_len, row_index), n_len)
+
+
+def active_k_chunk_count(row_len: int, k_len: int, row_index: int) -> int:
+    return ceil_div(pos_kmax_py(active_row_bound_a(row_len, row_index)), k_len)
 
 
 def active_product_k_len(args: argparse.Namespace) -> int:
@@ -1237,11 +1336,19 @@ def single_chunk_theorem_lines(
     if field == "edge-fixed":
         row_lo = 401 + args.edge_row_len * row_index
         k_lo = 1 + args.edge_k_len * k_index
+        if args.active_row_covers:
+            row_bound = row_lo + args.edge_row_len
+            scale = (
+                f"positiveEdgeFixedKScaleUpTo {args.edge_k_len} "
+                f"(posKmax {row_bound})"
+            )
+        else:
+            scale = f"positiveEdgeFixedKScale {args.edge_k_len}"
         return [
             f"theorem {name} :",
             "    checkPositiveEdgeMajorantKChunkUnitRowRange",
             f"      {row_lo} {args.edge_row_len} {k_lo} {args.edge_k_len}",
-            f"      (fun _ => positiveEdgeFixedKScale {args.edge_k_len}) = true := by",
+            f"      (fun _ => {scale}) = true := by",
             "  native_decide",
         ]
     raise AssertionError(f"unhandled single chunk field {field!r}")
@@ -1337,6 +1444,78 @@ def single_chunk_shapes(
     return shapes
 
 
+def active_single_chunk_shapes(
+    args: argparse.Namespace,
+) -> list[tuple[str, int, int | None, int | None]]:
+    shapes = []
+    product_fields = (
+        ("product-combined",)
+        if args.strategy in (
+            "combined-product-nk-tangent-solo-n-chunked",
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        )
+        else ("product-small", "product-tempered")
+    )
+    for field in product_fields:
+        for row_index in range(row_count(args.product_row_len)):
+            shapes.append(
+                (
+                    field,
+                    row_index,
+                    active_n_index_count(args.product_row_len, args.n_len, row_index),
+                    active_k_chunk_count(
+                        args.product_row_len, active_product_k_len(args), row_index
+                    ),
+                )
+            )
+    for row_index in range(row_count(args.tangent_row_len)):
+        shapes.append(
+            (
+                "tangent-n",
+                row_index,
+                active_n_index_count(
+                    args.tangent_row_len, args.tangent_n_len, row_index
+                ),
+                tangent_k_count(args.tangent_k_len),
+            )
+        )
+    for field, row_len, n_len in (
+        ("solo-saddle-n", args.solo_saddle_row_len, args.solo_saddle_n_len),
+        ("solo-budget-n", args.solo_budget_row_len, args.solo_budget_n_len),
+    ):
+        for row_index in range(row_count(row_len)):
+            shapes.append(
+                (
+                    field,
+                    row_index,
+                    active_n_index_count(row_len, n_len, row_index),
+                    None,
+                )
+            )
+    for row_index in range(row_count(args.edge_row_len)):
+        shapes.append(
+            (
+                "edge-fixed",
+                row_index,
+                None,
+                active_k_chunk_count(args.edge_row_len, args.edge_k_len, row_index),
+            )
+        )
+    return shapes
+
+
+def active_single_chunk_shape_count(
+    shape: tuple[str, int, int | None, int | None],
+) -> int:
+    _field, _row_index, n_count, k_count = shape
+    total = 1
+    if n_count is not None:
+        total *= n_count
+    if k_count is not None:
+        total *= k_count
+    return total
+
+
 def single_chunk_shape_count(
     shape: tuple[str, int, int | None, int | None],
 ) -> int:
@@ -1350,6 +1529,11 @@ def single_chunk_shape_count(
 
 
 def single_chunk_total_count(args: argparse.Namespace) -> int:
+    if args.active_row_covers:
+        return sum(
+            active_single_chunk_shape_count(shape)
+            for shape in active_single_chunk_shapes(args)
+        )
     return sum(single_chunk_shape_count(shape) for shape in single_chunk_shapes(args))
 
 
@@ -1384,11 +1568,57 @@ def single_chunk_spec_from_local_index(
     return field, row_index, n_index, k_index, name
 
 
+def active_single_chunk_spec_from_local_index(
+    args: argparse.Namespace,
+    shape: tuple[str, int, int | None, int | None],
+    local_index: int,
+) -> tuple[str, int, int | None, int | None, str]:
+    field, row_index, n_count, k_count = shape
+    if n_count is None and k_count is None:
+        n_index = None
+        k_index = None
+    elif n_count is None:
+        assert k_count is not None
+        n_index = None
+        k_index = local_index
+    elif k_count is None:
+        n_index = local_index
+        k_index = None
+    else:
+        n_index = local_index // k_count
+        k_index = local_index % k_count
+    name = single_chunk_name(
+        args.single_chunk_prefix, field, row_index, n_index, k_index
+    )
+    return field, row_index, n_index, k_index, name
+
+
+def active_single_chunk_specs_slice(
+    args: argparse.Namespace,
+    start: int,
+    stop: int,
+):
+    offset = 0
+    for shape in active_single_chunk_shapes(args):
+        shape_total = active_single_chunk_shape_count(shape)
+        local_start = max(0, start - offset)
+        local_stop = min(shape_total, stop - offset)
+        if local_start < local_stop:
+            for local_index in range(local_start, local_stop):
+                yield active_single_chunk_spec_from_local_index(
+                    args, shape, local_index
+                )
+        offset += shape_total
+
+
 def single_chunk_specs_slice(
     args: argparse.Namespace,
     start: int,
     stop: int,
 ):
+    if args.active_row_covers:
+        yield from active_single_chunk_specs_slice(args, start, stop)
+        return
     offset = 0
     for shape in single_chunk_shapes(args):
         shape_total = single_chunk_shape_count(shape)
@@ -1429,6 +1659,8 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
         "--edge-k-len",
         str(args.edge_k_len),
     ]
+    if args.active_row_covers:
+        emit_args.append("--active-row-covers")
     for module in args.extra_import:
         emit_args.extend(["--extra-import", module])
     if args.final_tail_parts:
@@ -1552,6 +1784,7 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         )
     manifest = {
         "strategy": args.strategy,
+        "cover_mode": "row-active" if args.active_row_covers else "global",
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
         "extra_imports": args.extra_import,
@@ -1690,13 +1923,19 @@ def dry_run_chunk_lengths(args: argparse.Namespace) -> dict[str, int | None]:
 
 
 def emit_dry_run_counts(args: argparse.Namespace) -> str:
-    counts, dimensions = collect_count_payload(
-        args,
-        (count_product_atoms, count_tangent_solo_atoms, count_edge_atoms),
-    )
+    if args.active_row_covers:
+        counts, dimensions = count_active_single_chunk_atoms(args)
+        cover_mode = "row-active"
+    else:
+        counts, dimensions = collect_count_payload(
+            args,
+            (count_product_atoms, count_tangent_solo_atoms, count_edge_atoms),
+        )
+        cover_mode = "global"
     total = sum(counts.values())
     payload = {
         "strategy": args.strategy,
+        "cover_mode": cover_mode,
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
         "chunk_lengths": dry_run_chunk_lengths(args),
@@ -1753,6 +1992,49 @@ def add_count_stats(
     dimensions[f"{prefix}_sum"] = sum(values)
     dimensions[f"{prefix}_min"] = min(values) if values else 0
     dimensions[f"{prefix}_max"] = max(values) if values else 0
+
+
+def count_active_single_chunk_atoms(
+    args: argparse.Namespace,
+) -> tuple[dict[str, int], dict[str, int]]:
+    counts: dict[str, int] = {}
+    rows_by_field: dict[str, int] = {}
+    n_counts_by_field: dict[str, list[int]] = {}
+    k_counts_by_field: dict[str, list[int]] = {}
+    atom_counts_by_field: dict[str, list[int]] = {}
+    for shape in active_single_chunk_shapes(args):
+        field, _row_index, n_count, k_count = shape
+        atom_count = active_single_chunk_shape_count(shape)
+        counts[field] = counts.get(field, 0) + atom_count
+        rows_by_field[field] = rows_by_field.get(field, 0) + 1
+        atom_counts_by_field.setdefault(field, []).append(atom_count)
+        if n_count is not None:
+            n_counts_by_field.setdefault(field, []).append(n_count)
+        if k_count is not None:
+            k_counts_by_field.setdefault(field, []).append(k_count)
+
+    dimensions: dict[str, int] = {}
+    for field, rows in rows_by_field.items():
+        prefix = field.replace("-", "_")
+        dimensions[f"{prefix}_rows"] = rows
+        add_count_stats(
+            dimensions,
+            f"{prefix}_row_atoms",
+            atom_counts_by_field.get(field, []),
+        )
+        if field in n_counts_by_field:
+            add_count_stats(
+                dimensions,
+                f"{prefix}_active_n_indices",
+                n_counts_by_field[field],
+            )
+        if field in k_counts_by_field:
+            add_count_stats(
+                dimensions,
+                f"{prefix}_active_k_chunks",
+                k_counts_by_field[field],
+            )
+    return counts, dimensions
 
 
 def count_product_atoms_active(
@@ -1868,14 +2150,27 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         args,
         (count_product_atoms, count_tangent_solo_atoms, count_edge_atoms),
     )
-    active_counts, active_dimensions = collect_count_payload(
-        args,
-        (
-            count_product_atoms_active,
-            count_tangent_solo_atoms_active,
-            count_edge_atoms_active,
-        ),
-    )
+    if args.active_row_covers:
+        active_counts, active_dimensions = count_active_single_chunk_atoms(args)
+        count_mode = "row-active"
+        note = (
+            "Counts are the exact row-local N/k chunks used by "
+            "--active-row-covers manifest and shard emission."
+        )
+    else:
+        active_counts, active_dimensions = collect_count_payload(
+            args,
+            (
+                count_product_atoms_active,
+                count_tangent_solo_atoms_active,
+                count_edge_atoms_active,
+            ),
+        )
+        count_mode = "active-estimate"
+        note = (
+            "Counts skip row-local N/k chunks that cannot intersect the finite "
+            "positive rectangle. They do not change generated Lean semantics."
+        )
     skipped = {
         field: global_counts.get(field, 0) - active_counts.get(field, 0)
         for field in sorted(set(global_counts) | set(active_counts))
@@ -1884,11 +2179,8 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "strategy": args.strategy,
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
-        "count_mode": "active-estimate",
-        "note": (
-            "Counts skip row-local N/k chunks that cannot intersect the finite "
-            "positive rectangle. They do not change generated Lean semantics."
-        ),
+        "count_mode": count_mode,
+        "note": note,
         "chunk_lengths": dry_run_chunk_lengths(args),
         "dimensions": active_dimensions,
         "counts": active_counts,
@@ -2467,6 +2759,300 @@ def add_product_row_n_product_k_dispatch_field_from_single_chunks(
             ),
         )
     )
+
+
+def add_active_n_index_bound(
+    lines: list[str], n_len: int, count: int, indent: str = "      "
+) -> None:
+    lines.extend(
+        [
+            f"{indent}have hnIndexRaw :=",
+            f"{indent}  (mem_positiveProductFixedNChunkIndicesForRowRange_iff",
+            f"{indent}    (by norm_num : 0 < {n_len})).1 hnIndex",
+            f"{indent}have hnIndex' : nIndex < {count} := by",
+            f"{indent}  norm_num at hnIndexRaw ⊢",
+            f"{indent}  exact hnIndexRaw",
+            f"{indent}clear hnIndex hnIndexRaw",
+        ]
+    )
+
+
+def add_active_product_k_bound(
+    lines: list[str], product_k_len: int, count: int, indent: str = "      "
+) -> None:
+    lines.extend(
+        [
+            f"{indent}rcases (mem_positiveProductFixedKChunksUpTo_iff",
+            f"{indent}    (by norm_num : 0 < {product_k_len})).1 hproductKChunk with",
+            f"{indent}  ⟨j, hj, rfl⟩",
+            f"{indent}have hj' : j < {count} := by",
+            f"{indent}  norm_num [posKmax] at hj ⊢",
+            f"{indent}  exact hj",
+            f"{indent}clear hj",
+        ]
+    )
+
+
+def add_active_edge_k_bound(
+    lines: list[str], edge_k_len: int, count: int, indent: str = "      "
+) -> None:
+    lines.extend(
+        [
+            f"{indent}rcases (mem_positiveEdgeFixedKChunksUpTo_iff",
+            f"{indent}    (by norm_num : 0 < {edge_k_len})).1 hedgeChunk with",
+            f"{indent}  ⟨j, hj, rfl⟩",
+            f"{indent}have hj' : j < {count} := by",
+            f"{indent}  norm_num [posKmax] at hj ⊢",
+            f"{indent}  exact hj",
+            f"{indent}clear hj",
+        ]
+    )
+
+
+def add_active_product_row_n_product_k_dispatch_field(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    n_len: int,
+    product_k_len: int,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex productKChunk hproductKChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        k_count = active_k_chunk_count(row_len, product_k_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        add_active_product_k_bound(lines, product_k_len, k_count)
+        lines.append("      interval_cases nIndex; interval_cases j; native_decide")
+
+
+def add_active_product_row_n_product_k_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    n_len: int,
+    product_k_len: int,
+    chunk_field: str,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex productKChunk hproductKChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        k_count = active_k_chunk_count(row_len, product_k_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        add_active_product_k_bound(lines, product_k_len, k_count)
+        lines.extend(
+            exact_case_tree_lines(
+                [("nIndex", n_count), ("j", k_count)],
+                lambda n, j, row_index=row_index: single_chunk_name(
+                    theorem_prefix, chunk_field, row_index, n, j
+                ),
+                indent="      ",
+            )
+        )
+
+
+def add_active_tangent_row_n_k_dispatch_field(
+    lines: list[str], field_name: str, row_len: int, n_len: int, k_len: int
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex kChunk hkChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    rcases (mem_positiveTangentFixedKChunks_iff",
+            f"        (by norm_num : 0 < {k_len})).1 hkChunk with",
+            "      ⟨j, hj, rfl⟩",
+            f"    have hj' : j < {tangent_k_count(k_len)} := by simpa using hj",
+            "    clear hj",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        lines.append("      interval_cases nIndex; interval_cases j; native_decide")
+
+
+def add_active_tangent_row_n_k_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    n_len: int,
+    k_len: int,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex kChunk hkChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    rcases (mem_positiveTangentFixedKChunks_iff",
+            f"        (by norm_num : 0 < {k_len})).1 hkChunk with",
+            "      ⟨j, hj, rfl⟩",
+            f"    have hj' : j < {tangent_k_count(k_len)} := by simpa using hj",
+            "    clear hj",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        lines.extend(
+            exact_case_tree_lines(
+                [("nIndex", n_count), ("j", tangent_k_count(k_len))],
+                lambda n, j, row_index=row_index: single_chunk_name(
+                    theorem_prefix, "tangent-n", row_index, n, j
+                ),
+                indent="      ",
+            )
+        )
+
+
+def add_active_solo_row_n_dispatch_field(
+    lines: list[str], field_name: str, row_len: int, n_len: int
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        lines.append("      interval_cases nIndex; native_decide")
+
+
+def add_active_solo_row_n_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    n_len: int,
+    chunk_field: str,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk nIndex hnIndex",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        n_count = active_n_index_count(row_len, n_len, row_index)
+        lines.append("    next =>")
+        add_active_n_index_bound(lines, n_len, n_count)
+        lines.extend(
+            exact_case_tree_lines(
+                [("nIndex", n_count)],
+                lambda n, row_index=row_index: single_chunk_name(
+                    theorem_prefix, chunk_field, row_index, n
+                ),
+                indent="      ",
+            )
+        )
+
+
+def add_active_row_fixed_edge_dispatch_field(
+    lines: list[str], field_name: str, row_len: int, edge_k_len: int
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk edgeChunk hedgeChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        k_count = active_k_chunk_count(row_len, edge_k_len, row_index)
+        lines.append("    next =>")
+        add_active_edge_k_bound(lines, edge_k_len, k_count)
+        lines.append("      interval_cases j; native_decide")
+
+
+def add_active_row_fixed_edge_dispatch_field_from_single_chunks(
+    lines: list[str],
+    field_name: str,
+    row_len: int,
+    edge_k_len: int,
+    theorem_prefix: str,
+) -> None:
+    lines.extend(
+        [
+            f"  {field_name} := by",
+            "    intro rowChunk hrowChunk edgeChunk hedgeChunk",
+            "    rcases (mem_positiveSaddleFixedRowChunks_iff",
+            f"        (by norm_num : 0 < {row_len})).1 hrowChunk with",
+            "      ⟨i, hi, rfl⟩",
+            f"    have hi' : i < {row_count(row_len)} := by simpa using hi",
+            "    clear hi",
+            "    interval_cases i",
+        ]
+    )
+    for row_index in range(row_count(row_len)):
+        k_count = active_k_chunk_count(row_len, edge_k_len, row_index)
+        lines.append("    next =>")
+        add_active_edge_k_bound(lines, edge_k_len, k_count)
+        lines.extend(
+            exact_case_tree_lines(
+                [("j", k_count)],
+                lambda j, row_index=row_index: single_chunk_name(
+                    theorem_prefix, "edge-fixed", row_index, None, j
+                ),
+                indent="      ",
+            )
+        )
 
 
 def tangent_cell_provider_binder(with_colon: bool) -> list[str]:
@@ -3307,10 +3893,15 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
     edge_k = args.edge_k_len
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
+    certificate_type = (
+        "PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
+        if args.active_row_covers
+        else "PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
+    )
 
     lines = [
         f"theorem {name} :",
-        "    PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate",
+        f"    {certificate_type}",
         f"      {p} {t} {ss} {sb} {e}",
         f"      {product_n} {product_k} {tangent_n} {solo_saddle_n} {solo_budget_n}",
         f"      {tangent_k} {edge_k} where",
@@ -3328,82 +3919,163 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         "  edgeKLenPos := by norm_num",
     ]
     if args.use_single_chunk_theorems:
-        add_product_row_n_product_k_dispatch_field_from_single_chunks(
-            lines,
-            "xyProductRawClearedTableProductRowRangeNIndexKChunks",
-            p,
-            product_n,
-            product_k,
-            "product-combined",
-            args.single_chunk_prefix,
-        )
-        add_tangent_row_n_k_dispatch_field_from_single_chunks(
-            lines,
-            "smallTangentExpEdgeRowRangeNIndexKChunks",
-            t,
-            tangent_n,
-            tangent_k,
-            args.single_chunk_prefix,
-        )
-        add_solo_row_n_dispatch_field_from_single_chunks(
-            lines,
-            "soloYSaddleClearedRowRangeNIndexChunks",
-            ss,
-            solo_saddle_n,
-            "solo-saddle-n",
-            args.single_chunk_prefix,
-        )
-        add_solo_row_n_dispatch_field_from_single_chunks(
-            lines,
-            "soloYBudgetRowRangeNIndexChunks",
-            sb,
-            solo_budget_n,
-            "solo-budget-n",
-            args.single_chunk_prefix,
-        )
-        add_row_fixed_edge_dispatch_field_from_single_chunks(
-            lines,
-            "edgeKChunkUnitRowRanges",
-            e,
-            edge_k,
-            args.single_chunk_prefix,
-        )
+        if args.active_row_covers:
+            add_active_product_row_n_product_k_dispatch_field_from_single_chunks(
+                lines,
+                "xyProductRawClearedTableProductRowRangeNIndexKChunks",
+                p,
+                product_n,
+                product_k,
+                "product-combined",
+                args.single_chunk_prefix,
+            )
+            add_active_tangent_row_n_k_dispatch_field_from_single_chunks(
+                lines,
+                "smallTangentExpEdgeRowRangeNIndexKChunks",
+                t,
+                tangent_n,
+                tangent_k,
+                args.single_chunk_prefix,
+            )
+            add_active_solo_row_n_dispatch_field_from_single_chunks(
+                lines,
+                "soloYSaddleClearedRowRangeNIndexChunks",
+                ss,
+                solo_saddle_n,
+                "solo-saddle-n",
+                args.single_chunk_prefix,
+            )
+            add_active_solo_row_n_dispatch_field_from_single_chunks(
+                lines,
+                "soloYBudgetRowRangeNIndexChunks",
+                sb,
+                solo_budget_n,
+                "solo-budget-n",
+                args.single_chunk_prefix,
+            )
+            add_active_row_fixed_edge_dispatch_field_from_single_chunks(
+                lines,
+                "edgeKChunkUnitRowRanges",
+                e,
+                edge_k,
+                args.single_chunk_prefix,
+            )
+        else:
+            add_product_row_n_product_k_dispatch_field_from_single_chunks(
+                lines,
+                "xyProductRawClearedTableProductRowRangeNIndexKChunks",
+                p,
+                product_n,
+                product_k,
+                "product-combined",
+                args.single_chunk_prefix,
+            )
+            add_tangent_row_n_k_dispatch_field_from_single_chunks(
+                lines,
+                "smallTangentExpEdgeRowRangeNIndexKChunks",
+                t,
+                tangent_n,
+                tangent_k,
+                args.single_chunk_prefix,
+            )
+            add_solo_row_n_dispatch_field_from_single_chunks(
+                lines,
+                "soloYSaddleClearedRowRangeNIndexChunks",
+                ss,
+                solo_saddle_n,
+                "solo-saddle-n",
+                args.single_chunk_prefix,
+            )
+            add_solo_row_n_dispatch_field_from_single_chunks(
+                lines,
+                "soloYBudgetRowRangeNIndexChunks",
+                sb,
+                solo_budget_n,
+                "solo-budget-n",
+                args.single_chunk_prefix,
+            )
+            add_row_fixed_edge_dispatch_field_from_single_chunks(
+                lines,
+                "edgeKChunkUnitRowRanges",
+                e,
+                edge_k,
+                args.single_chunk_prefix,
+            )
     else:
-        add_product_row_n_product_k_dispatch_field(
-            lines,
-            "xyProductRawClearedTableProductRowRangeNIndexKChunks",
-            p,
-            product_n,
-            product_k,
-        )
-        add_tangent_row_n_k_dispatch_field(
-            lines,
-            "smallTangentExpEdgeRowRangeNIndexKChunks",
-            t,
-            tangent_n,
-            tangent_k,
-        )
-        add_solo_row_n_dispatch_field(
-            lines,
-            "soloYSaddleClearedRowRangeNIndexChunks",
-            ss,
-            solo_saddle_n,
-        )
-        add_solo_row_n_dispatch_field(
-            lines,
-            "soloYBudgetRowRangeNIndexChunks",
-            sb,
-            solo_budget_n,
-        )
-        add_row_fixed_edge_dispatch_field(
-            lines,
-            "edgeKChunkUnitRowRanges",
-            e,
-            edge_k,
-        )
+        if args.active_row_covers:
+            add_active_product_row_n_product_k_dispatch_field(
+                lines,
+                "xyProductRawClearedTableProductRowRangeNIndexKChunks",
+                p,
+                product_n,
+                product_k,
+            )
+            add_active_tangent_row_n_k_dispatch_field(
+                lines,
+                "smallTangentExpEdgeRowRangeNIndexKChunks",
+                t,
+                tangent_n,
+                tangent_k,
+            )
+            add_active_solo_row_n_dispatch_field(
+                lines,
+                "soloYSaddleClearedRowRangeNIndexChunks",
+                ss,
+                solo_saddle_n,
+            )
+            add_active_solo_row_n_dispatch_field(
+                lines,
+                "soloYBudgetRowRangeNIndexChunks",
+                sb,
+                solo_budget_n,
+            )
+            add_active_row_fixed_edge_dispatch_field(
+                lines,
+                "edgeKChunkUnitRowRanges",
+                e,
+                edge_k,
+            )
+        else:
+            add_product_row_n_product_k_dispatch_field(
+                lines,
+                "xyProductRawClearedTableProductRowRangeNIndexKChunks",
+                p,
+                product_n,
+                product_k,
+            )
+            add_tangent_row_n_k_dispatch_field(
+                lines,
+                "smallTangentExpEdgeRowRangeNIndexKChunks",
+                t,
+                tangent_n,
+                tangent_k,
+            )
+            add_solo_row_n_dispatch_field(
+                lines,
+                "soloYSaddleClearedRowRangeNIndexChunks",
+                ss,
+                solo_saddle_n,
+            )
+            add_solo_row_n_dispatch_field(
+                lines,
+                "soloYBudgetRowRangeNIndexChunks",
+                sb,
+                solo_budget_n,
+            )
+            add_row_fixed_edge_dispatch_field(
+                lines,
+                "edgeKChunkUnitRowRanges",
+                e,
+                edge_k,
+            )
 
     if args.emit_final:
-        if args.final_tail_tempered_raw_exp_ratio_ten_sevenths_reserve_envelope_bounds:
+        if args.active_row_covers:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
+            )
+            final_arg = final_tail_arg(args)
+        elif args.final_tail_tempered_raw_exp_ratio_ten_sevenths_reserve_envelope_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate"
             )

@@ -143,11 +143,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   for batch proof production; add `--manifest-shard-count n` to include the
   balanced shard start/stop plan in the same file.  Use
   `--dry-run-active-counts` before manifest production to estimate how many
-  row-local atoms can actually meet the finite positive rectangle; this is a
-  planning estimate and does not change the generated global atom order.
-  Shard emission now computes its `[start, stop)` slice directly from the
-  global index formulas, so `--emit-single-chunk-shard` does not materialize
-  the full manifest first.  Lean
+  row-local atoms can actually meet the finite positive rectangle.  For the
+  fixed-edge combined strategy, pass `--active-row-covers` to make the
+  generated certificate, manifest, and shard emission use those row-local `N`
+  and retained-`k` covers instead of the global atom order.  Shard emission now
+  computes its `[start, stop)` slice directly from the index formulas, so
+  `--emit-single-chunk-shard` does not materialize the full manifest first.
+  Lean
   also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
@@ -189,11 +191,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   its product/tangent/solo `N` indices and product/edge retained-`k` chunks
   are local to each row range, then reduce to the same tangent-product budget
   certificate.  This records a proof-production optimization beyond the
-  TeX-style fixed global cover; the generator manifest still uses the global
-  atom order until active manifests are implemented.  Final assembly adapters
-  are available for the base large-tail audit, refined atomic bounds, and the
-  preferred quotient/crossmul ten-sevenths closed-reserve solo-envelope tail
-  shapes.  The
+  TeX-style fixed global cover; the generator emits this route with
+  `--active-row-covers`, including active manifests and active shard slices.
+  Final assembly adapters are available for the base large-tail audit, refined
+  atomic bounds, and the preferred quotient/crossmul ten-sevenths
+  closed-reserve solo-envelope tail shapes.  The
   remaining large-tail inputs can also be supplied through
   `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
   product-small, product-tempered, solo, adjacent-step, and unit-reserve

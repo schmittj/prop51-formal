@@ -574,16 +574,20 @@ Status:
       formulas without materializing the atom list; `--dry-run-active-counts`
       additionally reports row-local active-geometry estimates and
       skipped-vs-global totals, which is useful when choosing row, `N`, or
-      `k` lengths before committing to a global manifest.  Shard emission now
-      uses direct global-index slicing, so large `--emit-single-chunk-shard`
-      jobs no longer build the full atom list before selecting their slice.
+      `k` lengths before committing to a manifest.  For the fixed-edge
+      combined strategy, `--active-row-covers` makes the generated certificate,
+      manifest, and shard emission use the row-local active `N` and retained
+      `k` covers.  Shard emission now uses direct index slicing, so large
+      `--emit-single-chunk-shard` jobs no longer build the full atom list
+      before selecting their slice.
       Lean now also has the row-active finite-window wrapper
       `PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate`,
       whose `N` and retained-`k` covers are local to each row range and then
       reduce to the same `PositiveSaddleTangentProductBudgetCertificate`.
       This is a documented Lean proof-production divergence from the
-      TeX-style fixed global chunk cover; generator manifests still use the
-      global atom order until active manifest/shard emission is implemented.
+      TeX-style fixed global chunk cover; the generator emits this route with
+      `--active-row-covers`, including active manifests and active shard
+      slices.
       `Prop51/Main.lean` exposes final assembly adapters for this active
       route, including the refined atomic and preferred ten-sevenths
       closed-reserve solo-envelope large-tail shapes.
