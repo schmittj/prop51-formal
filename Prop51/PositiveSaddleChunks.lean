@@ -5314,15 +5314,33 @@ structure PositiveSaddleLargeTailPartsAuditCertificate : Prop where
   candidateUnitReserves :
     PositiveSaddleLargeTailCandidateUnitReserveCertificate
 
+theorem PositiveSaddleLargeTailPartsAuditCertificate.toProductPointwiseYRawUnitSoloCertificate
+    (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :=
+  positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
+    cert.smallProductRaw cert.temperedProductRaw cert.soloYUnit
+
+theorem PositiveSaddleLargeTailPartsAuditCertificate.toCandidateRawClearedUnitReserveBoundsCertificate
+    (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate :=
+  positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
+    cert.candidateRawClearedSteps cert.candidateUnitReserves
+
+theorem PositiveSaddleLargeTailPartsAuditCertificate.toCandidateBoundsCertificate
+    (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toCandidateRawClearedUnitReserveBoundsCertificate.toBoundsCertificate
+
 theorem PositiveSaddleLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
     (cert : PositiveSaddleLargeTailPartsAuditCertificate) :
     PositiveSaddleLargeTailAuditCertificate where
   productPointwiseYRawUnitSolo :=
-    positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
-      cert.smallProductRaw cert.temperedProductRaw cert.soloYUnit
+    cert.toProductPointwiseYRawUnitSoloCertificate
   candidateSplitTemperedRawClearedUnitReserve :=
-    positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate_of_parts
-      cert.candidateRawClearedSteps cert.candidateUnitReserves
+    cert.toCandidateRawClearedUnitReserveBoundsCertificate
 
 /-- Large-tail audit certificate with the six candidate entropy-reserve
 families split into atomic one-dimensional targets.  This refines

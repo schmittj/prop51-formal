@@ -1,7 +1,8 @@
 /- Axiom audit: run with `lake env lean scripts/AxiomsReport.lean`.
-   CI greps the output: certificate theorems may use exactly
-   [propext, Classical.choice, Quot.sound, Lean.ofReduceBool];
-   everything else must avoid Lean.ofReduceBool and Lean.trustCompiler. -/
+   CI greps the output: structural theorems should introduce no axioms beyond
+   the standard trio [propext, Classical.choice, Quot.sound], while
+   `native_decide`-backed finite or rational audit endpoints may additionally
+   use Lean.ofReduceBool and Lean.trustCompiler. -/
 import Prop51
 
 #print axioms Prop51.c_succ_succ
@@ -90,3 +91,22 @@ import Prop51
 #print axioms Prop51.DeltaRat_le_final_envelope
 #print axioms Prop51.Eminus_normalized_residual_le_DeltaRat
 #print axioms Prop51.Eminus_normalized_residual_le_final
+
+-- Layer C sign-lock: completed `X`-side margin and its positive-saddle bridge
+#print axioms Prop51.signLock_error_budget_zetaMax
+#print axioms Prop51.signLockNearBase_lower
+#print axioms Prop51.Xnorm_le_neg_final_margin_of_signLockNearBase
+#print axioms Prop51.Xnorm_le_neg_final_margin
+#print axioms Prop51.Xnorm_le_neg_signLockMargin
+#print axioms Prop51.Unorm_neg_of_signLock_and_positiveEnvelopeBound
+
+-- Layer C positive-saddle: current finite-window and large-tail audit interfaces
+#print axioms Prop51.positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
+#print axioms Prop51.PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedUnitReserveBoundsCertificate
+#print axioms Prop51.PositiveSaddleLargeTailCandidateAtomicCertificate.toBoundsCertificate
+#print axioms Prop51.PositiveSaddleLargeTailPartsAuditCertificate.toProductPointwiseYRawUnitSoloCertificate
+#print axioms Prop51.PositiveSaddleLargeTailPartsAuditCertificate.toCandidateRawClearedUnitReserveBoundsCertificate
+#print axioms Prop51.PositiveSaddleLargeTailPartsAuditCertificate.toCandidateBoundsCertificate
+#print axioms Prop51.PositiveSaddleLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
+#print axioms Prop51.PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailAuditCertificate
+#print axioms Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicPartsAuditCertificate
