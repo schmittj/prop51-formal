@@ -54,8 +54,16 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
+* **Canonical remaining route**:
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
+  This is the intended final conditional endpoint for `a ≥ 401`: it combines
+  the corrected fixed-edge combined-product finite-window certificate with
+  `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate`, separating
+  product bounds, solo bounds, and the six one-dimensional large-tail
+  candidate step/reserve inequalities.  Older long-named capstones below are
+  retained as audit and profiling alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
-  — the current most practical large-`a` conditional capstone: table-backed
+  — an older table-backed large-`a` conditional capstone: table-backed
   exact finite product chunks using a fixed-width row-dependent `N` cover and
   independent row covers for product, tangent, displayed-solo saddle,
   displayed-solo budget, and edge `k`-chunk checks, the default 20-wide
@@ -186,14 +194,19 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate` bundles the
   product/solo bound certificates with those atomic candidate fields.  Existing
   grouped raw-cleared unit-reserve proofs can also be split back into those
-  atomic candidate fields, so either proof-production shape can feed the final
-  route; the core large-tail audit certificate also exposes reverse parts and
-  atomic-parts views for audit.  The finite generator can target these split
+  atomic candidate fields; the convenience wrapper
+  `Prop51.PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate` accepts
+  product/solo bounds together with that grouped raw-cleared unit-reserve
+  proof and converts to the atomic-bounds route.  The core large-tail audit
+  certificate also exposes reverse parts and atomic-parts views for audit.
+  The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
-  `--final-tail-atomic-parts`, or `--final-tail-atomic-bounds`; use repeated
-  `--extra-import` flags when the atom theorems live in separately built Lean
-  modules.
+  `--final-tail-atomic-parts`, `--final-tail-atomic-bounds`, or
+  `--final-tail-raw-cleared-unit-bounds`; use repeated `--extra-import` flags
+  when the atom theorems live in separately built Lean modules.  Before
+  emitting a full manifest, run the same command with `--dry-run-counts` to
+  print formula-based atom counts without materializing the atom list.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.

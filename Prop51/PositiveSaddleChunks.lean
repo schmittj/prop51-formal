@@ -5580,6 +5580,104 @@ theorem PositiveSaddleLargeTailAtomicBoundsAuditCertificate.toLargeTailAuditCert
         cert.candidateTemperedLowerFirstReserve
         cert.candidateTemperedUpperLastReserve)
 
+/-- Large-tail audit certificate with product and solo bounds split, while the
+candidate entropy-reserve proof is kept in the grouped raw-cleared
+unit-reserve form used by earlier generated-audit targets.
+
+This is a proof-production convenience interface.  It intentionally converts
+back to `PositiveSaddleLargeTailAtomicBoundsAuditCertificate`, so the canonical
+final route still consumes the same six atomic one-dimensional candidate
+inequality families. -/
+structure PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+    (smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ)
+    (soloYBound : Nat → Nat → ℚ) : Prop where
+  productBounds :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound
+  soloY : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound
+  candidateSplitTemperedRawClearedUnitReserve :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate
+
+theorem PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate.toBoundsPartsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailBoundsPartsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  candidateRawClearedSteps :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateRawClearedStepCertificate
+  candidateUnitReserves :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateUnitReserveCertificate
+
+theorem PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := cert.productBounds
+  soloY := cert.soloY
+  candidateSmallRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.smallRawStep
+  candidateTemperedLowerRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedLowerRawStep
+  candidateTemperedUpperReverseRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedUpperReverseRawStep
+  candidateSmallFirstReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.smallFirstReserve
+  candidateTemperedLowerFirstReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedLowerFirstReserve
+  candidateTemperedUpperLastReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedUpperLastReserve
+
+theorem PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate.toLargeTailPartsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailPartsAuditCertificate :=
+  cert.toBoundsPartsAuditCertificate.toLargeTailPartsAuditCertificate
+
+theorem PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate.toAtomicPartsAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAtomicPartsAuditCertificate :=
+  cert.toAtomicBoundsAuditCertificate.toAtomicPartsAuditCertificate
+
+theorem PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate.toLargeTailAuditCertificate
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
 theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateAtomicCertificate
     (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
     PositiveSaddleLargeTailCandidateAtomicCertificate where

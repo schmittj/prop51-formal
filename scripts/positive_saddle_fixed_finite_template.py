@@ -33,6 +33,8 @@ Strategies include:
   * --emit-single-chunk-manifest: emit the same atom list as JSON for batch
     proof production; pass --manifest-shard-count to include the balanced
     shard plan in the JSON.
+  * --dry-run-counts: emit formula-based atom counts as JSON, without
+    materializing the full atom manifest.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
     from previously emitted single-chunk theorem names.
 
@@ -209,6 +211,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-raw-cleared-unit-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split and grouped raw-cleared unit-reserve "
+            "PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate "
+            "interface"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -248,6 +260,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help=(
             "emit a JSON manifest of all required single-chunk theorem names "
             "and indices instead of Lean code"
+        ),
+    )
+    parser.add_argument(
+        "--dry-run-counts",
+        action="store_true",
+        help=(
+            "emit formula-based JSON atom counts and exit without "
+            "materializing the full manifest or any Lean code"
         ),
     )
     parser.add_argument(
@@ -338,11 +358,22 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--emit-single-chunk-manifest cannot be combined with "
             "--emit-single-chunk-suite"
         )
+    if args.dry_run_counts and (
+        args.emit_single_chunk is not None
+        or args.emit_single_chunk_suite
+        or args.emit_single_chunk_shard
+        or args.emit_single_chunk_manifest
+    ):
+        parser.error(
+            "--dry-run-counts cannot be combined with single-chunk, suite, "
+            "shard, or manifest emission"
+        )
     final_tail_selectors = (
         args.final_tail_parts,
         args.final_tail_bounds_parts,
         args.final_tail_atomic_parts,
         args.final_tail_atomic_bounds,
+        args.final_tail_raw_cleared_unit_bounds,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -411,6 +442,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     ):
         parser.error(
             "--emit-single-chunk-manifest is only supported for "
+            "--strategy product-n-chunked-tangent or "
+            "--strategy product-tangent-solo-n-chunked or "
+            "--strategy product-nk-tangent-solo-n-chunked or "
+            "--strategy combined-product-nk-tangent-solo-n-chunked"
+            " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        )
+    if args.dry_run_counts and args.strategy not in (
+        "product-n-chunked-tangent",
+        "product-tangent-solo-n-chunked",
+        "product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+    ):
+        parser.error(
+            "--dry-run-counts is only supported for "
             "--strategy product-n-chunked-tangent or "
             "--strategy product-tangent-solo-n-chunked or "
             "--strategy product-nk-tangent-solo-n-chunked or "
@@ -709,6 +755,8 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "Pass `--final-tail-bounds-parts` for product/solo bound splits.",
         "Pass `--final-tail-atomic-parts` for the atomic large-tail interface.",
         "Pass `--final-tail-atomic-bounds` for bound-split atomic tails.",
+        "Pass `--final-tail-raw-cleared-unit-bounds` for grouped raw-cleared",
+        "unit-reserve tails with product/solo bound splits.",
         "-/",
     ]
 
@@ -716,6 +764,8 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
 def final_tail_type(args: argparse.Namespace) -> str:
     if args.final_tail_atomic_bounds:
         return "PositiveSaddleLargeTailAtomicBoundsAuditCertificate"
+    if args.final_tail_raw_cleared_unit_bounds:
+        return "PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate"
     if args.final_tail_atomic_parts:
         return "PositiveSaddleLargeTailAtomicPartsAuditCertificate"
     if args.final_tail_bounds_parts:
@@ -726,7 +776,11 @@ def final_tail_type(args: argparse.Namespace) -> str:
 
 
 def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
-    if args.final_tail_bounds_parts or args.final_tail_atomic_bounds:
+    if (
+        args.final_tail_bounds_parts
+        or args.final_tail_atomic_bounds
+        or args.final_tail_raw_cleared_unit_bounds
+    ):
         return [
             "    {smallXBound smallYBound temperedXBound temperedYBound :",
             "      Nat → Nat → Nat → ℚ}",
@@ -740,6 +794,7 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
 def final_tail_arg(args: argparse.Namespace) -> str:
     if (
         args.final_tail_atomic_bounds
+        or args.final_tail_raw_cleared_unit_bounds
         or args.final_tail_atomic_parts
         or args.final_tail_bounds_parts
         or args.final_tail_parts
@@ -1110,6 +1165,124 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
             for start, stop in [shard_bounds(len(specs), shard_index, shard_count)]
         ]
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+
+
+def count_product_atoms(args: argparse.Namespace) -> tuple[dict[str, int], dict[str, int]]:
+    product_rows = row_count(args.product_row_len)
+    product_n = product_n_index_count(args.product_row_len, args.n_len)
+    product_k = active_product_k_count(args)
+    product_fields = (
+        ("product-combined",)
+        if args.strategy in (
+            "combined-product-nk-tangent-solo-n-chunked",
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        )
+        else ("product-small", "product-tempered")
+    )
+    per_field = product_rows * product_n * product_k
+    counts = {field: per_field for field in product_fields}
+    dimensions = {
+        "product_rows": product_rows,
+        "product_n_indices": product_n,
+        "product_k_chunks": product_k,
+        "product_k_len": active_product_k_len(args),
+    }
+    return counts, dimensions
+
+
+def count_tangent_solo_atoms(args: argparse.Namespace) -> tuple[dict[str, int], dict[str, int]]:
+    counts: dict[str, int] = {}
+    dimensions: dict[str, int] = {}
+    tangent_rows = row_count(args.tangent_row_len)
+    tangent_k = tangent_k_count(args.tangent_k_len)
+    dimensions["tangent_rows"] = tangent_rows
+    dimensions["tangent_k_chunks"] = tangent_k
+    if args.strategy in (
+        "product-tangent-solo-n-chunked",
+        "product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+    ):
+        tangent_n = product_n_index_count(args.tangent_row_len, args.tangent_n_len)
+        dimensions["tangent_n_indices"] = tangent_n
+        counts["tangent-n"] = tangent_rows * tangent_n * tangent_k
+        for field, row_len, n_len in (
+            ("solo-saddle-n", args.solo_saddle_row_len, args.solo_saddle_n_len),
+            ("solo-budget-n", args.solo_budget_row_len, args.solo_budget_n_len),
+        ):
+            rows = row_count(row_len)
+            n_indices = product_n_index_count(row_len, n_len)
+            dimensions[f"{field}_rows"] = rows
+            dimensions[f"{field}_n_indices"] = n_indices
+            counts[field] = rows * n_indices
+    else:
+        counts["tangent"] = tangent_rows * tangent_k
+        for field, row_len in (
+            ("solo-saddle", args.solo_saddle_row_len),
+            ("solo-budget", args.solo_budget_row_len),
+        ):
+            rows = row_count(row_len)
+            dimensions[f"{field}_rows"] = rows
+            counts[field] = rows
+    return counts, dimensions
+
+
+def count_edge_atoms(args: argparse.Namespace) -> tuple[dict[str, int], dict[str, int]]:
+    edge_rows = row_count(args.edge_row_len)
+    if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked":
+        edge_chunks = edge_k_count(args.edge_k_len)
+        return (
+            {"edge-fixed": edge_rows * edge_chunks},
+            {
+                "edge_rows": edge_rows,
+                "edge_k_chunks": edge_chunks,
+                "edge_k_len": args.edge_k_len,
+            },
+        )
+    return (
+        {"edge": edge_rows * 90},
+        {"edge_rows": edge_rows, "edge_k_chunks": 90, "edge_k_len": 20},
+    )
+
+
+def emit_dry_run_counts(args: argparse.Namespace) -> str:
+    counts: dict[str, int] = {}
+    dimensions: dict[str, int] = {}
+    for next_counts, next_dimensions in (
+        count_product_atoms(args),
+        count_tangent_solo_atoms(args),
+        count_edge_atoms(args),
+    ):
+        counts.update(next_counts)
+        dimensions.update(next_dimensions)
+    total = sum(counts.values())
+    payload = {
+        "strategy": args.strategy,
+        "certificate_theorem": args.name,
+        "single_chunk_prefix": args.single_chunk_prefix,
+        "chunk_lengths": {
+            "product_row_len": args.product_row_len,
+            "product_n_len": args.n_len,
+            "product_k_len": active_product_k_len(args),
+            "tangent_row_len": args.tangent_row_len,
+            "tangent_n_len": args.tangent_n_len,
+            "tangent_k_len": args.tangent_k_len,
+            "solo_saddle_row_len": args.solo_saddle_row_len,
+            "solo_saddle_n_len": args.solo_saddle_n_len,
+            "solo_budget_row_len": args.solo_budget_row_len,
+            "solo_budget_n_len": args.solo_budget_n_len,
+            "edge_row_len": args.edge_row_len,
+            "edge_k_len": args.edge_k_len
+            if args.strategy
+            == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            else 20,
+        },
+        "dimensions": dimensions,
+        "counts": counts,
+        "total": total,
+        "materialized_chunks": False,
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
 def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, int]:
@@ -2660,6 +2833,8 @@ def emit_combined_product_nk_tangent_solo_n_fixed_edge_k_chunked(
 
 
 def emit(args: argparse.Namespace) -> str:
+    if args.dry_run_counts:
+        return emit_dry_run_counts(args)
     if args.emit_single_chunk is not None:
         return emit_single_chunk(args)
     if args.emit_single_chunk_manifest:

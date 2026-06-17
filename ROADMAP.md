@@ -569,7 +569,10 @@ Status:
       `--emit-single-chunk-manifest` emits the same atom list as JSON with
       global atom indices and per-atom emit commands for batching and coverage
       checks; add `--manifest-shard-count n` to include the balanced shard
-      start/stop plan in that JSON.  The finer Lean endpoint
+      start/stop plan in that JSON.  Before asking for the full manifest,
+      `--dry-run-counts` prints the same field-level atom counts from closed
+      formulas without materializing the atom list; use this first when
+      changing row, `N`, or `k` lengths.  The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
       `N`-chunk index and is emitted with
@@ -638,8 +641,13 @@ Status:
       `--emit-final --final-tail-atomic-parts` or
       `--final-tail-atomic-bounds`.  Grouped raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
-      existing grouped proof production can still feed this final route.  If
-      a proof already has the core `PositiveSaddleLargeTailAuditCertificate`,
+      existing grouped proof production can still feed this final route; the
+      convenience wrapper
+      `PositiveSaddleLargeTailRawClearedUnitBoundsAuditCertificate` bundles
+      product/solo bounds with that grouped candidate proof and is available
+      to generated final theorems through
+      `--final-tail-raw-cleared-unit-bounds`.  If a proof already has the
+      core `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass
       repeated `--extra-import` options when emitting the assembly theorem.
