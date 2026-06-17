@@ -207,13 +207,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   and packages it as
   `Prop51.positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`.  The
   conversion theorem then restores the original raw-cleared small-step field
-  using monotonicity of the small large-exp factor.  The lower-tempered
-  adjacent-step atom has the analogous reduced
-  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate`
-  interface: Lean proves the lower-side tempered large-exp factor decreases
-  up to `Prop51.positiveLargeExpTemperedSplit`, so the remaining lower-step
-  proof only has to show the pure raw-base ratio with the `(4a-1)/(4a)`
-  denominator cleared.
+  using monotonicity of the small large-exp factor.  For the lower-tempered
+  adjacent-step atom, Lean proves that the lower-side tempered large-exp
+  factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this
+  monotonicity is useful bookkeeping, but the pure raw-base ratio alone is
+  too strong near the split.  The official remaining target is therefore
+  still the raw-cleared field
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate`,
+  where the quantitative decrease of the large-exp factor must be used
+  together with the entropy-shadow raw quotient.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

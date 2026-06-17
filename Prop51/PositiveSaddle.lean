@@ -7549,6 +7549,12 @@ theorem positiveTemperedLargeExp_succ_div_le_one_of_lower_branch
   rw [div_le_iff₀ hpos]
   simpa using positiveTemperedLargeExp_succ_le_of_lower_branch ha hrlo hrhi
 
+/-- Convenience bridge from a pure lower-tempered raw-base ratio to the
+raw-cleared lower step.
+
+This is deliberately not exposed as a candidate certificate: the pure
+raw-base ratio alone is too strong near the split.  The final lower-tempered
+step must still use the quantitative decrease of the large-exp factor. -/
 theorem positiveTemperedLargeExp_lower_rawStepCleared_of_base_ratio
     {a r : Nat} (ha : 2000 < a)
     (hrlo : max 1 (posTemperedCutoff a + 1) ≤ r)
@@ -11337,28 +11343,6 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate :
             positiveTemperedLargeExp a r *
               positiveEntropyShadowBaseStepRawDenominator a r
 
-/-- Smaller lower-tempered adjacent-step target after using monotonicity of
-the large-tail tempered exponential factor on the lower side of the split.
-The remaining inequality is the pure raw-base ratio
-`raw quotient ≤ (4a-1)/(4a)`, with the common positive denominator cleared. -/
-structure PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate :
-    Prop where
-  temperedLowerRawBaseRatio :
-    ∀ {a r : Nat}, 2000 < a →
-      max 1 (posTemperedCutoff a + 1) ≤ r →
-      r < positiveLargeExpTemperedSplit a →
-        ((4 * a : Nat) : ℚ) * positiveEntropyShadowBaseStepRawNumerator a r
-          ≤ ((4 * a - 1 : Nat) : ℚ) *
-            positiveEntropyShadowBaseStepRawDenominator a r
-
-theorem PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate.toTemperedLowerRawStepCertificate
-    (cert : PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate) :
-    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate where
-  temperedLowerRawStepCleared := by
-    intro a r ha hrlo hrhi
-    exact positiveTemperedLargeExp_lower_rawStepCleared_of_base_ratio
-      ha hrlo hrhi (cert.temperedLowerRawBaseRatio ha hrlo hrhi)
-
 /-- Atomic upper-tempered reverse adjacent-step target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate :
@@ -11482,18 +11466,6 @@ theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHa
     PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
   positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
     small.toSmallRawStepCertificate temperedLower temperedUpper
-
-theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_baseRatioParts
-    (small : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate)
-    (temperedLower :
-      PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate)
-    (temperedUpper :
-      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate) :
-    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
-  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
-    small.toSmallRawStepCertificate
-    temperedLower.toTemperedLowerRawStepCertificate
-    temperedUpper
 
 /-- Reassembles atomic candidate reserve targets into the grouped reserve
 certificate. -/

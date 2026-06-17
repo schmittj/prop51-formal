@@ -654,13 +654,13 @@ Status:
       `positiveEntropyShadowBaseStepRawBaseHalf_of_small_branch`, packages it
       as `positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate`, and
       then uses decreasingness of the small large-exp factor to restore the
-      original raw-cleared small-step field.  The lower-tempered adjacent-step
-      atom has likewise been reduced to
-      `PositiveSaddleLargeTailCandidateTemperedLowerRawBaseRatioCertificate`:
-      Lean proves `positiveTemperedLargeExp` decreases on the lower side of
-      the split, so the remaining lower-step proof is the pure raw-base
-      `(4a-1)/(4a)` ratio with the common denominator cleared.  If a proof
-      already has the core
+      original raw-cleared small-step field.  For the lower-tempered
+      adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
+      the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
+      is too strong near the split.  The remaining official target is the
+      original raw-cleared lower-step field, using that large-exp decrease
+      quantitatively together with the entropy-shadow raw quotient.  If a
+      proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass
