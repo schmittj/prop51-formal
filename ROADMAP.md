@@ -816,6 +816,13 @@ Status:
       and
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
       avoid quotient divisions in generated or hand-cleared analytic audits.
+      The upper reverse target is now closed in Lean on the far upper branch
+      `3 * a ≤ 5 * r`, using exponent monotonicity and the exact raw
+      entropy-shadow lower bound.  The reduced certificate
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`
+      asks only for the middle band `5 * r < 3 * a`, and its adapter supplies
+      the full upper reverse exp-target certificate.  This is a Lean-side
+      proof-production split of the same TeX reverse-step estimate.
       The lower exp target is closed immediately on the front subrange
       `8 * (r + 1) ≤ a` by
       `positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
@@ -850,6 +857,9 @@ Status:
       `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-bounds`,
       and
       `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+      The new upper-middle constructors can be used when the remaining atom
+      theorem proves only `5 * r < 3 * a`; the far upper branch is supplied by
+      Lean before reassembling the same refined atomic bounds audit.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

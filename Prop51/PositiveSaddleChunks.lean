@@ -6588,6 +6588,33 @@ theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSh
       temperedUpperLastReserve
 
 /-- Bounds-level refined atomic constructor for the ten-offset lower sharp
+top-strip target and the reduced upper reverse middle-band target.  The far
+upper range `3*a ≤ 5*r` is closed in Lean. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserves
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserves
+      temperedLower temperedUpper temperedLowerFirstReserve
+      temperedUpperLastReserve
+
+/-- Bounds-level refined atomic constructor for the ten-offset lower sharp
 top-strip target with the two remaining tempered reserve atoms supplied
 through envelope bounds. -/
 theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetExpTargets_temperedReserveEnvelopes
@@ -6614,6 +6641,35 @@ theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSh
   soloY := solo
   candidateRefined :=
     positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperExpTarget_temperedReserveEnvelopes
+      temperedLower temperedUpper temperedLowerFirst temperedUpperLast
+
+/-- Bounds-level refined atomic constructor for the ten-offset lower sharp
+top-strip target and the reduced upper reverse middle-band target, with the
+two remaining tempered reserves supplied through envelope bounds. -/
+theorem positiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate_of_temperedSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserveEnvelopes
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloYBoundCertificate soloYBound)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound where
+  productBounds := product
+  soloY := solo
+  candidateRefined :=
+    positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserveEnvelopes
       temperedLower temperedUpper temperedLowerFirst temperedUpperLast
 
 theorem PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate.toRefinedAtomicPartsAuditCertificate

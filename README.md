@@ -360,6 +360,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   and
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
   are also available for generated or denominator-cleared analytic audits.
+  The upper target is now closed in Lean on the far upper branch
+  `3 * a ≤ 5 * r`, using exponent monotonicity together with the exact raw
+  entropy-shadow lower bound.  The reduced upper input is
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`,
+  whose field only covers the middle band `5 * r < 3 * a`; its adapter fills
+  the far branch automatically.  This is a Lean-side refinement of the same
+  raw-cleared reverse-step argument, not a separate route from the TeX proof.
   The lower target is already closed on the front subrange
   `8 * (r + 1) ≤ a` by
   `Prop51.positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
@@ -429,6 +436,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-bounds`,
   or the most reduced
   `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+  The Lean constructors also accept the reduced upper-middle target through
+  `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetExpTarget_upperMiddleExpTarget_temperedReserves`,
+  its envelope analogue, and the corresponding bounds-level wrappers; these
+  replace the full upper exp-target field by the middle-band-only field above.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
