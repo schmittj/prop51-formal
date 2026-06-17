@@ -355,7 +355,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   and
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate`,
   which ask only for the two displayed large-exp quotient estimates after the
-  raw quotient bookkeeping has been discharged.
+  raw quotient bookkeeping has been discharged.  Division-free variants
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
+  are also available for generated or denominator-cleared analytic audits.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

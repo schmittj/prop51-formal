@@ -810,7 +810,12 @@ Status:
       `PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate`
       and
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate`,
-      which leave only the two large-exp quotient estimates.
+      which leave only the two large-exp quotient estimates.  The denominator-
+      cleared variants
+      `PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate`
+      and
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate`
+      avoid quotient divisions in generated or hand-cleared analytic audits.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

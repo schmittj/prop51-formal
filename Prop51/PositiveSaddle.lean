@@ -12802,6 +12802,44 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate.toTemp
     PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
   cert.toTemperedLowerRawUpperExpFactorCertificate.toTemperedLowerRawExpRatioCertificate
 
+/-- Denominator-cleared form of
+`PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate`.
+
+This is the preferred proof-production target for the lower large-exp quotient:
+Lean divides by the positive large-exp factor at `r` to recover the quotient
+field above. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate :
+    Prop where
+  lowerExpQuotientTargetCrossmul :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        positiveTemperedLargeExp a (r + 1)
+          ≤ positiveTemperedLowerExpQuotientTarget a r *
+            positiveTemperedLargeExp a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate.toTemperedLowerExpTargetCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate where
+  lowerExpQuotientTarget := by
+    intro a r ha hrlo hrhi
+    have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    rw [div_le_iff₀ hEpos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using
+      cert.lowerExpQuotientTargetCrossmul ha hrlo hrhi
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate.toTemperedLowerRawExpRatioCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
+  cert.toTemperedLowerExpTargetCertificate.toTemperedLowerRawExpRatioCertificate
+
 /-- Factorized upper-tempered reverse adjacent-step target.
 
 This records the reverse ratio as a product of two one-dimensional factors:
@@ -12985,6 +13023,41 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate
             mul_le_mul_of_nonneg_left hratioBound (by positivity)
       _ = ((4 * a - 1 : Nat) : ℚ) :=
             positiveLargeExpTemperedRatio_mul_den (by omega : 0 < a)
+
+/-- Denominator-cleared form of
+`PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate`.
+
+The quotient target has a positive denominator
+`positiveTemperedLargeExp a r`; this form records the same remaining estimate
+without division. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate :
+    Prop where
+  upperExpReverseQuotientTargetCrossmul :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        positiveTemperedLargeExp a (r - 1)
+          ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
+            positiveTemperedLargeExp a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate.toTemperedUpperReverseExpTargetCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate where
+  upperExpReverseQuotientTarget := by
+    intro a r ha hrlo hrhi
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    rw [div_le_iff₀ hEpos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using
+      cert.upperExpReverseQuotientTargetCrossmul ha hrlo hrhi
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate.toTemperedUpperReverseRawExpRatioCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate :=
+  cert.toTemperedUpperReverseExpTargetCertificate.toTemperedUpperReverseRawExpRatioCertificate
 
 /-- Atomic small-regime first-term reserve target for the large-tail candidate
 entropy reserve. -/
@@ -14538,6 +14611,23 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpT
     temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
     temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Denominator-cleared exp-target version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargets_temperedReserves`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargets_temperedReserves
+    temperedLower.toTemperedLowerExpTargetCertificate
+    temperedUpper.toTemperedUpperReverseExpTargetCertificate
+    temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -14621,6 +14711,26 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpT
   positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserveEnvelopes
     temperedLower.toTemperedLowerRawExpRatioCertificate
     temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
+    temperedLowerFirst temperedUpperLast
+
+/-- Denominator-cleared exp-target envelope version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargets_temperedReserveEnvelopes`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargets_temperedReserveEnvelopes
+    temperedLower.toTemperedLowerExpTargetCertificate
+    temperedUpper.toTemperedUpperReverseExpTargetCertificate
     temperedLowerFirst temperedUpperLast
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
