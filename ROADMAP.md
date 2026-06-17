@@ -665,7 +665,9 @@ Status:
       records exactly the quotient inequality for
       `rawQuotient * positiveTemperedLargeExp(a,r+1) /
       positiveTemperedLargeExp(a,r)` and converts it back to the raw-cleared
-      field.  If a proof already has the core
+      field.  The upper-tempered reverse step has the analogous
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate`
+      interface.  If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass

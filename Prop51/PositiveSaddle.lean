@@ -5172,6 +5172,32 @@ theorem mul_le_mul_rawQuotient_mul_of_mul_den_le
   rw [le_div_iff₀ hden]
   simpa [mul_assoc, mul_left_comm, mul_comm] using h
 
+/-- Clear the positive raw entropy-shadow denominator in the reverse
+direction.  This is the converse bookkeeping step to
+`mul_le_mul_rawQuotient_mul_of_mul_den_le`. -/
+theorem mul_den_le_of_mul_le_mul_rawQuotient_mul
+    {a r : Nat} {q p x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
+    (h :
+      q * x ≤ p * (positiveEntropyShadowBaseStepRawQuotient a r * y)) :
+    q * x * positiveEntropyShadowBaseStepRawDenominator a r
+      ≤ p * (positiveEntropyShadowBaseStepRawNumerator a r * y) := by
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawDenominator a r :=
+    positiveEntropyShadowBaseStepRawDenominator_pos hr1 hj2
+  have hrewrite :
+      p * (positiveEntropyShadowBaseStepRawQuotient a r * y) =
+        (p * (positiveEntropyShadowBaseStepRawNumerator a r * y)) /
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+    rw [positiveEntropyShadowBaseStepRawQuotient_eq_num_div_den hr1 hj2]
+    field_simp [hden.ne']
+  have h' :
+      q * x ≤
+        (p * (positiveEntropyShadowBaseStepRawNumerator a r * y)) /
+          positiveEntropyShadowBaseStepRawDenominator a r := by
+    simpa [hrewrite] using h
+  rw [le_div_iff₀ hden] at h'
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h'
+
 theorem positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul
     (smallExp : Nat → Nat → ℚ) (a k : Nat) :
     positiveSmallEntropyShadowExpMajorantTerm smallExp a k =
@@ -7634,6 +7660,76 @@ theorem positiveTemperedLargeExp_lower_rawStepCleared_of_raw_exp_ratio
     (y := ((4 * a - 1 : Nat) : ℚ) *
       positiveTemperedLargeExp a r)
     hr1 hj2 (by
+      simpa [mul_assoc, mul_left_comm, mul_comm] using hquotCross)
+
+/-- Honest quotient-form bridge for the upper-tempered reverse adjacent step.
+
+The hypothesis is the reverse quotient used by the split tempered geometric
+tail: the inverse of the raw quotient times the large-exp quotient is bounded
+by `(4a-1)/(4a)`, written with that denominator cleared. -/
+theorem positiveTemperedLargeExp_upperReverse_rawStepCleared_of_raw_exp_reverse_ratio
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hrhi : r ≤ posKmax a)
+    (hratio :
+      ((4 * a : Nat) : ℚ) *
+          (1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1))))
+        ≤ ((4 * a - 1 : Nat) : ℚ)) :
+    ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1) *
+        positiveEntropyShadowBaseStepRawDenominator a (r - 1)
+      ≤ ((4 * a - 1 : Nat) : ℚ) *
+        (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
+          positiveTemperedLargeExp a r) := by
+  have hsplitLower := positiveLargeExpTemperedSplitLower_of_large ha
+  have hrprev1 : 1 ≤ r - 1 := by omega
+  have hj2 : 2 ≤ posJ a (r - 1) :=
+    two_le_posJ_of_le_posKmax_of_large
+      (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+  have hprevMem : r - 1 ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨by omega, by omega⟩
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+  have hEprev : 0 < positiveTemperedLargeExp a (r - 1) :=
+    positiveTemperedLargeExp_pos_of_large ha hprevMem
+  have hE : 0 < positiveTemperedLargeExp a r :=
+    positiveTemperedLargeExp_pos_of_large ha hrMem
+  have hraw :
+      0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) :=
+    positiveEntropyShadowBaseStepRawQuotient_pos hrprev1 hj2
+  have hden :
+      0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+          positiveTemperedLargeExp a r :=
+    mul_pos hraw hE
+  have hquotCross :
+      ((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1)
+        ≤ ((4 * a - 1 : Nat) : ℚ) *
+          (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            positiveTemperedLargeExp a r) := by
+    have hdiv :
+        (((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1)) /
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+          ≤ ((4 * a - 1 : Nat) : ℚ) := by
+      calc
+        (((4 * a : Nat) : ℚ) * positiveTemperedLargeExp a (r - 1)) /
+            (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              positiveTemperedLargeExp a r)
+            =
+          ((4 * a : Nat) : ℚ) *
+              (1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+                (positiveTemperedLargeExp a r /
+                  positiveTemperedLargeExp a (r - 1)))) := by
+              field_simp [hraw.ne', hE.ne', hEprev.ne']
+        _ ≤ ((4 * a - 1 : Nat) : ℚ) := hratio
+    rwa [div_le_iff₀ hden] at hdiv
+  exact mul_den_le_of_mul_le_mul_rawQuotient_mul
+    (a := a) (r := r - 1) (q := ((4 * a : Nat) : ℚ))
+    (p := ((4 * a - 1 : Nat) : ℚ))
+    (x := positiveTemperedLargeExp a (r - 1))
+    (y := positiveTemperedLargeExp a r)
+    hrprev1 hj2 (by
       simpa [mul_assoc, mul_left_comm, mul_comm] using hquotCross)
 
 /-- Convenience bridge from a pure lower-tempered raw-base ratio to the
@@ -11470,6 +11566,34 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate
             (positiveEntropyShadowBaseStepRawNumerator a (r - 1) *
               positiveTemperedLargeExp a r)
 
+/-- Quotient-form upper-tempered reverse adjacent-step target.
+
+This is the reverse-ratio analogue of
+`PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate`.
+It keeps the raw entropy-shadow quotient and the large-exp quotient together,
+then Lean clears the positive raw denominator to recover the official
+raw-cleared reverse-step field. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate :
+    Prop where
+  temperedUpperReverseRawExpRatio :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) *
+            (1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+              (positiveTemperedLargeExp a r /
+                positiveTemperedLargeExp a (r - 1))))
+          ≤ ((4 * a - 1 : Nat) : ℚ)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate.toTemperedUpperReverseRawStepCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate where
+  temperedUpperReverseRawStepCleared := by
+    intro a r ha hrlo hrhi
+    exact positiveTemperedLargeExp_upperReverse_rawStepCleared_of_raw_exp_reverse_ratio
+      ha hrlo hrhi
+      (cert.temperedUpperReverseRawExpRatio ha hrlo hrhi)
+
 /-- Atomic small-regime first-term reserve target for the large-tail candidate
 entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :
@@ -11595,6 +11719,21 @@ theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHa
     small.toSmallRawStepCertificate
     temperedLower.toTemperedLowerRawStepCertificate
     temperedUpper
+
+/-- Reassembles grouped candidate adjacent-step targets when the small branch
+uses the raw-base half-quotient certificate and both tempered branches are
+supplied in quotient form. -/
+theorem positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_smallBaseHalf_temperedRawExpRatios
+    (small : PositiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate)
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  positiveSaddleLargeTailCandidateRawClearedStepCertificate_of_atomic
+    small.toSmallRawStepCertificate
+    temperedLower.toTemperedLowerRawStepCertificate
+    temperedUpper.toTemperedUpperReverseRawStepCertificate
 
 /-- Reassembles atomic candidate reserve targets into the grouped reserve
 certificate. -/

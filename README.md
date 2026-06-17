@@ -221,7 +221,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   its field is the honest quotient inequality for
   `rawQuotient * positiveTemperedLargeExp(a,r+1) /
   positiveTemperedLargeExp(a,r)`, and Lean converts it back to the
-  raw-cleared step.
+  raw-cleared step.  The upper-tempered reverse step has the analogous
+  quotient-form interface
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate`.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
