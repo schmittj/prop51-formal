@@ -13,6 +13,7 @@ import Mathlib.Data.Nat.Sqrt
 import Mathlib.Data.Nat.Choose.Bounds
 import Mathlib.Data.Nat.Choose.Sum
 import Mathlib.Data.Nat.Factorial.BigOperators
+import Mathlib.Analysis.SpecificLimits.Normed
 import Prop51.SignLock
 
 namespace Prop51
@@ -6849,6 +6850,171 @@ def partialExpUpperNegativeBinomialShell (a : Nat) (q : ℚ) : ℚ :=
   (∑ t ∈ Finset.range a, (a.multichoose t : ℚ) * q^t)
     + (a.multichoose a : ℚ) * q^a * (1 / (1 - q))
 
+theorem multichoose_eq_choose_pred_right {a t : Nat} (ha : 0 < a) :
+    a.multichoose t = (t + (a - 1)).choose (a - 1) := by
+  rw [Nat.multichoose_eq]
+  have htop : a + t - 1 = t + (a - 1) := by omega
+  rw [htop]
+  simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
+    (Nat.choose_symm_add (a := a - 1) (b := t)).symm
+
+/-- The complete negative-binomial term used to close the small-reserve shell.
+This is a Lean-side packaging of the finite shell estimate: the truncated
+multichoose shell is compared with the full `(1-q)^(-a)` series. -/
+def negativeBinomialShellFullTerm (a n : Nat) (q : ℚ) : ℚ :=
+  (((n + (a - 1)).choose (a - 1) : Nat) : ℚ) * q^n
+
+theorem negativeBinomialShellFullTerm_eq_multichoose
+    {a n : Nat} (ha : 0 < a) (q : ℚ) :
+    negativeBinomialShellFullTerm a n q =
+      (a.multichoose n : ℚ) * q^n := by
+  unfold negativeBinomialShellFullTerm
+  rw [multichoose_eq_choose_pred_right (a := a) (t := n) ha]
+
+theorem negativeBinomialShellFullTerm_tsum_threeTenths
+    {a : Nat} (ha : 0 < a) :
+    (∑' n : Nat, negativeBinomialShellFullTerm a n (3 / 10 : ℚ))
+      = (10 / 7 : ℚ)^a := by
+  have hsum :=
+    tsum_choose_mul_geometric_of_norm_lt_one
+      (𝕜 := ℚ) (a - 1) (r := (3 / 10 : ℚ)) (by
+        rw [← Rat.norm_cast_real]
+        norm_num)
+  have hsucc : a - 1 + 1 = a := by omega
+  unfold negativeBinomialShellFullTerm
+  rw [hsum, hsucc]
+  calc
+    1 / (1 - 3 / 10 : ℚ)^a = (1 / (1 - 3 / 10 : ℚ))^a := by
+      rw [div_pow]
+      simp
+    _ = (10 / 7 : ℚ)^a := by norm_num
+
+theorem negativeBinomialShellCoeff_tail_le
+    {a n : Nat} (ha : 0 < a) (hn : a ≤ n) :
+    (a.multichoose a : ℚ)
+      ≤ (((n + (a - 1)).choose (a - 1) : Nat) : ℚ) := by
+  have hleft :
+      a.multichoose a = (a + (a - 1)).choose (a - 1) :=
+    multichoose_eq_choose_pred_right (a := a) (t := a) ha
+  rw [hleft]
+  exact_mod_cast
+    (Nat.choose_le_choose (a - 1) (by omega : a + (a - 1) ≤ n + (a - 1)))
+
+theorem negativeBinomialShell_constantTail_tsum_threeTenths (a : Nat) :
+    (∑' j : Nat, (a.multichoose a : ℚ) * (3 / 10 : ℚ)^(a + j))
+      = (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+          (1 / (1 - 3 / 10 : ℚ)) := by
+  have hgeom :
+      (∑' j : Nat, (3 / 10 : ℚ)^j) =
+        (1 - (3 / 10 : ℚ))⁻¹ :=
+    tsum_geometric_of_norm_lt_one (ξ := (3 / 10 : ℚ)) (by
+      rw [← Rat.norm_cast_real]
+      norm_num)
+  calc
+    (∑' j : Nat, (a.multichoose a : ℚ) * (3 / 10 : ℚ)^(a + j))
+        = ∑' j : Nat,
+            ((a.multichoose a : ℚ) * (3 / 10 : ℚ)^a) *
+              (3 / 10 : ℚ)^j := by
+          congr 1 with j
+          rw [pow_add]
+          ring
+    _ = ((a.multichoose a : ℚ) * (3 / 10 : ℚ)^a) *
+          (∑' j : Nat, (3 / 10 : ℚ)^j) := by
+          rw [tsum_mul_left]
+    _ = (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+          (1 / (1 - 3 / 10 : ℚ)) := by
+          rw [hgeom]
+          ring
+
+/-- Close the weighted multichoose shell at `q = 3/10` by embedding its
+finite prefix and constant tail into the complete negative-binomial series.
+This avoids a large finite coefficient expansion; it proves the same analytic
+envelope used for the small first-reserve budget. -/
+theorem partialExpUpperNegativeBinomialShell_threeTenths_le_tenSevenths_pow
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
+      ≤ (10 / 7 : ℚ)^a := by
+  let f : Nat → ℚ := fun n =>
+    negativeBinomialShellFullTerm a n (3 / 10 : ℚ)
+  have hf : Summable f := by
+    have hsum :=
+      hasSum_choose_mul_geometric_of_norm_lt_one
+        (𝕜 := ℚ) (a - 1) (r := (3 / 10 : ℚ)) (by
+          rw [← Rat.norm_cast_real]
+          norm_num)
+    simpa [f, negativeBinomialShellFullTerm] using hsum.summable
+  have hfinite :
+      (∑ t ∈ Finset.range a, (a.multichoose t : ℚ) * (3 / 10 : ℚ)^t)
+        = ∑ t ∈ Finset.range a, f t := by
+    refine Finset.sum_congr rfl ?_
+    intro t _ht
+    simpa [f] using
+      (negativeBinomialShellFullTerm_eq_multichoose
+        (a := a) (n := t) ha (3 / 10 : ℚ)).symm
+  have htailSummable :
+      Summable
+        (fun j : Nat => (a.multichoose a : ℚ) * (3 / 10 : ℚ)^(a + j)) := by
+    have hgeomSummable : Summable (fun j : Nat => (3 / 10 : ℚ)^j) :=
+      summable_geometric_of_norm_lt_one (by
+        rw [← Rat.norm_cast_real]
+        norm_num)
+    simpa [pow_add, mul_assoc, mul_left_comm, mul_comm] using
+      hgeomSummable.mul_left
+        ((a.multichoose a : ℚ) * (3 / 10 : ℚ)^a)
+  have htrueTailSummable :
+      Summable (fun j : Nat => f (j + a)) :=
+    (summable_nat_add_iff
+      (f := fun n : Nat => f n) a).2 hf
+  have htail_point :
+      ∀ j : Nat,
+        (a.multichoose a : ℚ) * (3 / 10 : ℚ)^(a + j)
+          ≤ f (j + a) := by
+    intro j
+    have hcoeff :=
+      negativeBinomialShellCoeff_tail_le
+        (a := a) (n := j + a) ha (by omega : a ≤ j + a)
+    have hpow_nonneg : 0 ≤ (3 / 10 : ℚ)^(j + a) :=
+      pow_nonneg (by norm_num : (0 : ℚ) ≤ 3 / 10) _
+    unfold f negativeBinomialShellFullTerm
+    rw [show a + j = j + a by omega]
+    exact mul_le_mul_of_nonneg_right hcoeff hpow_nonneg
+  have htail_le :
+      (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+          (1 / (1 - 3 / 10 : ℚ))
+        ≤ ∑' j : Nat, f (j + a) := by
+    rw [← negativeBinomialShell_constantTail_tsum_threeTenths a]
+    exact htailSummable.tsum_le_tsum htail_point htrueTailSummable
+  have hsplit :
+      (∑ t ∈ Finset.range a, f t) + (∑' j : Nat, f (j + a))
+        = ∑' n : Nat, f n :=
+    hf.sum_add_tsum_nat_add a
+  unfold partialExpUpperNegativeBinomialShell
+  calc
+    (∑ t ∈ Finset.range a, (a.multichoose t : ℚ) * (3 / 10 : ℚ)^t)
+        + (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+          (1 / (1 - 3 / 10 : ℚ))
+        = (∑ t ∈ Finset.range a, f t)
+            + (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+              (1 / (1 - 3 / 10 : ℚ)) := by
+          rw [hfinite]
+    _ ≤ (∑ t ∈ Finset.range a, f t) + (∑' j : Nat, f (j + a)) := by
+          exact add_le_add le_rfl htail_le
+    _ = ∑' n : Nat, f n := hsplit
+    _ = (10 / 7 : ℚ)^a := by
+          simpa [f] using
+            negativeBinomialShellFullTerm_tsum_threeTenths (a := a) ha
+
+theorem partialExpUpperNegativeBinomialShell_threeTenths_le_threeHalves_pow
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
+      ≤ (3 / 2 : ℚ)^a := by
+  exact
+    (partialExpUpperNegativeBinomialShell_threeTenths_le_tenSevenths_pow
+      (a := a) ha).trans
+      (pow_le_pow_left₀
+        (by norm_num : (0 : ℚ) ≤ 10 / 7)
+        (by norm_num : (10 / 7 : ℚ) ≤ 3 / 2) a)
+
 theorem partialExpUpper_scaled_term_le_multichoose
     {a t : Nat} {q : ℚ} (hq : 0 ≤ q) :
     ((a : ℚ) * q)^t / (t.factorial : ℚ)
@@ -6919,6 +7085,15 @@ theorem partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
   intro a ha
   exact (partialExpUpper_threeTenths_le_negativeBinomialShell
     (a := a) (by omega : 0 < a)).trans (hShell ha)
+
+theorem partialExpUpper_threeTenths_le_threeHalves_pow :
+    ∀ {a : Nat}, 2000 < a →
+      partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) a
+        ≤ (3 / 2 : ℚ)^a :=
+  partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
+    (fun {a} _ha =>
+      partialExpUpperNegativeBinomialShell_threeTenths_le_threeHalves_pow
+        (a := a) (by omega : 0 < a))
 
 theorem positiveSmallExponentUpper_nonneg {a k : Nat}
     (hj : 0 < posJ a k) :
@@ -11821,6 +11996,13 @@ theorem positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShel
     (partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
       hShell)
 
+theorem positiveSmallLargeExp_one_le_threeHalvesExpBound :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallLargeExp a 1
+        ≤ positiveSmallFirstReserveThreeHalvesExpBound a :=
+  positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths
+    partialExpUpper_threeTenths_le_threeHalves_pow
+
 theorem positiveSmallEntropyShadowBaseTerm_one_eq {a : Nat} (ha : 3 ≤ a) :
     positiveSmallEntropyShadowBaseTerm a 1 =
       (65 / ((12 * a - 8 : Nat) : ℚ)) *
@@ -11932,6 +12114,12 @@ theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_thr
   positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves
     (positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell
       hShell)
+
+theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound :=
+  positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves
+    positiveSmallLargeExp_one_le_threeHalvesExpBound
 
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/

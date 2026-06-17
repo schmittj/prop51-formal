@@ -234,7 +234,7 @@ All Lean proofs are sorry-free.  Headline theorems:
   reserve-envelope estimate that is implicit in the TeX write-up as a named
   Lean obligation.  Generated final assemblies can target it with
   `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`.  The small
-  first-reserve budget side is partially closed: Lean proves
+  first-reserve budget side is now closed: Lean proves
   `Prop51.positiveSmallFirstReserveThreeHalvesEnvelopeUnit`, so the theorem
   `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves`
   reduces that atom to the single exponential-envelope estimate
@@ -245,11 +245,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths`.
   Lean then compares that shell termwise with the weighted multichoose
   expression
-  `Prop51.partialExpUpperNegativeBinomialShell a (3/10)`, exposing the final
-  small-reserve analytic core through
-  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`
-  and the certificate constructor
-  `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_of_negativeBinomialShell`.
+  `Prop51.partialExpUpperNegativeBinomialShell a (3/10)`, and closes that
+  expression by bounding it with the complete negative-binomial series
+  `(10/7)^a ≤ (3/2)^a`.  The closed reserve-facing wrappers are
+  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound` and
+  `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed`.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp

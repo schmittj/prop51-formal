@@ -690,13 +690,14 @@ Status:
       wrapper
       `positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths`,
       reducing the analytic side to the standalone rational shell envelope
-      `partialExpUpper ((3/10) * a) a ≤ (3/2)^a`.  The new
-      `partialExpUpperNegativeBinomialShell` comparison further reduces this
-      to a weighted multichoose shell inequality, with
-      `positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`
-      and
-      `positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_of_negativeBinomialShell`
-      as the reserve-facing wrappers.  For the
+      `partialExpUpper ((3/10) * a) a ≤ (3/2)^a`.  The
+      `partialExpUpperNegativeBinomialShell` comparison reduces this to a
+      weighted multichoose shell, and Lean closes the shell by comparing its
+      finite prefix plus constant tail with the complete negative-binomial
+      series `(10/7)^a`.  The reserve-facing closed wrappers are
+      `positiveSmallLargeExp_one_le_threeHalvesExpBound` and
+      `positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed`.
+      For the
       lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
