@@ -5336,6 +5336,68 @@ theorem positiveEntropyShadowBaseStepRawQuotient_eq_factored
   rw [hdyadic]
   field_simp [hrQ, hjQ, hrPredPow, hjPredPow, hpow2j1]
 
+/-- Uniform explicit upper bound for the raw entropy-shadow adjacent quotient.
+
+The power-ratio factors in
+`positiveEntropyShadowBaseStepRawQuotient_eq_factored` are bounded by
+`68/25` and `1`; the remaining prefactor is `(r+1)/(a-r)`. -/
+def positiveEntropyShadowBaseStepRawUpperBound (a r : Nat) : ℚ :=
+  (136 / 25 : ℚ) * (((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ))
+
+theorem positiveEntropyShadowBaseStepRawUpperBound_nonneg
+    (a r : Nat) :
+    0 ≤ positiveEntropyShadowBaseStepRawUpperBound a r := by
+  unfold positiveEntropyShadowBaseStepRawUpperBound
+  positivity
+
+theorem positiveEntropyShadowBaseStepRawQuotient_le_upperBound
+    {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r) :
+    positiveEntropyShadowBaseStepRawQuotient a r
+      ≤ positiveEntropyShadowBaseStepRawUpperBound a r := by
+  let pref : ℚ := ((r + 1 : Nat) : ℚ) / ((posJ a r : Nat) : ℚ)
+  let rpart : ℚ :=
+    ((r : ℚ)^r) /
+      ((r : ℚ) * ((r - 1 : Nat) : ℚ)^(r - 1))
+  let jpart : ℚ :=
+    (((posJ a r - 1 : Nat) : ℚ) *
+        ((posJ a r - 2 : Nat) : ℚ)^(posJ a r - 2)) /
+      (((posJ a r - 1 : Nat) : ℚ)^(posJ a r - 1))
+  have hraw :
+      positiveEntropyShadowBaseStepRawQuotient a r =
+        pref * rpart * jpart * 2 := by
+    dsimp [pref, rpart, jpart]
+    exact positiveEntropyShadowBaseStepRawQuotient_eq_factored hr1 hj2
+  have hpref_nonneg : 0 ≤ pref := by
+    dsimp [pref]
+    positivity
+  have hR : rpart ≤ 68 / 25 := by
+    dsimp [rpart]
+    exact positiveEntropyShadowBaseStepRawRPart_le_expBound hr1
+  have hJ : jpart ≤ 1 := by
+    dsimp [jpart]
+    exact positiveEntropyShadowBaseStepRawJPart_le_one hj2
+  have hJ_nonneg : 0 ≤ jpart := by
+    dsimp [jpart]
+    positivity
+  have hstepR : pref * rpart ≤ pref * (68 / 25) :=
+    mul_le_mul_of_nonneg_left hR hpref_nonneg
+  have hright_nonneg : 0 ≤ pref * (68 / 25) := by
+    positivity
+  have hprod :
+      (pref * rpart) * jpart ≤ (pref * (68 / 25)) * 1 :=
+    mul_le_mul hstepR hJ hJ_nonneg hright_nonneg
+  calc
+    positiveEntropyShadowBaseStepRawQuotient a r
+        = (pref * rpart) * jpart * 2 := by
+          rw [hraw]
+          ring
+    _ ≤ ((pref * (68 / 25)) * 1) * 2 :=
+          mul_le_mul_of_nonneg_right hprod
+            (by norm_num : (0 : ℚ) ≤ 2)
+    _ = positiveEntropyShadowBaseStepRawUpperBound a r := by
+          dsimp [positiveEntropyShadowBaseStepRawUpperBound, pref]
+          ring
+
 theorem mul_rawQuotient_mul_le_of_mul_num_le
     {a r : Nat} {q x y : ℚ} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
     (h :
@@ -12595,6 +12657,179 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertif
     PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate :=
   cert.toTemperedUpperReverseRawExpRatioCertificate.toTemperedUpperReverseRawStepCertificate
 
+/-- Factorized lower-tempered adjacent-step target.
+
+This is a Lean-side proof-organization split of
+`PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate`.  The
+raw entropy-shadow quotient is bounded by the explicit universal envelope
+`positiveEntropyShadowBaseStepRawUpperBound`; the remaining large-exp quotient
+and the final scalar product budget are exposed as separate obligations. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate
+    (lowerExpFactor : Nat → Nat → ℚ) : Prop where
+  lowerExpQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        positiveTemperedLargeExp a (r + 1) /
+            positiveTemperedLargeExp a r
+          ≤ lowerExpFactor a r
+  lowerRawUpperExpBudget :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+        ((4 * a : Nat) : ℚ) *
+            (positiveEntropyShadowBaseStepRawUpperBound a r *
+              lowerExpFactor a r)
+          ≤ ((4 * a - 1 : Nat) : ℚ)
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate.toTemperedLowerRawExpRatioCertificate
+    {lowerExpFactor : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate
+        lowerExpFactor) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate where
+  temperedLowerRawExpRatio := by
+    intro a r ha hrlo hrhi
+    have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+    have hr1 : 1 ≤ r := le_trans (le_max_left _ _) hrlo
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨hr1, by omega⟩
+    have hsuccMem : r + 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    have hj2 : 2 ≤ posJ a r :=
+      two_le_posJ_of_le_posKmax_of_large
+        (by omega : 20 ≤ a) (by omega : r ≤ posKmax a)
+    have hraw_le :
+        positiveEntropyShadowBaseStepRawQuotient a r
+          ≤ positiveEntropyShadowBaseStepRawUpperBound a r :=
+      positiveEntropyShadowBaseStepRawQuotient_le_upperBound hr1 hj2
+    have hrawUpper0 :
+        0 ≤ positiveEntropyShadowBaseStepRawUpperBound a r :=
+      positiveEntropyShadowBaseStepRawUpperBound_nonneg a r
+    have hEpos : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    have hEsucc0 : 0 ≤ positiveTemperedLargeExp a (r + 1) :=
+      positiveTemperedLargeExp_nonneg_of_large ha hsuccMem
+    have hExpQuot0 :
+        0 ≤ positiveTemperedLargeExp a (r + 1) /
+          positiveTemperedLargeExp a r :=
+      div_nonneg hEsucc0 hEpos.le
+    have hprod :
+        positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r)
+          ≤ positiveEntropyShadowBaseStepRawUpperBound a r *
+            lowerExpFactor a r :=
+      mul_le_mul hraw_le
+        (cert.lowerExpQuotient ha hrlo hrhi) hExpQuot0 hrawUpper0
+    calc
+      ((4 * a : Nat) : ℚ) *
+          (positiveEntropyShadowBaseStepRawQuotient a r *
+            (positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r))
+          ≤ ((4 * a : Nat) : ℚ) *
+              (positiveEntropyShadowBaseStepRawUpperBound a r *
+                lowerExpFactor a r) :=
+            mul_le_mul_of_nonneg_left hprod (by positivity)
+      _ ≤ ((4 * a - 1 : Nat) : ℚ) :=
+            cert.lowerRawUpperExpBudget ha hrlo hrhi
+
+/-- Factorized upper-tempered reverse adjacent-step target.
+
+This records the reverse ratio as a product of two one-dimensional factors:
+an inverse raw entropy-shadow quotient and a reverse quotient of the
+large-exp shell.  It is a Lean-side split of the quotient-form target; it
+does not change the public raw-cleared theorem consumed by the tail audit. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate
+    (upperRawReverseFactor upperExpReverseFactor : Nat → Nat → ℚ) :
+    Prop where
+  upperRawReverseFactorNonneg :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        0 ≤ upperRawReverseFactor a r
+  upperRawReverseQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1)
+          ≤ upperRawReverseFactor a r
+  upperExpReverseQuotient :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        positiveTemperedLargeExp a (r - 1) /
+            positiveTemperedLargeExp a r
+          ≤ upperExpReverseFactor a r
+  upperReverseFactorBudget :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+        ((4 * a : Nat) : ℚ) *
+            (upperRawReverseFactor a r * upperExpReverseFactor a r)
+          ≤ ((4 * a - 1 : Nat) : ℚ)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate.toTemperedUpperReverseRawExpRatioCertificate
+    {upperRawReverseFactor upperExpReverseFactor : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate
+        upperRawReverseFactor upperExpReverseFactor) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate where
+  temperedUpperReverseRawExpRatio := by
+    intro a r ha hrlo hrhi
+    have hsplitLower := positiveLargeExpTemperedSplitLower_of_large ha
+    have hprevMem : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    have hEprev : 0 < positiveTemperedLargeExp a (r - 1) :=
+      positiveTemperedLargeExp_pos_of_large ha hprevMem
+    have hE : 0 < positiveTemperedLargeExp a r :=
+      positiveTemperedLargeExp_pos_of_large ha hrMem
+    have hraw :
+        0 < positiveEntropyShadowBaseStepRawQuotient a (r - 1) := by
+      have hrprev1 : 1 ≤ r - 1 := by omega
+      have hj2 : 2 ≤ posJ a (r - 1) :=
+        two_le_posJ_of_le_posKmax_of_large
+          (by omega : 20 ≤ a) (by omega : r - 1 ≤ posKmax a)
+      exact positiveEntropyShadowBaseStepRawQuotient_pos hrprev1 hj2
+    have hExpReverse0 :
+        0 ≤ positiveTemperedLargeExp a (r - 1) /
+          positiveTemperedLargeExp a r :=
+      div_nonneg hEprev.le hE.le
+    have hfactor :
+        1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+          (positiveTemperedLargeExp a r /
+            positiveTemperedLargeExp a (r - 1)))
+          =
+        (1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1)) *
+          (positiveTemperedLargeExp a (r - 1) /
+            positiveTemperedLargeExp a r) := by
+      field_simp [hraw.ne', hE.ne', hEprev.ne']
+      ring
+    have hprod :
+        (1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1)) *
+            (positiveTemperedLargeExp a (r - 1) /
+              positiveTemperedLargeExp a r)
+          ≤ upperRawReverseFactor a r * upperExpReverseFactor a r :=
+      mul_le_mul
+        (cert.upperRawReverseQuotient ha hrlo hrhi)
+        (cert.upperExpReverseQuotient ha hrlo hrhi)
+        hExpReverse0
+        (cert.upperRawReverseFactorNonneg ha hrlo hrhi)
+    calc
+      ((4 * a : Nat) : ℚ) *
+          (1 / (positiveEntropyShadowBaseStepRawQuotient a (r - 1) *
+            (positiveTemperedLargeExp a r /
+              positiveTemperedLargeExp a (r - 1))))
+          =
+        ((4 * a : Nat) : ℚ) *
+          ((1 / positiveEntropyShadowBaseStepRawQuotient a (r - 1)) *
+            (positiveTemperedLargeExp a (r - 1) /
+              positiveTemperedLargeExp a r)) := by
+            rw [hfactor]
+      _ ≤ ((4 * a : Nat) : ℚ) *
+            (upperRawReverseFactor a r * upperExpReverseFactor a r) :=
+            mul_le_mul_of_nonneg_left hprod (by positivity)
+      _ ≤ ((4 * a - 1 : Nat) : ℚ) :=
+            cert.upperReverseFactorBudget ha hrlo hrhi
+
 /-- Atomic small-regime first-term reserve target for the large-tail candidate
 entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :
@@ -14105,6 +14340,29 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawE
     temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
     temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Factorized version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
+The lower factor route uses the proved raw quotient upper envelope; the upper
+reverse route keeps separate inverse-raw and reverse-large-exp factors. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedFactorCertificates_temperedReserves
+    {lowerExpFactor upperRawReverseFactor upperExpReverseFactor :
+      Nat → Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate
+        lowerExpFactor)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate
+        upperRawReverseFactor upperExpReverseFactor)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves
+    temperedLower.toTemperedLowerRawExpRatioCertificate
+    temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
+    temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -14134,6 +14392,30 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawE
       PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate)
     (temperedUpper :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserveEnvelopes
+    temperedLower.toTemperedLowerRawExpRatioCertificate
+    temperedUpper.toTemperedUpperReverseRawExpRatioCertificate
+    temperedLowerFirst temperedUpperLast
+
+/-- Factorized envelope version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedFactorCertificates_temperedReserves`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedFactorCertificates_temperedReserveEnvelopes
+    {lowerExpFactor upperRawReverseFactor upperExpReverseFactor :
+      Nat → Nat → ℚ}
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate
+        lowerExpFactor)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate
+        upperRawReverseFactor upperExpReverseFactor)
     (temperedLowerFirst :
       PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
         temperedLowerFirstExpBound)

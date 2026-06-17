@@ -797,6 +797,16 @@ Status:
       `PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate`.
       This is a proof-production shape only: the adapters divide by positive
       tempered large-exp and raw-base factors to recover the quotient fields.
+      A still finer Lean-side proof-production split is now available via
+      `PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate`
+      and
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate`.
+      The lower split uses the proved universal raw quotient envelope
+      `positiveEntropyShadowBaseStepRawUpperBound`; the remaining obligations
+      are the large-exp quotient bound and the scalar product budget.  The
+      upper split separates the inverse raw quotient from the reverse large-exp
+      quotient.  This is a translation aid for Lean, not a different TeX
+      argument.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

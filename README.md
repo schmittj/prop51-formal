@@ -341,7 +341,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   and
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate`;
   the adapters to the quotient interfaces are proved from positivity of the
-  tempered large-exp factors and the raw base quotient.
+  tempered large-exp factors and the raw base quotient.  Lean now also exposes
+  the proof-production split
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawUpperExpFactorCertificate`,
+  using the proved raw quotient envelope
+  `Prop51.positiveEntropyShadowBaseStepRawUpperBound`, and
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate`,
+  which separates the inverse raw quotient from the reverse large-exp quotient.
+  This factorization is not a new mathematical route; it records the remaining
+  quantitative estimates in smaller Lean-facing pieces.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
