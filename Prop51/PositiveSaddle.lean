@@ -7720,6 +7720,353 @@ theorem partialExpPrefix_last_term_mul_twentyfive_le
   rw [← hpair_eq] at h25
   exact h25.trans hpair_le
 
+/-- The last prefix term is at most one twenty-fifth of the full
+`partialExpUpper` shell under the upper-middle cutoff. -/
+theorem partialExpUpper_last_term_mul_twentyfive_le
+    {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
+    (hzT : z < (T : ℚ))
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (25 : ℚ) * (z^(T-1) / ((T-1).factorial : ℚ))
+      ≤ partialExpUpper z T := by
+  have hprefix :=
+    partialExpPrefix_last_term_mul_twentyfive_le
+      (z := z) (T := T) hT hz0 hzSmall
+  have hTQ : (0 : ℚ) < (T : ℚ) := by
+    exact_mod_cast (by omega : 0 < T)
+  have hden : 0 < 1 - z / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hzT
+  have htail0 :
+      0 ≤ (z^T / (T.factorial : ℚ)) *
+        (1 / (1 - z / (T : ℚ))) := by
+    positivity
+  unfold partialExpUpper
+  linarith
+
+/-- Coarse bound for the reciprocal geometric-tail derivative factor in the
+upper-middle range. -/
+theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
+    {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (1 / (1 - z / (T : ℚ))) *
+        (1 + z / ((T : ℚ)^2) *
+          (1 / (1 - z / (T : ℚ))))
+      ≤ 9 / 4 := by
+  have hTQpos : (0 : ℚ) < (T : ℚ) := by
+    exact_mod_cast (by omega : 0 < T)
+  have hTQge2 : (2 : ℚ) ≤ (T : ℚ) := by
+    exact_mod_cast hT
+  have hpred_le_T : ((T - 1 : Nat) : ℚ) ≤ (T : ℚ) := by
+    exact_mod_cast Nat.sub_le T 1
+  have hz_le_T_div : z ≤ (T : ℚ) / 24 := by
+    nlinarith
+  have hz_div_T_le : z / (T : ℚ) ≤ 1 / 24 := by
+    rw [div_le_iff₀ hTQpos]
+    nlinarith
+  have hz_div_T0 : 0 ≤ z / (T : ℚ) :=
+    div_nonneg hz0 hTQpos.le
+  have hdenPos : 0 < 1 - z / (T : ℚ) := by
+    nlinarith
+  have hdenLower : (2 / 3 : ℚ) ≤ 1 - z / (T : ℚ) := by
+    nlinarith
+  have hB_le :
+      1 / (1 - z / (T : ℚ)) ≤ 3 / 2 := by
+    have h :=
+      one_div_le_one_div_of_le
+        (by norm_num : (0 : ℚ) < 2 / 3) hdenLower
+    norm_num at h
+    simpa [one_div] using h
+  have hB0 : 0 ≤ 1 / (1 - z / (T : ℚ)) := by
+    positivity
+  have hInvT_le : 1 / (T : ℚ) ≤ 1 / 2 := by
+    have h :=
+      one_div_le_one_div_of_le
+        (by norm_num : (0 : ℚ) < 2) hTQge2
+    norm_num at h
+    simpa [one_div] using h
+  have hInvT0 : 0 ≤ 1 / (T : ℚ) := by positivity
+  have hztB :
+      (z / (T : ℚ)) * (1 / (1 - z / (T : ℚ)))
+        ≤ (1 / 24 : ℚ) * (3 / 2) := by
+    exact mul_le_mul hz_div_T_le hB_le hB0
+      (by norm_num : (0 : ℚ) ≤ 1 / 24)
+  have hztB0 :
+      0 ≤ (z / (T : ℚ)) * (1 / (1 - z / (T : ℚ))) :=
+    mul_nonneg hz_div_T0 hB0
+  have hcorr_eq :
+      z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ)))
+        =
+      (z / (T : ℚ)) * (1 / (1 - z / (T : ℚ))) *
+        (1 / (T : ℚ)) := by
+    field_simp [hTQpos.ne']
+  have hcorr_le :
+      z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ))) ≤ 1 / 2 := by
+    rw [hcorr_eq]
+    have hmul :=
+      mul_le_mul hztB hInvT_le hInvT0
+        (by norm_num : (0 : ℚ) ≤ (1 / 24) * (3 / 2))
+    nlinarith
+  have hsecond_le :
+      1 + z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ)))
+        ≤ 3 / 2 := by
+    nlinarith
+  have hsecond0 :
+      0 ≤ 1 + z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ))) := by
+    positivity
+  calc
+    (1 / (1 - z / (T : ℚ))) *
+        (1 + z / ((T : ℚ)^2) *
+          (1 / (1 - z / (T : ℚ))))
+        ≤ (3 / 2 : ℚ) * (3 / 2) :=
+          mul_le_mul hB_le hsecond_le hsecond0
+            (by norm_num : (0 : ℚ) ≤ 3 / 2)
+    _ = 9 / 4 := by norm_num
+
+/-- The geometric-tail derivative kernel costs at most one tenth of the full
+`partialExpUpper` shell in the upper-middle range. -/
+theorem partialExpUpper_tail_deriv_kernel_le_tenth
+    {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
+    (hzT : z < (T : ℚ))
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (z^(T-1) / ((T-1).factorial : ℚ)) *
+        ((1 / (1 - z / (T : ℚ))) *
+          (1 + z / ((T : ℚ)^2) *
+            (1 / (1 - z / (T : ℚ)))))
+      ≤ (1 / 10 : ℚ) * partialExpUpper z T := by
+  have hlast25 :=
+    partialExpUpper_last_term_mul_twentyfive_le
+      (z := z) (T := T) hT hz0 hzT hzSmall
+  have hupper0 : 0 ≤ partialExpUpper z T :=
+    partialExpUpper_nonneg_of_nonneg_lt hz0 hzT
+  have hlast_le :
+      z^(T-1) / ((T-1).factorial : ℚ)
+        ≤ (1 / 25 : ℚ) * partialExpUpper z T := by
+    nlinarith
+  have hfactor_le :=
+    partialExpUpper_tail_deriv_factor_le_nine_fourths
+      (z := z) (T := T) hT hz0 hzSmall
+  have hfactor0 :
+      0 ≤ (1 / (1 - z / (T : ℚ))) *
+        (1 + z / ((T : ℚ)^2) *
+          (1 / (1 - z / (T : ℚ)))) := by
+    have hTQpos : (0 : ℚ) < (T : ℚ) := by
+      exact_mod_cast (by omega : 0 < T)
+    have hden : 0 < 1 - z / (T : ℚ) := by
+      rw [sub_pos, div_lt_one hTQpos]
+      exact hzT
+    positivity
+  have hupperScaled0 :
+      0 ≤ (1 / 25 : ℚ) * partialExpUpper z T := by
+    positivity
+  calc
+    (z^(T-1) / ((T-1).factorial : ℚ)) *
+        ((1 / (1 - z / (T : ℚ))) *
+          (1 + z / ((T : ℚ)^2) *
+            (1 / (1 - z / (T : ℚ)))))
+        ≤ ((1 / 25 : ℚ) * partialExpUpper z T) * (9 / 4) :=
+          mul_le_mul hlast_le hfactor_le hfactor0 hupperScaled0
+    _ = (9 / 100 : ℚ) * partialExpUpper z T := by ring
+    _ ≤ (1 / 10 : ℚ) * partialExpUpper z T := by
+          nlinarith
+
+/-- Difference bound for the geometric tail of `partialExpUpper` in the
+upper-middle range. -/
+theorem partialExpUpper_tail_sub_le_shift_tenth
+    {y z : ℚ} {T : Nat} (hT : 2 ≤ T)
+    (hy : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T : ℚ))
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    (z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
+        - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))
+      ≤ (1 / 10 : ℚ) * (z - y) * partialExpUpper z T := by
+  have hT1 : 1 ≤ T := by omega
+  have hTQpos : (0 : ℚ) < (T : ℚ) := by
+    exact_mod_cast (by omega : 0 < T)
+  have hTQne : (T : ℚ) ≠ 0 := hTQpos.ne'
+  have hz0 : 0 ≤ z := hy.trans hyz
+  have hd0 : 0 ≤ z - y := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt hyz hzT
+  have hdenY : 0 < 1 - y / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQpos]
+    exact hyT
+  have hdenZ : 0 < 1 - z / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQpos]
+    exact hzT
+  have hTminusY : (T : ℚ) - y ≠ 0 := by
+    nlinarith
+  have hTminusZ : (T : ℚ) - z ≠ 0 := by
+    nlinarith
+  let Ay : ℚ := y^T / (T.factorial : ℚ)
+  let Az : ℚ := z^T / (T.factorial : ℚ)
+  let last : ℚ := z^(T-1) / ((T-1).factorial : ℚ)
+  let By : ℚ := 1 / (1 - y / (T : ℚ))
+  let Bz : ℚ := 1 / (1 - z / (T : ℚ))
+  have hBy0 : 0 ≤ By := by
+    dsimp [By]
+    positivity
+  have hBz0 : 0 ≤ Bz := by
+    dsimp [Bz]
+    positivity
+  have hAz0 : 0 ≤ Az := by
+    dsimp [Az]
+    positivity
+  have hAy0 : 0 ≤ Ay := by
+    dsimp [Ay]
+    positivity
+  have hBmono : By ≤ Bz := by
+    have hdiv_yz : y / (T : ℚ) ≤ z / (T : ℚ) :=
+      div_le_div_of_nonneg_right hyz hTQpos.le
+    have hden_le : 1 - z / (T : ℚ) ≤ 1 - y / (T : ℚ) := by
+      linarith
+    have h :=
+      one_div_le_one_div_of_le hdenZ hden_le
+    simpa [By, Bz] using h
+  have hBdiff0 : 0 ≤ Bz - By := sub_nonneg.mpr hBmono
+  have hAdiff :
+      Az - Ay ≤ (z - y) * last := by
+    have h :=
+      expTerm_sub_le_shift_deriv_upper
+        (y := y) (z := z) (n := T) hy hyz hT1
+    dsimp [Az, Ay, last]
+    calc
+      z^T / (T.factorial : ℚ) - y^T / (T.factorial : ℚ)
+          ≤ (z - y) * z^(T-1) / ((T-1).factorial : ℚ) := h
+      _ = (z - y) *
+          (z^(T-1) / ((T-1).factorial : ℚ)) := by ring
+  have hAy_le_Az : Ay ≤ Az := by
+    have hpow := pow_le_pow_left₀ hy hyz T
+    dsimp [Ay, Az]
+    exact div_le_div_of_nonneg_right hpow (by positivity)
+  have hBdiff_eq :
+      Bz - By = ((z - y) / (T : ℚ)) * By * Bz := by
+    dsimp [By, Bz]
+    field_simp [hTQne, hdenY.ne', hdenZ.ne', hTminusY, hTminusZ]
+    ring
+  have hBdiff_le :
+      Bz - By ≤ ((z - y) / (T : ℚ)) * Bz * Bz := by
+    have hdT0 : 0 ≤ (z - y) / (T : ℚ) :=
+      div_nonneg hd0 hTQpos.le
+    have hleft :
+        ((z - y) / (T : ℚ)) * By
+          ≤ ((z - y) / (T : ℚ)) * Bz :=
+      mul_le_mul_of_nonneg_left hBmono hdT0
+    have hright :=
+      mul_le_mul_of_nonneg_right hleft hBz0
+    rw [hBdiff_eq]
+    simpa [mul_assoc, mul_left_comm, mul_comm] using hright
+  have hsplit :
+      Az * Bz - Ay * By = (Az - Ay) * Bz + Ay * (Bz - By) := by
+    ring
+  have hfirst :
+      (Az - Ay) * Bz ≤ ((z - y) * last) * Bz :=
+    mul_le_mul_of_nonneg_right hAdiff hBz0
+  have hsecond :
+      Ay * (Bz - By)
+        ≤ Az * (((z - y) / (T : ℚ)) * Bz * Bz) := by
+    have hupper0 :
+        0 ≤ ((z - y) / (T : ℚ)) * Bz * Bz := by
+      positivity
+    exact mul_le_mul hAy_le_Az hBdiff_le hBdiff0 hAz0
+  have htail_pre :
+      Az * Bz - Ay * By
+        ≤ ((z - y) * last) * Bz
+          + Az * (((z - y) / (T : ℚ)) * Bz * Bz) := by
+    rw [hsplit]
+    exact add_le_add hfirst hsecond
+  have hpredFac : (((T - 1).factorial : Nat) : ℚ) ≠ 0 := by
+    positivity
+  have hfac : (((T).factorial : Nat) : ℚ) =
+      (T : ℚ) * (((T - 1).factorial : Nat) : ℚ) := by
+    rw [show T = (T - 1) + 1 by omega, Nat.factorial_succ]
+    push_cast
+    ring
+  have hpow : z^T = z^(T-1) * z := by
+    calc
+      z^T = z^((T - 1) + 1) := by
+        exact congrArg (fun n : Nat => z^n)
+          (by omega : T = (T - 1) + 1)
+      _ = z^(T-1) * z := by rw [pow_succ]
+  have hAz_eq : Az = last * (z / (T : ℚ)) := by
+    dsimp [Az, last]
+    rw [hfac, hpow]
+    field_simp [hTQne, hpredFac]
+  have hkernel_eq :
+      ((z - y) * last) * Bz
+          + Az * (((z - y) / (T : ℚ)) * Bz * Bz)
+        =
+      (z - y) *
+        (last * (Bz *
+          (1 + z / ((T : ℚ)^2) * Bz))) := by
+    rw [hAz_eq]
+    field_simp [hTQne]
+  have htail_kernel :
+      Az * Bz - Ay * By
+        ≤ (z - y) *
+          (last * (Bz *
+            (1 + z / ((T : ℚ)^2) * Bz))) := by
+    calc
+      Az * Bz - Ay * By
+          ≤ ((z - y) * last) * Bz
+              + Az * (((z - y) / (T : ℚ)) * Bz * Bz) := htail_pre
+      _ = (z - y) *
+          (last * (Bz *
+            (1 + z / ((T : ℚ)^2) * Bz))) := hkernel_eq
+  have hkernel :=
+    partialExpUpper_tail_deriv_kernel_le_tenth
+      (z := z) (T := T) hT hz0 hzT hzSmall
+  have hscaled :=
+    mul_le_mul_of_nonneg_left hkernel hd0
+  dsimp [Ay, Az, By, Bz] at htail_kernel
+  calc
+    (z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
+        - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))
+        ≤ (z - y) *
+          ((z^(T-1) / ((T-1).factorial : ℚ)) *
+            ((1 / (1 - z / (T : ℚ))) *
+              (1 + z / ((T : ℚ)^2) *
+                (1 / (1 - z / (T : ℚ)))))) := by
+          simpa [mul_assoc, mul_left_comm, mul_comm] using htail_kernel
+    _ ≤ (z - y) * ((1 / 10 : ℚ) * partialExpUpper z T) := by
+          simpa [mul_assoc, mul_left_comm, mul_comm] using hscaled
+    _ = (1 / 10 : ℚ) * (z - y) * partialExpUpper z T := by ring
+
+/-- First-order upper shift bound for the whole `partialExpUpper` shell in the
+upper-middle range.  The finite prefix contributes `d`, and the geometric tail
+contributes the extra `d/10`. -/
+theorem partialExpUpper_sub_le_shift_eleven_tenths
+    {y z : ℚ} {T : Nat} (hT : 2 ≤ T)
+    (hy : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T : ℚ))
+    (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
+    partialExpUpper z T - partialExpUpper y T
+      ≤ (11 / 10 : ℚ) * (z - y) * partialExpUpper z T := by
+  have hpref :=
+    partialExpPrefix_sub_le_shift_partialExpUpper
+      (y := y) (z := z) (T := T) hy hyz hzT
+  have htail :=
+    partialExpUpper_tail_sub_le_shift_tenth
+      (y := y) (z := z) (T := T) hT hy hyz hzT hzSmall
+  have hsplit :
+      partialExpUpper z T - partialExpUpper y T
+        =
+      ((∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+        - (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ)))
+      +
+      ((z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
+        - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))) := by
+    unfold partialExpUpper
+    ring
+  calc
+    partialExpUpper z T - partialExpUpper y T
+        =
+      ((∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+        - (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ)))
+      +
+      ((z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
+        - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))) := hsplit
+    _ ≤ (z - y) * partialExpUpper z T
+          + (1 / 10 : ℚ) * (z - y) * partialExpUpper z T :=
+        add_le_add hpref htail
+    _ = (11 / 10 : ℚ) * (z - y) * partialExpUpper z T := by ring
+
 /-- The shifted finite prefix gains enough to cover multiplication by
 `1+d`, up to the final boundary term. -/
 theorem partialExpPrefix_mul_one_add_le_add_top {y d : ℚ} {T : Nat}
@@ -15979,6 +16326,78 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenc
       le_inv_one_sub_mul_of_sub_le_mul_self
         (positiveTemperedUpperMiddleExpShiftBeta_lt_one ha) hdiff
     simpa [positiveTemperedUpperMiddleExpShiftFactor] using hle
+
+/-- Concrete upper-middle `partialExpUpper` shift-difference certificate.
+
+This is the Lean replacement for the TeX Taylor/geometric-tail estimate in the
+upper-middle reverse branch: the proof is split into the generic
+`partialExpUpper_sub_le_shift_eleven_tenths` lemma plus the already audited
+`45/a` exponent-shift and `(8a-1)/24` cutoff bounds. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate where
+  upperMiddleShiftDifference := by
+    intro a r ha hrlo hrhi hmid
+    have hr1 : 1 ≤ r := by omega
+    have hjpos : 0 < posJ a r :=
+      posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hrhi
+    have hy :
+        0 ≤ positiveTemperedExponentUpper a r :=
+      positiveTemperedExponentUpper_nonneg hr1 hjpos
+    have hbudget0 :
+        0 ≤ positiveTemperedUpperMiddleExpShiftBudget a := by
+      unfold positiveTemperedUpperMiddleExpShiftBudget
+      exact div_nonneg (by norm_num : (0 : ℚ) ≤ 45)
+        (by exact_mod_cast (by omega : 0 ≤ a))
+    have hyz :
+        positiveTemperedExponentUpper a r
+          ≤ positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a := by
+      linarith
+    have hcut :
+        positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a
+          < ((8 * a : Nat) : ℚ) :=
+      positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
+        ha hr1 hrhi
+    have hsmall :
+        positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a
+          ≤ ((8 * a - 1 : Nat) : ℚ) / 24 :=
+      positiveTemperedExponentUpper_upperMiddleShiftBudget_le_cutoff_div_twentyfour
+        ha hrlo hrhi hmid
+    have hT : 2 ≤ 8 * a := by omega
+    have hdiff :=
+      partialExpUpper_sub_le_shift_eleven_tenths
+        (y := positiveTemperedExponentUpper a r)
+        (z := positiveTemperedExponentUpper a r
+          + positiveTemperedUpperMiddleExpShiftBudget a)
+        (T := 8 * a) hT hy hyz hcut hsmall
+    calc
+      partialExpUpper
+          (positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+        - partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
+          ≤ (11 / 10 : ℚ) *
+              ((positiveTemperedExponentUpper a r
+                  + positiveTemperedUpperMiddleExpShiftBudget a)
+                - positiveTemperedExponentUpper a r) *
+              partialExpUpper
+                (positiveTemperedExponentUpper a r
+                  + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) :=
+            hdiff
+      _ =
+          ((11 / 10 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
+            partialExpUpper
+              (positiveTemperedExponentUpper a r
+                + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) := by
+            ring
+
+/-- Concrete upper-middle analytic shift-factor certificate obtained from the
+difference form above. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate :=
+  positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate
+    |>.toMiddleShiftFactorCertificate
 
 /-- Raw-quotient scalar margin for the upper-middle shift factor.
 
