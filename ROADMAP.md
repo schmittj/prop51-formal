@@ -639,6 +639,8 @@ Status:
       `--final-tail-atomic-bounds`.  Grouped raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
       existing grouped proof production can still feed this final route.  If
+      a proof already has the core `PositiveSaddleLargeTailAuditCertificate`,
+      Lean also exposes reverse parts and atomic-parts views for audit.  If
       generated atom theorems are split over separate Lean modules, pass
       repeated `--extra-import` options when emitting the assembly theorem.
       The generator also has

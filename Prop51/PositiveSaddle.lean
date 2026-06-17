@@ -9678,6 +9678,24 @@ structure PositiveSaddleLargeTailSoloYUnitCertificate : Prop where
           (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
         ≤ 1
 
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toSmallProductRawCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
+    PositiveSaddleLargeTailSmallProductRawCertificate where
+  smallProductRaw := cert.smallProductRaw
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toTemperedProductRawCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
+    PositiveSaddleLargeTailTemperedProductRawCertificate where
+  temperedProductRaw := cert.temperedProductRaw
+
+theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toSoloYUnitCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
+    PositiveSaddleLargeTailSoloYUnitCertificate where
+  soloYUnit := cert.soloYUnit
+
 /-- Reassemble the unit-scaled large-tail solo target from a separate
 `Y_a(N)` majorant and the scalar dyadic budget for that majorant. -/
 theorem positiveLargeTailSoloYUnit_of_Y_bound

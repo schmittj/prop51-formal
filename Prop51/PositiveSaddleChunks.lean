@@ -5412,6 +5412,21 @@ theorem PositiveSaddleLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
   candidateSplitTemperedRawClearedUnitReserve :=
     cert.toCandidateRawClearedUnitReserveBoundsCertificate
 
+theorem PositiveSaddleLargeTailAuditCertificate.toLargeTailPartsAuditCertificate
+    (cert : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleLargeTailPartsAuditCertificate where
+  smallProductRaw :=
+    cert.productPointwiseYRawUnitSolo.toSmallProductRawCertificate
+  temperedProductRaw :=
+    cert.productPointwiseYRawUnitSolo.toTemperedProductRawCertificate
+  soloYUnit := cert.productPointwiseYRawUnitSolo.toSoloYUnitCertificate
+  candidateRawClearedSteps :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateRawClearedStepCertificate
+  candidateUnitReserves :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateUnitReserveCertificate
+
 /-- Large-tail audit certificate with the six candidate entropy-reserve
 families split into atomic one-dimensional targets.  This refines
 `PositiveSaddleLargeTailPartsAuditCertificate` only as a proof-production
@@ -5619,6 +5634,39 @@ theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailAuditCerti
     (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toLargeTailPartsAuditCertificate.toLargeTailAuditCertificate
+
+theorem PositiveSaddleLargeTailAuditCertificate.toLargeTailAtomicPartsAuditCertificate
+    (cert : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleLargeTailAtomicPartsAuditCertificate where
+  smallProductRaw :=
+    cert.productPointwiseYRawUnitSolo.toSmallProductRawCertificate
+  temperedProductRaw :=
+    cert.productPointwiseYRawUnitSolo.toTemperedProductRawCertificate
+  soloYUnit := cert.productPointwiseYRawUnitSolo.toSoloYUnitCertificate
+  candidateSmallRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.smallRawStep
+  candidateTemperedLowerRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedLowerRawStep
+  candidateTemperedUpperReverseRawStep :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedUpperReverseRawStep
+  candidateSmallFirstReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.smallFirstReserve
+  candidateTemperedLowerFirstReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedLowerFirstReserve
+  candidateTemperedUpperLastReserve :=
+    cert.candidateSplitTemperedRawClearedUnitReserve
+      |>.toCandidateAtomicCertificate
+      |>.temperedUpperLastReserve
 
 /-- Table-backed exact raw-product wrapper with the remaining finite
 tangent and edge checks also chunked.
