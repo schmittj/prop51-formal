@@ -49,6 +49,34 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
     positiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate
   temperedUpperReverseMiddleExpTarget := upperMiddle
 
+/-- Same hybrid wrapper, but with the solo side supplied in the
+denominator-cleared `QqEplusGcompBound` saddle form.
+
+This records the current Lean-side reduction of the TeX solo saddle estimate:
+the final proof still needs the same saddle inequality, but in a form that is
+friendlier for rational coefficient estimates than the normalized
+`positiveYgcompBound` quotient. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompSaddleCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompSaddleCleared a N)
+    (upperMiddle :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10 smallXBound smallYBound temperedXBound temperedYBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle
+    product
+    (fun {a N} ha hrect =>
+      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+        (soloY (a := a) (N := N) ha hrect))
+    upperMiddle
+
 /-- Large-tail wrapper with both adjacent-step sides filled in.
 
 After the upper-middle reverse target is now concrete, this route asks only for
@@ -65,6 +93,23 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
     PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
       999 10 smallXBound smallYBound temperedXBound temperedYBound :=
   positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle
+    product soloY
+    positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+
+/-- Large-tail wrapper with both adjacent-step sides filled in and the solo
+side supplied as the cleared `Gcomp` saddle target. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompSaddleCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompSaddleCleared a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10 smallXBound smallYBound temperedXBound temperedYBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompSaddleCleared
     product soloY
     positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
 
@@ -88,6 +133,23 @@ theorem positiveSaddleLargeTailAuditCertificate_of_upperMiddle
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle
     product soloY upperMiddle).toLargeTailAuditCertificate
 
+/-- Large-tail audit certificate with the lower hybrid ratio side concrete and
+the solo side supplied as the cleared `Gcomp` saddle target. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_upperMiddle_soloGcompSaddleCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompSaddleCleared a N)
+    (upperMiddle :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompSaddleCleared
+    product soloY upperMiddle).toLargeTailAuditCertificate
+
 /-- Large-tail audit certificate after both adjacent-step sides are filled.
 
 The remaining analytic inputs are exactly the product bounds and the solo
@@ -103,6 +165,21 @@ theorem positiveSaddleLargeTailAuditCertificate_of_product_solo
         positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N) :
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    product soloY).toLargeTailAuditCertificate
+
+/-- Large-tail audit certificate after both adjacent-step sides are filled and
+the solo side is reduced to the cleared `Gcomp` saddle target. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompSaddleCleared a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompSaddleCleared
     product soloY).toLargeTailAuditCertificate
 
 end Prop51

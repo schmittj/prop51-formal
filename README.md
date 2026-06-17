@@ -310,7 +310,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`;
   they expose product bounds, the analytic saddle estimate
   `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`, and
-  the two tempered adjacent-step atoms.  The older staging wrappers
+  the two tempered adjacent-step atoms.  The solo estimate can now also be
+  supplied through the denominator-cleared
+  `Prop51.positiveLargeTailSoloGcompSaddleCleared` target; the theorem
+  `Prop51.positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared`
+  converts it back to the displayed `(10/7)^a` envelope, and
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared`
+  exposes this as the current proof-facing large-tail wrapper.  The older
+  staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`

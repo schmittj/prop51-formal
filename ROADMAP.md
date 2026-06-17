@@ -782,6 +782,14 @@ Status:
       they leave product bounds, the analytic estimate
       `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`,
       and the two tempered adjacent-step atoms as generated large-tail fields.
+      The solo estimate is now further reduced to the denominator-cleared
+      `positiveLargeTailSoloGcompSaddleCleared` target, with
+      `positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared`
+      and the audit wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared`
+      converting that cleared saddle input into the preferred `(10/7)^a`
+      solo envelope.  This is a Lean-side quotient-clearing refinement of the
+      same TeX solo saddle estimate.
       The older staging
       wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
