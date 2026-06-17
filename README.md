@@ -373,7 +373,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate`:
   the former is the pure raw power-product estimate giving the envelope
   `2*(r+1)/(a-r)`, and the latter only has to handle the top strip
-  `a < 3 * (r + 1)`.
+  `a < 3 * (r + 1)`.  The raw side can be supplied in its exact local form
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
+  whose field is just
+  `positiveEntropyShadowBaseStepRawPowerProduct a r ≤ 1`.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

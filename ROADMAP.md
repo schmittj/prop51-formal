@@ -829,7 +829,11 @@ Status:
       for the pure raw power-product envelope `2*(r+1)/(a-r)`, and
       `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopExpTargetCrossmulCertificate`
       for the remaining large-exp quotient only in the top strip
-      `a < 3 * (r + 1)`.
+      `a < 3 * (r + 1)`.  The raw certificate can itself be supplied by the
+      exact local target
+      `PositiveSaddleLargeTailCandidateTemperedLowerRawPowerProductCertificate`,
+      whose only field is
+      `positiveEntropyShadowBaseStepRawPowerProduct a r ≤ 1`.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
