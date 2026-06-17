@@ -4071,14 +4071,69 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
 
     if args.emit_final:
         if args.active_row_covers:
-            if args.final_tail_tempered_raw_exp_ratio_ten_sevenths_closed_reserve_solo_envelope_bounds:
+            if args.final_tail_tempered_raw_exp_ratio_ten_sevenths_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_ten_sevenths_closed_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_ten_sevenths_closed_reserve_solo_envelope_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_crossmul_ten_sevenths_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_crossmul_ten_sevenths_closed_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate"
                 )
                 final_arg = "tail"
             elif args.final_tail_tempered_raw_exp_crossmul_ten_sevenths_closed_reserve_solo_envelope_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_raw_cleared_unit_bounds:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRawClearedUnitBoundsAuditCertificate"
                 )
                 final_arg = "tail"
             elif args.final_tail_refined_atomic_bounds:
@@ -4089,6 +4144,21 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
             elif args.final_tail_atomic_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_atomic_parts:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicPartsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_bounds_parts:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedBoundsPartsAuditCertificate"
+                )
+                final_arg = "tail"
+            elif args.final_tail_parts:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedPartsAuditCertificate"
                 )
                 final_arg = "tail"
             else:

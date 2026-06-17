@@ -589,8 +589,9 @@ Status:
       `--active-row-covers`, including active manifests and active shard
       slices.
       `Prop51/Main.lean` exposes final assembly adapters for this active
-      route, including atomic bounds, refined atomic bounds, and the preferred
-      ten-sevenths closed-reserve solo-envelope large-tail shapes.
+      route mirroring the fixed-edge tail interface family, from parts and
+      product/solo bounds through atomic/refined bounds, grouped raw-cleared
+      reserves, and the quotient/crossmul ten-sevenths tail shapes.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

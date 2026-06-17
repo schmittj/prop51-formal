@@ -197,9 +197,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate.  This records a proof-production optimization beyond the
   TeX-style fixed global cover; the generator emits this route with
   `--active-row-covers`, including active manifests and active shard slices.
-  Final assembly adapters are available for the base large-tail audit, atomic
-  bounds, refined atomic bounds, and the preferred quotient/crossmul
-  ten-sevenths closed-reserve solo-envelope tail shapes.  The
+  Final assembly adapters mirror the fixed-edge tail interface family,
+  including parts, product/solo bounds, atomic/refined bounds, grouped
+  raw-cleared reserves, and the quotient/crossmul ten-sevenths tail shapes.
+  The
   remaining large-tail inputs can also be supplied through
   `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
   product-small, product-tempered, solo, adjacent-step, and unit-reserve
