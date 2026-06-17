@@ -267,6 +267,26 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split interface whose live candidate fields are the two "
+            "cross-multiplied tempered raw-exp atoms and the two tempered "
+            "reserve atoms"
+        ),
+    )
+    parser.add_argument(
+        "--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product/solo "
+            "bound-split interface whose live candidate fields are the two "
+            "cross-multiplied tempered raw-exp atoms and the two tempered "
+            "reserve envelopes"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -425,6 +445,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds,
         args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds,
+        args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds,
+        args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -818,6 +840,10 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "to split those reserve atoms through explicit exp envelopes.",
         "Pass `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`",
         "to split only the remaining tempered reserve atoms.",
+        "Pass `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds`",
+        "for denominator-cleared tempered step atoms and direct reserve atoms.",
+        "Pass `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds`",
+        "for denominator-cleared tempered step atoms and reserve envelopes.",
         "-/",
     ]
 
@@ -838,6 +864,14 @@ def final_tail_type(args: argparse.Namespace) -> str:
     if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
         return (
             "PositiveSaddleLargeTailTemperedRawExpRatioTemperedReserveBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate"
+        )
+    if args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds:
+        return (
+            "PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate"
         )
     if args.final_tail_refined_atomic_bounds:
         return "PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate"
@@ -864,6 +898,8 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
         or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds
         or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds
+        or args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds
+        or args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds
     ):
         lines = [
             "    {smallXBound smallYBound temperedXBound temperedYBound :",
@@ -882,6 +918,17 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
                 ]
             )
         elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+            lines.extend(
+                [
+                    "    {temperedLowerFirstExpBound",
+                    "      temperedUpperLastExpBound : Nat → ℚ}",
+                    f"    (tail : {final_tail_type(args)}",
+                    "      smallXBound smallYBound temperedXBound temperedYBound soloYBound",
+                    "      temperedLowerFirstExpBound",
+                    "      temperedUpperLastExpBound) :",
+                ]
+            )
+        elif args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds:
             lines.extend(
                 [
                     "    {temperedLowerFirstExpBound",
@@ -912,6 +959,8 @@ def final_tail_arg(args: argparse.Namespace) -> str:
         or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds
         or args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds
         or args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds
+        or args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds
+        or args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds
         or args.final_tail_atomic_parts
         or args.final_tail_bounds_parts
         or args.final_tail_parts
@@ -1220,6 +1269,14 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
     if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
         emit_args.append(
             "--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds"
+        )
+    if args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds:
+        emit_args.append(
+            "--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds"
+        )
+    if args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds:
+        emit_args.append(
+            "--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds"
         )
     return emit_args
 
@@ -2932,9 +2989,29 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
             )
             final_arg = "tail"
+        elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_envelope_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_envelope_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate"
+            )
+            final_arg = "tail"
         elif args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveBoundsAuditCertificate"
+            )
+            final_arg = "tail"
+        elif args.final_tail_tempered_raw_exp_crossmul_tempered_reserve_bounds:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate"
             )
             final_arg = "tail"
         elif args.final_tail_refined_atomic_bounds:

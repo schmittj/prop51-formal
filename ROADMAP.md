@@ -722,6 +722,18 @@ Status:
       candidate-side inputs.  The generator flags are
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` and
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`.
+      Lean now also provides cross-multiplied versions of those two tempered
+      quotient-step atoms,
+      `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`
+      and
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate`.
+      This is a proof-production shape only: the adapters divide by positive
+      tempered large-exp and raw-base factors to recover the quotient fields.
+      The corresponding reduced audit wrappers and generator flags are
+      `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
+      `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
+      `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds`, and
+      `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds`.
       If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If

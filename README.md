@@ -274,6 +274,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   raw-cleared step.  The upper-tempered reverse step has the analogous
   quotient-form interface
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate`.
+  For generated rational audits, Lean also exposes the denominator-cleared
+  equivalents
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpCrossmulCertificate`;
+  the adapters to the quotient interfaces are proved from positivity of the
+  tempered large-exp factors and the raw base quotient.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
@@ -288,7 +295,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   reserve atoms are supplied through separate exponential envelope bounds, or
   `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds` when
   only the two remaining tempered reserve atoms are supplied through
-  envelope bounds.
+  envelope bounds.  Use
+  `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds` or
+  `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-envelope-bounds`
+  for the same reduced tail routes with denominator-cleared tempered
+  adjacent-step atoms.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
