@@ -14005,6 +14005,377 @@ theorem positiveTemperedLowerSharpTopOffsetThreeStepBudgetAux
   rw [hdiff]
   positivity
 
+set_option maxHeartbeats 800000 in
+/-- Uniform one-step exponent drop on the ten lower top-offset rows.
+
+This is the analytic input needed to turn the three-step
+`partialExpUpper` growth lemma into a separated large-exp quotient bound.
+The proof is a deliberately explicit rational envelope: the positive
+`57/(r(r+1))` drop is minimized at `r ≤ a/3+9`, while the negative
+`29/(j(j-1))` correction is maximized using `j ≥ 2a/3-9`. -/
+theorem positiveTemperedExponentUpper_lowerSharpTopOffsetDrop
+    {a t : Nat} (ha : 3000 ≤ a) (ht : t < 10) :
+    positiveTemperedExponentUpper a (a / 3 + t + 1)
+        + (175 : ℚ) / (4 * (a : ℚ))
+      ≤ positiveTemperedExponentUpper a (a / 3 + t) := by
+  let r := a / 3 + t
+  have haQ : (3000 : ℚ) ≤ a := by exact_mod_cast ha
+  have haPosNat : 0 < a := by omega
+  have hrposNat : 0 < r := by dsimp [r]; omega
+  have hleA : r ≤ a := by dsimp [r]; omega
+  have hjSucc : posJ a (r + 1) = posJ a r - 1 := by
+    unfold posJ
+    omega
+  have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hrposNat
+  have hrsQpos : (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hjQpos : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast (by dsimp [r]; unfold posJ; omega : 0 < posJ a r)
+  have hjm1Qpos : (0 : ℚ) < ((posJ a r - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by dsimp [r]; unfold posJ; omega : 0 < posJ a r - 1)
+  have hdiff_eq :
+      positiveTemperedExponentUpper a r - positiveTemperedExponentUpper a (r + 1)
+        = ((a : ℚ) / 10) *
+          (57 / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+            29 / (((posJ a r : Nat) : ℚ) *
+              ((posJ a r - 1 : Nat) : ℚ))) := by
+    unfold positiveTemperedExponentUpper
+    rw [hjSucc]
+    field_simp [hrQpos.ne', hrsQpos.ne', hjQpos.ne', hjm1Qpos.ne']
+    rw [show ((r + 1 : Nat) : ℚ) = (r : ℚ) + 1 by norm_num]
+    rw [show ((posJ a r - 1 : Nat) : ℚ) =
+        ((posJ a r : Nat) : ℚ) - 1 by
+      rw [Nat.cast_sub (by dsimp [r]; unfold posJ; omega : 1 ≤ posJ a r)]
+      norm_num]
+    ring
+  have hsimple_sum :
+      (175 : ℚ) / (4 * (a : ℚ)^2)
+          + (261 : ℚ) / (20 * ((a : ℚ) - 15) * (-27 + (a : ℚ) * 2))
+        ≤ (513 : ℚ) / (10 * ((a : ℚ) + 27) * ((a : ℚ) + 30)) := by
+    have haPos : (0 : ℚ) < a := by nlinarith
+    have h15 : (0 : ℚ) < (a : ℚ) - 15 := by nlinarith
+    have h2 : (0 : ℚ) < -27 + (a : ℚ) * 2 := by nlinarith
+    have hPden : (0 : ℚ) <
+        10 * ((a : ℚ) + 27) * ((a : ℚ) + 30) := by positivity
+    rw [le_div_iff₀ hPden]
+    field_simp [haPos.ne', h15.ne', h2.ne']
+    ring_nf
+    have hnum : (0 : ℚ) ≤
+        41 * (a : ℚ)^4 - 123234 * (a : ℚ)^3
+          + 1275120 * (a : ℚ)^2 + 20199375 * (a : ℚ)
+          - 287043750 := by
+      have hb : 0 ≤ (a : ℚ) - 3000 := by nlinarith
+      have hEq :
+          41 * (a : ℚ)^4 - 123234 * (a : ℚ)^3
+              + 1275120 * (a : ℚ)^2 + 20199375 * (a : ℚ)
+              - 287043750
+            =
+          41 * ((a : ℚ) - 3000)^4
+            + 368766 * ((a : ℚ) - 3000)^3
+            + 1106169120 * ((a : ℚ) - 3000)^2
+            + 1108352919375 * ((a : ℚ) - 3000)
+            + 5218391081250 := by
+        ring
+      rw [hEq]
+      positivity
+    nlinarith [hnum]
+  have hsimple :
+      (175 : ℚ) / (4 * (a : ℚ)^2)
+        ≤ (513 : ℚ) / (10 * ((a : ℚ) + 27) * ((a : ℚ) + 30))
+            - (261 : ℚ) /
+              (20 * ((a : ℚ) - 15) * (-27 + (a : ℚ) * 2)) := by
+    linarith
+  have haQpos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast haPosNat
+  have hdivQ : (((a / 3 : Nat) : ℚ)) ≤ (a : ℚ) / 3 := by
+    have hmul : (3 : ℚ) * ((a / 3 : Nat) : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.mul_div_le a 3
+    nlinarith
+  have hrCast : (r : ℚ) = ((a / 3 : Nat) : ℚ) + (t : ℚ) := by
+    dsimp [r]
+    norm_num
+  have hr_le : (r : ℚ) ≤ (a : ℚ) / 3 + 9 := by
+    have htQ : (t : ℚ) ≤ 9 := by exact_mod_cast (by omega : t ≤ 9)
+    rw [hrCast]
+    nlinarith
+  have hrs_le : ((r + 1 : Nat) : ℚ) ≤ (a : ℚ) / 3 + 10 := by
+    have h : ((r + 1 : Nat) : ℚ) = (r : ℚ) + 1 := by norm_num
+    rw [h]
+    nlinarith
+  have hbigR_nonneg : (0 : ℚ) ≤ (a : ℚ) / 3 + 9 := by positivity
+  have hprodR_le :
+      (r : ℚ) * ((r + 1 : Nat) : ℚ)
+        ≤ (((a : ℚ) + 27) * ((a : ℚ) + 30)) / 9 := by
+    have hmul := mul_le_mul hr_le hrs_le
+      (by positivity : (0 : ℚ) ≤ ((r + 1 : Nat) : ℚ)) hbigR_nonneg
+    nlinarith
+  have hposTerm :
+      (513 : ℚ) / (10 * ((a : ℚ) + 27) * ((a : ℚ) + 30))
+        ≤ (57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) := by
+    have hrec := one_div_le_one_div_of_le (mul_pos hrQpos hrsQpos) hprodR_le
+    have hscale := mul_le_mul_of_nonneg_left hrec
+      (by norm_num : (0 : ℚ) ≤ 57 / 10)
+    calc
+      (513 : ℚ) / (10 * ((a : ℚ) + 27) * ((a : ℚ) + 30))
+          = (57 / 10 : ℚ) *
+              (1 / ((((a : ℚ) + 27) * ((a : ℚ) + 30)) / 9)) := by
+            field_simp
+            ring
+      _ ≤ (57 / 10 : ℚ) * (1 / ((r : ℚ) * ((r + 1 : Nat) : ℚ))) :=
+            hscale
+      _ = (57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) := by
+            ring
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hjm1Cast :
+      ((posJ a r - 1 : Nat) : ℚ) =
+        ((posJ a r : Nat) : ℚ) - 1 := by
+    rw [Nat.cast_sub (by dsimp [r]; unfold posJ; omega : 1 ≤ posJ a r)]
+    norm_num
+  have hj_lower : (2 * (a : ℚ)) / 3 - 9
+      ≤ ((posJ a r : Nat) : ℚ) := by
+    rw [hjCast]
+    nlinarith
+  have hjm1_lower : (2 * (a : ℚ)) / 3 - 10
+      ≤ ((posJ a r - 1 : Nat) : ℚ) := by
+    rw [hjm1Cast]
+    nlinarith
+  have hsmallJ_nonneg : (0 : ℚ) ≤ (2 * (a : ℚ)) / 3 - 10 := by
+    nlinarith
+  have hJprod_lower :
+      (((2 * (a : ℚ)) / 3 - 9) * ((2 * (a : ℚ)) / 3 - 10))
+        ≤ ((posJ a r : Nat) : ℚ) *
+          ((posJ a r - 1 : Nat) : ℚ) := by
+    exact mul_le_mul hj_lower hjm1_lower hsmallJ_nonneg (by positivity)
+  have hsmallJpos :
+      (0 : ℚ) <
+        (((2 * (a : ℚ)) / 3 - 9) * ((2 * (a : ℚ)) / 3 - 10)) := by
+    nlinarith
+  have hnegTerm :
+      (29 / 10 : ℚ) /
+          (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ))
+        ≤ (261 : ℚ) / (20 * ((a : ℚ) - 15) * (-27 + (a : ℚ) * 2)) := by
+    have hrec := one_div_le_one_div_of_le hsmallJpos hJprod_lower
+    have hscale := mul_le_mul_of_nonneg_left hrec
+      (by norm_num : (0 : ℚ) ≤ 29 / 10)
+    calc
+      (29 / 10 : ℚ) /
+          (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ))
+          = (29 / 10 : ℚ) *
+              (1 / (((posJ a r : Nat) : ℚ) *
+                ((posJ a r - 1 : Nat) : ℚ))) := by
+            ring
+      _ ≤ (29 / 10 : ℚ) *
+            (1 / (((2 * (a : ℚ)) / 3 - 9) *
+              ((2 * (a : ℚ)) / 3 - 10))) := hscale
+      _ = (261 : ℚ) / (20 * ((a : ℚ) - 15) * (-27 + (a : ℚ) * 2)) := by
+          have hden : 405 - (a : ℚ) * 57 + (a : ℚ)^2 * 2 ≠ 0 := by
+            have hpos :
+                (0 : ℚ) < 405 - (a : ℚ) * 57 + (a : ℚ)^2 * 2 := by
+              nlinarith [sq_nonneg ((a : ℚ) - 15)]
+            exact hpos.ne'
+          have hden2 : 810 - (a : ℚ) * 114 + (a : ℚ)^2 * 4 ≠ 0 := by
+            have hpos :
+                (0 : ℚ) < 810 - (a : ℚ) * 114 + (a : ℚ)^2 * 4 := by
+              nlinarith [sq_nonneg ((a : ℚ) - 15)]
+            exact hpos.ne'
+          have hinv :
+              (810 - (a : ℚ) * 114 + (a : ℚ)^2 * 4)⁻¹ * 5220 =
+                (405 - (a : ℚ) * 57 + (a : ℚ)^2 * 2)⁻¹ * 2610 := by
+            field_simp [hden, hden2]
+            ring
+          field_simp [hden, hden2]
+          ring_nf
+          exact hinv
+  have hcore :
+      (513 : ℚ) / (10 * ((a : ℚ) + 27) * ((a : ℚ) + 30))
+          - (261 : ℚ) /
+              (20 * ((a : ℚ) - 15) * (-27 + (a : ℚ) * 2))
+        ≤ (57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+          (29 / 10 : ℚ) /
+            (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ)) := by
+    linarith
+  have hcore2 :
+      (175 : ℚ) / (4 * (a : ℚ)^2)
+        ≤ (57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+          (29 / 10 : ℚ) /
+            (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ)) :=
+    hsimple.trans hcore
+  have hmul :
+      (a : ℚ) * ((175 : ℚ) / (4 * (a : ℚ)^2))
+        ≤ (a : ℚ) *
+          ((57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+          (29 / 10 : ℚ) /
+            (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ))) :=
+    mul_le_mul_of_nonneg_left hcore2 haQpos.le
+  have hmul_left :
+      (a : ℚ) * ((175 : ℚ) / (4 * (a : ℚ)^2))
+        = (175 : ℚ) / (4 * (a : ℚ)) := by
+    field_simp [haQpos.ne']
+  have hmul_right :
+      (a : ℚ) *
+          ((57 / 10 : ℚ) / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+          (29 / 10 : ℚ) /
+            (((posJ a r : Nat) : ℚ) * ((posJ a r - 1 : Nat) : ℚ)))
+        = ((a : ℚ) / 10) *
+          (57 / ((r : ℚ) * ((r + 1 : Nat) : ℚ)) -
+            29 / (((posJ a r : Nat) : ℚ) *
+              ((posJ a r - 1 : Nat) : ℚ))) := by
+    ring
+  have hdrop : (175 : ℚ) / (4 * (a : ℚ)) ≤
+      positiveTemperedExponentUpper a r - positiveTemperedExponentUpper a (r + 1) := by
+    rw [hdiff_eq]
+    rw [← hmul_left, ← hmul_right]
+    exact hmul
+  have hfinal :
+      positiveTemperedExponentUpper a (r + 1) + (175 : ℚ) / (4 * (a : ℚ))
+        ≤ positiveTemperedExponentUpper a r := by
+    linarith
+  simpa [r, Nat.add_assoc] using hfinal
+
+/-- The auxiliary worst-case scalar budget applies to the actual sharp
+top-offset target on the ten-row strip. -/
+theorem positiveTemperedLowerSharpTopOffsetThreeStepBudget
+    {a t : Nat} (ha : 3000 ≤ a) (ht : t < 10) :
+    1 ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
+      (1 + (175 : ℚ) / (12 * (a : ℚ)))^3 := by
+  let r := a / 3 + t
+  have haux := positiveTemperedLowerSharpTopOffsetThreeStepBudgetAux
+    (a := a) ha
+  have haQ : (3000 : ℚ) ≤ a := by exact_mod_cast ha
+  have hleA : r ≤ a := by dsimp [r]; omega
+  have hdivQ : (((a / 3 : Nat) : ℚ)) ≤ (a : ℚ) / 3 := by
+    have hmul : (3 : ℚ) * ((a / 3 : Nat) : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.mul_div_le a 3
+    nlinarith
+  have hrCast : (r : ℚ) = ((a / 3 : Nat) : ℚ) + (t : ℚ) := by
+    dsimp [r]
+    norm_num
+  have hr_le : (r : ℚ) ≤ (a : ℚ) / 3 + 9 := by
+    have htQ : (t : ℚ) ≤ 9 := by exact_mod_cast (by omega : t ≤ 9)
+    rw [hrCast]
+    nlinarith
+  have hrs_le : ((r + 1 : Nat) : ℚ) ≤ (a : ℚ) / 3 + 10 := by
+    have h : ((r + 1 : Nat) : ℚ) = (r : ℚ) + 1 := by norm_num
+    rw [h]
+    nlinarith
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hj_lower :
+      (2 * (a : ℚ)) / 3 - 9 ≤ ((posJ a r : Nat) : ℚ) := by
+    rw [hjCast]
+    nlinarith
+  have hdenEnvPos : (0 : ℚ) < (a : ℚ) / 3 + 10 := by positivity
+  have hrsQpos : (0 : ℚ) < ((r + 1 : Nat) : ℚ) := by positivity
+  have hfront_le :
+      (((2 * (a : ℚ)) / 3 - 9) / ((a : ℚ) / 3 + 10))
+        ≤ (((posJ a r : Nat) : ℚ) / ((r + 1 : Nat) : ℚ)) := by
+    have hnum_step :
+        (((2 * (a : ℚ)) / 3 - 9) / ((a : ℚ) / 3 + 10))
+          ≤ (((posJ a r : Nat) : ℚ) / ((a : ℚ) / 3 + 10)) := by
+      exact div_le_div_of_nonneg_right hj_lower hdenEnvPos.le
+    have hden_step :
+        (((posJ a r : Nat) : ℚ) / ((a : ℚ) / 3 + 10))
+          ≤ (((posJ a r : Nat) : ℚ) / ((r + 1 : Nat) : ℚ)) := by
+      have hrec := one_div_le_one_div_of_le hrsQpos hrs_le
+      have hJnonneg : (0 : ℚ) ≤ ((posJ a r : Nat) : ℚ) := by positivity
+      calc
+        ((posJ a r : Nat) : ℚ) / ((a : ℚ) / 3 + 10)
+            = ((posJ a r : Nat) : ℚ) * (1 / ((a : ℚ) / 3 + 10)) := by
+              ring
+        _ ≤ ((posJ a r : Nat) : ℚ) * (1 / ((r + 1 : Nat) : ℚ)) :=
+              mul_le_mul_of_nonneg_left hrec hJnonneg
+        _ = ((posJ a r : Nat) : ℚ) / ((r + 1 : Nat) : ℚ) := by
+              ring
+    exact hnum_step.trans hden_step
+  have hratio_eq :
+      positiveLargeExpTemperedRatio a =
+        ((4 * (a : ℚ) - 1) / (4 * (a : ℚ))) := by
+    unfold positiveLargeExpTemperedRatio
+    have hnum : ((4 * a - 1 : Nat) : ℚ) = 4 * (a : ℚ) - 1 := by
+      rw [Nat.cast_sub (by omega : 1 ≤ 4 * a)]
+      norm_num
+    have hden : ((4 * a : Nat) : ℚ) = 4 * (a : ℚ) := by norm_num
+    rw [hnum, hden]
+  have hratio0 : 0 ≤ ((4 * (a : ℚ) - 1) / (4 * (a : ℚ))) := by
+    have hnum : (0 : ℚ) ≤ 4 * (a : ℚ) - 1 := by nlinarith
+    have hden : (0 : ℚ) ≤ 4 * (a : ℚ) := by positivity
+    exact div_nonneg hnum hden
+  have henv_le_target :
+      (1 / 2 : ℚ) *
+          (((2 * (a : ℚ)) / 3 - 9) / ((a : ℚ) / 3 + 10)) *
+          (((4 * (a : ℚ) - 1) / (4 * (a : ℚ))))
+        ≤ positiveTemperedLowerSharpExpQuotientTarget a r := by
+    unfold positiveTemperedLowerSharpExpQuotientTarget
+    rw [hratio_eq]
+    exact mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hfront_le
+        (by norm_num : (0 : ℚ) ≤ 1 / 2))
+      hratio0
+  have hgrow0 : 0 ≤ (1 + (175 : ℚ) / (12 * (a : ℚ)))^3 := by
+    positivity
+  have hscaled := mul_le_mul_of_nonneg_right henv_le_target hgrow0
+  exact haux.trans (by simpa [r, mul_assoc] using hscaled)
+
+/-- The separated sharp large-exp quotient target is closed on the large
+part of the ten-row lower top-offset strip. -/
+theorem positiveTemperedLargeExp_lowerSharpTopOffsetExpQuotientTargetCrossmulLarge
+    {a t : Nat} (ha : 2000 < a) (haLarge : 3000 ≤ a) (ht : t < 10)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t) :
+    positiveTemperedLargeExp a (a / 3 + t + 1)
+      ≤ positiveTemperedLowerSharpExpQuotientTarget a (a / 3 + t) *
+        positiveTemperedLargeExp a (a / 3 + t) := by
+  let r := a / 3 + t
+  have haPosNat : 0 < a := by omega
+  have haQpos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast haPosNat
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hrhi : r < positiveLargeExpTemperedSplit a := by
+    dsimp [r]
+    unfold positiveLargeExpTemperedSplit
+    omega
+  have hrMem : r ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+  have hsucc1 : 1 ≤ r + 1 := by omega
+  have hsuccJ : 0 < posJ a (r + 1) := by
+    dsimp [r]
+    unfold posJ
+    omega
+  have hy : 0 ≤ positiveTemperedExponentUpper a (r + 1) :=
+    positiveTemperedExponentUpper_nonneg hsucc1 hsuccJ
+  have hd0 : 0 ≤ (175 : ℚ) / (4 * (a : ℚ)) := by positivity
+  have hT : 1 ≤ 8 * a := by omega
+  have hzT : positiveTemperedExponentUpper a r < ((8 * a : Nat) : ℚ) :=
+    positiveTemperedExponentUpper_lt_largeExpCutoff ha hrMem
+  have hdrop :
+      positiveTemperedExponentUpper a (r + 1) + (175 : ℚ) / (4 * (a : ℚ))
+        ≤ positiveTemperedExponentUpper a r := by
+    simpa [r, Nat.add_assoc] using
+      positiveTemperedExponentUpper_lowerSharpTopOffsetDrop
+        (a := a) (t := t) haLarge ht
+  have hbudget :
+      1 ≤ positiveTemperedLowerSharpExpQuotientTarget a r *
+        (1 + ((175 : ℚ) / (4 * (a : ℚ))) / 3)^3 := by
+    have hd :
+        ((175 : ℚ) / (4 * (a : ℚ))) / 3 =
+          (175 : ℚ) / (12 * (a : ℚ)) := by
+      field_simp [haQpos.ne']
+      ring
+    simpa [r, hd, Nat.add_assoc] using
+      positiveTemperedLowerSharpTopOffsetThreeStepBudget
+        (a := a) (t := t) haLarge ht
+  have hmain :
+      positiveTemperedLargeExp a (r + 1)
+        ≤ positiveTemperedLowerSharpExpQuotientTarget a r *
+          positiveTemperedLargeExp a r := by
+    unfold positiveTemperedLargeExp
+    exact partialExpUpper_le_mul_of_three_step_shift
+      (y := positiveTemperedExponentUpper a (r + 1))
+      (z := positiveTemperedExponentUpper a r)
+      (d₀ := (175 : ℚ) / (4 * (a : ℚ)))
+      (target := positiveTemperedLowerSharpExpQuotientTarget a r)
+      (T := 8 * a) hy hd0 hT hzT hdrop hbudget
+  simpa [r, Nat.add_assoc] using hmain
+
 theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
     {a r : Nat} (ha : 0 < a)
     (hgap :

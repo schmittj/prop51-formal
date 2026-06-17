@@ -426,6 +426,21 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpC
   lowerPrefixTopOffsetRawExpCrossmul :=
     cert.lowerPrefixTopOffsetRawExpChunks.lowerPrefixTopOffsetRawExpCrossmul
 
+/-- Close the large side of the hybrid raw-exp chunked certificate in Lean.
+Only the finite prefix raw-exp chunks remain as data. -/
+theorem PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate.toSharpTopOffsetHybridRawExpChunkedCertificate
+    {aLen tLen : Nat}
+    (prefixChunks :
+      PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawExpChunksCertificate
+        aLen tLen) :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpChunkedCertificate
+      aLen tLen where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge := by
+    intro a t ha haLarge ht hrlo
+    exact positiveTemperedLargeExp_lowerSharpTopOffsetExpQuotientTargetCrossmulLarge
+      ha haLarge ht hrlo
+  lowerPrefixTopOffsetRawExpChunks := prefixChunks
+
 /-- Boolean atom for the raw-only lower-prefix budget after extracting the
 row-dependent prefix large-exp quotient target. -/
 def checkPositiveTemperedLowerPrefixTopOffsetRawBudget
@@ -765,6 +780,25 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCh
         aLen tLen) :
     PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpCertificate :=
   cert.toHybridRatioCertificate.toHybridRawExpCertificate
+
+/-- Close the large side of the hybrid ratio/raw-budget chunked certificate
+in Lean.  The remaining inputs are the finite prefix large-exp quotient
+certificate and the raw-only prefix budget chunks. -/
+theorem PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate.toSharpTopOffsetHybridRatioChunkedCertificate
+    {aLen tLen : Nat}
+    (rawBudget :
+      PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate
+        aLen tLen)
+    (expRatio :
+      PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate
+      aLen tLen where
+  lowerSharpTopOffsetExpQuotientTargetCrossmulLarge := by
+    intro a t ha haLarge ht hrlo
+    exact positiveTemperedLargeExp_lowerSharpTopOffsetExpQuotientTargetCrossmulLarge
+      ha haLarge ht hrlo
+  lowerPrefixTopOffsetExpRatio := expRatio
+  lowerPrefixTopOffsetRawBudgetChunks := rawBudget
 
 /-! ## Row-dependent product `N`-chunks -/
 
