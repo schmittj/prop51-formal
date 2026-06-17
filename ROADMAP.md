@@ -673,7 +673,14 @@ Status:
       `PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate`
       and generator flag
       `--final-tail-tempered-raw-exp-ratio-reserve-bounds` expose exactly
-      this reduced final tail interface.  For the lower-tempered
+      this reduced final tail interface.  Lean now also exposes the stricter
+      reserve-envelope wrapper
+      `PositiveSaddleLargeTailTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate`
+      and generator flag
+      `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`; this
+      records the TeX reserve-envelope step as separate exponential-envelope
+      and base-times-envelope unit-budget obligations before converting back
+      to the same reduced tail route.  For the lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio
       is too strong near the split.  The remaining official target is the

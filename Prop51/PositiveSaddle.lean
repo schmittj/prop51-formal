@@ -11604,6 +11604,48 @@ structure PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :
           positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
         ≤ 1
 
+/-- Envelope form of the small-regime first reserve.
+
+This Lean-side split keeps the entropy-shadow base term fixed and replaces
+only the large-tail `partialExpUpper` factor by an externally supplied
+one-variable envelope.  The TeX proof treats this exponential estimate
+informally; this certificate records it as a named proof obligation. -/
+structure PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+    (smallFirstExpBound : Nat → ℚ) : Prop where
+  smallFirstLargeExp_le :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallLargeExp a 1 ≤ smallFirstExpBound a
+  smallFirstEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (positiveSmallEntropyShadowBaseTerm a 1 * smallFirstExpBound a)
+        ≤ 1
+
+theorem PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate.toSmallFirstReserveCertificate
+    {smallFirstExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+        smallFirstExpBound) :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate where
+  smallFirstReserveUnit := by
+    intro a ha
+    have hk : 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨le_rfl, one_le_posKmax (by omega : 2 ≤ a)⟩
+    have hbase0 : 0 ≤ positiveSmallEntropyShadowBaseTerm a 1 :=
+      (positiveSmallEntropyShadowBaseTerm_pos (by omega : 20 ≤ a) hk).le
+    have hterm :
+        positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a 1
+          ≤ positiveSmallEntropyShadowBaseTerm a 1 *
+            smallFirstExpBound a := by
+      rw [positiveSmallEntropyShadowExpMajorantTerm_eq_base_mul]
+      exact mul_le_mul_of_nonneg_left
+        (cert.smallFirstLargeExp_le ha) hbase0
+    exact
+      (mul_le_mul_of_nonneg_left hterm
+        (by norm_num : (0 : ℚ) ≤ 800000000)).trans
+        (cert.smallFirstEnvelopeUnit ha)
+
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
@@ -11616,6 +11658,61 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
               positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1)))
         ≤ 1
 
+/-- Envelope form of the lower-tempered first reserve.  It isolates the
+remaining exponential estimate at the first retained tempered index from the
+fixed entropy-shadow base arithmetic. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+    (temperedLowerFirstExpBound : Nat → ℚ) : Prop where
+  temperedLowerFirstLargeExp_le :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+        ≤ temperedLowerFirstExpBound a
+  temperedLowerFirstEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a
+              (max 1 (posTemperedCutoff a + 1)) *
+                temperedLowerFirstExpBound a))
+        ≤ 1
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate.toTemperedLowerFirstReserveCertificate
+    {temperedLowerFirstExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound) :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate where
+  temperedLowerFirstReserveUnit := by
+    intro a ha
+    let k := max 1 (posTemperedCutoff a + 1)
+    have hk : k ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨le_max_left _ _, positiveTemperedBranch_start_le_posKmax_of_large ha⟩
+    have hbase0 : 0 ≤ positiveTemperedEntropyShadowBaseTerm a k :=
+      (positiveTemperedEntropyShadowBaseTerm_pos
+        (by omega : 20 ≤ a) hk).le
+    have hterm :
+        positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a k
+          ≤ positiveTemperedEntropyShadowBaseTerm a k *
+              temperedLowerFirstExpBound a := by
+      rw [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
+      exact mul_le_mul_of_nonneg_left
+        (cert.temperedLowerFirstLargeExp_le ha) hbase0
+    have hscaled :
+        ((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a k
+          ≤ ((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a k *
+                temperedLowerFirstExpBound a) :=
+      mul_le_mul_of_nonneg_left hterm (by positivity)
+    exact
+      (mul_le_mul_of_nonneg_left hscaled
+        (by norm_num : (0 : ℚ) ≤ 800000000)).trans
+        (by
+          simpa [k] using cert.temperedLowerFirstEnvelopeUnit ha)
+
 /-- Atomic upper-tempered last-term reserve target for the large-tail candidate
 entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :
@@ -11627,6 +11724,121 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :
             positiveTemperedEntropyShadowExpMajorantTerm
               positiveTemperedLargeExp a (posKmax a))
         ≤ 1
+
+/-- Envelope form of the upper-tempered last reserve.  It is the reverse-tail
+counterpart of
+`PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate`. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+    (temperedUpperLastExpBound : Nat → ℚ) : Prop where
+  temperedUpperLastLargeExp_le :
+    ∀ {a : Nat}, 2000 < a →
+      positiveTemperedLargeExp a (posKmax a)
+        ≤ temperedUpperLastExpBound a
+  temperedUpperLastEnvelopeUnit :
+    ∀ {a : Nat}, 2000 < a →
+      (800000000 : ℚ) *
+          (((4 * a : Nat) : ℚ) *
+            (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+              temperedUpperLastExpBound a))
+        ≤ 1
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate.toTemperedUpperLastReserveCertificate
+    {temperedUpperLastExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate where
+  temperedUpperLastReserveUnit := by
+    intro a ha
+    have hk : posKmax a ∈ positiveKRange a :=
+      mem_positiveKRange.mpr
+        ⟨one_le_posKmax (by omega : 2 ≤ a), le_rfl⟩
+    have hbase0 : 0 ≤ positiveTemperedEntropyShadowBaseTerm a (posKmax a) :=
+      (positiveTemperedEntropyShadowBaseTerm_pos
+        (by omega : 20 ≤ a) hk).le
+    have hterm :
+        positiveTemperedEntropyShadowExpMajorantTerm
+            positiveTemperedLargeExp a (posKmax a)
+          ≤ positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+              temperedUpperLastExpBound a := by
+      rw [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul]
+      exact mul_le_mul_of_nonneg_left
+        (cert.temperedUpperLastLargeExp_le ha) hbase0
+    have hscaled :
+        ((4 * a : Nat) : ℚ) *
+            positiveTemperedEntropyShadowExpMajorantTerm
+              positiveTemperedLargeExp a (posKmax a)
+          ≤ ((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+                temperedUpperLastExpBound a) :=
+      mul_le_mul_of_nonneg_left hterm (by positivity)
+    exact
+      (mul_le_mul_of_nonneg_left hscaled
+        (by norm_num : (0 : ℚ) ≤ 800000000)).trans
+        (cert.temperedUpperLastEnvelopeUnit ha)
+
+/-- Combined envelope split for the three first/last reserve atoms.  This is
+only a proof-production interface; converting it yields the existing
+unit-scaled reserve certificate consumed by the large-tail audit. -/
+structure PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+    (smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ) : Prop where
+  smallFirst :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+      smallFirstExpBound
+  temperedLowerFirst :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+      temperedLowerFirstExpBound
+  temperedUpperLast :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+      temperedUpperLastExpBound
+
+theorem PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate.toUnitReserveCertificate
+    {smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+        smallFirstExpBound temperedLowerFirstExpBound
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate where
+  smallFirstReserveUnit :=
+    cert.smallFirst.toSmallFirstReserveCertificate.smallFirstReserveUnit
+  temperedLowerFirstReserveUnit :=
+    cert.temperedLowerFirst.toTemperedLowerFirstReserveCertificate
+      |>.temperedLowerFirstReserveUnit
+  temperedUpperLastReserveUnit :=
+    cert.temperedUpperLast.toTemperedUpperLastReserveCertificate
+      |>.temperedUpperLastReserveUnit
+
+theorem PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate.toSmallFirstReserveCertificate
+    {smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+        smallFirstExpBound temperedLowerFirstExpBound
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate :=
+  cert.smallFirst.toSmallFirstReserveCertificate
+
+theorem PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate.toTemperedLowerFirstReserveCertificate
+    {smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+        smallFirstExpBound temperedLowerFirstExpBound
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :=
+  cert.temperedLowerFirst.toTemperedLowerFirstReserveCertificate
+
+theorem PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate.toTemperedUpperLastReserveCertificate
+    {smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+        smallFirstExpBound temperedLowerFirstExpBound
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :=
+  cert.temperedUpperLast.toTemperedUpperLastReserveCertificate
 
 theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
     (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
@@ -11734,6 +11946,26 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawE
   smallFirstReserve := smallFirstReserve
   temperedLowerFirstReserve := temperedLowerFirstReserve
   temperedUpperLastReserve := temperedUpperLastReserve
+
+/-- Constructor for the refined candidate interface when the three reserve
+atoms are supplied through large-exp envelope bounds. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_reserveEnvelopes
+    {smallFirstExpBound temperedLowerFirstExpBound
+      temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate)
+    (reserves :
+      PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+        smallFirstExpBound temperedLowerFirstExpBound
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios
+    temperedLower temperedUpper
+    reserves.toSmallFirstReserveCertificate
+    reserves.toTemperedLowerFirstReserveCertificate
+    reserves.toTemperedUpperLastReserveCertificate
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step
 certificate. -/

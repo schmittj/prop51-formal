@@ -226,7 +226,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioReserveBoundsAuditCertificate`
   and final theorem
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveBoundsAuditCertificate`
-  expose exactly this reduced obligation set.  For the lower-tempered
+  expose exactly this reduced obligation set.  Lean also exposes the stricter
+  proof-production wrapper
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate`,
+  where the three reserve atoms are split into explicit large-exp envelope
+  bounds and entropy-shadow base-times-envelope unit budgets; this records the
+  reserve-envelope estimate that is implicit in the TeX write-up as a named
+  Lean obligation.  Generated final assemblies can target it with
+  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds`.  For the
+  lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
   factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this
   monotonicity is useful bookkeeping, but the pure raw-base ratio alone is
@@ -251,6 +259,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-refined-atomic-bounds` for the explicit refined atomic route
   above, or `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   reduced live-obligation route that fills the small step in Lean.  Use
+  `--final-tail-tempered-raw-exp-ratio-reserve-envelope-bounds` when the three
+  reserve atoms are supplied through separate exponential envelope bounds.
+  Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
   emitting a full manifest, run the same command with `--dry-run-counts` to
