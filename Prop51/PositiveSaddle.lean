@@ -7743,15 +7743,15 @@ theorem partialExpUpper_last_term_mul_twentyfive_le
   unfold partialExpUpper
   linarith
 
-/-- Coarse bound for the reciprocal geometric-tail derivative factor in the
+/-- Bound for the reciprocal geometric-tail derivative factor in the
 upper-middle range. -/
-theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
+theorem partialExpUpper_tail_deriv_factor_le_four_thirds
     {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
     (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
     (1 / (1 - z / (T : ℚ))) *
         (1 + z / ((T : ℚ)^2) *
           (1 / (1 - z / (T : ℚ))))
-      ≤ 9 / 4 := by
+      ≤ 4 / 3 := by
   have hTQpos : (0 : ℚ) < (T : ℚ) := by
     exact_mod_cast (by omega : 0 < T)
   have hTQge2 : (2 : ℚ) ≤ (T : ℚ) := by
@@ -7767,13 +7767,13 @@ theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
     div_nonneg hz0 hTQpos.le
   have hdenPos : 0 < 1 - z / (T : ℚ) := by
     nlinarith
-  have hdenLower : (2 / 3 : ℚ) ≤ 1 - z / (T : ℚ) := by
+  have hdenLower : (15 / 16 : ℚ) ≤ 1 - z / (T : ℚ) := by
     nlinarith
   have hB_le :
-      1 / (1 - z / (T : ℚ)) ≤ 3 / 2 := by
+      1 / (1 - z / (T : ℚ)) ≤ 16 / 15 := by
     have h :=
       one_div_le_one_div_of_le
-        (by norm_num : (0 : ℚ) < 2 / 3) hdenLower
+        (by norm_num : (0 : ℚ) < 15 / 16) hdenLower
     norm_num at h
     simpa [one_div] using h
   have hB0 : 0 ≤ 1 / (1 - z / (T : ℚ)) := by
@@ -7787,7 +7787,7 @@ theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
   have hInvT0 : 0 ≤ 1 / (T : ℚ) := by positivity
   have hztB :
       (z / (T : ℚ)) * (1 / (1 - z / (T : ℚ)))
-        ≤ (1 / 24 : ℚ) * (3 / 2) := by
+        ≤ (1 / 24 : ℚ) * (16 / 15) := by
     exact mul_le_mul hz_div_T_le hB_le hB0
       (by norm_num : (0 : ℚ) ≤ 1 / 24)
   have hztB0 :
@@ -7800,15 +7800,15 @@ theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
         (1 / (T : ℚ)) := by
     field_simp [hTQpos.ne']
   have hcorr_le :
-      z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ))) ≤ 1 / 2 := by
+      z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ))) ≤ 1 / 4 := by
     rw [hcorr_eq]
     have hmul :=
       mul_le_mul hztB hInvT_le hInvT0
-        (by norm_num : (0 : ℚ) ≤ (1 / 24) * (3 / 2))
+        (by norm_num : (0 : ℚ) ≤ (1 / 24) * (16 / 15))
     nlinarith
   have hsecond_le :
       1 + z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ)))
-        ≤ 3 / 2 := by
+        ≤ 5 / 4 := by
     nlinarith
   have hsecond0 :
       0 ≤ 1 + z / ((T : ℚ)^2) * (1 / (1 - z / (T : ℚ))) := by
@@ -7817,14 +7817,14 @@ theorem partialExpUpper_tail_deriv_factor_le_nine_fourths
     (1 / (1 - z / (T : ℚ))) *
         (1 + z / ((T : ℚ)^2) *
           (1 / (1 - z / (T : ℚ))))
-        ≤ (3 / 2 : ℚ) * (3 / 2) :=
+        ≤ (16 / 15 : ℚ) * (5 / 4) :=
           mul_le_mul hB_le hsecond_le hsecond0
-            (by norm_num : (0 : ℚ) ≤ 3 / 2)
-    _ = 9 / 4 := by norm_num
+            (by norm_num : (0 : ℚ) ≤ 16 / 15)
+    _ = 4 / 3 := by norm_num
 
-/-- The geometric-tail derivative kernel costs at most `9/100` of the full
+/-- The geometric-tail derivative kernel costs at most `4/75` of the full
 `partialExpUpper` shell in the upper-middle range. -/
-theorem partialExpUpper_tail_deriv_kernel_le_nine_hundredths
+theorem partialExpUpper_tail_deriv_kernel_le_four_seventy_fifths
     {z : ℚ} {T : Nat} (hT : 2 ≤ T) (hz0 : 0 ≤ z)
     (hzT : z < (T : ℚ))
     (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
@@ -7832,7 +7832,7 @@ theorem partialExpUpper_tail_deriv_kernel_le_nine_hundredths
         ((1 / (1 - z / (T : ℚ))) *
           (1 + z / ((T : ℚ)^2) *
             (1 / (1 - z / (T : ℚ)))))
-      ≤ (9 / 100 : ℚ) * partialExpUpper z T := by
+      ≤ (4 / 75 : ℚ) * partialExpUpper z T := by
   have hlast25 :=
     partialExpUpper_last_term_mul_twentyfive_le
       (z := z) (T := T) hT hz0 hzT hzSmall
@@ -7843,7 +7843,7 @@ theorem partialExpUpper_tail_deriv_kernel_le_nine_hundredths
         ≤ (1 / 25 : ℚ) * partialExpUpper z T := by
     nlinarith
   have hfactor_le :=
-    partialExpUpper_tail_deriv_factor_le_nine_fourths
+    partialExpUpper_tail_deriv_factor_le_four_thirds
       (z := z) (T := T) hT hz0 hzSmall
   have hfactor0 :
       0 ≤ (1 / (1 - z / (T : ℚ))) *
@@ -7863,21 +7863,21 @@ theorem partialExpUpper_tail_deriv_kernel_le_nine_hundredths
         ((1 / (1 - z / (T : ℚ))) *
           (1 + z / ((T : ℚ)^2) *
             (1 / (1 - z / (T : ℚ)))))
-        ≤ ((1 / 25 : ℚ) * partialExpUpper z T) * (9 / 4) :=
+        ≤ ((1 / 25 : ℚ) * partialExpUpper z T) * (4 / 3) :=
           mul_le_mul hlast_le hfactor_le hfactor0 hupperScaled0
-    _ = (9 / 100 : ℚ) * partialExpUpper z T := by ring
+    _ = (4 / 75 : ℚ) * partialExpUpper z T := by ring
 
 /-- Difference bound for the geometric tail of `partialExpUpper` in the
-upper-middle range.  The proof keeps the sharper `9/100` constant exposed;
+upper-middle range.  The proof keeps the sharper `4/75` constant exposed;
 using the coarser `1/10` makes the later low-half scalar target false at
 small large-tail values. -/
-theorem partialExpUpper_tail_sub_le_shift_nine_hundredths
+theorem partialExpUpper_tail_sub_le_shift_four_seventy_fifths
     {y z : ℚ} {T : Nat} (hT : 2 ≤ T)
     (hy : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T : ℚ))
     (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
     (z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
         - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))
-      ≤ (9 / 100 : ℚ) * (z - y) * partialExpUpper z T := by
+      ≤ (4 / 75 : ℚ) * (z - y) * partialExpUpper z T := by
   have hT1 : 1 ≤ T := by omega
   have hTQpos : (0 : ℚ) < (T : ℚ) := by
     exact_mod_cast (by omega : 0 < T)
@@ -8011,7 +8011,7 @@ theorem partialExpUpper_tail_sub_le_shift_nine_hundredths
           (last * (Bz *
             (1 + z / ((T : ℚ)^2) * Bz))) := hkernel_eq
   have hkernel :=
-    partialExpUpper_tail_deriv_kernel_le_nine_hundredths
+    partialExpUpper_tail_deriv_kernel_le_four_seventy_fifths
       (z := z) (T := T) hT hz0 hzT hzSmall
   have hscaled :=
     mul_le_mul_of_nonneg_left hkernel hd0
@@ -8025,24 +8025,24 @@ theorem partialExpUpper_tail_sub_le_shift_nine_hundredths
               (1 + z / ((T : ℚ)^2) *
                 (1 / (1 - z / (T : ℚ)))))) := by
           simpa [mul_assoc, mul_left_comm, mul_comm] using htail_kernel
-    _ ≤ (z - y) * ((9 / 100 : ℚ) * partialExpUpper z T) := by
+    _ ≤ (z - y) * ((4 / 75 : ℚ) * partialExpUpper z T) := by
           simpa [mul_assoc, mul_left_comm, mul_comm] using hscaled
-    _ = (9 / 100 : ℚ) * (z - y) * partialExpUpper z T := by ring
+    _ = (4 / 75 : ℚ) * (z - y) * partialExpUpper z T := by ring
 
 /-- First-order upper shift bound for the whole `partialExpUpper` shell in the
 upper-middle range.  The finite prefix contributes `d`, and the geometric tail
-contributes the extra `9d/100`. -/
-theorem partialExpUpper_sub_le_shift_one_hundred_nine_hundredths
+contributes the extra `4d/75`. -/
+theorem partialExpUpper_sub_le_shift_seventy_nine_seventy_fifths
     {y z : ℚ} {T : Nat} (hT : 2 ≤ T)
     (hy : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T : ℚ))
     (hzSmall : z ≤ ((T - 1 : Nat) : ℚ) / 24) :
     partialExpUpper z T - partialExpUpper y T
-      ≤ (109 / 100 : ℚ) * (z - y) * partialExpUpper z T := by
+      ≤ (79 / 75 : ℚ) * (z - y) * partialExpUpper z T := by
   have hpref :=
     partialExpPrefix_sub_le_shift_partialExpUpper
       (y := y) (z := z) (T := T) hy hyz hzT
   have htail :=
-    partialExpUpper_tail_sub_le_shift_nine_hundredths
+    partialExpUpper_tail_sub_le_shift_four_seventy_fifths
       (y := y) (z := z) (T := T) hT hy hyz hzT hzSmall
   have hsplit :
       partialExpUpper z T - partialExpUpper y T
@@ -8063,9 +8063,9 @@ theorem partialExpUpper_sub_le_shift_one_hundred_nine_hundredths
       ((z^T / (T.factorial : ℚ) * (1 / (1 - z / (T : ℚ))))
         - (y^T / (T.factorial : ℚ) * (1 / (1 - y / (T : ℚ))))) := hsplit
     _ ≤ (z - y) * partialExpUpper z T
-          + (9 / 100 : ℚ) * (z - y) * partialExpUpper z T :=
+          + (4 / 75 : ℚ) * (z - y) * partialExpUpper z T :=
         add_le_add hpref htail
-    _ = (109 / 100 : ℚ) * (z - y) * partialExpUpper z T := by ring
+    _ = (79 / 75 : ℚ) * (z - y) * partialExpUpper z T := by ring
 
 /-- The shifted finite prefix gains enough to cover multiplication by
 `1+d`, up to the final boundary term. -/
@@ -15807,16 +15807,16 @@ def positiveTemperedUpperMiddleExpShiftBudget (a : Nat) : ℚ :=
 /-- Analytic factor reserved for the upper-middle `partialExpUpper` shift.
 
 The intended later proof is a first-order Taylor/geometric-tail estimate of
-the form `P(E+45/a) ≤ (1 - (109/100)*(45/a))⁻¹ P(E)`.  The raw quotient target is
+the form `P(E+45/a) ≤ (1 - (79/75)*(45/a))⁻¹ P(E)`.  The raw quotient target is
 kept separate below so the remaining work is not an opaque mixed inequality. -/
 def positiveTemperedUpperMiddleExpShiftFactor (a : Nat) : ℚ :=
-  1 / (1 - (109 / 100 : ℚ) *
+  1 / (1 - (79 / 75 : ℚ) *
     positiveTemperedUpperMiddleExpShiftBudget a)
 
 theorem positiveTemperedUpperMiddleExpShiftFactor_den_pos
     {a : Nat} (ha : 2000 < a) :
     0 <
-      1 - (109 / 100 : ℚ) *
+      1 - (79 / 75 : ℚ) *
         positiveTemperedUpperMiddleExpShiftBudget a := by
   have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
   unfold positiveTemperedUpperMiddleExpShiftBudget
@@ -15846,7 +15846,7 @@ theorem le_inv_one_sub_mul_of_sub_le_mul_self
 
 theorem positiveTemperedUpperMiddleExpShiftBeta_lt_one
     {a : Nat} (ha : 2000 < a) :
-    (109 / 100 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a < 1 := by
+    (79 / 75 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a < 1 := by
   have hden := positiveTemperedUpperMiddleExpShiftFactor_den_pos ha
   linarith
 
@@ -16297,7 +16297,7 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorC
 
 This is the local Taylor/geometric-tail target: the increase from shifting the
 exponent by `45/a` is at most `β` times the shifted value, with
-`β = (109/100)*(45/a)`.  The algebraic conversion to the multiplicative shift
+`β = (79/75)*(45/a)`.  The algebraic conversion to the multiplicative shift
 factor is proved below. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate :
     Prop where
@@ -16310,7 +16310,7 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDiffere
               + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
           - partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
         ≤
-          ((109 / 100 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
+          ((79 / 75 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
             partialExpUpper
               (positiveTemperedExponentUpper a r
                 + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
@@ -16331,7 +16331,7 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenc
 
 This is the Lean replacement for the TeX Taylor/geometric-tail estimate in the
 upper-middle reverse branch: the proof is split into the generic
-`partialExpUpper_sub_le_shift_one_hundred_nine_hundredths` lemma plus the already audited
+`partialExpUpper_sub_le_shift_seventy_nine_seventy_fifths` lemma plus the already audited
 `45/a` exponent-shift and `(8a-1)/24` cutoff bounds. -/
 theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate :
     PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate where
@@ -16367,7 +16367,7 @@ theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenc
         ha hrlo hrhi hmid
     have hT : 2 ≤ 8 * a := by omega
     have hdiff :=
-      partialExpUpper_sub_le_shift_one_hundred_nine_hundredths
+      partialExpUpper_sub_le_shift_seventy_nine_seventy_fifths
         (y := positiveTemperedExponentUpper a r)
         (z := positiveTemperedExponentUpper a r
           + positiveTemperedUpperMiddleExpShiftBudget a)
@@ -16377,7 +16377,7 @@ theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenc
           (positiveTemperedExponentUpper a r
             + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
         - partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
-          ≤ (109 / 100 : ℚ) *
+          ≤ (79 / 75 : ℚ) *
               ((positiveTemperedExponentUpper a r
                   + positiveTemperedUpperMiddleExpShiftBudget a)
                 - positiveTemperedExponentUpper a r) *
@@ -16386,7 +16386,7 @@ theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenc
                   + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) :=
             hdiff
       _ =
-          ((109 / 100 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
+          ((79 / 75 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
             partialExpUpper
               (positiveTemperedExponentUpper a r
                 + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) := by
