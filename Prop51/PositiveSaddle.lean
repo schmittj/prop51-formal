@@ -10842,6 +10842,51 @@ theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitR
       positiveLargeExpTemperedUpperReverseRatio :=
   cert.toRawClearedBoundsCertificate.toBoundsCertificate
 
+/-- Atomic candidate reserve certificates can be consumed at the raw-cleared
+non-unit layer when a later proof wants to reuse the existing reserve
+denominator conversion. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedBoundsCertificate :=
+  cert.toRawClearedUnitReserveBoundsCertificate.toRawClearedBoundsCertificate
+
+/-- Atomic candidate reserve certificates reassemble to the denominator-linear
+large-tail audit target. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toLinearBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedLinearBoundsCertificate :=
+  cert.toRawClearedUnitReserveBoundsCertificate.toLinearBoundsCertificate
+
+/-- Atomic candidate reserve certificates reassemble to the candidate
+cross-multiplied large-tail audit target. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toCandidateSplitTemperedCrossmulBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedCrossmulBoundsCertificate :=
+  cert.toRawClearedUnitReserveBoundsCertificate
+    |>.toCandidateSplitTemperedCrossmulBoundsCertificate
+
+/-- Atomic candidate reserve certificates reassemble to the generic
+split-tempered cross-multiplied target with the concrete candidate split and
+ratios. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toSplitTemperedCrossmulBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedCrossmulBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toRawClearedUnitReserveBoundsCertificate
+    |>.toSplitTemperedCrossmulBoundsCertificate
+
+/-- Atomic candidate reserve certificates reassemble to the raw-quotient
+reserve bounds consumed by the entropy-tail assembly. -/
+theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toBoundsCertificate
+    (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toRawClearedUnitReserveBoundsCertificate.toBoundsCertificate
+
 /-- Concrete mixed raw-quotient reserve certificate using the variable-cutoff
 large-tail exponential factors `positiveSmallLargeExp` and
 `positiveTemperedLargeExp`.

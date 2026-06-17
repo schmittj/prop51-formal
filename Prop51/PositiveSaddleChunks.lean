@@ -5355,6 +5355,35 @@ theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateAtomicCert
   temperedLowerFirstReserve := cert.candidateTemperedLowerFirstReserve
   temperedUpperLastReserve := cert.candidateTemperedUpperLastReserve
 
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toProductPointwiseYRawUnitSoloCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :=
+  positiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate_of_parts
+    cert.smallProductRaw cert.temperedProductRaw cert.soloYUnit
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateRawClearedStepCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate :=
+  cert.toCandidateAtomicCertificate.toRawClearedStepCertificate
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateUnitReserveCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate :=
+  cert.toCandidateAtomicCertificate.toUnitReserveCertificate
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateRawClearedUnitReserveBoundsCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate :=
+  cert.toCandidateAtomicCertificate.toRawClearedUnitReserveBoundsCertificate
+
+theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toCandidateBoundsCertificate
+    (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
+    PositiveSaddleEntropyShadowLargeExpSplitTemperedRawQuotientReserveBoundsCertificate
+      positiveLargeExpTemperedSplit positiveLargeExpSmallRatio
+      positiveLargeExpTemperedLowerRatio
+      positiveLargeExpTemperedUpperReverseRatio :=
+  cert.toCandidateAtomicCertificate.toBoundsCertificate
+
 theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailPartsAuditCertificate
     (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
     PositiveSaddleLargeTailPartsAuditCertificate where
@@ -5362,9 +5391,9 @@ theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailPartsAudit
   temperedProductRaw := cert.temperedProductRaw
   soloYUnit := cert.soloYUnit
   candidateRawClearedSteps :=
-    cert.toCandidateAtomicCertificate.toRawClearedStepCertificate
+    cert.toCandidateRawClearedStepCertificate
   candidateUnitReserves :=
-    cert.toCandidateAtomicCertificate.toUnitReserveCertificate
+    cert.toCandidateUnitReserveCertificate
 
 theorem PositiveSaddleLargeTailAtomicPartsAuditCertificate.toLargeTailAuditCertificate
     (cert : PositiveSaddleLargeTailAtomicPartsAuditCertificate) :
