@@ -7074,6 +7074,46 @@ theorem positiveSmallExponentUpper_lt_largeExpCutoff
     _ < (a : ℚ) := by
           nlinarith
 
+/-- At the first small index, the large-tail exponent is at most `0.3a`.
+This is the parameter reduction used by the first-reserve exponential
+envelope: the square-root cutoff contributes only `a/12`, and
+`a / (a-1) ≤ 2` absorbs the `Y`-factor. -/
+theorem positiveSmallExponentUpper_one_le_three_tenths_self
+    {a : Nat} (ha : 2000 < a) :
+    positiveSmallExponentUpper a 1 ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+  have hcut12Nat : 12 * posSmallCutoff a ≤ a :=
+    twelve_mul_posSmallCutoff_le_self_of_large ha
+  have hcut12 : (12 : ℚ) * (posSmallCutoff a : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast hcut12Nat
+  have hcut : (posSmallCutoff a : ℚ) ≤ (a : ℚ) / 12 := by
+    linarith
+  have hjposNat : 0 < posJ a 1 := by
+    unfold posJ
+    omega
+  have hjpos : (0 : ℚ) < (posJ a 1 : ℚ) := by
+    exact_mod_cast hjposNat
+  have hratio : (a : ℚ) / (posJ a 1 : ℚ) ≤ 2 := by
+    rw [div_le_iff₀ hjpos]
+    have hcast : ((posJ a 1 : Nat) : ℚ) = (a : ℚ) - 1 := by
+      unfold posJ
+      rw [Nat.cast_sub (by omega : 1 ≤ a)]
+      norm_num
+    rw [hcast]
+    have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+    nlinarith
+  have hjle : posJ a 1 ≤ a := by
+    unfold posJ
+    omega
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  calc
+    positiveSmallExponentUpper a 1
+        ≤ (1139 / 1000 : ℚ) * ((a : ℚ) / 12)
+            + (1 / 5 : ℚ) * (a : ℚ) + (29 / 10 : ℚ) * 2 + 1 := by
+          unfold positiveSmallExponentUpper
+          gcongr
+    _ ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+          nlinarith
+
 /-- On the large-tail small branch, the concrete small exponent decreases as
 `k` advances.  This is a Lean-side helper for the raw-cleared small step: it
 lets that atom use only the raw entropy-shadow quotient slack, without an
@@ -11652,6 +11692,40 @@ The remaining analytic estimate is
 closes the unit reserve budget. -/
 def positiveSmallFirstReserveThreeHalvesExpBound (a : Nat) : ℚ :=
   (3 / 2 : ℚ)^a
+
+/-- Reduction of the small first-reserve exponential estimate to a clean
+`partialExpUpper` envelope at exponent ratio `3/10`.
+
+This is a Lean-side bookkeeping step not made explicit in the TeX: it first
+proves the concrete exponent at `k = 1` is at most `0.3a`, then uses
+monotonicity of the rational `partialExpUpper` shell.  The remaining
+analytic obligation is the standalone envelope in `hEnvelope`. -/
+theorem positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths
+    (hEnvelope :
+      ∀ {a : Nat}, 2000 < a →
+        partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) a
+          ≤ (3 / 2 : ℚ)^a) :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallLargeExp a 1
+        ≤ positiveSmallFirstReserveThreeHalvesExpBound a := by
+  intro a ha
+  have hjpos : 0 < posJ a 1 := by
+    unfold posJ
+    omega
+  have hexp_nonneg : 0 ≤ positiveSmallExponentUpper a 1 :=
+    positiveSmallExponentUpper_nonneg hjpos
+  have hexp_le :
+      positiveSmallExponentUpper a 1 ≤ (3 / 10 : ℚ) * (a : ℚ) :=
+    positiveSmallExponentUpper_one_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < (a : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    nlinarith
+  unfold positiveSmallLargeExp positiveSmallFirstReserveThreeHalvesExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans (hEnvelope ha)
 
 theorem positiveSmallEntropyShadowBaseTerm_one_eq {a : Nat} (ha : 3 ≤ a) :
     positiveSmallEntropyShadowBaseTerm a 1 =

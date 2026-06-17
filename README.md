@@ -238,7 +238,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSmallFirstReserveThreeHalvesEnvelopeUnit`, so the theorem
   `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves`
   reduces that atom to the single exponential-envelope estimate
-  `positiveSmallLargeExp a 1 ≤ (3/2)^a`.  For the
+  `positiveSmallLargeExp a 1 ≤ (3/2)^a`.  Lean further reduces that estimate
+  to the standalone shell bound
+  `partialExpUpper ((3/10) * a) a ≤ (3/2)^a`, via
+  `Prop51.positiveSmallExponentUpper_one_le_three_tenths_self` and
+  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths`.
+  For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
   factor decreases up to `Prop51.positiveLargeExpTemperedSplit`; this
