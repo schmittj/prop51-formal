@@ -15728,6 +15728,133 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProd
     rw [hfactorEq]
     exact hwithRatio
 
+theorem positiveTemperedUpperMiddleShiftPowerProductTarget_le_one_of_midpoint
+    {a r : Nat} (ha : 2000 < a) (hrhi : r ≤ posKmax a)
+    (hhalf : a + 1 ≤ 2 * r) :
+    positiveTemperedUpperMiddleShiftPowerProductTarget a r ≤ 1 := by
+  have hr1 : 1 ≤ r := by omega
+  have hleA : r - 1 ≤ a := by
+    unfold posKmax at hrhi
+    omega
+  have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hr1
+  have haQpos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast (by omega : 0 < a)
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have hfourApos : (0 : ℚ) < ((4 * a : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a)
+  have hfourApredpos : (0 : ℚ) < ((4 * a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a - 1)
+  have hdenFactor :=
+    positiveTemperedUpperMiddleExpShiftFactor_den_pos ha
+  have hjCast :
+      ((posJ a (r - 1) : Nat) : ℚ) = (a : ℚ) - (r : ℚ) + 1 := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+    rw [Nat.cast_sub (by omega : 1 ≤ r)]
+    norm_num
+    ring
+  have hhalfQ : (a : ℚ) + 1 ≤ 2 * (r : ℚ) := by
+    exact_mod_cast hhalf
+  have hfactor_le :
+      positiveTemperedUpperMiddleExpShiftFactor a ≤ 11 / 10 := by
+    unfold positiveTemperedUpperMiddleExpShiftFactor
+    rw [div_le_iff₀ hdenFactor]
+    unfold positiveTemperedUpperMiddleExpShiftBudget
+    field_simp [haQpos.ne']
+    ring_nf
+    nlinarith
+  have hratio_le :
+      ((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ) ≤ 11 / 10 := by
+    rw [div_le_iff₀ hfourApredpos]
+    have hnat : 10 * (4 * a) ≤ 11 * (4 * a - 1) := by omega
+    have hnatQ : (10 : ℚ) * ((4 * a : Nat) : ℚ)
+        ≤ 11 * ((4 * a - 1 : Nat) : ℚ) := by
+      exact_mod_cast hnat
+    nlinarith
+  have hfactorRatio_le_two :
+      positiveTemperedUpperMiddleExpShiftFactor a *
+          (((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ))
+        ≤ 2 := by
+    calc
+      positiveTemperedUpperMiddleExpShiftFactor a *
+          (((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ))
+          ≤ (11 / 10 : ℚ) * (11 / 10 : ℚ) :=
+            mul_le_mul hfactor_le hratio_le
+              (div_nonneg hfourApos.le hfourApredpos.le)
+              (by norm_num : (0 : ℚ) ≤ 11 / 10)
+      _ ≤ 2 := by norm_num
+  have hfactorRatio0 :
+      0 ≤ positiveTemperedUpperMiddleExpShiftFactor a *
+          (((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ)) := by
+    exact mul_nonneg
+      (positiveTemperedUpperMiddleExpShiftFactor_pos ha).le
+      (div_nonneg hfourApos.le hfourApredpos.le)
+  have hjratio_le_half :
+      ((posJ a (r - 1) : Nat) : ℚ) / (2 * (r : ℚ)) ≤ 1 / 2 := by
+    rw [hjCast]
+    rw [div_le_iff₀ (by positivity : (0 : ℚ) < 2 * (r : ℚ))]
+    nlinarith
+  have hjratio0 :
+      0 ≤ ((posJ a (r - 1) : Nat) : ℚ) / (2 * (r : ℚ)) := by
+    positivity
+  calc
+    positiveTemperedUpperMiddleShiftPowerProductTarget a r
+        =
+      (positiveTemperedUpperMiddleExpShiftFactor a *
+          (((4 * a : Nat) : ℚ) / ((4 * a - 1 : Nat) : ℚ))) *
+        (((posJ a (r - 1) : Nat) : ℚ) / (2 * (r : ℚ))) := by
+          rfl
+    _ ≤ 2 * (1 / 2 : ℚ) :=
+        mul_le_mul hfactorRatio_le_two hjratio_le_half
+          hjratio0 (by norm_num : (0 : ℚ) ≤ 2)
+    _ = 1 := by norm_num
+
+theorem positiveTemperedUpperMiddleShiftPowerProductTarget_le_powerProduct_of_midpoint
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hrhi : r ≤ posKmax a) (_hmid : 5 * r < 3 * a)
+    (hhalf : a + 1 ≤ 2 * r) :
+    positiveTemperedUpperMiddleShiftPowerProductTarget a r
+      ≤ positiveEntropyShadowBaseStepRawPowerProduct a (r - 1) := by
+  have htarget :
+      positiveTemperedUpperMiddleShiftPowerProductTarget a r ≤ 1 :=
+    positiveTemperedUpperMiddleShiftPowerProductTarget_le_one_of_midpoint
+      ha hrhi hhalf
+  have hprev2 : 2 ≤ r - 1 := by omega
+  have hj3 : 3 ≤ posJ a (r - 1) := by
+    unfold posJ
+    unfold posKmax at hrhi
+    omega
+  have hle : posJ a (r - 1) - 2 ≤ r - 1 - 1 := by
+    unfold posJ
+    omega
+  have hprod :
+      1 ≤ positiveEntropyShadowBaseStepRawPowerProduct a (r - 1) :=
+    one_le_positiveEntropyShadowBaseStepRawPowerProduct_of_jpred_le_pred
+      hprev2 hj3 hle
+  exact htarget.trans hprod
+
+/-- Remaining scalar work after the midpoint branch has been closed in Lean. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate :
+    Prop where
+  upperMiddleShiftPowerProductTarget_lowHalf :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a → 2 * r < a + 1 →
+        positiveTemperedUpperMiddleShiftPowerProductTarget a r
+          ≤ positiveEntropyShadowBaseStepRawPowerProduct a (r - 1)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate.toPowerProductScalarCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate where
+  upperMiddleShiftPowerProductTarget := by
+    intro a r ha hrlo hrhi hmid
+    by_cases hhalf : a + 1 ≤ 2 * r
+    · exact positiveTemperedUpperMiddleShiftPowerProductTarget_le_powerProduct_of_midpoint
+        ha hrlo hrhi hmid hhalf
+    · exact cert.upperMiddleShiftPowerProductTarget_lowHalf
+        ha hrlo hrhi hmid (by omega)
+
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate.toMiddleShiftBudgetCertificate
     (factorCert :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate)
