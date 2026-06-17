@@ -7590,6 +7590,42 @@ theorem partialExpUpper_mul_one_add_third_pow_three_le_of_add
           dsimp [e]
           ring
 
+/-- Convert a certified exponent-drop lower bound and a scalar budget into a
+cross-multiplied `partialExpUpper` quotient estimate. -/
+theorem partialExpUpper_le_mul_of_three_step_shift
+    {y z d₀ target : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd₀ : 0 ≤ d₀) (hT : 1 ≤ T) (hzT : z < (T : ℚ))
+    (hdrop : y + d₀ ≤ z)
+    (hbudget : 1 ≤ target * (1 + d₀ / 3)^3) :
+    partialExpUpper y T ≤ target * partialExpUpper z T := by
+  have hy_le_shift : y ≤ y + d₀ := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt (hy_le_shift.trans hdrop) hzT
+  have hshift0 : 0 ≤ y + d₀ := add_nonneg hy hd₀
+  have hshiftT : y + d₀ < (T : ℚ) := lt_of_le_of_lt hdrop hzT
+  have hgrowth :
+      (1 + d₀ / 3)^3 * partialExpUpper y T
+        ≤ partialExpUpper (y+d₀) T :=
+    partialExpUpper_mul_one_add_third_pow_three_le_of_add
+      (y := y) (d := d₀) (T := T) hy hd₀ hT hshiftT
+  have hmono :
+      partialExpUpper (y+d₀) T ≤ partialExpUpper z T :=
+    partialExpUpper_mono_of_nonneg_le_lt hshift0 hdrop hzT
+  have hfactor_le :
+      (1 + d₀ / 3)^3 * partialExpUpper y T ≤ partialExpUpper z T :=
+    hgrowth.trans hmono
+  have hfactor_pos : 0 < (1 + d₀ / 3)^3 := by positivity
+  have htarget0 : 0 ≤ target := by nlinarith
+  have hupper0 : 0 ≤ partialExpUpper y T :=
+    partialExpUpper_nonneg_of_nonneg_lt hy hyT
+  calc
+    partialExpUpper y T
+        = 1 * partialExpUpper y T := by ring
+    _ ≤ (target * (1 + d₀ / 3)^3) * partialExpUpper y T :=
+          mul_le_mul_of_nonneg_right hbudget hupper0
+    _ = target * ((1 + d₀ / 3)^3 * partialExpUpper y T) := by ring
+    _ ≤ target * partialExpUpper z T :=
+          mul_le_mul_of_nonneg_left hfactor_le htarget0
+
 /-- Negative-binomial shell used to bound the variable-cutoff
 `partialExpUpper ((a : ℚ) * q) a`.
 
