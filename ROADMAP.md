@@ -643,7 +643,11 @@ Status:
       `PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate` keeps the
       same product/solo bound split but replaces the raw-cleared step atoms by
       the closed small raw-base half target and the two tempered raw-exp ratio
-      targets; it converts back to the canonical atomic-bounds route.  Grouped
+      targets; generated finite files can target it with
+      `--emit-final --final-tail-refined-atomic-bounds`, and it converts back
+      to the canonical atomic-bounds route.  This quotient-form step split is
+      a deliberate Lean refinement of the raw-cleared LaTeX presentation.
+      Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
       existing grouped proof production can still feed this final route; the

@@ -54,19 +54,19 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* **Canonical remaining route**:
-  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
-  This is the intended final conditional endpoint for `a ≥ 401`: it combines
-  the corrected fixed-edge combined-product finite-window certificate with
-  `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate`, separating
-  product bounds, solo bounds, and the six one-dimensional large-tail
-  candidate step/reserve inequalities.  The proof-facing refinement
+* **Canonical remaining proof-facing route**:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`
-  accepts `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate`,
-  where the small step is the raw-base half certificate and the two tempered
-  step atoms are the quotient-form raw-exp ratio targets; it converts back to
-  the canonical atomic-bounds route.  Older long-named capstones below are
-  retained as audit and profiling alternatives, not as competing final routes.
+  is the intended final conditional endpoint for `a ≥ 401`: it combines the
+  corrected fixed-edge combined-product finite-window certificate with
+  `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate`,
+  separating product bounds, solo bounds, and the one-dimensional large-tail
+  candidate atoms.  This Lean interface intentionally refines the LaTeX
+  raw-cleared adjacent-step presentation: the small step is the closed
+  raw-base half certificate, and the two tempered step atoms are quotient-form
+  raw-exp ratio targets.  It converts back to the atomic-bounds route
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
+  Older long-named capstones below are retained as audit and profiling
+  alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
   — an older table-backed large-`a` conditional capstone: table-backed
   exact finite product chunks using a fixed-width row-dependent `N` cover and
@@ -237,7 +237,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
   `--final-tail-atomic-parts`, `--final-tail-atomic-bounds`, or
-  `--final-tail-raw-cleared-unit-bounds`; use repeated `--extra-import` flags
+  `--final-tail-raw-cleared-unit-bounds`; use
+  `--final-tail-refined-atomic-bounds` for the current proof-facing route
+  above.  Use repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
   emitting a full manifest, run the same command with `--dry-run-counts` to
   print formula-based atom counts without materializing the atom list.
