@@ -722,6 +722,17 @@ Status:
       candidate-side inputs.  The generator flags are
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` and
       `--final-tail-tempered-raw-exp-ratio-tempered-reserve-envelope-bounds`.
+      The endpoint envelope variants are now reduced further on the
+      exponential side: Lean proves
+      `positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound` and
+      `positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound`, using a
+      cutoff-parameterized negative-binomial shell for the `8*a`
+      `partialExpUpper` cutoff.  The constructors
+      `positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves`
+      and
+      `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves`
+      leave only the two endpoint
+      entropy-shadow-base-times-`(3/2)^a` unit budgets.
       Lean now also provides cross-multiplied versions of those two tempered
       quotient-step atoms,
       `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`

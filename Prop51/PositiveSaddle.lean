@@ -6850,6 +6850,17 @@ def partialExpUpperNegativeBinomialShell (a : Nat) (q : ℚ) : ℚ :=
   (∑ t ∈ Finset.range a, (a.multichoose t : ℚ) * q^t)
     + (a.multichoose a : ℚ) * q^a * (1 / (1 - q))
 
+/-- Cutoff-parameterized version of
+`partialExpUpperNegativeBinomialShell`.
+
+The small first-reserve estimate uses the natural cutoff `a`; the tempered
+endpoint reserves use `8*a`.  This Lean-side variant keeps the same analytic
+majorant while avoiding any expansion of the large rational exponential
+polynomial. -/
+def partialExpUpperNegativeBinomialShellAt (a L : Nat) (q : ℚ) : ℚ :=
+  (∑ t ∈ Finset.range L, (a.multichoose t : ℚ) * q^t)
+    + (a.multichoose L : ℚ) * q^L * (1 / (1 - q))
+
 theorem multichoose_eq_choose_pred_right {a t : Nat} (ha : 0 < a) :
     a.multichoose t = (t + (a - 1)).choose (a - 1) := by
   rw [Nat.multichoose_eq]
@@ -6900,6 +6911,17 @@ theorem negativeBinomialShellCoeff_tail_le
   exact_mod_cast
     (Nat.choose_le_choose (a - 1) (by omega : a + (a - 1) ≤ n + (a - 1)))
 
+theorem negativeBinomialShellCoeffAt_tail_le
+    {a L n : Nat} (ha : 0 < a) (hn : L ≤ n) :
+    (a.multichoose L : ℚ)
+      ≤ (((n + (a - 1)).choose (a - 1) : Nat) : ℚ) := by
+  have hleft :
+      a.multichoose L = (L + (a - 1)).choose (a - 1) :=
+    multichoose_eq_choose_pred_right (a := a) (t := L) ha
+  rw [hleft]
+  exact_mod_cast
+    (Nat.choose_le_choose (a - 1) (by omega : L + (a - 1) ≤ n + (a - 1)))
+
 theorem negativeBinomialShell_constantTail_tsum_threeTenths (a : Nat) :
     (∑' j : Nat, (a.multichoose a : ℚ) * (3 / 10 : ℚ)^(a + j))
       = (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
@@ -6922,6 +6944,33 @@ theorem negativeBinomialShell_constantTail_tsum_threeTenths (a : Nat) :
           (∑' j : Nat, (3 / 10 : ℚ)^j) := by
           rw [tsum_mul_left]
     _ = (a.multichoose a : ℚ) * (3 / 10 : ℚ)^a *
+          (1 / (1 - 3 / 10 : ℚ)) := by
+          rw [hgeom]
+          ring
+
+theorem negativeBinomialShellAt_constantTail_tsum_threeTenths
+    (a L : Nat) :
+    (∑' j : Nat, (a.multichoose L : ℚ) * (3 / 10 : ℚ)^(L + j))
+      = (a.multichoose L : ℚ) * (3 / 10 : ℚ)^L *
+          (1 / (1 - 3 / 10 : ℚ)) := by
+  have hgeom :
+      (∑' j : Nat, (3 / 10 : ℚ)^j) =
+        (1 - (3 / 10 : ℚ))⁻¹ :=
+    tsum_geometric_of_norm_lt_one (ξ := (3 / 10 : ℚ)) (by
+      rw [← Rat.norm_cast_real]
+      norm_num)
+  calc
+    (∑' j : Nat, (a.multichoose L : ℚ) * (3 / 10 : ℚ)^(L + j))
+        = ∑' j : Nat,
+            ((a.multichoose L : ℚ) * (3 / 10 : ℚ)^L) *
+              (3 / 10 : ℚ)^j := by
+          congr 1 with j
+          rw [pow_add]
+          ring
+    _ = ((a.multichoose L : ℚ) * (3 / 10 : ℚ)^L) *
+          (∑' j : Nat, (3 / 10 : ℚ)^j) := by
+          rw [tsum_mul_left]
+    _ = (a.multichoose L : ℚ) * (3 / 10 : ℚ)^L *
           (1 / (1 - 3 / 10 : ℚ)) := by
           rw [hgeom]
           ring
@@ -7004,6 +7053,80 @@ theorem partialExpUpperNegativeBinomialShell_threeTenths_le_tenSevenths_pow
           simpa [f] using
             negativeBinomialShellFullTerm_tsum_threeTenths (a := a) ha
 
+theorem partialExpUpperNegativeBinomialShellAt_threeTenths_le_tenSevenths_pow
+    {a L : Nat} (ha : 0 < a) :
+    partialExpUpperNegativeBinomialShellAt a L (3 / 10 : ℚ)
+      ≤ (10 / 7 : ℚ)^a := by
+  let f : Nat → ℚ := fun n =>
+    negativeBinomialShellFullTerm a n (3 / 10 : ℚ)
+  have hf : Summable f := by
+    have hsum :=
+      hasSum_choose_mul_geometric_of_norm_lt_one
+        (𝕜 := ℚ) (a - 1) (r := (3 / 10 : ℚ)) (by
+          rw [← Rat.norm_cast_real]
+          norm_num)
+    simpa [f, negativeBinomialShellFullTerm] using hsum.summable
+  have hfinite :
+      (∑ t ∈ Finset.range L, (a.multichoose t : ℚ) * (3 / 10 : ℚ)^t)
+        = ∑ t ∈ Finset.range L, f t := by
+    refine Finset.sum_congr rfl ?_
+    intro t _ht
+    simpa [f] using
+      (negativeBinomialShellFullTerm_eq_multichoose
+        (a := a) (n := t) ha (3 / 10 : ℚ)).symm
+  have htailSummable :
+      Summable
+        (fun j : Nat => (a.multichoose L : ℚ) * (3 / 10 : ℚ)^(L + j)) := by
+    have hgeomSummable : Summable (fun j : Nat => (3 / 10 : ℚ)^j) :=
+      summable_geometric_of_norm_lt_one (by
+        rw [← Rat.norm_cast_real]
+        norm_num)
+    simpa [pow_add, mul_assoc, mul_left_comm, mul_comm] using
+      hgeomSummable.mul_left
+        ((a.multichoose L : ℚ) * (3 / 10 : ℚ)^L)
+  have htrueTailSummable :
+      Summable (fun j : Nat => f (j + L)) :=
+    (summable_nat_add_iff
+      (f := fun n : Nat => f n) L).2 hf
+  have htail_point :
+      ∀ j : Nat,
+        (a.multichoose L : ℚ) * (3 / 10 : ℚ)^(L + j)
+          ≤ f (j + L) := by
+    intro j
+    have hcoeff :=
+      negativeBinomialShellCoeffAt_tail_le
+        (a := a) (L := L) (n := j + L) ha (by omega : L ≤ j + L)
+    have hpow_nonneg : 0 ≤ (3 / 10 : ℚ)^(j + L) :=
+      pow_nonneg (by norm_num : (0 : ℚ) ≤ 3 / 10) _
+    unfold f negativeBinomialShellFullTerm
+    rw [show L + j = j + L by omega]
+    exact mul_le_mul_of_nonneg_right hcoeff hpow_nonneg
+  have htail_le :
+      (a.multichoose L : ℚ) * (3 / 10 : ℚ)^L *
+          (1 / (1 - 3 / 10 : ℚ))
+        ≤ ∑' j : Nat, f (j + L) := by
+    rw [← negativeBinomialShellAt_constantTail_tsum_threeTenths a L]
+    exact htailSummable.tsum_le_tsum htail_point htrueTailSummable
+  have hsplit :
+      (∑ t ∈ Finset.range L, f t) + (∑' j : Nat, f (j + L))
+        = ∑' n : Nat, f n :=
+    hf.sum_add_tsum_nat_add L
+  unfold partialExpUpperNegativeBinomialShellAt
+  calc
+    (∑ t ∈ Finset.range L, (a.multichoose t : ℚ) * (3 / 10 : ℚ)^t)
+        + (a.multichoose L : ℚ) * (3 / 10 : ℚ)^L *
+          (1 / (1 - 3 / 10 : ℚ))
+        = (∑ t ∈ Finset.range L, f t)
+            + (a.multichoose L : ℚ) * (3 / 10 : ℚ)^L *
+              (1 / (1 - 3 / 10 : ℚ)) := by
+          rw [hfinite]
+    _ ≤ (∑ t ∈ Finset.range L, f t) + (∑' j : Nat, f (j + L)) := by
+          exact add_le_add le_rfl htail_le
+    _ = ∑' n : Nat, f n := hsplit
+    _ = (10 / 7 : ℚ)^a := by
+          simpa [f] using
+            negativeBinomialShellFullTerm_tsum_threeTenths (a := a) ha
+
 theorem partialExpUpperNegativeBinomialShell_threeTenths_le_threeHalves_pow
     {a : Nat} (ha : 0 < a) :
     partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
@@ -7011,6 +7134,17 @@ theorem partialExpUpperNegativeBinomialShell_threeTenths_le_threeHalves_pow
   exact
     (partialExpUpperNegativeBinomialShell_threeTenths_le_tenSevenths_pow
       (a := a) ha).trans
+      (pow_le_pow_left₀
+        (by norm_num : (0 : ℚ) ≤ 10 / 7)
+        (by norm_num : (10 / 7 : ℚ) ≤ 3 / 2) a)
+
+theorem partialExpUpperNegativeBinomialShellAt_threeTenths_le_threeHalves_pow
+    {a L : Nat} (ha : 0 < a) :
+    partialExpUpperNegativeBinomialShellAt a L (3 / 10 : ℚ)
+      ≤ (3 / 2 : ℚ)^a := by
+  exact
+    (partialExpUpperNegativeBinomialShellAt_threeTenths_le_tenSevenths_pow
+      (a := a) (L := L) ha).trans
       (pow_le_pow_left₀
         (by norm_num : (0 : ℚ) ≤ 10 / 7)
         (by norm_num : (10 / 7 : ℚ) ≤ 3 / 2) a)
@@ -7064,6 +7198,45 @@ theorem partialExpUpper_scaled_le_negativeBinomialShell
       partialExpUpper_scaled_term_le_multichoose (a := a) (t := t) hq0
   · exact mul_le_mul_of_nonneg_right htail hdenNonneg
 
+theorem partialExpUpper_scaled_le_negativeBinomialShellAt
+    {a L : Nat} (ha : 0 < a) (hL : a ≤ L)
+    {q : ℚ} (hq0 : 0 ≤ q) (hq1 : q < 1) :
+    partialExpUpper ((a : ℚ) * q) L
+      ≤ partialExpUpperNegativeBinomialShellAt a L q := by
+  have hLpos : 0 < L := by omega
+  have hLQ : (0 : ℚ) < (L : ℚ) := by exact_mod_cast hLpos
+  have hratio_le : ((a : ℚ) * q) / (L : ℚ) ≤ q := by
+    rw [div_le_iff₀ hLQ]
+    have hLQ_ge : (a : ℚ) ≤ (L : ℚ) := by exact_mod_cast hL
+    nlinarith
+  have hdenPartial : 0 < 1 - ((a : ℚ) * q) / (L : ℚ) := by
+    have hratio_lt : ((a : ℚ) * q) / (L : ℚ) < 1 :=
+      lt_of_le_of_lt hratio_le hq1
+    linarith
+  have hdenShell : 0 < 1 - q := by linarith
+  have hden_le :
+      1 - q ≤ 1 - ((a : ℚ) * q) / (L : ℚ) := by
+    linarith
+  have hrecip :
+      1 / (1 - ((a : ℚ) * q) / (L : ℚ)) ≤ 1 / (1 - q) :=
+    one_div_le_one_div_of_le hdenShell hden_le
+  have htail :
+      ((a : ℚ) * q)^L / (L.factorial : ℚ)
+        ≤ (a.multichoose L : ℚ) * q^L :=
+    partialExpUpper_scaled_term_le_multichoose (a := a) (t := L) hq0
+  have hshellTailNonneg :
+      0 ≤ (a.multichoose L : ℚ) * q^L := by positivity
+  have hpartialRecipNonneg :
+      0 ≤ 1 / (1 - ((a : ℚ) * q) / (L : ℚ)) := by
+    positivity
+  unfold partialExpUpper partialExpUpperNegativeBinomialShellAt
+  apply add_le_add
+  · exact Finset.sum_le_sum fun t _ =>
+      partialExpUpper_scaled_term_le_multichoose (a := a) (t := t) hq0
+  · exact
+      (mul_le_mul_of_nonneg_right htail hpartialRecipNonneg).trans
+        (mul_le_mul_of_nonneg_left hrecip hshellTailNonneg)
+
 theorem partialExpUpper_threeTenths_le_negativeBinomialShell
     {a : Nat} (ha : 0 < a) :
     partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) a
@@ -7073,6 +7246,17 @@ theorem partialExpUpper_threeTenths_le_negativeBinomialShell
   rw [hscaled]
   exact partialExpUpper_scaled_le_negativeBinomialShell
     (a := a) ha (q := (3 / 10 : ℚ)) (by norm_num) (by norm_num)
+
+theorem partialExpUpper_threeTenths_eight_le_negativeBinomialShellAt
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) (8 * a)
+      ≤ partialExpUpperNegativeBinomialShellAt a (8 * a) (3 / 10 : ℚ) := by
+  have hscaled :
+      (3 / 10 : ℚ) * (a : ℚ) = (a : ℚ) * (3 / 10 : ℚ) := by ring
+  rw [hscaled]
+  exact partialExpUpper_scaled_le_negativeBinomialShellAt
+    (a := a) (L := 8 * a) ha (by omega : a ≤ 8 * a)
+    (q := (3 / 10 : ℚ)) (by norm_num) (by norm_num)
 
 theorem partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
     (hShell :
@@ -7094,6 +7278,15 @@ theorem partialExpUpper_threeTenths_le_threeHalves_pow :
     (fun {a} _ha =>
       partialExpUpperNegativeBinomialShell_threeTenths_le_threeHalves_pow
         (a := a) (by omega : 0 < a))
+
+theorem partialExpUpper_threeTenths_eight_le_threeHalves_pow
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) (8 * a)
+      ≤ (3 / 2 : ℚ)^a :=
+  (partialExpUpper_threeTenths_eight_le_negativeBinomialShellAt
+    (a := a) ha).trans
+    (partialExpUpperNegativeBinomialShellAt_threeTenths_le_threeHalves_pow
+      (a := a) (L := 8 * a) ha)
 
 theorem positiveSmallExponentUpper_nonneg {a k : Nat}
     (hj : 0 < posJ a k) :
@@ -12243,6 +12436,159 @@ theorem positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed :
   positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed
     |>.toSmallFirstReserveCertificate
 
+/-- At the first retained tempered index, the large-tail tempered exponent is
+at most `0.3a`.
+
+This is another Lean-side envelope reduction: the TeX reserve estimate uses
+the same qualitative decay, while the formal proof records the explicit
+cutoff arithmetic at `max 1 (posTemperedCutoff a + 1)`. -/
+theorem positiveTemperedExponentUpper_lowerFirst_le_three_tenths_self
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedExponentUpper a (max 1 (posTemperedCutoff a + 1))
+      ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+  let k := max 1 (posTemperedCutoff a + 1)
+  change positiveTemperedExponentUpper a k ≤ (3 / 10 : ℚ) * (a : ℚ)
+  have hk100Nat : 100 ≤ k := by
+    have hcut : 99 < posTemperedCutoff a := by
+      unfold posTemperedCutoff
+      exact lt_ceilSqrt_of_sq_lt (by
+        unfold posNlo
+        omega)
+    dsimp [k]
+    omega
+  have hkpos : (0 : ℚ) < (k : ℚ) := by
+    exact_mod_cast (by omega : 0 < k)
+  have hratioK : (a : ℚ) / (k : ℚ) ≤ (a : ℚ) / 100 := by
+    rw [div_le_iff₀ hkpos]
+    have hk100Q : (100 : ℚ) ≤ (k : ℚ) := by exact_mod_cast hk100Nat
+    have hmul :=
+      mul_le_mul_of_nonneg_left hk100Q
+        (show 0 ≤ (a : ℚ) / 100 by positivity)
+    nlinarith
+  have hkmax : k ≤ posKmax a := by
+    dsimp [k]
+    exact positiveTemperedBranch_start_le_posKmax_of_large ha
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+  have hratioJ : (a : ℚ) / (posJ a k : ℚ) ≤ 10 := by
+    rw [div_le_iff₀ hjQ]
+    exact_mod_cast self_le_ten_mul_posJ_of_le_posKmax hkmax
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  calc
+    positiveTemperedExponentUpper a k
+        ≤ (1 / 5 : ℚ) * (a : ℚ)
+            + (57 / 10 : ℚ) * ((a : ℚ) / 100)
+            + (29 / 10 : ℚ) * 10 + 2 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+          nlinarith
+
+/-- At the last retained tempered index, the large-tail tempered exponent is
+also at most `0.3a`.  The proof uses the existing `posKmax` floor arithmetic,
+especially `4*a ≤ 5*posKmax a`, and keeps the TeX-to-Lean endpoint
+bookkeeping explicit. -/
+theorem positiveTemperedExponentUpper_upperLast_le_three_tenths_self
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedExponentUpper a (posKmax a)
+      ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+  let k := posKmax a
+  change positiveTemperedExponentUpper a k ≤ (3 / 10 : ℚ) * (a : ℚ)
+  have hk1 : 1 ≤ k := by
+    dsimp [k]
+    exact one_le_posKmax (by omega : 2 ≤ a)
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk1
+  have h4Nat : 4 * a ≤ 5 * k := by
+    dsimp [k]
+    exact four_mul_self_le_five_mul_posKmax (by omega : 9 ≤ a)
+  have hratioK : (a : ℚ) / (k : ℚ) ≤ 5 / 4 := by
+    rw [div_le_iff₀ hkpos]
+    have h4Q : (4 : ℚ) * (a : ℚ) ≤ 5 * (k : ℚ) := by
+      exact_mod_cast h4Nat
+    nlinarith
+  have hkmax : k ≤ posKmax a := by
+    simp [k]
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjpos
+  have hratioJ : (a : ℚ) / (posJ a k : ℚ) ≤ 10 := by
+    rw [div_le_iff₀ hjQ]
+    exact_mod_cast self_le_ten_mul_posJ_of_le_posKmax hkmax
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  calc
+    positiveTemperedExponentUpper a k
+        ≤ (1 / 5 : ℚ) * (a : ℚ)
+            + (57 / 10 : ℚ) * (5 / 4 : ℚ)
+            + (29 / 10 : ℚ) * 10 + 2 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+          nlinarith
+
+theorem positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLargeExp a (max 1 (posTemperedCutoff a + 1))
+      ≤ positiveSmallFirstReserveThreeHalvesExpBound a := by
+  let k := max 1 (posTemperedCutoff a + 1)
+  change positiveTemperedLargeExp a k
+      ≤ positiveSmallFirstReserveThreeHalvesExpBound a
+  have hk1 : 1 ≤ k := by
+    dsimp [k]
+    exact le_max_left _ _
+  have hkmax : k ≤ posKmax a := by
+    dsimp [k]
+    exact positiveTemperedBranch_start_le_posKmax_of_large ha
+  have hjpos : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hexp_nonneg : 0 ≤ positiveTemperedExponentUpper a k :=
+    positiveTemperedExponentUpper_nonneg hk1 hjpos
+  have hexp_le :
+      positiveTemperedExponentUpper a k ≤ (3 / 10 : ℚ) * (a : ℚ) := by
+    dsimp [k]
+    exact positiveTemperedExponentUpper_lowerFirst_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < ((8 * a : Nat) : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  unfold positiveTemperedLargeExp positiveSmallFirstReserveThreeHalvesExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans
+      (partialExpUpper_threeTenths_eight_le_threeHalves_pow
+        (a := a) (by omega : 0 < a))
+
+theorem positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLargeExp a (posKmax a)
+      ≤ positiveSmallFirstReserveThreeHalvesExpBound a := by
+  have hk1 : 1 ≤ posKmax a :=
+    one_le_posKmax (by omega : 2 ≤ a)
+  have hjpos : 0 < posJ a (posKmax a) :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) le_rfl
+  have hexp_nonneg : 0 ≤ positiveTemperedExponentUpper a (posKmax a) :=
+    positiveTemperedExponentUpper_nonneg hk1 hjpos
+  have hexp_le :
+      positiveTemperedExponentUpper a (posKmax a)
+        ≤ (3 / 10 : ℚ) * (a : ℚ) :=
+    positiveTemperedExponentUpper_upperLast_le_three_tenths_self ha
+  have hcutoff :
+      (3 / 10 : ℚ) * (a : ℚ) < ((8 * a : Nat) : ℚ) := by
+    have haQ : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (by omega : 0 < a)
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  unfold positiveTemperedLargeExp positiveSmallFirstReserveThreeHalvesExpBound
+  exact
+    (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
+      hcutoff).trans
+      (partialExpUpper_threeTenths_eight_le_threeHalves_pow
+        (a := a) (by omega : 0 < a))
+
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
@@ -12455,6 +12801,70 @@ theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_of_temperedEn
     positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_closed
   temperedLowerFirst := temperedLowerFirst
   temperedUpperLast := temperedUpperLast
+
+/-- Close the exponential side of the lower tempered endpoint reserve with the
+same `(3/2)^a` envelope used for the small first reserve.  After this
+constructor, the only remaining lower-endpoint reserve input is the displayed
+base-times-envelope arithmetic inequality. -/
+theorem positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves
+    (hEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a
+                (max 1 (posTemperedCutoff a + 1)) *
+                  positiveSmallFirstReserveThreeHalvesExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound where
+  temperedLowerFirstLargeExp_le := by
+    intro a ha
+    exact positiveTemperedLargeExp_lowerFirst_le_threeHalvesExpBound ha
+  temperedLowerFirstEnvelopeUnit := hEnvelopeUnit
+
+/-- Close the exponential side of the upper tempered endpoint reserve with the
+same `(3/2)^a` envelope.  The remaining hypothesis is the separate
+base-times-envelope arithmetic budget at `posKmax a`. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves
+    (hEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+                positiveSmallFirstReserveThreeHalvesExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound where
+  temperedUpperLastLargeExp_le := by
+    intro a ha
+    exact positiveTemperedLargeExp_upperLast_le_threeHalvesExpBound ha
+  temperedUpperLastEnvelopeUnit := hEnvelopeUnit
+
+theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_threeHalves_of_temperedEndpointEnvelopeUnits
+    (hLowerEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a
+                (max 1 (posTemperedCutoff a + 1)) *
+                  positiveSmallFirstReserveThreeHalvesExpBound a))
+          ≤ 1)
+    (hUpperEnvelopeUnit :
+      ∀ {a : Nat}, 2000 < a →
+        (800000000 : ℚ) *
+            (((4 * a : Nat) : ℚ) *
+              (positiveTemperedEntropyShadowBaseTerm a (posKmax a) *
+                positiveSmallFirstReserveThreeHalvesExpBound a))
+          ≤ 1) :
+    PositiveSaddleLargeTailCandidateReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound
+      positiveSmallFirstReserveThreeHalvesExpBound
+      positiveSmallFirstReserveThreeHalvesExpBound :=
+  positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_of_temperedEnvelopes
+    (positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_threeHalves
+      hLowerEnvelopeUnit)
+    (positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_threeHalves
+      hUpperEnvelopeUnit)
 
 theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
     (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
