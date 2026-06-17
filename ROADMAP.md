@@ -905,9 +905,10 @@ Status:
       `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`.
       The checker uses a cutoff-`700` numerator majorant and an `800`-term
       denominator prefix instead of expanding the full `8a` quotient shell.
-      `PositiveSaddlePrefixExpRatio.lean` now contains the first four
-      generated 50-row chunks (`a = 2001..2200`, all `t < 10`); the remaining
-      exp-ratio production work is the analogous sixteen 50-row chunks and
+      `PositiveSaddlePrefixExpRatio.lean` and
+      `PositiveSaddlePrefixExpRatio2.lean` now contain the first eight
+      generated 50-row chunks (`a = 2001..2400`, all `t < 10`); the remaining
+      exp-ratio production work is the analogous twelve 50-row chunks and
       then the final `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate`
       packager.
       The older denominator-cleared raw-exp wrappers remain available through
