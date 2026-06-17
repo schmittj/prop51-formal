@@ -12921,6 +12921,54 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificat
     PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
   cert.toTemperedLowerExpTargetCertificate.toTemperedLowerRawExpRatioCertificate
 
+/-- Lower large-exp target with the front subrange removed.
+
+The adapter fills the case `8 * (r+1) ≤ a` using
+`positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`.
+The only supplied field is therefore the nearer-split case
+`a < 8 * (r+1)`, where the monotonicity bound `quotient ≤ 1` is no longer
+strong enough by itself. -/
+structure PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate :
+    Prop where
+  lowerNearSplitExpQuotientTargetCrossmul :
+    ∀ {a r : Nat}, 2000 < a →
+      max 1 (posTemperedCutoff a + 1) ≤ r →
+      r < positiveLargeExpTemperedSplit a →
+      a < 8 * (r + 1) →
+        positiveTemperedLargeExp a (r + 1)
+          ≤ positiveTemperedLowerExpQuotientTarget a r *
+            positiveTemperedLargeExp a r
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate.toTemperedLowerExpTargetCrossmulCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCrossmulCertificate where
+  lowerExpQuotientTargetCrossmul := by
+    intro a r ha hrlo hrhi
+    by_cases hfront : 8 * (r + 1) ≤ a
+    · have hquot :
+          positiveTemperedLargeExp a (r + 1) /
+              positiveTemperedLargeExp a r
+            ≤ positiveTemperedLowerExpQuotientTarget a r :=
+        positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le
+          ha hrlo hrhi hfront
+      have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+      have hrMem : r ∈ positiveKRange a :=
+        mem_positiveKRange.mpr
+          ⟨le_trans (le_max_left _ _) hrlo, by omega⟩
+      have hEpos : 0 < positiveTemperedLargeExp a r :=
+        positiveTemperedLargeExp_pos_of_large ha hrMem
+      rw [div_le_iff₀ hEpos] at hquot
+      simpa [mul_comm, mul_left_comm, mul_assoc] using hquot
+    · exact cert.lowerNearSplitExpQuotientTargetCrossmul
+        ha hrlo hrhi (by omega)
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate.toTemperedLowerRawExpRatioCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate :=
+  cert.toTemperedLowerExpTargetCrossmulCertificate.toTemperedLowerRawExpRatioCertificate
+
 /-- Factorized upper-tempered reverse adjacent-step target.
 
 This records the reverse ratio as a product of two one-dimensional factors:
@@ -14709,6 +14757,25 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpT
     temperedUpper.toTemperedUpperReverseExpTargetCertificate
     temperedLowerFirstReserve temperedUpperLastReserve
 
+/-- Near-split lower exp-target version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserves`.
+The front lower subrange is closed in Lean; the supplied lower certificate
+only covers `a < 8 * (r+1)`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerNearSplitExpTargetCrossmul_temperedReserves
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirstReserve :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate)
+    (temperedUpperLastReserve :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserves
+    temperedLower.toTemperedLowerExpTargetCrossmulCertificate
+    temperedUpper
+    temperedLowerFirstReserve temperedUpperLastReserve
+
 /-- Envelope version of
 `positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedRawExpRatios_temperedReserves`.
 The solved small first-reserve envelope is filled automatically. -/
@@ -14812,6 +14879,26 @@ theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpT
   positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargets_temperedReserveEnvelopes
     temperedLower.toTemperedLowerExpTargetCertificate
     temperedUpper.toTemperedUpperReverseExpTargetCertificate
+    temperedLowerFirst temperedUpperLast
+
+/-- Near-split lower exp-target envelope version of
+`positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerNearSplitExpTargetCrossmul_temperedReserves`. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerNearSplitExpTargetCrossmul_temperedReserveEnvelopes
+    {temperedLowerFirstExpBound temperedUpperLastExpBound : Nat → ℚ}
+    (temperedLower :
+      PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate)
+    (temperedUpper :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate)
+    (temperedLowerFirst :
+      PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+        temperedLowerFirstExpBound)
+    (temperedUpperLast :
+      PositiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate
+        temperedUpperLastExpBound) :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedExpTargetCrossmuls_temperedReserveEnvelopes
+    temperedLower.toTemperedLowerExpTargetCrossmulCertificate
+    temperedUpper
     temperedLowerFirst temperedUpperLast
 
 /-- Reassembles atomic candidate adjacent-step targets into the grouped step

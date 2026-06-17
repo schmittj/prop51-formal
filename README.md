@@ -364,7 +364,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `8 * (r + 1) ≤ a` by
   `Prop51.positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
   the hard lower work is therefore concentrated closer to
-  `Prop51.positiveLargeExpTemperedSplit`.
+  `Prop51.positiveLargeExpTemperedSplit`.  For that reduced obligation use
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate`,
+  whose adapter fills the front subrange automatically.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,

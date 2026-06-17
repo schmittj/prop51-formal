@@ -820,7 +820,10 @@ Status:
       `8 * (r + 1) ≤ a` by
       `positiveTemperedLargeExp_lowerExpQuotientTarget_of_eight_mul_succ_le`;
       only the nearer-split lower cells need a genuinely sharper
-      `partialExpUpper` quotient estimate.
+      `partialExpUpper` quotient estimate.  The reduced lower input is
+      packaged as
+      `PositiveSaddleLargeTailCandidateTemperedLowerNearSplitExpTargetCrossmulCertificate`,
+      whose adapter fills the front subrange automatically.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
