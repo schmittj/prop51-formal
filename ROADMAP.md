@@ -733,21 +733,27 @@ Status:
       and
       `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`
       isolate the endpoint entropy-shadow-base-times-`(10/7)^a` unit budgets.
-      The lower endpoint is now closed in Lean by
+      Both endpoint budgets are now closed in Lean.  The lower endpoint uses
       `positiveTemperedLowerFirstTenSeventhsEnvelopeUnit`, using the explicit
       coarse cutoff
       `positiveTemperedBranch_start_le_quarter_self_of_large`, the global
       entropy-shadow ratio bound
       `positiveBinomRatioEntropyShadowPosJBound_le_one`, and a 4-step
-      monotonicity proof for the dyadic coarse term.  The remaining endpoint
-      budget is the upper `posKmax a` unit inequality.
+      monotonicity proof for the dyadic coarse term.  The upper endpoint uses
+      `positiveTemperedUpperLastTenSeventhsEnvelopeUnit`, with explicit
+      `posKmax a` and `posJ a (posKmax a)` entropy splits and a 100-step
+      monotonicity proof for the resulting coarse term.  The combined reserve
+      closures are
+      `positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_closed`
+      and
+      `positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed`.
       The audit-facing wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
       and
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
       still expose both endpoint unit-budget fields, using either quotient-form
-      or denominator-cleared tempered adjacent-step atoms; the lower field can
-      be supplied by the closed theorem above.
+      or denominator-cleared tempered adjacent-step atoms; both fields can now
+      be supplied by the closed theorems above.
       Lean now also provides cross-multiplied versions of those two tempered
       quotient-step atoms,
       `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`
