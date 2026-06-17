@@ -7388,6 +7388,202 @@ theorem pow_add_linear_lower {y d : ℚ} {n : Nat}
   rw [← hpair_eq]
   exact hpair_le
 
+/-- Second-order binomial lower bound for `(1+y)^n`.
+
+The low-half upper-middle scalar proof needs a sharp one-step estimate for
+`(1+1/n)^n`; keeping the quadratic binomial term is the smallest useful
+strength. -/
+theorem one_add_pow_two_term_lower {y : ℚ} {n : Nat}
+    (hy : 0 ≤ y) :
+    1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2 ≤ (1 + y)^n := by
+  by_cases hn2 : 2 ≤ n
+  · let term : Nat → ℚ := fun m => y^m * 1^(n-m) * (n.choose m : ℚ)
+    let s : Finset Nat := {0, 1, 2}
+    have hsubset : s ⊆ Finset.range (n + 1) := by
+      intro m hm
+      simp [s] at hm
+      rcases hm with hm | hm | hm <;> subst m
+      · exact Finset.mem_range.mpr (by omega)
+      · exact Finset.mem_range.mpr (by omega)
+      · exact Finset.mem_range.mpr (by omega)
+    have hnonneg :
+        ∀ m ∈ Finset.range (n + 1), m ∉ s → 0 ≤ term m := by
+      intro m _hm _hms
+      dsimp [term]
+      positivity
+    have hsmall :
+        ∑ m ∈ s, term m ≤ ∑ m ∈ Finset.range (n + 1), term m :=
+      Finset.sum_le_sum_of_subset_of_nonneg hsubset hnonneg
+    have hsum_eq :
+        ∑ m ∈ s, term m =
+          1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2 := by
+      simp [s, term, Nat.choose_zero_right, Nat.choose_one_right, pow_two]
+      ring
+    calc
+      1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2
+          = ∑ m ∈ s, term m := hsum_eq.symm
+      _ ≤ ∑ m ∈ Finset.range (n + 1), term m := hsmall
+      _ = (y + 1)^n := by
+            rw [add_pow]
+      _ = (1 + y)^n := by
+            rw [add_comm]
+  · have hn : n = 0 ∨ n = 1 := by omega
+    rcases hn with rfl | rfl
+    · norm_num
+    · simp
+
+/-- One-step lower bound for the inverse monotonicity ratio of
+`A(n) = (1+1/n)^n`.
+
+The proof mirrors `one_add_inv_pow_mono_succ`, but keeps the quadratic
+binomial term in `(1+y)^n`. -/
+theorem one_add_inv_pow_div_succ_lower (n : Nat) (hn : 1 ≤ n) :
+    1 - 1 / (2 * (n : ℚ) * (((n + 1 : Nat) : ℚ)))
+      ≤ (1 + 1 / (n : ℚ))^n /
+          (1 + 1 / (((n + 1 : Nat) : ℚ)))^(n + 1) := by
+  let y : ℚ := 1 / ((n : ℚ) * (((n + 2 : Nat) : ℚ)))
+  let B : ℚ := 1 + 1 / (((n + 1 : Nat) : ℚ))
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hn1pos : (0 : ℚ) < (((n + 1 : Nat) : ℚ)) := by positivity
+  have hn2pos : (0 : ℚ) < (((n + 2 : Nat) : ℚ)) := by positivity
+  have hBpos : 0 < B := by
+    dsimp [B]
+    positivity
+  have hBne : B ≠ 0 := hBpos.ne'
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    positivity
+  have hratio :
+      1 + 1 / (n : ℚ) = B * (1 + y) := by
+    dsimp [B, y]
+    field_simp [hnpos.ne', hn1pos.ne', hn2pos.ne']
+    push_cast
+    ring_nf
+  have hquad :
+      1 - 1 / (2 * (n : ℚ) * (((n + 1 : Nat) : ℚ)))
+        ≤ (1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2) / B := by
+    have hdiff :
+        (1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2) / B
+            - (1 - 1 / (2 * (n : ℚ) * (((n + 1 : Nat) : ℚ))))
+          =
+        ((n : ℚ)^2 + 7 * (n : ℚ) + 7) /
+          (2 * (n : ℚ) * (((n + 1 : Nat) : ℚ)) *
+            (((n + 2 : Nat) : ℚ)^3)) := by
+      dsimp [B, y]
+      rw [Nat.cast_choose_two]
+      field_simp [hnpos.ne', hn1pos.ne', hn2pos.ne']
+      push_cast
+      ring_nf
+    have hnonneg :
+        0 ≤ ((n : ℚ)^2 + 7 * (n : ℚ) + 7) /
+          (2 * (n : ℚ) * (((n + 1 : Nat) : ℚ)) *
+            (((n + 2 : Nat) : ℚ)^3)) := by
+      positivity
+    nlinarith
+  have hpow :
+      1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2 ≤ (1 + y)^n :=
+    one_add_pow_two_term_lower hy0
+  have hdiv :
+      (1 + (n : ℚ) * y + (n.choose 2 : ℚ) * y^2) / B
+        ≤ (1 + y)^n / B :=
+    div_le_div_of_nonneg_right hpow hBpos.le
+  have hmain :
+      (1 + y)^n / B =
+        (1 + 1 / (n : ℚ))^n /
+          (1 + 1 / (((n + 1 : Nat) : ℚ)))^(n + 1) := by
+    rw [hratio]
+    dsimp [B]
+    rw [mul_pow, pow_succ]
+    field_simp [hBne]
+  exact hquad.trans (hdiv.trans_eq hmain)
+
+/-- Telescoped lower bound for the inverse ratio of
+`A(n) = (1+1/n)^n` on an interval. -/
+theorem one_add_inv_pow_div_lower_of_le
+    {n m : Nat} (hn : 1 ≤ n) (hnm : n ≤ m) :
+    1 - ((m : ℚ) - (n : ℚ)) / (2 * (n : ℚ) * (m : ℚ))
+      ≤ (1 + 1 / (n : ℚ))^n / (1 + 1 / (m : ℚ))^m := by
+  let A : Nat → ℚ := fun k => (1 + 1 / (k : ℚ))^k
+  induction m, hnm using Nat.le_induction with
+  | base =>
+      have hnpos : (0 : ℚ) < (n : ℚ) := by exact_mod_cast (by omega : 0 < n)
+      field_simp [hnpos.ne']
+      nlinarith
+  | succ m hnm ih =>
+      have hm1 : 1 ≤ m := le_trans hn hnm
+      have hmpos : (0 : ℚ) < (m : ℚ) := by
+        exact_mod_cast (by omega : 0 < m)
+      have hmp1pos : (0 : ℚ) < (((m + 1 : Nat) : ℚ)) := by positivity
+      have hAnm0 : 0 ≤ A n / A m := by
+        dsimp [A]
+        positivity
+      have hstep0 :
+          0 ≤ 1 - 1 / (2 * (m : ℚ) * (((m + 1 : Nat) : ℚ))) := by
+        rw [sub_nonneg]
+        have hden_ge_one :
+            (1 : ℚ) ≤ 2 * (m : ℚ) * (((m + 1 : Nat) : ℚ)) := by
+          have hm_ge_one : (1 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm1
+          have hmp1_ge_one : (1 : ℚ) ≤ (((m + 1 : Nat) : ℚ)) := by
+            norm_num
+          nlinarith
+        simpa [one_div] using inv_le_one_of_one_le₀ hden_ge_one
+      have hstep :
+          1 - 1 / (2 * (m : ℚ) * (((m + 1 : Nat) : ℚ)))
+            ≤ A m / A (m + 1) := by
+        dsimp [A]
+        exact one_add_inv_pow_div_succ_lower m hm1
+      have hmul :
+          (1 - ((m : ℚ) - (n : ℚ)) / (2 * (n : ℚ) * (m : ℚ))) *
+              (1 - 1 / (2 * (m : ℚ) * (((m + 1 : Nat) : ℚ))))
+            ≤ (A n / A m) * (A m / A (m + 1)) :=
+        mul_le_mul ih hstep hstep0 hAnm0
+      have htarget_mul :
+          1 - (((m + 1 : Nat) : ℚ) - (n : ℚ)) /
+                (2 * (n : ℚ) * (((m + 1 : Nat) : ℚ)))
+            ≤
+          (1 - ((m : ℚ) - (n : ℚ)) / (2 * (n : ℚ) * (m : ℚ))) *
+            (1 - 1 / (2 * (m : ℚ) * (((m + 1 : Nat) : ℚ)))) := by
+        have hnpos : (0 : ℚ) < (n : ℚ) := by
+          exact_mod_cast (by omega : 0 < n)
+        have hdiff :
+            (1 - ((m : ℚ) - (n : ℚ)) /
+                  (2 * (n : ℚ) * (m : ℚ))) *
+                (1 - 1 / (2 * (m : ℚ) * (((m + 1 : Nat) : ℚ))))
+              -
+              (1 - (((m + 1 : Nat) : ℚ) - (n : ℚ)) /
+                  (2 * (n : ℚ) * (((m + 1 : Nat) : ℚ))))
+              =
+            ((m : ℚ) - (n : ℚ)) /
+              (4 * (m : ℚ)^2 * (n : ℚ) *
+                (((m + 1 : Nat) : ℚ))) := by
+          field_simp [hnpos.ne', hmpos.ne', hmp1pos.ne']
+          push_cast
+          ring
+        have hnonneg :
+            0 ≤ ((m : ℚ) - (n : ℚ)) /
+              (4 * (m : ℚ)^2 * (n : ℚ) *
+                (((m + 1 : Nat) : ℚ))) := by
+          have hnum : 0 ≤ (m : ℚ) - (n : ℚ) := by
+            have hmn : (n : ℚ) ≤ (m : ℚ) := by exact_mod_cast hnm
+            linarith
+          have hden :
+              0 ≤ 4 * (m : ℚ)^2 * (n : ℚ) *
+                (((m + 1 : Nat) : ℚ)) := by
+            positivity
+          exact div_nonneg hnum hden
+        nlinarith
+      have hApos_m : 0 < A m := by
+        dsimp [A]
+        positivity
+      have hApos_succ : 0 < A (m + 1) := by
+        dsimp [A]
+        positivity
+      have hprod :
+          (A n / A m) * (A m / A (m + 1)) = A n / A (m + 1) := by
+        field_simp [hApos_m.ne', hApos_succ.ne']
+      exact htarget_mul.trans (hmul.trans_eq hprod)
+
 /-- First-order lower bound for one normalized exponential-series term. -/
 theorem expTerm_add_linear_lower {y d : ℚ} {n : Nat}
     (hy : 0 ≤ y) (hd : 0 ≤ d) (hn : 1 ≤ n) :
@@ -16613,6 +16809,331 @@ theorem positiveTemperedUpperMiddleShiftPowerProductTarget_le_powerProduct_of_mi
       hprev2 hj3 hle
   exact htarget.trans hprod
 
+/-- Quantitative lower bound for the raw power-product factor on the low side
+of the entropy shadow.
+
+Writing `n = s-1` and `m = posJ a s - 2`, the power product is
+`A(n)/A(m)` for `A(t)=(1+1/t)^t`.  The telescoped one-step estimate gives the
+displayed rational lower bound. -/
+theorem positiveEntropyShadowBaseStepRawPowerProduct_ge_one_sub_gap
+    {a s : Nat} (hs2 : 2 ≤ s) (hj3 : 3 ≤ posJ a s)
+    (hle : s - 1 ≤ posJ a s - 2) :
+    1 - (((posJ a s - 2 : Nat) : ℚ) - ((s - 1 : Nat) : ℚ)) /
+        (2 * ((s - 1 : Nat) : ℚ) * ((posJ a s - 2 : Nat) : ℚ))
+      ≤ positiveEntropyShadowBaseStepRawPowerProduct a s := by
+  let j := posJ a s
+  let rpart : ℚ :=
+    ((s : ℚ)^s) /
+      ((s : ℚ) * ((s - 1 : Nat) : ℚ)^(s - 1))
+  let jpart : ℚ :=
+    ((((j - 1 : Nat) : ℚ) * ((j - 2 : Nat) : ℚ)^(j - 2)) /
+      (((j - 1 : Nat) : ℚ)^(j - 1)))
+  let E : ℚ := (1 + 1 / ((j - 2 : Nat) : ℚ))^(j - 2)
+  have hn : 1 ≤ s - 1 := by omega
+  have hratio :=
+    one_add_inv_pow_div_lower_of_le
+      (n := s - 1) (m := j - 2) hn (by simpa [j] using hle)
+  have hrEq :
+      rpart = (1 + 1 / ((s - 1 : Nat) : ℚ))^(s - 1) := by
+    dsimp [rpart]
+    exact positiveEntropyShadowBaseStepRawRPart_eq_one_add_inv_pow hs2
+  have hjEq : E * jpart = 1 := by
+    dsimp [E, jpart, j]
+    exact positiveEntropyShadowBaseStepRawJPart_mul_one_add_inv_pow hj3
+  have hEpos : 0 < E := by
+    dsimp [E, j]
+    positivity
+  have hjpart_eq : jpart = 1 / E := by
+    calc
+      jpart = (E * jpart) / E := by field_simp [hEpos.ne']
+      _ = 1 / E := by rw [hjEq]
+  have hratio_eq :
+      (1 + 1 / ((s - 1 : Nat) : ℚ))^(s - 1) / E
+        = rpart * jpart := by
+    rw [hrEq, hjpart_eq]
+    ring
+  calc
+    1 - (((posJ a s - 2 : Nat) : ℚ) - ((s - 1 : Nat) : ℚ)) /
+        (2 * ((s - 1 : Nat) : ℚ) * ((posJ a s - 2 : Nat) : ℚ))
+        ≤ (1 + 1 / ((s - 1 : Nat) : ℚ))^(s - 1) / E := by
+          simpa [j, E] using hratio
+    _ = rpart * jpart := hratio_eq
+    _ = positiveEntropyShadowBaseStepRawPowerProduct a s := by
+          dsimp [positiveEntropyShadowBaseStepRawPowerProduct, rpart, jpart, j]
+
+/-- The upper-middle scalar target is below the clean envelope `1 - 1/a` on
+the low half.  This is the rational side of the low-half power-product
+comparison; the product side is supplied by
+`positiveEntropyShadowBaseStepRawPowerProduct_ge_one_sub_gap`. -/
+theorem positiveTemperedUpperMiddleShiftPowerProductTarget_le_one_sub_inv_self
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hrhi : r ≤ posKmax a) :
+    positiveTemperedUpperMiddleShiftPowerProductTarget a r
+      ≤ 1 - 1 / (a : ℚ) := by
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have haQpos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast (by omega : 0 < a)
+  have hr1 : 1 ≤ r := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hr1
+  have hleA : r - 1 ≤ a := by
+    unfold posKmax at hrhi
+    omega
+  have hjQpos : (0 : ℚ) < (posJ a (r - 1) : ℚ) := by
+    exact_mod_cast
+      (posJ_pos_of_le_posKmax (by omega : 1 ≤ a)
+        (by omega : r - 1 ≤ posKmax a))
+  have hfourApredpos : (0 : ℚ) < ((4 * a - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 0 < 4 * a - 1)
+  have hfourDenPos : 0 < 4 * (a : ℚ) - 1 := by nlinarith
+  have hfourDen : 4 * (a : ℚ) - 1 ≠ 0 := by nlinarith
+  have hfourDen' : -1 + (a : ℚ) * 4 ≠ 0 := by nlinarith
+  have hden5pos : 0 < (5 : ℚ) * (a : ℚ) - 237 := by nlinarith
+  have hden5 : (5 : ℚ) * (a : ℚ) - 237 ≠ 0 := by
+    nlinarith
+  have hden75 : (75 : ℚ) * (a : ℚ) - 3555 ≠ 0 := by nlinarith
+  have hcombinedDen :
+      237 - (a : ℚ) * 953 + (a : ℚ)^2 * 20 ≠ 0 := by
+    have hprod := mul_pos hfourDenPos hden5pos
+    have hEq :
+        (4 * (a : ℚ) - 1) * (5 * (a : ℚ) - 237)
+          = 237 - (a : ℚ) * 953 + (a : ℚ)^2 * 20 := by
+      ring
+    nlinarith
+  have hfactor_eq :
+      positiveTemperedUpperMiddleExpShiftFactor a =
+        (5 * (a : ℚ)) / (5 * (a : ℚ) - 237) := by
+    unfold positiveTemperedUpperMiddleExpShiftFactor
+      positiveTemperedUpperMiddleExpShiftBudget
+    have hden_rewrite :
+        1 - (79 / 75 : ℚ) * (45 / (a : ℚ))
+          = (5 * (a : ℚ) - 237) / (5 * (a : ℚ)) := by
+      field_simp [haQpos.ne']
+      ring
+    rw [hden_rewrite]
+    field_simp [haQpos.ne', hden5]
+  have hrNatLower : a / 3 + 12 ≤ r := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hdiv : a < 3 * (a / 3 + 1) := by
+    simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+      (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mp
+        (Nat.lt_succ_self (a / 3))
+  have hrLower34Nat : a + 34 ≤ 3 * r := by
+    have h1 : a + 34 ≤ 3 * (a / 3 + 12) := by omega
+    have h2 : 3 * (a / 3 + 12) ≤ 3 * r := by omega
+    exact h1.trans h2
+  have hrLower34 : ((a : ℚ) + 34) / 3 ≤ (r : ℚ) := by
+    have hcast : ((a + 34 : Nat) : ℚ) ≤ (3 * r : Nat) := by
+      exact_mod_cast hrLower34Nat
+    norm_num at hcast ⊢
+    linarith
+  have hcoef_nonneg :
+      0 ≤ 30 * (a : ℚ)^3 - 973 * (a : ℚ)^2
+          + 1190 * (a : ℚ) - 237 := by
+    have hlin : 0 ≤ 30 * (a : ℚ) - 973 := by nlinarith
+    have hmul := mul_nonneg (sq_nonneg (a : ℚ)) hlin
+    ring_nf at hmul ⊢
+    nlinarith
+  have hedge_poly :
+      0 ≤ 17 * (a : ℚ)^3 - 31892 * (a : ℚ)^2
+          + 40223 * (a : ℚ) - 8058 := by
+    have hb : 0 ≤ (a : ℚ) - 2001 := by
+      have : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast (by omega : 2001 ≤ a)
+      linarith
+    have hEq :
+        17 * (a : ℚ)^3 - 31892 * (a : ℚ)^2
+            + 40223 * (a : ℚ) - 8058
+          =
+        17 * ((a : ℚ) - 2001)^3
+          + 70159 * ((a : ℚ) - 2001)^2
+          + 76612490 * ((a : ℚ) - 2001)
+          + 8588980290 := by
+      ring
+    rw [hEq]
+    positivity
+  have hnum_nonneg :
+      0 ≤
+        -10 * (a : ℚ)^4
+          + 30 * (a : ℚ)^3 * (r : ℚ)
+          - 10 * (a : ℚ)^3
+          - 973 * (a : ℚ)^2 * (r : ℚ)
+          + 1190 * (a : ℚ) * (r : ℚ)
+          - 237 * (r : ℚ) := by
+    let C : ℚ :=
+      30 * (a : ℚ)^3 - 973 * (a : ℚ)^2
+        + 1190 * (a : ℚ) - 237
+    have hmul := mul_le_mul_of_nonneg_left hrLower34 hcoef_nonneg
+    have hedge :
+        0 ≤ C * (((a : ℚ) + 34) / 3)
+            - 10 * (a : ℚ)^4 - 10 * (a : ℚ)^3 := by
+      dsimp [C]
+      nlinarith
+    dsimp [C] at hmul hedge
+    nlinarith
+  unfold positiveTemperedUpperMiddleShiftPowerProductTarget
+  rw [hfactor_eq]
+  rw [show ((4 * a : Nat) : ℚ) = 4 * (a : ℚ) by norm_num]
+  rw [show ((4 * a - 1 : Nat) : ℚ) = 4 * (a : ℚ) - 1 by
+    rw [Nat.cast_sub (by omega : 1 ≤ 4 * a)]
+    norm_num]
+  rw [show ((posJ a (r - 1) : Nat) : ℚ) =
+      (a : ℚ) - (r : ℚ) + 1 by
+        unfold posJ
+        rw [Nat.cast_sub hleA]
+        rw [Nat.cast_sub (by omega : 1 ≤ r)]
+        norm_num
+        ring]
+  field_simp [haQpos.ne', hrQpos.ne', hfourDen, hfourDen', hden5,
+    hcombinedDen]
+  ring_nf
+  let D : ℚ := -1 + (a : ℚ) * 4
+  have hDpos : 0 < D := by
+    dsimp [D]
+    nlinarith
+  have hcleared :
+      -20 * (a : ℚ)^3 * (r : ℚ) + 20 * (a : ℚ)^3 + 20 * (a : ℚ)^4
+        ≤ (-(a : ℚ) * (r : ℚ) * 484 + (a : ℚ)^2 * (r : ℚ) * 10
+            + (r : ℚ) * 474) * D := by
+    dsimp [D]
+    nlinarith [hnum_nonneg]
+  have hgoal :
+      (-20 * (a : ℚ)^3 * (r : ℚ) + 20 * (a : ℚ)^3 + 20 * (a : ℚ)^4) / D
+        ≤ -(a : ℚ) * (r : ℚ) * 484 + (a : ℚ)^2 * (r : ℚ) * 10
+            + (r : ℚ) * 474 := by
+    rw [div_le_iff₀ hDpos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hcleared
+  dsimp [D] at hgoal
+  convert hgoal using 1 <;> ring_nf
+
+/-- Low-half product margin for the upper-middle reverse branch.
+
+The TeX argument compares the power product with the remaining scalar loss.
+Lean packages the comparison through the clean envelope `1 - 1/a`: the
+telescoped product gap is at most `1/a` on the low half. -/
+theorem positiveEntropyShadowBaseStepRawPowerProduct_ge_one_sub_inv_self_of_lowHalf
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hhalf : 2 * r < a + 1) :
+    1 - 1 / (a : ℚ) ≤
+      positiveEntropyShadowBaseStepRawPowerProduct a (r - 1) := by
+  have haQpos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (by omega : 0 < a)
+  have hs2 : 2 ≤ r - 1 := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hr3 : 3 ≤ r := by omega
+  have hj3 : 3 ≤ posJ a (r - 1) := by
+    unfold posJ
+    omega
+  have hle : r - 1 - 1 ≤ posJ a (r - 1) - 2 := by
+    unfold posJ
+    omega
+  have hprod :=
+    positiveEntropyShadowBaseStepRawPowerProduct_ge_one_sub_gap
+      (a := a) (s := r - 1) hs2 hj3 hle
+  have hrNatLower : a / 3 + 12 ≤ r := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hrLower34Nat : a + 34 ≤ 3 * r := by
+    have hdiv : a < 3 * (a / 3 + 1) := by
+      simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+        (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mp
+          (Nat.lt_succ_self (a / 3))
+    have h1 : a + 34 ≤ 3 * (a / 3 + 12) := by omega
+    have h2 : 3 * (a / 3 + 12) ≤ 3 * r := by omega
+    exact h1.trans h2
+  have hrLower34 : ((a : ℚ) + 34) / 3 ≤ (r : ℚ) := by
+    have hcast : ((a + 34 : Nat) : ℚ) ≤ (3 * r : Nat) := by
+      exact_mod_cast hrLower34Nat
+    norm_num at hcast ⊢
+    linarith
+  have hhalfLeNat : 2 * r ≤ a := by omega
+  have hhalfLe : 2 * (r : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast hhalfLeNat
+  have hnQpos : 0 < (r : ℚ) - 2 := by
+    have : (3 : ℚ) ≤ (r : ℚ) := by exact_mod_cast hr3
+    linarith
+  have hmQpos : 0 < (a : ℚ) - (r : ℚ) - 1 := by
+    have : (3 : ℚ) ≤ (r : ℚ) := by exact_mod_cast hr3
+    nlinarith
+  have hdenpos :
+      0 < 2 * ((r : ℚ) - 2) * ((a : ℚ) - (r : ℚ) - 1) := by
+    positivity
+  have hslack_nonneg :
+      0 ≤ 2 * ((r : ℚ) - 2) * ((a : ℚ) - (r : ℚ) - 1)
+          - (a : ℚ) * ((a : ℚ) - 2 * (r : ℚ) + 1) := by
+    have hleft : 0 ≤ (r : ℚ) - ((a : ℚ) + 34) / 3 := by
+      linarith
+    have hcoef :
+        0 ≤ ((10 * (a : ℚ) - 62) / 3) - 2 * (r : ℚ) := by
+      nlinarith
+    have hprod_nonneg := mul_nonneg hleft hcoef
+    have hbase :
+        0 ≤ ((a : ℚ)^2 + 233 * (a : ℚ) - 2072) / 9 := by
+      have hnum : 0 ≤ (a : ℚ)^2 + 233 * (a : ℚ) - 2072 := by
+        have hage : (2001 : ℚ) ≤ (a : ℚ) := by
+          exact_mod_cast (by omega : 2001 ≤ a)
+        nlinarith [sq_nonneg (a : ℚ)]
+      exact div_nonneg hnum (by norm_num)
+    have hdecomp :
+        2 * ((r : ℚ) - 2) * ((a : ℚ) - (r : ℚ) - 1)
+            - (a : ℚ) * ((a : ℚ) - 2 * (r : ℚ) + 1)
+          =
+        ((a : ℚ)^2 + 233 * (a : ℚ) - 2072) / 9
+          + (((r : ℚ) - ((a : ℚ) + 34) / 3) *
+              (((10 * (a : ℚ) - 62) / 3) - 2 * (r : ℚ))) := by
+      ring
+    rw [hdecomp]
+    nlinarith
+  have hnCast :
+      (((r - 1 - 1 : Nat) : ℚ)) = (r : ℚ) - 2 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ r - 1)]
+    rw [Nat.cast_sub (by omega : 1 ≤ r)]
+    norm_num
+    ring
+  have hleA : r - 1 ≤ a := by
+    omega
+  have hmCast :
+      (((posJ a (r - 1) - 2 : Nat) : ℚ)) =
+        (a : ℚ) - (r : ℚ) - 1 := by
+    rw [Nat.cast_sub (by omega : 2 ≤ posJ a (r - 1))]
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+    rw [Nat.cast_sub (by omega : 1 ≤ r)]
+    norm_num
+    ring
+  have hgap_le_inv :
+      (((posJ a (r - 1) - 2 : Nat) : ℚ)
+            - ((r - 1 - 1 : Nat) : ℚ)) /
+          (2 * ((r - 1 - 1 : Nat) : ℚ) *
+            ((posJ a (r - 1) - 2 : Nat) : ℚ))
+        ≤ 1 / (a : ℚ) := by
+    rw [hmCast, hnCast]
+    refine (div_le_iff₀ hdenpos).mpr ?_
+    have hcleared :
+        (a : ℚ) *
+            (((a : ℚ) - (r : ℚ) - 1) - ((r : ℚ) - 2))
+          ≤ 2 * ((r : ℚ) - 2) * ((a : ℚ) - (r : ℚ) - 1) := by
+      nlinarith [hslack_nonneg]
+    have htarget :
+        ((a : ℚ) - (r : ℚ) - 1 - ((r : ℚ) - 2))
+          ≤ (2 * ((r : ℚ) - 2) *
+              ((a : ℚ) - (r : ℚ) - 1)) / (a : ℚ) := by
+      rw [le_div_iff₀ haQpos]
+      simpa [mul_comm, mul_left_comm, mul_assoc] using hcleared
+    convert htarget using 1
+    ring
+  have htarget_le_gap :
+      1 - 1 / (a : ℚ) ≤
+        1 - (((posJ a (r - 1) - 2 : Nat) : ℚ)
+              - ((r - 1 - 1 : Nat) : ℚ)) /
+            (2 * ((r - 1 - 1 : Nat) : ℚ) *
+              ((posJ a (r - 1) - 2 : Nat) : ℚ)) := by
+    linarith
+  exact htarget_le_gap.trans hprod
+
 /-- Remaining scalar work after the midpoint branch has been closed in Lean. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate :
     Prop where
@@ -16634,6 +17155,27 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProd
         ha hrlo hrhi hmid hhalf
     · exact cert.upperMiddleShiftPowerProductTarget_lowHalf
         ha hrlo hrhi hmid (by omega)
+
+/-- Concrete low-half power-product certificate for the upper-middle reverse
+branch.  The midpoint branch is handled by
+`positiveTemperedUpperMiddleShiftPowerProductTarget_le_powerProduct_of_midpoint`;
+this certificate supplies the complementary low-half comparison. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate where
+  upperMiddleShiftPowerProductTarget_lowHalf := by
+    intro a r ha hrlo hrhi _hmid hhalf
+    exact
+      (positiveTemperedUpperMiddleShiftPowerProductTarget_le_one_sub_inv_self
+        ha hrlo hrhi).trans
+        (positiveEntropyShadowBaseStepRawPowerProduct_ge_one_sub_inv_self_of_lowHalf
+          ha hrlo hhalf)
+
+/-- Concrete power-product scalar certificate for the upper-middle reverse
+branch, assembled from the midpoint and low-half comparisons. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductScalarCertificate :=
+  positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate
+    |>.toPowerProductScalarCertificate
 
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate.toMiddleShiftBudgetCertificate
     (factorCert :
@@ -16738,6 +17280,13 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProd
     |>.toMiddleShiftScalarCertificate
     |>.toMiddleExpTargetCrossmulCertificate
 
+/-- Concrete upper-middle reverse large-exp target, obtained from the
+power-product low-half certificate and the analytic shift estimate. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate :=
+  positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftPowerProductLowHalfScalarCertificate
+    |>.toMiddleExpTargetCrossmulCertificate
+
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate.toTemperedUpperReverseExpTargetCrossmulCertificate
     (cert :
       PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate) :
@@ -16763,6 +17312,13 @@ theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCross
     PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate :=
   cert.toTemperedUpperReverseExpTargetCrossmulCertificate
     |>.toTemperedUpperReverseRawExpRatioCertificate
+
+/-- Concrete upper reverse large-exp target, with the far upper range and the
+middle-band range both supplied by Lean proofs. -/
+theorem positiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCrossmulCertificate :=
+  positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+    |>.toTemperedUpperReverseExpTargetCrossmulCertificate
 
 /-- Atomic small-regime first-term reserve target for the large-tail candidate
 entropy reserve. -/
