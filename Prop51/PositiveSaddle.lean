@@ -15176,6 +15176,26 @@ theorem positiveTemperedUpperMiddleExpShiftFactor_pos
   unfold positiveTemperedUpperMiddleExpShiftFactor
   exact div_pos zero_lt_one hden
 
+theorem le_inv_one_sub_mul_of_sub_le_mul_self
+    {x y beta : ℚ} (hbeta : beta < 1)
+    (hdiff : y - x ≤ beta * y) :
+    y ≤ (1 / (1 - beta)) * x := by
+  have hden : 0 < 1 - beta := by linarith
+  have hlin : (1 - beta) * y ≤ x := by
+    nlinarith
+  calc
+    y = ((1 - beta) * y) / (1 - beta) := by
+          field_simp [hden.ne']
+    _ ≤ x / (1 - beta) :=
+          div_le_div_of_nonneg_right hlin hden.le
+    _ = (1 / (1 - beta)) * x := by ring
+
+theorem positiveTemperedUpperMiddleExpShiftBeta_lt_one
+    {a : Nat} (ha : 2000 < a) :
+    (11 / 10 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a < 1 := by
+  have hden := positiveTemperedUpperMiddleExpShiftFactor_den_pos ha
+  linarith
+
 theorem positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
     {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
     (hrhi : r ≤ posKmax a) :
@@ -15618,6 +15638,40 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorC
               + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
           ≤ positiveTemperedUpperMiddleExpShiftFactor a *
             partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
+
+/-- Difference form of the upper-middle `partialExpUpper` shift estimate.
+
+This is the local Taylor/geometric-tail target: the increase from shifting the
+exponent by `45/a` is at most `β` times the shifted value, with
+`β = (11/10)*(45/a)`.  The algebraic conversion to the multiplicative shift
+factor is proved below. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate :
+    Prop where
+  upperMiddleShiftDifference :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a →
+        partialExpUpper
+            (positiveTemperedExponentUpper a r
+              + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+          - partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
+        ≤
+          ((11 / 10 : ℚ) * positiveTemperedUpperMiddleExpShiftBudget a) *
+            partialExpUpper
+              (positiveTemperedExponentUpper a r
+                + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate.toMiddleShiftFactorCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftDifferenceCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftFactorCertificate where
+  upperMiddleShiftFactor := by
+    intro a r ha hrlo hrhi hmid
+    have hdiff := cert.upperMiddleShiftDifference ha hrlo hrhi hmid
+    have hle :=
+      le_inv_one_sub_mul_of_sub_le_mul_self
+        (positiveTemperedUpperMiddleExpShiftBeta_lt_one ha) hdiff
+    simpa [positiveTemperedUpperMiddleExpShiftFactor] using hle
 
 /-- Raw-quotient scalar margin for the upper-middle shift factor.
 
