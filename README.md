@@ -157,6 +157,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   small and tempered fields expected by the existing certificate.  In the
   same local sample, one combined product atom replaces the two separate
   small/tempered product atoms and compiles in about 15 seconds.  The
+  fixed-edge refinement
+  `PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate`
+  consumes `Prop51.positiveEdgeFixedKChunks` directly; emit it with
+  `--strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked` and
+  choose `--edge-k-len` independently.  This avoids reconstructing the older
+  default 20-wide edge booleans from fine edge atoms.  The
   remaining large-tail inputs can also be supplied through
   `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
   product-small, product-tempered, solo, adjacent-step, and unit-reserve

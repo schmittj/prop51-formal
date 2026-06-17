@@ -601,9 +601,13 @@ Status:
       1600-row default 20-wide edge atom timed out, row lengths 2/5/10/20
       took roughly 8/21/39/82 seconds, and one-wide retained-`k` edge atoms
       with `positiveEdgeFixedKScale 1` compile in about 1-6 seconds.  The
-      next finite wrapper should consume these fine edge chunks directly
-      through `positiveEdgeBudget_of_fixedKChunksUniformUnitChecks`, rather
-      than reconstructing the old default edge booleans.
+      wrapper
+      `PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate`
+      now consumes these fine edge chunks directly through
+      `positiveEdgeBudget_of_fixedKChunksUniformUnitChecks`; emit it with
+      `--strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked`
+      and choose `--edge-k-len`.  This is still only a Lean
+      proof-production refinement of the same edge majorant budget.
       The large-tail side now also has
       `PositiveSaddleLargeTailPartsAuditCertificate`, which decomposes the
       two non-finite certificate fields into product-small, product-tempered,
