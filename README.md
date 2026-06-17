@@ -263,14 +263,19 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths`
   and
   `Prop51.positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`;
-  they leave only the two explicit endpoint
-  entropy-shadow-base-times-`(10/7)^a` unit budgets.
+  the lower endpoint budget is now closed by the Lean-side coarse dyadic
+  estimate
+  `Prop51.positiveTemperedLowerFirstTenSeventhsEnvelopeUnit` and the wrapper
+  `Prop51.positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths_closed`.
+  The remaining endpoint arithmetic budget is the upper `posKmax a`
+  entropy-shadow-base-times-`(10/7)^a` unit inequality.
   The audit-facing wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
-  expose exactly those two endpoint unit-budget fields, with quotient-form or
-  denominator-cleared tempered adjacent-step atoms respectively.
+  still expose both endpoint unit-budget fields, with quotient-form or
+  denominator-cleared tempered adjacent-step atoms respectively; the lower
+  field can be filled by the closed theorem above.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp

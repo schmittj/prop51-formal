@@ -332,6 +332,38 @@ theorem positiveTemperedBranch_start_le_posKmax_of_large {a : Nat}
   exact max_le (one_le_posKmax (by omega : 2 ≤ a))
     (posTemperedCutoff_add_one_le_posKmax_of_large ha)
 
+/-- Coarse lower-end cutoff used only for the closed `(10/7)^a` endpoint
+reserve budget.  The TeX proof only needs that the first tempered index is
+well below a fixed positive fraction of `a`; Lean records the explicit
+`a/4` version so the later dyadic-decay estimate is purely rational. -/
+theorem positiveTemperedBranch_start_le_quarter_self_of_large {a : Nat}
+    (ha : 2000 < a) :
+    max 1 (posTemperedCutoff a + 1) ≤ a / 4 := by
+  let q := a / 4
+  have hqlo : 500 ≤ q := by
+    dsimp [q]
+    exact (Nat.le_div_iff_mul_le (by norm_num : 0 < 4)).mpr
+      (by omega : 500 * 4 ≤ a)
+  have hdecomp := Nat.mod_add_div a 4
+  have hmodlt := Nat.mod_lt a (by norm_num : 0 < 4)
+  have ha_upper : a ≤ 4 * q + 3 := by
+    have hdecomp_q : a % 4 + 4 * q = a := by
+      simpa [q] using hdecomp
+    omega
+  have hsquare : posNlo a ≤ (q - 1) * (q - 1) := by
+    have hqpred : 499 ≤ q - 1 := by omega
+    have hpos_upper : posNlo a ≤ 24 * q + 11 := by
+      unfold posNlo
+      omega
+    have hlinear : 24 * q + 11 ≤ 499 * (q - 1) := by omega
+    have hmul : 499 * (q - 1) ≤ (q - 1) * (q - 1) :=
+      Nat.mul_le_mul_right (q - 1) hqpred
+    exact hpos_upper.trans (hlinear.trans hmul)
+  have hceil : posTemperedCutoff a ≤ q - 1 := by
+    unfold posTemperedCutoff
+    exact ceilSqrt_le_of_le_sq hsquare
+  exact max_le (by omega) (by omega)
+
 theorem nine_mul_le_ten_mul_of_posKmax_lt {a k : Nat}
     (hk : posKmax a < k) :
     9*a ≤ 10*k := by
@@ -1950,6 +1982,13 @@ theorem positiveDyadicDecay_nonneg (j : Nat) : 0 ≤ positiveDyadicDecay j := by
 theorem positiveDyadicDecay_pos (j : Nat) : 0 < positiveDyadicDecay j := by
   unfold positiveDyadicDecay
   positivity
+
+theorem positiveDyadicDecay_le_of_le {i j : Nat} (hij : i ≤ j) :
+    positiveDyadicDecay j ≤ positiveDyadicDecay i := by
+  unfold positiveDyadicDecay
+  have hpow_pos : (0 : ℚ) < (2 : ℚ)^i := by positivity
+  exact one_div_le_one_div_of_le hpow_pos
+    (pow_le_pow_right₀ (by norm_num : (0 : ℚ) ≤ 2) hij)
 
 theorem Qq_eq_yfactor_mul_Ynorm {N j : Nat} (hN : 1 ≤ N) (hj : 1 ≤ j) :
     Qq N j = ((N : ℚ) / 2) * c j / (2 : ℚ)^j * Ynorm N j := by
@@ -4820,6 +4859,49 @@ theorem positiveBinomRatioEntropyShadowPosJBound_pos_of_mem_large
     unfold positiveBinomRatioEntropyShadowPosJBound
     positivity
 
+theorem positiveBinomRatioEntropyShadowPosJBound_le_one
+    {a k : Nat} (ha : 3 ≤ a) (hk1 : 1 ≤ k) (hj1 : 1 ≤ posJ a k) :
+    positiveBinomRatioEntropyShadowPosJBound a k ≤ 1 := by
+  have hk_le : k - 1 ≤ a - 2 := by
+    unfold posJ at hj1
+    omega
+  have hj_le : posJ a k - 1 ≤ a - 2 := by
+    unfold posJ at hj1 ⊢
+    omega
+  have hsum : k - 1 + (posJ a k - 1) = a - 2 := by
+    unfold posJ at hj1 ⊢
+    omega
+  have hkpow :
+      (((k - 1 : Nat) : ℚ)^(k - 1)) ≤
+        (((a - 2 : Nat) : ℚ)^(k - 1)) :=
+    pow_le_pow_left₀ (by positivity : (0 : ℚ) ≤ ((k - 1 : Nat) : ℚ))
+      (by exact_mod_cast hk_le) _
+  have hjpow :
+      (((posJ a k - 1 : Nat) : ℚ)^(posJ a k - 1)) ≤
+        (((a - 2 : Nat) : ℚ)^(posJ a k - 1)) :=
+    pow_le_pow_left₀
+      (by positivity : (0 : ℚ) ≤ ((posJ a k - 1 : Nat) : ℚ))
+      (by exact_mod_cast hj_le) _
+  have hnum_le :
+      (((k - 1 : Nat) : ℚ)^(k - 1) *
+          ((posJ a k - 1 : Nat) : ℚ)^(posJ a k - 1)) ≤
+        ((a - 2 : Nat) : ℚ)^(a - 2) := by
+    calc
+      (((k - 1 : Nat) : ℚ)^(k - 1) *
+          ((posJ a k - 1 : Nat) : ℚ)^(posJ a k - 1))
+          ≤ ((a - 2 : Nat) : ℚ)^(k - 1) *
+              ((a - 2 : Nat) : ℚ)^(posJ a k - 1) := by
+            exact mul_le_mul hkpow hjpow (by positivity) (by positivity)
+      _ = ((a - 2 : Nat) : ℚ)^(a - 2) := by
+            rw [← pow_add, hsum]
+  have hden_pos : 0 < (((a - 2 : Nat) : ℚ)^(a - 2)) := by
+    have ha2pos : (0 : ℚ) < ((a - 2 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < a - 2)
+    exact pow_pos ha2pos _
+  unfold positiveBinomRatioEntropyShadowPosJBound
+  rw [div_le_iff₀ hden_pos]
+  simpa using hnum_le
+
 /-- Small-regime summand with the binomial reciprocal replaced by the
 entropy-shadow ratio.  This is a rational shell for the large-`a` tail; a
 later step still supplies the appropriate exponential tail majorant. -/
@@ -5332,6 +5414,39 @@ theorem positiveTemperedEntropyShadowBaseTerm_pos
   have h := positiveTemperedEntropyShadowExpMajorantTerm_pos
     (temperedExp := fun _ _ => (1 : ℚ)) ha hkRange (by norm_num)
   simpa [positiveTemperedEntropyShadowExpMajorantTerm_eq_base_mul] using h
+
+theorem positiveTemperedEntropyShadowBaseTerm_le_simple
+    {a k : Nat} (ha : 20 ≤ a) (hkRange : k ∈ positiveKRange a) :
+    positiveTemperedEntropyShadowBaseTerm a k ≤
+      (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveDyadicDecay (posJ a k) := by
+  rcases mem_positiveKRange.mp hkRange with ⟨hk1, _hkmax⟩
+  have hj1 : 1 ≤ posJ a k :=
+    Nat.succ_le_of_lt (posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hkRange)
+  have hratio :
+      positiveBinomRatioEntropyShadowPosJBound a k ≤ 1 :=
+    positiveBinomRatioEntropyShadowPosJBound_le_one
+      (by omega : 3 ≤ a) hk1 hj1
+  have hcoef : 0 ≤ (96 / (posNlo a : ℚ)) := by positivity
+  have hkj : 0 ≤ ((k : ℚ) * (posJ a k : ℚ)) := by positivity
+  have hleft :
+      0 ≤ (96 / (posNlo a : ℚ)) *
+        ((k : ℚ) * (posJ a k : ℚ)) :=
+    mul_nonneg hcoef hkj
+  have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_nonneg (posJ a k)
+  unfold positiveTemperedEntropyShadowBaseTerm
+  calc
+    (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatioEntropyShadowPosJBound a k *
+        positiveDyadicDecay (posJ a k)
+        ≤ (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+            1 * positiveDyadicDecay (posJ a k) := by
+          exact mul_le_mul_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hratio hleft) hdecay
+    _ = (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveDyadicDecay (posJ a k) := by
+          ring
 
 theorem positiveSmallEntropyShadowBaseStepQuotient_eq_raw
     {a r : Nat} (hr1 : 1 ≤ r) (hj2 : 2 ≤ posJ a r)
@@ -13008,6 +13123,231 @@ theorem positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSe
       hLowerEnvelopeUnit)
     (positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths
       hUpperEnvelopeUnit)
+
+def positiveTemperedLowerFirstTenSeventhsEnvelopeTerm (a : Nat) : ℚ :=
+  (800000000 : ℚ) *
+    (((4 * a : Nat) : ℚ) *
+      (positiveTemperedEntropyShadowBaseTerm a
+        (max 1 (posTemperedCutoff a + 1)) *
+          positiveTemperedReserveTenSeventhsExpBound a))
+
+/-- Coarse Lean-side majorant for the first tempered endpoint reserve.
+
+The TeX estimate uses the endpoint entropy decay directly.  Here we first
+throw away the entropy-shadow binomial ratio (`≤ 1`), bound the first
+tempered index by `a/4`, and keep only the dyadic decay
+`2^{-(a-a/4)}`.  This is much rougher but still has large margin with the
+sharp `(10/7)^a` exponential envelope. -/
+def positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm (a : Nat) : ℚ :=
+  (3200000000 : ℚ) * (a : ℚ)^3 *
+    (positiveDyadicDecay (a - a / 4) *
+      positiveTemperedReserveTenSeventhsExpBound a)
+
+theorem positiveTemperedLowerFirstTenSeventhsEnvelopeTerm_le_coarse
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLowerFirstTenSeventhsEnvelopeTerm a
+      ≤ positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm a := by
+  let k := max 1 (posTemperedCutoff a + 1)
+  have hkRange : k ∈ positiveKRange a :=
+    mem_positiveKRange.mpr
+      ⟨le_max_left _ _, positiveTemperedBranch_start_le_posKmax_of_large ha⟩
+  have hbase :
+      positiveTemperedEntropyShadowBaseTerm a k ≤
+        (96 / (posNlo a : ℚ)) *
+            ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveDyadicDecay (posJ a k) :=
+    positiveTemperedEntropyShadowBaseTerm_le_simple
+      (by omega : 20 ≤ a) hkRange
+  have hExp_nonneg :
+      0 ≤ positiveTemperedReserveTenSeventhsExpBound a := by
+    unfold positiveTemperedReserveTenSeventhsExpBound
+    positivity
+  have hbaseExp :
+      positiveTemperedEntropyShadowBaseTerm a k *
+          positiveTemperedReserveTenSeventhsExpBound a
+        ≤
+      ((96 / (posNlo a : ℚ)) *
+            ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveDyadicDecay (posJ a k)) *
+        positiveTemperedReserveTenSeventhsExpBound a :=
+    mul_le_mul_of_nonneg_right hbase hExp_nonneg
+  have hkQuarter : k ≤ a / 4 := by
+    dsimp [k]
+    exact positiveTemperedBranch_start_le_quarter_self_of_large ha
+  have hk_le_a : k ≤ a := by
+    have hquarter_le : a / 4 ≤ a := Nat.div_le_self a 4
+    omega
+  have hj_le_a : posJ a k ≤ a := by
+    unfold posJ
+    omega
+  have hkj_nat : k * posJ a k ≤ a * a :=
+    Nat.mul_le_mul hk_le_a hj_le_a
+  have hkj :
+      (k : ℚ) * (posJ a k : ℚ) ≤ (a : ℚ)^2 := by
+    rw [sq]
+    exact_mod_cast hkj_nat
+  have hdyadic_index : a - a / 4 ≤ posJ a k := by
+    unfold posJ
+    omega
+  have hdyadic :
+      positiveDyadicDecay (posJ a k) ≤
+        positiveDyadicDecay (a - a / 4) :=
+    positiveDyadicDecay_le_of_le hdyadic_index
+  have hcoef :
+      96 / (posNlo a : ℚ) ≤ 1 := by
+    have hden : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+    rw [div_le_iff₀ hden]
+    simpa using (show (96 : ℚ) ≤ (posNlo a : ℚ) by
+      exact_mod_cast (by
+        unfold posNlo
+        omega : 96 ≤ posNlo a))
+  have hsimple :
+      ((96 / (posNlo a : ℚ)) *
+            ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveDyadicDecay (posJ a k)) *
+        positiveTemperedReserveTenSeventhsExpBound a
+        ≤
+      (a : ℚ)^2 *
+        (positiveDyadicDecay (a - a / 4) *
+          positiveTemperedReserveTenSeventhsExpBound a) := by
+    calc
+      ((96 / (posNlo a : ℚ)) *
+            ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveDyadicDecay (posJ a k)) *
+        positiveTemperedReserveTenSeventhsExpBound a
+          ≤
+        (1 * (a : ℚ)^2 *
+            positiveDyadicDecay (a - a / 4)) *
+          positiveTemperedReserveTenSeventhsExpBound a := by
+            gcongr
+            exact positiveDyadicDecay_nonneg (posJ a k)
+      _ = (a : ℚ)^2 *
+          (positiveDyadicDecay (a - a / 4) *
+            positiveTemperedReserveTenSeventhsExpBound a) := by
+            ring
+  have hinner :
+      positiveTemperedEntropyShadowBaseTerm a k *
+          positiveTemperedReserveTenSeventhsExpBound a
+        ≤
+      (a : ℚ)^2 *
+        (positiveDyadicDecay (a - a / 4) *
+          positiveTemperedReserveTenSeventhsExpBound a) :=
+    hbaseExp.trans hsimple
+  have hscale :
+      0 ≤ (800000000 : ℚ) * ((4 * a : Nat) : ℚ) := by positivity
+  calc
+    positiveTemperedLowerFirstTenSeventhsEnvelopeTerm a
+        ≤ (800000000 : ℚ) * (((4 * a : Nat) : ℚ) *
+            ((a : ℚ)^2 *
+              (positiveDyadicDecay (a - a / 4) *
+                positiveTemperedReserveTenSeventhsExpBound a))) := by
+          simpa [positiveTemperedLowerFirstTenSeventhsEnvelopeTerm, k,
+            mul_assoc, mul_left_comm, mul_comm] using
+            mul_le_mul_of_nonneg_left hinner hscale
+    _ = positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm a := by
+          unfold positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm
+          norm_num [Nat.cast_mul]
+          ring
+
+theorem positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm_add_four_le
+    {a : Nat} (ha : 2001 ≤ a) :
+    positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm (a + 4)
+      ≤ positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm a := by
+  have hdiv : (a + 4) / 4 = a / 4 + 1 := by
+    exact Nat.add_div_right a (by decide : 0 < 4)
+  have hsub : a + 4 - (a + 4) / 4 = (a - a / 4) + 3 := by
+    rw [hdiv]
+    omega
+  have hpow2 : (0 : ℚ) < (2 : ℚ)^(a - a / 4) := by positivity
+  have hpow10 : (0 : ℚ) < (10 / 7 : ℚ)^a := by positivity
+  unfold positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm
+    positiveDyadicDecay positiveTemperedReserveTenSeventhsExpBound
+  rw [hsub]
+  rw [show (10 / 7 : ℚ)^(a + 4) =
+      (10 / 7 : ℚ)^a * (10 / 7 : ℚ)^4 by
+        rw [pow_add]]
+  rw [show (2 : ℚ)^((a - a / 4) + 3) =
+      (2 : ℚ)^(a - a / 4) * (2 : ℚ)^3 by
+        rw [pow_add]]
+  field_simp [hpow2.ne', hpow10.ne']
+  ring_nf
+  have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+  have hstep : (a : ℚ) + 4 ≤ (401 / 400 : ℚ) * (a : ℚ) := by
+    nlinarith
+  have hcubed :
+      ((a : ℚ) + 4)^3 ≤ ((401 / 400 : ℚ) * (a : ℚ))^3 :=
+    pow_le_pow_left₀ (by positivity : (0 : ℚ) ≤ (a : ℚ) + 4) hstep 3
+  have hconst : (10000 : ℚ) * (401 / 400 : ℚ)^3 ≤ 19208 := by
+    norm_num
+  have hcubed_scaled :
+      (10000 : ℚ) * ((a : ℚ) + 4)^3
+        ≤ 10000 * ((401 / 400 : ℚ) * (a : ℚ))^3 :=
+    mul_le_mul_of_nonneg_left hcubed (by norm_num)
+  have hconst_scaled :
+      (10000 : ℚ) * ((401 / 400 : ℚ) * (a : ℚ))^3
+        ≤ 19208 * (a : ℚ)^3 := by
+    have ha3 : 0 ≤ (a : ℚ)^3 := by positivity
+    calc
+      (10000 : ℚ) * ((401 / 400 : ℚ) * (a : ℚ))^3
+          = (10000 * (401 / 400 : ℚ)^3) * (a : ℚ)^3 := by
+            ring
+      _ ≤ 19208 * (a : ℚ)^3 :=
+            mul_le_mul_of_nonneg_right hconst ha3
+  have htarget :
+      ((4 + a : Nat) : ℚ)^3 * 10000 ≤ (a : ℚ)^3 * 19208 := by
+    have h' := hcubed_scaled.trans hconst_scaled
+    have hadd : ((4 + a : Nat) : ℚ) = (a : ℚ) + 4 := by
+      norm_num [Nat.cast_add, add_comm]
+    rw [hadd]
+    ring_nf at h' ⊢
+    exact h'
+  nlinarith
+
+theorem positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm_le_one
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm a ≤ 1 := by
+  have ha2001 : 2001 ≤ a := by omega
+  revert ha2001
+  refine Nat.strong_induction_on a ?_
+  intro n ih hn
+  by_cases hbase : n ≤ 2004
+  · have hcases : n = 2001 ∨ n = 2002 ∨ n = 2003 ∨ n = 2004 := by
+      omega
+    rcases hcases with rfl | rfl | rfl | rfl <;> native_decide
+  · have hnprev : 2001 ≤ n - 4 := by omega
+    have hprev :
+        positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm (n - 4)
+          ≤ 1 :=
+      ih (n - 4) (by omega) hnprev
+    have hstep :=
+      positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm_add_four_le
+        (a := n - 4) hnprev
+    have hrewrite : n - 4 + 4 = n := by omega
+    rw [hrewrite] at hstep
+    exact hstep.trans hprev
+
+theorem positiveTemperedLowerFirstTenSeventhsEnvelopeTerm_le_one
+    {a : Nat} (ha : 2000 < a) :
+    positiveTemperedLowerFirstTenSeventhsEnvelopeTerm a ≤ 1 :=
+  (positiveTemperedLowerFirstTenSeventhsEnvelopeTerm_le_coarse ha).trans
+    (positiveTemperedLowerFirstTenSeventhsCoarseEnvelopeTerm_le_one ha)
+
+theorem positiveTemperedLowerFirstTenSeventhsEnvelopeUnit
+    {a : Nat} (ha : 2000 < a) :
+    (800000000 : ℚ) *
+        (((4 * a : Nat) : ℚ) *
+          (positiveTemperedEntropyShadowBaseTerm a
+            (max 1 (posTemperedCutoff a + 1)) *
+              positiveTemperedReserveTenSeventhsExpBound a))
+      ≤ 1 :=
+  positiveTemperedLowerFirstTenSeventhsEnvelopeTerm_le_one ha
+
+theorem positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths_closed :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate
+      positiveTemperedReserveTenSeventhsExpBound :=
+  positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths
+    (fun ha => positiveTemperedLowerFirstTenSeventhsEnvelopeUnit ha)
 
 theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
     (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :

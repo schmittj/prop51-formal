@@ -732,14 +732,22 @@ Status:
       `positiveSaddleLargeTailCandidateTemperedLowerFirstReserveEnvelopeCertificate_tenSevenths`
       and
       `positiveSaddleLargeTailCandidateTemperedUpperLastReserveEnvelopeCertificate_tenSevenths`
-      leave only the two endpoint
-      entropy-shadow-base-times-`(10/7)^a` unit budgets.
+      isolate the endpoint entropy-shadow-base-times-`(10/7)^a` unit budgets.
+      The lower endpoint is now closed in Lean by
+      `positiveTemperedLowerFirstTenSeventhsEnvelopeUnit`, using the explicit
+      coarse cutoff
+      `positiveTemperedBranch_start_le_quarter_self_of_large`, the global
+      entropy-shadow ratio bound
+      `positiveBinomRatioEntropyShadowPosJBound_le_one`, and a 4-step
+      monotonicity proof for the dyadic coarse term.  The remaining endpoint
+      budget is the upper `posKmax a` unit inequality.
       The audit-facing wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
       and
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
-      now expose exactly those two endpoint unit-budget fields, using either
-      quotient-form or denominator-cleared tempered adjacent-step atoms.
+      still expose both endpoint unit-budget fields, using either quotient-form
+      or denominator-cleared tempered adjacent-step atoms; the lower field can
+      be supplied by the closed theorem above.
       Lean now also provides cross-multiplied versions of those two tempered
       quotient-step atoms,
       `PositiveSaddleLargeTailCandidateTemperedLowerRawExpCrossmulCertificate`
