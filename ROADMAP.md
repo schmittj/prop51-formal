@@ -584,6 +584,9 @@ Status:
       This is a documented Lean proof-production divergence from the
       TeX-style fixed global chunk cover; generator manifests still use the
       global atom order until active manifest/shard emission is implemented.
+      `Prop51/Main.lean` exposes final assembly adapters for this active
+      route, including the refined atomic and preferred ten-sevenths
+      closed-reserve solo-envelope large-tail shapes.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

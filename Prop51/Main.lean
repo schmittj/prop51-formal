@@ -1117,6 +1117,89 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     (finite.toTangentProductBudgetCertificate tail)
 
+/-- Final assembly from the row-active combined-product finite route.
+
+This is the same mathematical finite-window proof as the fixed-edge route
+above, but the finite certificate fields are indexed by row-local active `N`
+and retained-`k` covers.  The route is recorded separately because generated
+Lean certificates may use this smaller proof-production surface rather than
+the TeX-style fixed global cover. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
+
+/-- Final assembly from the row-active finite route and the refined large-tail
+bounds interface. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail : PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
+/-- Final assembly from the row-active finite route, quotient-form tempered
+adjacent-step atoms, closed `(10/7)^a` endpoint reserves, and the solo scalar
+budget fixed to `positiveLargeTailSoloTenSeventhsBound`. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate
+    finite tail.toRefinedAtomicBoundsAuditCertificate
+
+/-- Final assembly from the row-active finite route and the denominator-cleared
+counterpart of the preferred ten-sevenths closed-reserve solo-envelope tail
+shape. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    finite tail.toTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+
 /-- Final assembly from the fine fixed-edge route and the split large-tail
 audit interface. -/
 theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedPartsAuditCertificate
