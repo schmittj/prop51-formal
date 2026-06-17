@@ -883,20 +883,28 @@ Status:
       and
       `--final-tail-tempered-sharp-top-offset-hybrid-raw-exp-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
       The preferred prefix production route now splits this combined atom
-      once more.  It fixes the prefix large-exp quotient target to
-      `positiveTemperedLowerPrefixTopOffsetExpRatioTarget = 2447/2500`,
+      once more.  It fixes the prefix large-exp quotient target to the
+      row-dependent value
+      `positiveTemperedLowerPrefixTopOffsetExpRatioTarget a = 1 - 213/(5a)`,
       checks the raw-only budget through
       `checkPositiveTemperedLowerPrefixTopOffsetRawBudgetChunk`, and
       reassembles with
       `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate`
       and
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
-      The raw-only budget for the entire prefix strip is already proved in
+      This replaces the earlier constant target `2447/2500`, which is too
+      strong for the large-exp quotient near `a = 3000`.  The raw-only budget
+      for the entire prefix strip is already proved in
       `PositiveSaddlePrefixRawBudget.lean` as
       `positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate`
       with one chunk `(aLen,tLen) = (999,10)`.  The remaining prefix-side
-      obligation is therefore the separate large-exp quotient certificate
-      `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate`.
+      obligation is therefore the separate large-exp quotient certificate;
+      proof production for that side now has the reduced checker
+      `checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk` and the
+      converter
+      `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`.
+      The checker uses a cutoff-`700` numerator majorant and an `800`-term
+      denominator prefix instead of expanding the full `8a` quotient shell.
       The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

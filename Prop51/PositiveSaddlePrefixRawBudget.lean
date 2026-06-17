@@ -4,8 +4,8 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 # Lower-prefix raw budget certificate
 
 This generated-style certificate closes the raw-only half of the lower
-hybrid prefix strip `2000 < a < 3000`, `t < 10`, after extracting the uniform
-large-exp quotient target `2447/2500`.
+hybrid prefix strip `2000 < a < 3000`, `t < 10`, after extracting the
+row-dependent large-exp quotient target `(5a-213)/(5a)`.
 -/
 
 import Prop51.PositiveSaddleChunks

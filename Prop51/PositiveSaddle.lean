@@ -8243,6 +8243,177 @@ theorem partialExpUpperFast_eq (y : ℚ) (T₀ : Nat) :
   rw [partialExpUpperFast, partialExpUpperState_eq]
   simp [partialExpUpper]
 
+/-- Fast evaluator for the finite prefix `∑ t<n, y^t/t!`. -/
+def partialExpPrefixFast (y : ℚ) (n : Nat) : ℚ :=
+  (partialExpUpperState y n).1
+
+theorem partialExpPrefixFast_eq (y : ℚ) (n : Nat) :
+    partialExpPrefixFast y n =
+      ∑ t ∈ Finset.range n, y^t / (t.factorial : ℚ) := by
+  unfold partialExpPrefixFast
+  rw [partialExpUpperState_eq]
+
+theorem partialExpPrefixFast_le_partialExpUpper
+    {y : ℚ} {n T₀ : Nat} (hn : n ≤ T₀)
+    (hy0 : 0 ≤ y) (hyT : y < (T₀ : ℚ)) :
+    partialExpPrefixFast y n ≤ partialExpUpper y T₀ := by
+  rw [partialExpPrefixFast_eq]
+  have hsum :
+      (∑ t ∈ Finset.range n, y^t / (t.factorial : ℚ))
+        ≤ ∑ t ∈ Finset.range T₀, y^t / (t.factorial : ℚ) := by
+    exact Finset.sum_le_sum_of_subset_of_nonneg
+      (fun t ht => Finset.mem_range.mpr
+        (lt_of_lt_of_le (Finset.mem_range.mp ht) hn))
+      (fun t _ _ => by positivity)
+  have htail0 :
+      0 ≤ (y^T₀ / (T₀.factorial : ℚ)) *
+        (1 / (1 - y / (T₀ : ℚ))) := by
+    have hTpos : 0 < T₀ := by
+      by_contra hnot
+      have hzero : T₀ = 0 := Nat.eq_zero_of_not_pos hnot
+      subst T₀
+      norm_num at hyT
+      linarith
+    have hTQ : (0 : ℚ) < (T₀ : ℚ) := by exact_mod_cast hTpos
+    have hden : 0 < 1 - y/(T₀ : ℚ) := by
+      rw [sub_pos, div_lt_one hTQ]
+      exact hyT
+    positivity
+  unfold partialExpUpper
+  linarith
+
+theorem partialExpUpper_tail_term_le (y : ℚ) (hy : 0 ≤ y)
+    (L j : Nat) (hL : 1 ≤ L) :
+    y^(L+j) / ((L+j).factorial : ℚ)
+      ≤ (y^L / (L.factorial : ℚ)) * (y/(L:ℚ))^j := by
+  have hNat : L.factorial * L^j ≤ (L+j).factorial :=
+    le_trans (Nat.mul_le_mul_left _ (Nat.pow_le_pow_left (by omega) j))
+      Nat.factorial_mul_pow_le_factorial
+  have hden : (0:ℚ) < (L.factorial : ℚ) * (L:ℚ)^j := by
+    have h1 : (0:ℚ) < (L.factorial : ℚ) := by
+      exact_mod_cast L.factorial_pos
+    have h2 : (0:ℚ) < (L:ℚ)^j := by
+      have : (0:ℚ) < (L:ℚ) := by exact_mod_cast (by omega : 0 < L)
+      positivity
+    positivity
+  rw [pow_add, div_pow, div_mul_div_comm]
+  apply div_le_div_of_nonneg_left (by positivity) hden
+  exact_mod_cast hNat
+
+theorem geom_sum_add_tail_eq_inv_one_sub
+    (q : ℚ) (hq : q ≠ 1) (K : Nat) :
+    (∑ j ∈ Finset.range K, q^j) + q^K * (1 / (1 - q)) =
+      1 / (1 - q) := by
+  rw [geom_sum_closed q hq K]
+  field_simp [sub_ne_zero.mpr (Ne.symm hq)]
+  ring
+
+/-- The `partialExpUpper` majorant decreases as the cutoff is moved upward,
+provided both cutoffs are above the nonnegative argument. -/
+theorem partialExpUpper_cutoff_le_of_le
+    {y : ℚ} {L T : Nat} (hLT : L ≤ T)
+    (hy0 : 0 ≤ y) (hyL : y < (L : ℚ)) :
+    partialExpUpper y T ≤ partialExpUpper y L := by
+  have hLpos : 0 < L := by
+    by_contra hnot
+    have hzero : L = 0 := Nat.eq_zero_of_not_pos hnot
+    subst L
+    norm_num at hyL
+    linarith
+  have hTpos : 0 < T := by omega
+  have hLQ : (0 : ℚ) < (L : ℚ) := by exact_mod_cast hLpos
+  have hTQ : (0 : ℚ) < (T : ℚ) := by exact_mod_cast hTpos
+  let q : ℚ := y / (L : ℚ)
+  let A : ℚ := y^L / (L.factorial : ℚ)
+  have hq0 : 0 ≤ q := by
+    dsimp [q]
+    exact div_nonneg hy0 hLQ.le
+  have hq1 : q < 1 := by
+    dsimp [q]
+    rw [div_lt_one hLQ]
+    exact hyL
+  have hdenL : 0 < 1 - y / (L : ℚ) := by
+    rw [sub_pos, div_lt_one hLQ]
+    exact hyL
+  have hdenT : 0 < 1 - y / (T : ℚ) := by
+    have hyT : y < (T : ℚ) := lt_of_lt_of_le hyL (by exact_mod_cast hLT)
+    rw [sub_pos, div_lt_one hTQ]
+    exact hyT
+  have hsplit :
+      (∑ t ∈ Finset.range T, y^t / (t.factorial : ℚ)) =
+        (∑ t ∈ Finset.range L, y^t / (t.factorial : ℚ)) +
+          ∑ t ∈ Finset.Ico L T, y^t / (t.factorial : ℚ) := by
+    rw [Finset.range_eq_Ico,
+        ← Finset.sum_Ico_consecutive _ (Nat.zero_le L) hLT,
+        ← Finset.range_eq_Ico]
+  have hfiniteTail :
+      ∑ t ∈ Finset.Ico L T, y^t / (t.factorial : ℚ)
+        ≤ A * ∑ j ∈ Finset.range (T - L), q^j := by
+    rw [Finset.sum_Ico_eq_sum_range]
+    calc
+      ∑ j ∈ Finset.range (T - L), y^(L+j) / ((L+j).factorial : ℚ)
+          ≤ ∑ j ∈ Finset.range (T - L), A * q^j := by
+            exact Finset.sum_le_sum fun j _ => by
+              dsimp [A, q]
+              exact partialExpUpper_tail_term_le y hy0 L j (by omega)
+      _ = A * ∑ j ∈ Finset.range (T - L), q^j := by
+            rw [Finset.mul_sum]
+  have htermT :
+      y^T / (T.factorial : ℚ) ≤ A * q^(T - L) := by
+    have hT_eq : T = L + (T - L) := by omega
+    have hpow : y^T = y^(L + (T - L)) :=
+      congrArg (fun n : Nat => y^n) hT_eq
+    have hfac :
+        ((T.factorial : Nat) : ℚ) =
+          (((L + (T - L)).factorial : Nat) : ℚ) :=
+      congrArg (fun n : Nat => ((n.factorial : Nat) : ℚ)) hT_eq
+    rw [hpow, hfac]
+    dsimp [A, q]
+    exact partialExpUpper_tail_term_le y hy0 L (T - L) (by omega)
+  have hrecip :
+      1 / (1 - y / (T : ℚ)) ≤ 1 / (1 - y / (L : ℚ)) := by
+    have hdiv_le : y / (T : ℚ) ≤ y / (L : ℚ) := by
+      rw [div_le_div_iff₀ hTQ hLQ]
+      have hLTQ : (L : ℚ) ≤ (T : ℚ) := by exact_mod_cast hLT
+      nlinarith
+    have hden_le : 1 - y / (L : ℚ) ≤ 1 - y / (T : ℚ) := by
+      linarith
+    exact one_div_le_one_div_of_le hdenL hden_le
+  have htailT :
+      (y^T / (T.factorial : ℚ)) * (1 / (1 - y / (T : ℚ)))
+        ≤ A * q^(T - L) * (1 / (1 - q)) := by
+    have hAqNonneg : 0 ≤ A * q^(T - L) := by
+      dsimp [A, q]
+      positivity
+    have hfirst :=
+      mul_le_mul htermT hrecip (by positivity) hAqNonneg
+    simpa [q, mul_assoc] using hfirst
+  unfold partialExpUpper
+  rw [hsplit]
+  have htailTotal :
+      (∑ t ∈ Finset.Ico L T, y^t / (t.factorial : ℚ)) +
+          (y^T / (T.factorial : ℚ)) * (1 / (1 - y / (T : ℚ)))
+        ≤ A * (1 / (1 - q)) := by
+    calc
+      (∑ t ∈ Finset.Ico L T, y^t / (t.factorial : ℚ)) +
+          (y^T / (T.factorial : ℚ)) * (1 / (1 - y / (T : ℚ)))
+          ≤ A * ∑ j ∈ Finset.range (T - L), q^j +
+              A * q^(T - L) * (1 / (1 - q)) :=
+            add_le_add hfiniteTail htailT
+      _ = A * ((∑ j ∈ Finset.range (T - L), q^j) +
+              q^(T - L) * (1 / (1 - q))) := by ring
+      _ = A * (1 / (1 - q)) := by
+            rw [geom_sum_add_tail_eq_inv_one_sub q (by linarith) (T - L)]
+  have hgoal :
+      (∑ t ∈ Finset.range L, y^t / (t.factorial : ℚ)) +
+          ((∑ t ∈ Finset.Ico L T, y^t / (t.factorial : ℚ)) +
+            (y^T / (T.factorial : ℚ)) *
+              (1 / (1 - y / (T : ℚ))))
+        ≤ (∑ t ∈ Finset.range L, y^t / (t.factorial : ℚ)) +
+          A * (1 / (1 - q)) :=
+    add_le_add le_rfl htailTotal
+  simpa [A, q, add_assoc] using hgoal
+
 /-- A concrete variable-cutoff rational exponential factor for the
 large-`a` small branch.  The cutoff grows with `a`, unlike the finite-window
 constant `positiveExpCutoff = 800`. -/
@@ -13685,15 +13856,73 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawEx
           ≤ ((4 * a - 1 : Nat) : ℚ) *
             positiveTemperedLargeExp a (a / 3 + t)
 
-/-- Uniform prefix-strip large-exp quotient target.
+/-- Row-dependent prefix-strip large-exp quotient target.
 
 Lean note: the exact prefix raw-exp atoms are too large for `native_decide`
 because they expand `partialExpUpper` with cutoff `8a`.  The official split
 below records the intended replacement: a raw-only finite budget against the
-constant `2447/2500`, plus a separate proof that the large-exp quotient on the
-same ten-offset strip is bounded by this constant. -/
-def positiveTemperedLowerPrefixTopOffsetExpRatioTarget : ℚ :=
-  2447 / 2500
+row-dependent target `(5a-213)/(5a)`, plus a separate proof that the large-exp
+quotient on the same ten-offset strip is bounded by this target.
+
+This is a Lean-side refinement of the previous constant target.  The constant
+`2447/2500` was strong enough for the raw side near `a=2001`, but too strong
+for the large-exp quotient near `a=3000`; the row-dependent target tracks the
+available margin across the whole finite prefix strip. -/
+def positiveTemperedLowerPrefixTopOffsetExpRatioTarget (a : Nat) : ℚ :=
+  1 - (213 : ℚ) / ((5 * a : Nat) : ℚ)
+
+theorem positiveTemperedLowerPrefixTopOffsetExpRatioTarget_nonneg
+    {a : Nat} (ha : 2000 < a) :
+    0 ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a := by
+  unfold positiveTemperedLowerPrefixTopOffsetExpRatioTarget
+  rw [sub_nonneg]
+  have hden : (0 : ℚ) < ((5 * a : Nat) : ℚ) := by positivity
+  rw [div_le_one hden]
+  norm_num
+  exact_mod_cast (by omega : 213 ≤ 5 * a)
+
+/-- Reduced-cutoff side bound for the lower-prefix top strip.
+
+Lean note: this is the analytic justification for replacing the full `8a`
+numerator shell by cutoff `700` in the generated quotient checker.  It is
+slightly more explicit than the TeX prose, because the formal checker separates
+the numerator upper majorant from the denominator prefix lower majorant. -/
+theorem positiveTemperedExponentUpper_lowerPrefixTopOffsetSucc_lt_700
+    {a t : Nat} (ha : 2000 < a) (haPrefix : a < 3000) (ht : t < 10) :
+    positiveTemperedExponentUpper a (a / 3 + t + 1) < (700 : ℚ) := by
+  let k := a / 3 + t + 1
+  change positiveTemperedExponentUpper a k < (700 : ℚ)
+  have hk1 : 1 ≤ k := by
+    dsimp [k]
+    omega
+  have hkQ : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk1
+  have hratioK : (a : ℚ) / (k : ℚ) ≤ 4 := by
+    rw [div_le_iff₀ hkQ]
+    have hnat : a ≤ 4 * k := by
+      dsimp [k]
+      omega
+    exact_mod_cast hnat
+  have hjposNat : 0 < posJ a k := by
+    dsimp [k]
+    unfold posJ
+    omega
+  have hjQ : (0 : ℚ) < (posJ a k : ℚ) := by exact_mod_cast hjposNat
+  have hratioJ : (a : ℚ) / (posJ a k : ℚ) ≤ 2 := by
+    rw [div_le_iff₀ hjQ]
+    have hnat : a ≤ 2 * posJ a k := by
+      dsimp [k]
+      unfold posJ
+      omega
+    exact_mod_cast hnat
+  have haQ : (a : ℚ) < 3000 := by exact_mod_cast haPrefix
+  calc
+    positiveTemperedExponentUpper a k
+        ≤ (1 / 5 : ℚ) * (a : ℚ)
+            + (57 / 10 : ℚ) * 4 + (29 / 10 : ℚ) * 2 + 2 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ < (700 : ℚ) := by
+          nlinarith
 
 /-- Prefix top-strip large-exp quotient bound left as the analytic/numeric
 input after extracting the raw-only finite budget. -/
@@ -13704,7 +13933,7 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCe
       max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
         positiveTemperedLargeExp a (a / 3 + t + 1) /
             positiveTemperedLargeExp a (a / 3 + t)
-          ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget
+          ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a
 
 /-- Raw-only prefix top-strip budget against
 `positiveTemperedLowerPrefixTopOffsetExpRatioTarget`.  Unlike
@@ -13717,7 +13946,7 @@ structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetC
       max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t →
         ((4 * a : Nat) : ℚ) *
             (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
-              positiveTemperedLowerPrefixTopOffsetExpRatioTarget)
+              positiveTemperedLowerPrefixTopOffsetExpRatioTarget a)
           ≤ ((4 * a - 1 : Nat) : ℚ)
 
 /-- Hybrid lower-tempered target with the prefix strip split into a raw finite
@@ -13763,7 +13992,7 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCe
             (positiveTemperedLargeExp a (a / 3 + t + 1) /
               positiveTemperedLargeExp a (a / 3 + t))
           ≤ positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
-              positiveTemperedLowerPrefixTopOffsetExpRatioTarget :=
+              positiveTemperedLowerPrefixTopOffsetExpRatioTarget a :=
       mul_le_mul_of_nonneg_left
         (cert.lowerPrefixTopOffsetExpRatio.lowerPrefixTopOffsetExpRatio
           ha hprefix ht hrlo) hraw0
@@ -13780,7 +14009,7 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCe
                 positiveTemperedLargeExp a (a / 3 + t)))
             ≤ ((4 * a : Nat) : ℚ) *
                 (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
-                  positiveTemperedLowerPrefixTopOffsetExpRatioTarget) :=
+                  positiveTemperedLowerPrefixTopOffsetExpRatioTarget a) :=
               mul_le_mul_of_nonneg_left hquot (by positivity)
         _ ≤ ((4 * a - 1 : Nat) : ℚ) :=
               cert.lowerPrefixTopOffsetRawBudget.lowerPrefixTopOffsetRawBudget

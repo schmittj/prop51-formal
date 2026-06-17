@@ -467,9 +467,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   The combined raw-exp prefix atoms are intentionally no longer the preferred
   proof-production target: even with the tail-recursive evaluator for
   `partialExpUpper`, exact `native_decide` must still expand the `8a`
-  exponential shell.  The newer split route uses the uniform prefix quotient
+  exponential shell.  The newer split route uses the row-dependent prefix quotient
   target
-  `Prop51.positiveTemperedLowerPrefixTopOffsetExpRatioTarget = 2447/2500`,
+  `Prop51.positiveTemperedLowerPrefixTopOffsetExpRatioTarget a =
+  1 - 213/(5a)`,
   checks only the raw budget with
   `Prop51.checkPositiveTemperedLowerPrefixTopOffsetRawBudgetChunk`, and
   reassembles through
@@ -477,9 +478,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   The raw-only prefix budget is already packaged in
   `Prop51.PositiveSaddlePrefixRawBudget` as
   `Prop51.positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChunksCertificate`
-  for one chunk covering `a = 2001..2999`, `t = 0..9`.  The remaining
-  prefix input on this route is the explicit large-exp quotient certificate
-  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate`;
+  for one chunk covering `a = 2001..2999`, `t = 0..9`.  The target is
+  deliberately row-dependent: the earlier constant `2447/2500` is too strong
+  for the large-exp quotient near `a = 3000`.  The remaining
+  prefix input on this route is the explicit large-exp quotient certificate.
+  It now has a reduced proof-production checker
+  `Prop51.checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk`,
+  which compares a cutoff-`700` numerator majorant to the target times an
+  `800`-term denominator prefix and converts through
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate`;
   the final-style wrapper is
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
   Use

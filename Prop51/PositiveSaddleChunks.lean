@@ -427,13 +427,13 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRawExpC
     cert.lowerPrefixTopOffsetRawExpChunks.lowerPrefixTopOffsetRawExpCrossmul
 
 /-- Boolean atom for the raw-only lower-prefix budget after extracting the
-uniform prefix large-exp quotient target. -/
+row-dependent prefix large-exp quotient target. -/
 def checkPositiveTemperedLowerPrefixTopOffsetRawBudget
     (a t : Nat) : Bool :=
   decide
     (((4 * a : Nat) : ℚ) *
         (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
-          positiveTemperedLowerPrefixTopOffsetExpRatioTarget)
+          positiveTemperedLowerPrefixTopOffsetExpRatioTarget a)
       ≤ ((4 * a - 1 : Nat) : ℚ))
 
 /-- Boolean chunk for the raw-only lower-prefix budget.
@@ -463,7 +463,7 @@ theorem checkPositiveTemperedLowerPrefixTopOffsetRawBudget_of_chunk
     (hrlo : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t) :
     ((4 * a : Nat) : ℚ) *
         (positiveEntropyShadowBaseStepRawQuotient a (a / 3 + t) *
-          positiveTemperedLowerPrefixTopOffsetExpRatioTarget)
+          positiveTemperedLowerPrefixTopOffsetExpRatioTarget a)
       ≤ ((4 * a - 1 : Nat) : ℚ) := by
   have haAll :
       ∀ x ∈ List.range' aLo aLen,
@@ -524,6 +524,211 @@ theorem PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetRawBudgetChu
       ⟨tChunk, htChunk, htMem⟩
     exact checkPositiveTemperedLowerPrefixTopOffsetRawBudget_of_chunk
       (cert.lowerPrefixTopOffsetRawBudgetChunk haChunk htChunk)
+      haMem htMem ha haPrefix ht hrlo
+
+/-- Reduced numerator cutoff used for the lower-prefix large-exp quotient
+checker. -/
+def positiveTemperedLowerPrefixTopOffsetExpUpperCutoff : Nat := 700
+
+/-- Denominator prefix retained for the lower-prefix large-exp quotient
+checker. -/
+def positiveTemperedLowerPrefixTopOffsetExpLowerPrefix : Nat := 800
+
+/-- Boolean atom for the reduced lower-prefix large-exp quotient check.
+
+Instead of expanding the full quotient with cutoff `8a`, this checks that the
+cutoff-`700` numerator majorant is bounded by the row-dependent target times a
+finite denominator prefix of length `800`.  The theorem below transports this
+reduced check back to the actual quotient. -/
+def checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced
+    (a t : Nat) : Bool :=
+  decide
+    (partialExpUpperFast
+        (positiveTemperedExponentUpper a (a / 3 + t + 1))
+        positiveTemperedLowerPrefixTopOffsetExpUpperCutoff
+      ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a *
+        partialExpPrefixFast
+          (positiveTemperedExponentUpper a (a / 3 + t))
+          positiveTemperedLowerPrefixTopOffsetExpLowerPrefix)
+
+theorem checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced_sound
+    {a t : Nat}
+    (h : checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced a t = true)
+    (ha : 2000 < a) (haPrefix : a < 3000) (ht : t < 10)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t) :
+    positiveTemperedLargeExp a (a / 3 + t + 1) /
+        positiveTemperedLargeExp a (a / 3 + t)
+      ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a := by
+  have hcheck :
+      partialExpUpperFast
+          (positiveTemperedExponentUpper a (a / 3 + t + 1))
+          positiveTemperedLowerPrefixTopOffsetExpUpperCutoff
+        ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a *
+          partialExpPrefixFast
+            (positiveTemperedExponentUpper a (a / 3 + t))
+            positiveTemperedLowerPrefixTopOffsetExpLowerPrefix :=
+    of_decide_eq_true (by
+      simpa [checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced] using h)
+  have hsplitUpper := positiveLargeExpTemperedSplitUpper_of_large ha
+  have hrMem : a / 3 + t ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨le_trans (le_max_left _ _) hrlo, by
+      unfold positiveLargeExpTemperedSplit at hsplitUpper
+      omega⟩
+  have hsuccMem : a / 3 + t + 1 ∈ positiveKRange a :=
+    mem_positiveKRange.mpr ⟨by omega, by
+      unfold positiveLargeExpTemperedSplit at hsplitUpper
+      omega⟩
+  have hsucc1 : 1 ≤ a / 3 + t + 1 := by omega
+  have hsuccJ : 0 < posJ a (a / 3 + t + 1) :=
+    posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hsuccMem
+  have hsuccExp0 :
+      0 ≤ positiveTemperedExponentUpper a (a / 3 + t + 1) :=
+    positiveTemperedExponentUpper_nonneg hsucc1 hsuccJ
+  have hsuccExpLt :
+      positiveTemperedExponentUpper a (a / 3 + t + 1) <
+        (positiveTemperedLowerPrefixTopOffsetExpUpperCutoff : ℚ) := by
+    dsimp [positiveTemperedLowerPrefixTopOffsetExpUpperCutoff]
+    exact positiveTemperedExponentUpper_lowerPrefixTopOffsetSucc_lt_700
+      ha haPrefix ht
+  have hnum :
+      positiveTemperedLargeExp a (a / 3 + t + 1)
+        ≤ partialExpUpperFast
+            (positiveTemperedExponentUpper a (a / 3 + t + 1))
+            positiveTemperedLowerPrefixTopOffsetExpUpperCutoff := by
+    rw [partialExpUpperFast_eq]
+    unfold positiveTemperedLargeExp
+    exact partialExpUpper_cutoff_le_of_le
+      (by
+        dsimp [positiveTemperedLowerPrefixTopOffsetExpUpperCutoff]
+        omega :
+        positiveTemperedLowerPrefixTopOffsetExpUpperCutoff ≤ 8 * a)
+      hsuccExp0 hsuccExpLt
+  have hr1 : 1 ≤ a / 3 + t := (mem_positiveKRange.mp hrMem).1
+  have hrJ : 0 < posJ a (a / 3 + t) :=
+    posJ_pos_of_mem_positiveKRange (by omega : 1 ≤ a) hrMem
+  have hrExp0 : 0 ≤ positiveTemperedExponentUpper a (a / 3 + t) :=
+    positiveTemperedExponentUpper_nonneg hr1 hrJ
+  have hrExpLt :
+      positiveTemperedExponentUpper a (a / 3 + t) < ((8 * a : Nat) : ℚ) :=
+    positiveTemperedExponentUpper_lt_largeExpCutoff ha hrMem
+  have hdenPrefix :
+      partialExpPrefixFast (positiveTemperedExponentUpper a (a / 3 + t))
+          positiveTemperedLowerPrefixTopOffsetExpLowerPrefix
+        ≤ positiveTemperedLargeExp a (a / 3 + t) := by
+    unfold positiveTemperedLargeExp
+    exact partialExpPrefixFast_le_partialExpUpper
+      (by
+        dsimp [positiveTemperedLowerPrefixTopOffsetExpLowerPrefix]
+        omega :
+        positiveTemperedLowerPrefixTopOffsetExpLowerPrefix ≤ 8 * a)
+      hrExp0 hrExpLt
+  have hq0 : 0 ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a :=
+    positiveTemperedLowerPrefixTopOffsetExpRatioTarget_nonneg ha
+  have hratioCross :
+      positiveTemperedLargeExp a (a / 3 + t + 1)
+        ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a *
+            positiveTemperedLargeExp a (a / 3 + t) := by
+    calc
+      positiveTemperedLargeExp a (a / 3 + t + 1)
+          ≤ partialExpUpperFast
+              (positiveTemperedExponentUpper a (a / 3 + t + 1))
+              positiveTemperedLowerPrefixTopOffsetExpUpperCutoff := hnum
+      _ ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a *
+            partialExpPrefixFast
+              (positiveTemperedExponentUpper a (a / 3 + t))
+              positiveTemperedLowerPrefixTopOffsetExpLowerPrefix := hcheck
+      _ ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a *
+            positiveTemperedLargeExp a (a / 3 + t) :=
+          mul_le_mul_of_nonneg_left hdenPrefix hq0
+  have hdenPos : 0 < positiveTemperedLargeExp a (a / 3 + t) :=
+    positiveTemperedLargeExp_pos_of_large ha hrMem
+  rw [div_le_iff₀ hdenPos]
+  exact hratioCross
+
+/-- Boolean chunk for the reduced lower-prefix large-exp quotient check.
+
+Rows and offsets outside the live prefix/top-offset domain are skipped, so
+generated chunks may overrun both endpoint covers. -/
+def checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk
+    (aLo aLen tLo tLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' tLo tLen).all fun t =>
+      if 2000 < a ∧ a < 3000 ∧ t < 10 ∧
+          max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t then
+        checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced a t
+      else
+        true
+
+theorem checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced_of_chunk
+    {aLo aLen tLo tLen a t : Nat}
+    (h :
+      checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk
+        aLo aLen tLo tLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (ht_mem : t ∈ List.range' tLo tLen)
+    (ha : 2000 < a) (haPrefix : a < 3000) (ht : t < 10)
+    (hrlo : max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t) :
+    positiveTemperedLargeExp a (a / 3 + t + 1) /
+        positiveTemperedLargeExp a (a / 3 + t)
+      ≤ positiveTemperedLowerPrefixTopOffsetExpRatioTarget a := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' tLo tLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y < 10 ∧
+              max 1 (posTemperedCutoff x + 1) ≤ x / 3 + y then
+            checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk]
+        using h)
+  have htAll :
+      ∀ y ∈ List.range' tLo tLen,
+        (if 2000 < a ∧ a < 3000 ∧ y < 10 ∧
+              max 1 (posTemperedCutoff a + 1) ≤ a / 3 + y then
+            checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced a t = true := by
+    have hcond :
+        2000 < a ∧ a < 3000 ∧ t < 10 ∧
+          max 1 (posTemperedCutoff a + 1) ≤ a / 3 + t :=
+      ⟨ha, haPrefix, ht, hrlo⟩
+    have hline := htAll t ht_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  exact checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced_sound
+    hcheck ha haPrefix ht hrlo
+
+structure PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate
+    (aLen tLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  tLenPos : 0 < tLen
+  lowerPrefixTopOffsetExpRatioChunk :
+    ∀ {aChunk tChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      tChunk ∈ positiveLargeTailLowerTopOffsetTChunks tLen →
+        checkPositiveTemperedLowerPrefixTopOffsetExpRatioReducedChunk
+          aChunk.1 aChunk.2 tChunk.1 tChunk.2 = true
+
+theorem PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate.toExpRatioCertificate
+    {aLen tLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate
+        aLen tLen) :
+    PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate where
+  lowerPrefixTopOffsetExpRatio := by
+    intro a t ha haPrefix ht hrlo
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    rcases positiveLargeTailLowerTopOffsetTChunks_cover
+        cert.tLenPos ht with
+      ⟨tChunk, htChunk, htMem⟩
+    exact checkPositiveTemperedLowerPrefixTopOffsetExpRatioReduced_of_chunk
+      (cert.lowerPrefixTopOffsetExpRatioChunk haChunk htChunk)
       haMem htMem ha haPrefix ht hrlo
 
 structure PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate
@@ -9136,8 +9341,8 @@ theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRawExpChunkedUpperMid
 upper-middle large-tail certificate.
 
 The short prefix `2000 < a < 3000` is split into a raw-only finite budget and
-the explicit quotient target
-`positiveTemperedLowerPrefixTopOffsetExpRatioTarget`; the converter below
+the row-dependent quotient target
+`positiveTemperedLowerPrefixTopOffsetExpRatioTarget a`; the converter below
 reassembles the existing hybrid raw-exp wrapper. -/
 structure PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
     (aLen tLen : Nat)
