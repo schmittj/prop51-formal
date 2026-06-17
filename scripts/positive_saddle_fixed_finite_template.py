@@ -31,6 +31,8 @@ Strategies include:
   * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
     product-n-chunked-tangent certificate, followed by the assembled finite
     certificate.
+  * --emit-single-chunk-shard: emit one balanced shard of the atom theorem
+    list, for independent Lean modules in large proof-production runs.
   * --emit-single-chunk-manifest: emit the same atom list as JSON for batch
     proof production.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
@@ -210,6 +212,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--emit-single-chunk-shard",
+        action="store_true",
+        help="emit one balanced shard of the required single-chunk theorems",
+    )
+    parser.add_argument(
+        "--shard-index",
+        type=nonnegative_nat,
+        help="zero-based shard index for --emit-single-chunk-shard",
+    )
+    parser.add_argument(
+        "--shard-count",
+        type=positive_nat,
+        help="total number of shards for --emit-single-chunk-shard",
+    )
+    parser.add_argument(
         "--emit-single-chunk-manifest",
         action="store_true",
         help=(
@@ -276,9 +293,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.edge_k_len = 20
     if args.emit_single_chunk_suite and args.emit_single_chunk is not None:
         parser.error("--emit-single-chunk-suite cannot be combined with --emit-single-chunk")
+    if args.emit_single_chunk_shard and args.emit_single_chunk is not None:
+        parser.error("--emit-single-chunk-shard cannot be combined with --emit-single-chunk")
     if args.emit_single_chunk_manifest and args.emit_single_chunk is not None:
         parser.error(
             "--emit-single-chunk-manifest cannot be combined with --emit-single-chunk"
+        )
+    if args.emit_single_chunk_shard and args.emit_single_chunk_suite:
+        parser.error(
+            "--emit-single-chunk-shard cannot be combined with "
+            "--emit-single-chunk-suite"
+        )
+    if args.emit_single_chunk_shard and args.emit_single_chunk_manifest:
+        parser.error(
+            "--emit-single-chunk-shard cannot be combined with "
+            "--emit-single-chunk-manifest"
         )
     if args.emit_single_chunk_manifest and args.emit_single_chunk_suite:
         parser.error(
@@ -295,6 +324,23 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--emit-single-chunk-suite cannot be combined with "
             "--use-single-chunk-theorems"
         )
+    if args.emit_single_chunk_shard and args.use_single_chunk_theorems:
+        parser.error(
+            "--emit-single-chunk-shard cannot be combined with "
+            "--use-single-chunk-theorems"
+        )
+    if args.emit_single_chunk_shard:
+        if args.shard_index is None or args.shard_count is None:
+            parser.error(
+                "--shard-index and --shard-count are required with "
+                "--emit-single-chunk-shard"
+            )
+        if args.shard_count <= args.shard_index:
+            parser.error("--shard-index must be smaller than --shard-count")
+    elif args.shard_index is not None or args.shard_count is not None:
+        parser.error(
+            "--shard-index/--shard-count require --emit-single-chunk-shard"
+        )
     if args.emit_single_chunk_suite and args.strategy not in (
         "product-n-chunked-tangent",
         "product-tangent-solo-n-chunked",
@@ -304,6 +350,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     ):
         parser.error(
             "--emit-single-chunk-suite is only supported for "
+            "--strategy product-n-chunked-tangent or "
+            "--strategy product-tangent-solo-n-chunked or "
+            "--strategy product-nk-tangent-solo-n-chunked or "
+            "--strategy combined-product-nk-tangent-solo-n-chunked"
+            " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        )
+    if args.emit_single_chunk_shard and args.strategy not in (
+        "product-n-chunked-tangent",
+        "product-tangent-solo-n-chunked",
+        "product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+    ):
+        parser.error(
+            "--emit-single-chunk-shard is only supported for "
             "--strategy product-n-chunked-tangent or "
             "--strategy product-tangent-solo-n-chunked or "
             "--strategy product-nk-tangent-solo-n-chunked or "
@@ -954,6 +1015,38 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "chunks": chunks,
     }
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+
+
+def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, int]:
+    start = total * shard_index // shard_count
+    stop = total * (shard_index + 1) // shard_count
+    return start, stop
+
+
+def emit_single_chunk_shard(args: argparse.Namespace) -> str:
+    specs = single_chunk_specs(args)
+    start, stop = shard_bounds(len(specs), args.shard_index, args.shard_count)
+    lines = emit_header(args)
+    lines.extend(
+        [
+            "",
+            "/-",
+            "Individual finite-window atom shard.",
+            f"Shard {args.shard_index + 1} of {args.shard_count}; "
+            f"atoms {start} <= i < {stop} out of {len(specs)}.",
+            "-/",
+            "",
+        ]
+    )
+    for field, row_index, n_index, k_index, name in specs[start:stop]:
+        lines.extend(
+            single_chunk_theorem_lines(
+                args, field, name, row_index, n_index, k_index
+            )
+        )
+        lines.append("")
+    lines.extend(["end Prop51", ""])
+    return "\n".join(lines)
 
 
 def emit_single_chunk_suite(args: argparse.Namespace) -> str:
@@ -2476,6 +2569,8 @@ def emit(args: argparse.Namespace) -> str:
         return emit_single_chunk(args)
     if args.emit_single_chunk_manifest:
         return emit_single_chunk_manifest(args)
+    if args.emit_single_chunk_shard:
+        return emit_single_chunk_shard(args)
     if args.emit_single_chunk_suite:
         return emit_single_chunk_suite(args)
     if args.strategy == "all-chunks":

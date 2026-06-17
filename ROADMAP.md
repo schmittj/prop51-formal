@@ -623,7 +623,9 @@ Status:
       certificates; emit final theorems against it with
       `--emit-final --final-tail-atomic-parts`.  If generated atom theorems
       are split over separate Lean modules, pass repeated `--extra-import`
-      options when emitting the assembly theorem.
+      options when emitting the assembly theorem.  The generator also has
+      `--emit-single-chunk-shard --shard-index i --shard-count n` for
+      balanced atom modules in the same order as the manifest.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

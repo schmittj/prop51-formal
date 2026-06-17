@@ -174,7 +174,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   one-dimensional inequality families.  The finite generator can target these
   split final-theorem interfaces with `--emit-final --final-tail-parts` or
   `--emit-final --final-tail-atomic-parts`; use repeated `--extra-import`
-  flags when the atom theorems live in separately built Lean modules.  When
+  flags when the atom theorems live in separately built Lean modules.
+  `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
+  atom modules using the same ordering as `--emit-single-chunk-manifest`.
+  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a
