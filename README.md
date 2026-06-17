@@ -273,12 +273,21 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_closed`,
   and
   `Prop51.positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed`.
-  The preferred audit-facing wrappers are now
+  The closed reserve audit-facing wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate`
   and
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate`;
-  they expose only the product bounds, solo bound, and the two tempered
-  adjacent-step atoms.  The older staging wrappers
+  expose only the product bounds, a solo bound certificate, and the two
+  tempered adjacent-step atoms.  Lean further fixes the solo scalar budget to
+  the envelope
+  `Prop51.positiveLargeTailSoloTenSeventhsBound a N =
+  (29/2) * (a/N) * (10/7)^a`.  The preferred audit-facing wrappers are now
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`;
+  they expose product bounds, the analytic saddle estimate
+  `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`, and
+  the two tempered adjacent-step atoms.  The older staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
@@ -336,8 +345,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-bounds`
   or
   `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-bounds`
-  for the preferred variants where both endpoint reserve budgets are filled in
-  Lean.
+  for the variants where both endpoint reserve budgets are filled in Lean.
+  Use
+  `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-solo-envelope-bounds`
+  or
+  `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-solo-envelope-bounds`
+  for the preferred variants where the endpoint reserve budgets and the solo
+  scalar budget are filled in Lean.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

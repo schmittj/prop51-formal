@@ -11300,6 +11300,133 @@ theorem PositiveSaddleLargeTailSoloYBoundCertificate.toSoloYUnitCertificate
       (cert.soloY ha hrect)
       (cert.soloScalar ha hrect)
 
+/-- Large-tail solo `Y_a(N)` envelope with the same practical `(10/7)^a`
+exponential slack used for the tempered endpoint reserves.
+
+This is only the scalar budget side of the solo proof: the remaining analytic
+input is the saddle estimate
+`positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`. -/
+def positiveLargeTailSoloTenSeventhsBound (a N : Nat) : ℚ :=
+  (29 / 2 : ℚ) * ((a : ℚ) / (N : ℚ)) * (10 / 7 : ℚ)^a
+
+theorem positiveRectangle_self_div_N_le_one_fifth
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+    (a : ℚ) / (N : ℚ) ≤ 1 / 5 := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by
+    exact_mod_cast positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have h5aN : 5 * a ≤ N := by
+    have h5lo : 5 * a ≤ posNlo a := by
+      unfold posNlo
+      omega
+    exact h5lo.trans hrect.1
+  rw [div_le_iff₀ hNpos]
+  have h5aNQ : (5 : ℚ) * (a : ℚ) ≤ (N : ℚ) := by
+    exact_mod_cast h5aN
+  nlinarith
+
+def positiveLargeTailSoloTenSeventhsScalarCoarseTerm (a : Nat) : ℚ :=
+  (290000000 : ℚ) * (5 / 7 : ℚ)^a
+
+theorem positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one
+    {a : Nat} (ha : 2000 < a) :
+    positiveLargeTailSoloTenSeventhsScalarCoarseTerm a ≤ 1 := by
+  have hpow :
+      (5 / 7 : ℚ)^a ≤ (5 / 7 : ℚ)^2001 :=
+    rat_pow_le_pow_of_le_one
+      (by norm_num : (0 : ℚ) ≤ 5 / 7)
+      (by norm_num : (5 / 7 : ℚ) ≤ 1)
+      (by omega : 2001 ≤ a)
+  have hbase :
+      positiveLargeTailSoloTenSeventhsScalarCoarseTerm 2001 ≤ 1 := by
+    native_decide
+  unfold positiveLargeTailSoloTenSeventhsScalarCoarseTerm at *
+  exact
+    (mul_le_mul_of_nonneg_left hpow
+      (by norm_num : (0 : ℚ) ≤ 290000000)).trans hbase
+
+theorem positiveLargeTailSoloTenSeventhsScalarBudget
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+    (200000000 : ℚ) *
+        (positiveDyadicDecay a / 2 *
+          positiveLargeTailSoloTenSeventhsBound a N)
+      ≤ 1 := by
+  have hratio := positiveRectangle_self_div_N_le_one_fifth ha hrect
+  have hpow_nonneg : 0 ≤ (10 / 7 : ℚ)^a := by positivity
+  have hbound :
+      positiveLargeTailSoloTenSeventhsBound a N
+        ≤ (29 / 10 : ℚ) * (10 / 7 : ℚ)^a := by
+    have hmul :
+        ((a : ℚ) / (N : ℚ)) * (10 / 7 : ℚ)^a
+          ≤ (1 / 5 : ℚ) * (10 / 7 : ℚ)^a :=
+      mul_le_mul_of_nonneg_right hratio hpow_nonneg
+    have hscaled :=
+      mul_le_mul_of_nonneg_left hmul
+        (by norm_num : (0 : ℚ) ≤ 29 / 2)
+    calc
+      positiveLargeTailSoloTenSeventhsBound a N
+          = (29 / 2 : ℚ) *
+              (((a : ℚ) / (N : ℚ)) * (10 / 7 : ℚ)^a) := by
+            unfold positiveLargeTailSoloTenSeventhsBound
+            ring
+      _ ≤ (29 / 2 : ℚ) *
+            ((1 / 5 : ℚ) * (10 / 7 : ℚ)^a) := hscaled
+      _ = (29 / 10 : ℚ) * (10 / 7 : ℚ)^a := by ring
+  have hcoef : 0 ≤ positiveDyadicDecay a / 2 :=
+    div_nonneg (positiveDyadicDecay_nonneg a) (by norm_num)
+  have hterm :
+      positiveDyadicDecay a / 2 *
+          positiveLargeTailSoloTenSeventhsBound a N
+        ≤ positiveDyadicDecay a / 2 *
+          ((29 / 10 : ℚ) * (10 / 7 : ℚ)^a) :=
+    mul_le_mul_of_nonneg_left hbound hcoef
+  have hscaled :
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 *
+            positiveLargeTailSoloTenSeventhsBound a N)
+        ≤ (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 *
+            ((29 / 10 : ℚ) * (10 / 7 : ℚ)^a)) :=
+    mul_le_mul_of_nonneg_left hterm
+      (by norm_num : (0 : ℚ) ≤ 200000000)
+  have hpow2 : (2 : ℚ)^a ≠ 0 := by positivity
+  have hpow_eq :
+      (10 / 7 : ℚ)^a / (2 : ℚ)^a = (5 / 7 : ℚ)^a := by
+    rw [← div_pow]
+    norm_num
+  have hcoarse :
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 *
+            ((29 / 10 : ℚ) * (10 / 7 : ℚ)^a))
+        = positiveLargeTailSoloTenSeventhsScalarCoarseTerm a := by
+    calc
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 *
+            ((29 / 10 : ℚ) * (10 / 7 : ℚ)^a))
+          = (290000000 : ℚ) *
+              ((10 / 7 : ℚ)^a / (2 : ℚ)^a) := by
+            unfold positiveDyadicDecay
+            field_simp [hpow2]
+            ring
+      _ = positiveLargeTailSoloTenSeventhsScalarCoarseTerm a := by
+            unfold positiveLargeTailSoloTenSeventhsScalarCoarseTerm
+            rw [hpow_eq]
+  exact hscaled.trans
+    (by
+      rw [hcoarse]
+      exact positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one ha)
+
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveYgcompBound N a
+          ≤ positiveLargeTailSoloTenSeventhsBound a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound where
+  soloY := hY
+  soloScalar := by
+    intro a N ha hrect
+    exact positiveLargeTailSoloTenSeventhsScalarBudget ha hrect
+
 /-- Reassemble a small-regime large-tail raw product inequality from separate
 upper bounds for the positive `B` and `Q` majorants plus the scalar product
 comparison.  This is a proof-production split of the same raw inequality used

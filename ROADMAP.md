@@ -747,12 +747,22 @@ Status:
       `positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_closed`
       and
       `positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed`.
-      The preferred audit-facing wrappers are now
+      The closed reserve audit-facing wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate`
       and
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate`;
-      they leave only the product bounds, solo bound, and two tempered
-      adjacent-step atoms as generated large-tail fields.  The older staging
+      leave only the product bounds, a solo bound certificate, and two
+      tempered adjacent-step atoms as generated large-tail fields.  Lean now
+      also fixes the solo scalar budget to
+      `positiveLargeTailSoloTenSeventhsBound a N =
+      (29/2) * (a/N) * (10/7)^a`.  The preferred audit-facing wrappers are
+      `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
+      and
+      `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`;
+      they leave product bounds, the analytic estimate
+      `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`,
+      and the two tempered adjacent-step atoms as generated large-tail fields.
+      The older staging
       wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
       and
@@ -776,10 +786,14 @@ Status:
       `--final-tail-tempered-raw-exp-ratio-ten-sevenths-reserve-envelope-bounds`
       and
       `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-reserve-envelope-bounds`.
-      The preferred closed-reserve generator flags are
+      The closed-reserve generator flags are
       `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-bounds`
       and
       `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-bounds`.
+      The preferred closed-reserve solo-envelope generator flags are
+      `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-solo-envelope-bounds`
+      and
+      `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-solo-envelope-bounds`.
       If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If
