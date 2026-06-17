@@ -173,7 +173,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   splits the six candidate entropy-reserve fields into separate atomic
   one-dimensional inequality families.  The finite generator can target these
   split final-theorem interfaces with `--emit-final --final-tail-parts` or
-  `--emit-final --final-tail-atomic-parts`.  When
+  `--emit-final --final-tail-atomic-parts`; use repeated `--extra-import`
+  flags when the atom theorems live in separately built Lean modules.  When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone
   supplies both row covers from `Prop51.positiveSaddleFixedRowChunks`.  When a

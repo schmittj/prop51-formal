@@ -621,7 +621,9 @@ Status:
       candidate entropy-reserve fields into atomic small-step,
       lower-tempered-step, upper-tempered-step, and three reserve-family
       certificates; emit final theorems against it with
-      `--emit-final --final-tail-atomic-parts`.
+      `--emit-final --final-tail-atomic-parts`.  If generated atom theorems
+      are split over separate Lean modules, pass repeated `--extra-import`
+      options when emitting the assembly theorem.
       If common fixed product-row and tangent-row lengths are enough, use the
       `PositiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedProductTangentRowNChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
       wrapper.  If one common product row length is enough and tangent checks

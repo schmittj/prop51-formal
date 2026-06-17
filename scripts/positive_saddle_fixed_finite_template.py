@@ -59,6 +59,9 @@ import sys
 
 
 LEAN_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_']*$")
+LEAN_MODULE_RE = re.compile(
+    r"^[A-Za-z_][A-Za-z0-9_']*(\.[A-Za-z_][A-Za-z0-9_']*)*$"
+)
 
 
 def positive_nat(text: str) -> int:
@@ -84,6 +87,12 @@ def nonnegative_nat(text: str) -> int:
 def lean_ident(text: str) -> str:
     if not LEAN_IDENT_RE.match(text):
         raise argparse.ArgumentTypeError(f"{text!r} is not a Lean identifier")
+    return text
+
+
+def lean_module(text: str) -> str:
+    if not LEAN_MODULE_RE.match(text):
+        raise argparse.ArgumentTypeError(f"{text!r} is not a Lean module name")
     return text
 
 
@@ -149,6 +158,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         type=lean_ident,
         default=None,
         help="Lean theorem name for the generated finite certificate",
+    )
+    parser.add_argument(
+        "--extra-import",
+        action="append",
+        default=[],
+        type=lean_module,
+        help=(
+            "additional Lean module to import in generated output; repeat for "
+            "assembled certificates that depend on separately built atom files"
+        ),
     )
     parser.add_argument(
         "--emit-final",
@@ -578,9 +597,14 @@ def exact_case_tree_lines(
     return lines
 
 
-def emit_header() -> list[str]:
+def emit_header(args: argparse.Namespace | None = None) -> list[str]:
+    imports = ["Prop51.Main"]
+    if args is not None:
+        for module in args.extra_import:
+            if module not in imports:
+                imports.append(module)
     return [
-        "import Prop51.Main",
+        *(f"import {module}" for module in imports),
         "",
         "namespace Prop51",
         "",
@@ -728,7 +752,7 @@ def single_chunk_theorem_lines(
 
 
 def emit_single_chunk(args: argparse.Namespace) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         single_chunk_theorem_lines(
             args,
@@ -924,6 +948,7 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "strategy": args.strategy,
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
+        "extra_imports": args.extra_import,
         "total": len(specs),
         "counts": counts,
         "chunks": chunks,
@@ -932,7 +957,7 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
 
 
 def emit_single_chunk_suite(args: argparse.Namespace) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         [
             "",
@@ -1488,7 +1513,7 @@ def emit_all_chunks(args: argparse.Namespace) -> str:
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
 
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         [
             f"theorem {name} :",
@@ -1540,7 +1565,7 @@ def emit_split_fields(args: argparse.Namespace) -> str:
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
 
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         [
             f"theorem {name} :",
@@ -1611,7 +1636,7 @@ def emit_cell_tangent(args: argparse.Namespace) -> str:
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
 
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         [
             f"theorem {name}",
@@ -1686,7 +1711,7 @@ def emit_chunked_tangent(args: argparse.Namespace) -> str:
     name = args.name
     final_name = f"coefficientNegativity_of_{name}"
 
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         [
             f"theorem {name} :",
@@ -1881,7 +1906,7 @@ def product_n_chunked_tangent_theorem_lines(args: argparse.Namespace) -> list[st
 
 
 def emit_product_n_chunked_tangent(args: argparse.Namespace) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(product_n_chunked_tangent_theorem_lines(args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
@@ -2413,14 +2438,14 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
 
 
 def emit_product_tangent_solo_n_chunked(args: argparse.Namespace) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(product_tangent_solo_n_chunked_theorem_lines(args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
 
 
 def emit_product_nk_tangent_solo_n_chunked(args: argparse.Namespace) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(product_nk_tangent_solo_n_chunked_theorem_lines(args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
@@ -2429,7 +2454,7 @@ def emit_product_nk_tangent_solo_n_chunked(args: argparse.Namespace) -> str:
 def emit_combined_product_nk_tangent_solo_n_chunked(
     args: argparse.Namespace,
 ) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(combined_product_nk_tangent_solo_n_chunked_theorem_lines(args))
     lines.extend(["", "end Prop51", ""])
     return "\n".join(lines)
@@ -2438,7 +2463,7 @@ def emit_combined_product_nk_tangent_solo_n_chunked(
 def emit_combined_product_nk_tangent_solo_n_fixed_edge_k_chunked(
     args: argparse.Namespace,
 ) -> str:
-    lines = emit_header()
+    lines = emit_header(args)
     lines.extend(
         combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(args)
     )
