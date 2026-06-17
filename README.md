@@ -55,16 +55,20 @@ All Lean proofs are sorry-free.  Headline theorems:
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
 * **Canonical remaining proof-facing route**:
-  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`
   is the intended final conditional endpoint for `a ≥ 401`: it combines the
-  corrected fixed-edge combined-product finite-window certificate with
+  corrected row-active fixed-edge combined-product finite-window certificate
+  with
   `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate`,
   separating product bounds, solo bounds, and the one-dimensional large-tail
   candidate atoms.  This Lean interface intentionally refines the LaTeX
   raw-cleared adjacent-step presentation: the small step is the closed
   raw-base half certificate, and the two tempered step atoms are quotient-form
   raw-exp ratio targets.  It converts back to the atomic-bounds route
-  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
+  The non-active fixed-edge route is retained as an audit/profiling sibling;
+  the active wrapper is a Lean proof-production optimization of the same
+  finite-window inequalities.
   Older long-named capstones below are retained as audit and profiling
   alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
@@ -193,9 +197,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate.  This records a proof-production optimization beyond the
   TeX-style fixed global cover; the generator emits this route with
   `--active-row-covers`, including active manifests and active shard slices.
-  Final assembly adapters are available for the base large-tail audit, refined
-  atomic bounds, and the preferred quotient/crossmul ten-sevenths
-  closed-reserve solo-envelope tail shapes.  The
+  Final assembly adapters are available for the base large-tail audit, atomic
+  bounds, refined atomic bounds, and the preferred quotient/crossmul
+  ten-sevenths closed-reserve solo-envelope tail shapes.  The
   remaining large-tail inputs can also be supplied through
   `Prop51.PositiveSaddleLargeTailPartsAuditCertificate`, which splits the
   product-small, product-tempered, solo, adjacent-step, and unit-reserve
