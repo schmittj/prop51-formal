@@ -7543,6 +7543,106 @@ theorem expTerm_sub_le_shift_partialExpUpper
     _ ≤ (z - y) * partialExpUpper z T :=
         mul_le_mul_of_nonneg_left hterm hd0
 
+/-- Prefix version of the upper-endpoint first-order shift bound. -/
+theorem partialExpPrefix_sub_le_shift_prefix_deriv_upper
+    {y z : ℚ} (hy : 0 ≤ y) (hyz : y ≤ z) :
+    ∀ T : Nat,
+      (∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+        - (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ))
+      ≤ (z - y) *
+          (∑ n ∈ Finset.range (T - 1), z^n / (n.factorial : ℚ))
+  | 0 => by simp
+  | T + 1 => by
+      by_cases hT0 : T = 0
+      · subst T
+        simp
+      · have hTpos : 1 ≤ T := by omega
+        have ih :=
+          partialExpPrefix_sub_le_shift_prefix_deriv_upper
+            (y := y) (z := z) hy hyz T
+        have htop :=
+          expTerm_sub_le_shift_deriv_upper
+            (y := y) (z := z) (n := T) hy hyz hTpos
+        have htop' :
+            z^T / (T.factorial : ℚ) - y^T / (T.factorial : ℚ)
+              ≤ (z - y) *
+                (z^(T-1) / ((T-1).factorial : ℚ)) := by
+          calc
+            z^T / (T.factorial : ℚ) - y^T / (T.factorial : ℚ)
+                ≤ (z - y) * z^(T-1) /
+                    ((T-1).factorial : ℚ) := htop
+            _ = (z - y) *
+                (z^(T-1) / ((T-1).factorial : ℚ)) := by ring
+        have hprefix :
+            (∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+              =
+            (∑ n ∈ Finset.range (T - 1), z^n / (n.factorial : ℚ))
+              + z^(T-1) / ((T-1).factorial : ℚ) := by
+          calc
+            (∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+                =
+              ∑ n ∈ Finset.range ((T - 1) + 1),
+                z^n / (n.factorial : ℚ) := by
+                  exact congrArg
+                    (fun q : Nat =>
+                      ∑ n ∈ Finset.range q,
+                        z^n / (n.factorial : ℚ))
+                    (by omega : T = (T - 1) + 1)
+            _ =
+              (∑ n ∈ Finset.range (T - 1),
+                  z^n / (n.factorial : ℚ))
+                + z^(T-1) / ((T-1).factorial : ℚ) := by
+                  rw [Finset.sum_range_succ]
+        rw [Finset.sum_range_succ, Finset.sum_range_succ]
+        rw [show T + 1 - 1 = T by omega]
+        rw [hprefix]
+        nlinarith [ih, htop']
+
+theorem partialExpPrefix_sub_le_shift_partialExpUpper
+    {y z : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hyz : y ≤ z) (hzT : z < (T : ℚ)) :
+    (∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+        - (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ))
+      ≤ (z - y) * partialExpUpper z T := by
+  have hz0 : 0 ≤ z := hy.trans hyz
+  have hd0 : 0 ≤ z - y := by linarith
+  have hprefix :=
+    partialExpPrefix_sub_le_shift_prefix_deriv_upper
+      (y := y) (z := z) hy hyz T
+  have hTpos : 0 < T := by
+    by_contra hnot
+    have hzero : T = 0 := Nat.eq_zero_of_not_pos hnot
+    subst T
+    norm_num at hzT
+    linarith
+  have hTQ : (0 : ℚ) < (T : ℚ) := by exact_mod_cast hTpos
+  have hden : 0 < 1 - z / (T : ℚ) := by
+    rw [sub_pos, div_lt_one hTQ]
+    exact hzT
+  have hsum_le :
+      (∑ n ∈ Finset.range (T - 1), z^n / (n.factorial : ℚ))
+        ≤ ∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ) := by
+    exact Finset.sum_le_sum_of_subset_of_nonneg
+      (fun n hn => Finset.mem_range.mpr
+        (lt_of_lt_of_le (Finset.mem_range.mp hn) (by omega : T - 1 ≤ T)))
+      (fun n _ _ => by positivity)
+  have htail0 :
+      0 ≤ (z^T / (T.factorial : ℚ)) *
+          (1 / (1 - z / (T : ℚ))) := by
+    positivity
+  have hprefix_le :
+      (∑ n ∈ Finset.range (T - 1), z^n / (n.factorial : ℚ))
+        ≤ partialExpUpper z T := by
+    unfold partialExpUpper
+    linarith
+  calc
+    (∑ n ∈ Finset.range T, z^n / (n.factorial : ℚ))
+        - (∑ n ∈ Finset.range T, y^n / (n.factorial : ℚ))
+        ≤ (z - y) *
+          (∑ n ∈ Finset.range (T - 1), z^n / (n.factorial : ℚ)) := hprefix
+    _ ≤ (z - y) * partialExpUpper z T :=
+        mul_le_mul_of_nonneg_left hprefix_le hd0
+
 /-- The shifted finite prefix gains enough to cover multiplication by
 `1+d`, up to the final boundary term. -/
 theorem partialExpPrefix_mul_one_add_le_add_top {y d : ℚ} {T : Nat}
