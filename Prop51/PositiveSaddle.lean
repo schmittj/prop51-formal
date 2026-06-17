@@ -13957,6 +13957,54 @@ theorem positiveTemperedLowerSharpExpQuotientTarget_budget
     positiveLargeExpTemperedRatio
   field_simp [hrSuccPos.ne', hjpos.ne', hdenPos.ne']
 
+/-- Three-step growth budget for the worst ten-offset sharp lower target.
+
+This is the one-variable scalar inequality left after replacing
+`posJ a (a/3+t)/(a/3+t+1)` by the uniform top-strip lower envelope
+`((2a/3)-9)/((a/3)+10)`. -/
+theorem positiveTemperedLowerSharpTopOffsetThreeStepBudgetAux
+    {a : Nat} (ha : 3000 ≤ a) :
+    (1 : ℚ) ≤
+      ((1 / 2 : ℚ) *
+        (((2 * (a : ℚ)) / 3 - 9) / ((a : ℚ) / 3 + 10)) *
+        (((4 * (a : ℚ) - 1) / (4 * (a : ℚ)))) *
+        (1 + (175 : ℚ) / (12 * (a : ℚ)))^3) := by
+  have haQ : (3000 : ℚ) ≤ a := by exact_mod_cast ha
+  have haPos : (0 : ℚ) < a := by nlinarith
+  have h1 : (0 : ℚ) < (a : ℚ) / 3 + 10 := by positivity
+  have h4a : (0 : ℚ) < 4 * (a : ℚ) := by positivity
+  have h12a : (0 : ℚ) < 12 * (a : ℚ) := by positivity
+  have hnum :
+      (0 : ℚ) ≤
+        550656 * (a : ℚ)^3 - 76358800 * (a : ℚ)^2
+          - 559763750 * (a : ℚ) + 144703125 := by
+    have hb : 0 ≤ (a : ℚ) - 3000 := by nlinarith
+    have hEq :
+        550656 * (a : ℚ)^3 - 76358800 * (a : ℚ)^2
+            - 559763750 * (a : ℚ) + 144703125
+          =
+        550656 * ((a : ℚ) - 3000)^3
+          + 4879545200 * ((a : ℚ) - 3000)^2
+          + 14408999436250 * ((a : ℚ) - 3000)
+          + 14178803653453125 := by
+      ring
+    rw [hEq]
+    positivity
+  have hdiff :
+      ((1 / 2 : ℚ) *
+          (((2 * (a : ℚ)) / 3 - 9) / ((a : ℚ) / 3 + 10)) *
+          (((4 * (a : ℚ) - 1) / (4 * (a : ℚ)))) *
+          (1 + (175 : ℚ) / (12 * (a : ℚ)))^3) - 1
+        =
+      (550656 * (a : ℚ)^3 - 76358800 * (a : ℚ)^2
+          - 559763750 * (a : ℚ) + 144703125) /
+        (13824 * (a : ℚ)^4 * ((a : ℚ) + 30)) := by
+    field_simp [haPos.ne', h1.ne', h4a.ne', h12a.ne']
+    ring
+  rw [← sub_nonneg]
+  rw [hdiff]
+  positivity
+
 theorem positiveTemperedLowerSharpExpQuotientTarget_ge_one_of_gap
     {a r : Nat} (ha : 0 < a)
     (hgap :
