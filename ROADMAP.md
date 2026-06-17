@@ -907,9 +907,10 @@ Status:
       denominator prefix instead of expanding the full `8a` quotient shell.
       `PositiveSaddlePrefixExpRatio.lean`,
       `PositiveSaddlePrefixExpRatio2.lean`, and
-      `PositiveSaddlePrefixExpRatio3.lean` now contain the first twelve
-      generated 50-row chunks (`a = 2001..2600`, all `t < 10`); the remaining
-      exp-ratio production work is the analogous eight 50-row chunks and
+      `PositiveSaddlePrefixExpRatio3.lean`, and
+      `PositiveSaddlePrefixExpRatio4.lean` now contain the first sixteen
+      generated 50-row chunks (`a = 2001..2800`, all `t < 10`); the remaining
+      exp-ratio production work is the analogous four 50-row chunks and
       then the final `PositiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioChunksCertificate`
       packager.
       The older denominator-cleared raw-exp wrappers remain available through
