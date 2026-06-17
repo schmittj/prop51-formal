@@ -23,3 +23,32 @@ jobs:
       - name: Python certificate scripts (fast layer)
         run: |
           python3 scripts/positive_saddle_scan.py --quick
+      - name: Positive saddle generator smoke
+        run: |
+          python3 -m py_compile scripts/positive_saddle_fixed_finite_template.py
+          common=(
+            --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked
+            --product-row-len 1600
+            --tangent-row-len 1600
+            --solo-saddle-row-len 1600
+            --solo-budget-row-len 1600
+            --edge-row-len 1600
+            --n-len 21600
+            --product-k-len 1800
+            --tangent-n-len 21600
+            --solo-saddle-n-len 21600
+            --solo-budget-n-len 21600
+            --tangent-k-len 155
+            --edge-k-len 1800
+            --single-chunk-prefix ciSmokeChunk
+            --name ciSmokeCert
+          )
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-single-chunk-manifest | grep '"total": 5'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
+            --extra-import Prop51.Generated.CIAtoms | grep 'Shard 2 of 2'
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
+            --extra-import Prop51.Generated.CIAtoms | \
+            grep 'import Prop51.Generated.CIAtoms'
