@@ -184,9 +184,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   splits the six candidate entropy-reserve fields into separate atomic
   one-dimensional inequality families, while
   `Prop51.PositiveSaddleLargeTailAtomicBoundsAuditCertificate` bundles the
-  product/solo bound certificates with those atomic candidate fields.  The
-  finite generator can target these split final-theorem interfaces with
-  `--emit-final --final-tail-parts`, `--final-tail-bounds-parts`,
+  product/solo bound certificates with those atomic candidate fields.  Existing
+  grouped raw-cleared unit-reserve proofs can also be split back into those
+  atomic candidate fields, so either proof-production shape can feed the final
+  route.  The finite generator can target these split final-theorem interfaces
+  with `--emit-final --final-tail-parts`, `--final-tail-bounds-parts`,
   `--final-tail-atomic-parts`, or `--final-tail-atomic-bounds`; use repeated
   `--extra-import` flags when the atom theorems live in separately built Lean
   modules.

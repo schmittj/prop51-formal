@@ -636,9 +636,12 @@ Status:
       is the fully split product/solo/candidate wrapper; emit final theorems
       against the atomic route with
       `--emit-final --final-tail-atomic-parts` or
-      `--final-tail-atomic-bounds`.  If generated atom theorems are split
-      over separate Lean modules, pass repeated `--extra-import` options when
-      emitting the assembly theorem.  The generator also has
+      `--final-tail-atomic-bounds`.  Grouped raw-cleared unit-reserve
+      candidate proofs can now be split back into the six atomic fields, so
+      existing grouped proof production can still feed this final route.  If
+      generated atom theorems are split over separate Lean modules, pass
+      repeated `--extra-import` options when emitting the assembly theorem.
+      The generator also has
       `--emit-single-chunk-shard --shard-index i --shard-count n` for
       balanced atom modules in the same global order as the manifest.
       If common fixed product-row and tangent-row lengths are enough, use the

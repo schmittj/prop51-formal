@@ -10724,6 +10724,37 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate :
               positiveTemperedLargeExp a (posKmax a))
         ≤ 1
 
+theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toSmallRawStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
+    PositiveSaddleLargeTailCandidateSmallRawStepCertificate where
+  smallRawStepCleared := cert.smallRawStepCleared
+
+theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toTemperedLowerRawStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawStepCertificate where
+  temperedLowerRawStepCleared := cert.temperedLowerRawStepCleared
+
+theorem PositiveSaddleLargeTailCandidateRawClearedStepCertificate.toTemperedUpperReverseRawStepCertificate
+    (cert : PositiveSaddleLargeTailCandidateRawClearedStepCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawStepCertificate where
+  temperedUpperReverseRawStepCleared :=
+    cert.temperedUpperReverseRawStepCleared
+
+theorem PositiveSaddleLargeTailCandidateUnitReserveCertificate.toSmallFirstReserveCertificate
+    (cert : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveCertificate where
+  smallFirstReserveUnit := cert.smallFirstReserveUnit
+
+theorem PositiveSaddleLargeTailCandidateUnitReserveCertificate.toTemperedLowerFirstReserveCertificate
+    (cert : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate where
+  temperedLowerFirstReserveUnit := cert.temperedLowerFirstReserveUnit
+
+theorem PositiveSaddleLargeTailCandidateUnitReserveCertificate.toTemperedUpperLastReserveCertificate
+    (cert : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperLastReserveCertificate where
+  temperedUpperLastReserveUnit := cert.temperedUpperLastReserveUnit
+
 /-- Atomic candidate large-tail entropy reserve interface.  This is only a
 proof-production split of the six fields in
 `PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate`;
@@ -10773,6 +10804,23 @@ theorem positiveSaddleLargeTailCandidateUnitReserveCertificate_of_atomic
   temperedUpperLastReserveUnit :=
     temperedUpper.temperedUpperLastReserveUnit
 
+/-- Splits grouped candidate step/reserve targets into the atomic interface.
+This is the reverse proof-production adapter to
+`PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedUnitReserveBoundsCertificate`. -/
+theorem positiveSaddleLargeTailCandidateAtomicCertificate_of_parts
+    (steps : PositiveSaddleLargeTailCandidateRawClearedStepCertificate)
+    (reserves : PositiveSaddleLargeTailCandidateUnitReserveCertificate) :
+    PositiveSaddleLargeTailCandidateAtomicCertificate where
+  smallRawStep := steps.toSmallRawStepCertificate
+  temperedLowerRawStep := steps.toTemperedLowerRawStepCertificate
+  temperedUpperReverseRawStep :=
+    steps.toTemperedUpperReverseRawStepCertificate
+  smallFirstReserve := reserves.toSmallFirstReserveCertificate
+  temperedLowerFirstReserve :=
+    reserves.toTemperedLowerFirstReserveCertificate
+  temperedUpperLastReserve :=
+    reserves.toTemperedUpperLastReserveCertificate
+
 /-- Reassembles the atomic candidate adjacent-step fields. -/
 theorem PositiveSaddleLargeTailCandidateAtomicCertificate.toRawClearedStepCertificate
     (cert : PositiveSaddleLargeTailCandidateAtomicCertificate) :
@@ -10802,6 +10850,31 @@ theorem positiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitR
   temperedUpperReverseRawStepCleared :=
     steps.temperedUpperReverseRawStepCleared
   temperedUpperLastReserveUnit := reserves.temperedUpperLastReserveUnit
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toCandidateRawClearedStepCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleLargeTailCandidateRawClearedStepCertificate where
+  smallRawStepCleared := cert.smallRawStepCleared
+  temperedLowerRawStepCleared := cert.temperedLowerRawStepCleared
+  temperedUpperReverseRawStepCleared :=
+    cert.temperedUpperReverseRawStepCleared
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toCandidateUnitReserveCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleLargeTailCandidateUnitReserveCertificate where
+  smallFirstReserveUnit := cert.smallFirstReserveUnit
+  temperedLowerFirstReserveUnit := cert.temperedLowerFirstReserveUnit
+  temperedUpperLastReserveUnit := cert.temperedUpperLastReserveUnit
+
+theorem PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate.toCandidateAtomicCertificate
+    (cert :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleLargeTailCandidateAtomicCertificate :=
+  positiveSaddleLargeTailCandidateAtomicCertificate_of_parts
+    cert.toCandidateRawClearedStepCertificate
+    cert.toCandidateUnitReserveCertificate
 
 /-- Reassembles the atomic candidate entropy-reserve target into the existing
 raw-cleared unit-reserve certificate. -/
