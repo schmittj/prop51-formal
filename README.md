@@ -382,6 +382,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   and
   `Prop51.positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopExpTarget_upperExpTarget_temperedReserveEnvelopes`
   therefore take no separate lower raw-side certificate.
+  At the product/solo-bounds audit level, the corresponding reduced route is
+  exposed by
+  `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetExpTargetTemperedReserveBoundsAuditCertificate`
+  and its envelope, `(10/7)^a`, closed-reserve, and solo-envelope variants.
+  These Lean interfaces are slightly more fine-grained than the TeX
+  raw-cleared adjacent-step statement: the lower raw power-product bound is
+  proved once in Lean, and the remaining lower large-exp work is exactly the
+  ten top-strip offset families.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
@@ -414,7 +422,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   or
   `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-solo-envelope-bounds`
   for the preferred variants where the endpoint reserve budgets and the solo
-  scalar budget are filled in Lean.
+  scalar budget are filled in Lean.  The sharper lower top-strip route uses
+  `--final-tail-tempered-sharp-top-offset-exp-target-tempered-reserve-bounds`,
+  `--final-tail-tempered-sharp-top-offset-exp-target-tempered-reserve-envelope-bounds`,
+  `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-reserve-envelope-bounds`,
+  `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-bounds`,
+  or the most reduced
+  `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

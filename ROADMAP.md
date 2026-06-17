@@ -835,7 +835,22 @@ Status:
       separate lower raw-side certificate.  The top strip is also exposed as
       `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetExpTargetCrossmulCertificate`,
       reducing it to the ten offset families `r = a/3 + t`, `t < 10`.
-      The corresponding reduced audit wrappers and generator flags are
+      The corresponding sharp-top-offset audit wrappers are
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetExpTargetTemperedReserveBoundsAuditCertificate`
+      and
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetExpTargetTemperedReserveEnvelopeBoundsAuditCertificate`,
+      with concrete `(10/7)^a`, closed-reserve, and solo-envelope variants.
+      These are a Lean-side refinement of the TeX raw-cleared adjacent-step
+      package: the lower raw power-product estimate is closed once, leaving
+      only the ten lower top-strip large-exp offset families and the upper
+      reverse large-exp target.  The corresponding generator flags are
+      `--final-tail-tempered-sharp-top-offset-exp-target-tempered-reserve-bounds`,
+      `--final-tail-tempered-sharp-top-offset-exp-target-tempered-reserve-envelope-bounds`,
+      `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-reserve-envelope-bounds`,
+      `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-bounds`,
+      and
+      `--final-tail-tempered-sharp-top-offset-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+      The older denominator-cleared raw-exp wrappers remain available through
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,
       `--final-tail-tempered-raw-exp-crossmul-tempered-reserve-bounds`, and
