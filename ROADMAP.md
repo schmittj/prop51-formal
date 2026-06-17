@@ -571,8 +571,10 @@ Status:
       checks; add `--manifest-shard-count n` to include the balanced shard
       start/stop plan in that JSON.  Before asking for the full manifest,
       `--dry-run-counts` prints the same field-level atom counts from closed
-      formulas without materializing the atom list; use this first when
-      changing row, `N`, or `k` lengths.  The finer Lean endpoint
+      formulas without materializing the atom list; `--dry-run-active-counts`
+      additionally reports row-local active-geometry estimates and
+      skipped-vs-global totals, which is useful when choosing row, `N`, or
+      `k` lengths before committing to a global manifest.  The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
       `N`-chunk index and is emitted with

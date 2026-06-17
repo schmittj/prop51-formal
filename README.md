@@ -141,7 +141,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   certificate in one Lean module.  Use `--emit-single-chunk-manifest` to list
   the same atom names, global atom indices, and per-atom emit commands as JSON
   for batch proof production; add `--manifest-shard-count n` to include the
-  balanced shard start/stop plan in the same file.  Lean
+  balanced shard start/stop plan in the same file.  Use
+  `--dry-run-active-counts` before manifest production to estimate how many
+  row-local atoms can actually meet the finite positive rectangle; this is a
+  planning estimate and does not change the generated global atom order.  Lean
   also exposes
   `Prop51.PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`,
   which further splits tangent and displayed-solo checks by fixed `N`-chunk
@@ -356,7 +359,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
   emitting a full manifest, run the same command with `--dry-run-counts` to
-  print formula-based atom counts without materializing the atom list.
+  print formula-based atom counts without materializing the atom list, or with
+  `--dry-run-active-counts` to also report the row-local active-geometry
+  estimate and the skipped-vs-global totals.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.
