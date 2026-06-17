@@ -15140,6 +15140,241 @@ theorem positiveTemperedLargeExp_upperReverseExpQuotientTargetCrossmul_of_upper_
           positiveTemperedLargeExp a r :=
         mul_le_mul_of_nonneg_right htarget hExp0
 
+/-- Explicit exponent-shift budget for the upper-middle tempered reverse
+branch.
+
+This is a Lean-side bookkeeping constant for the part of the TeX argument
+that treats the upper-middle exponential quotient by a short Taylor/ratio
+estimate.  The theorem below proves that moving from `r` back to `r-1` changes
+the rational exponent by at most `45/a` throughout the middle band. -/
+def positiveTemperedUpperMiddleExpShiftBudget (a : Nat) : ℚ :=
+  (45 : ℚ) / (a : ℚ)
+
+theorem positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
+    {a r : Nat} (ha : 2000 < a) (hr1 : 1 ≤ r)
+    (hrhi : r ≤ posKmax a) :
+    positiveTemperedExponentUpper a r
+        + positiveTemperedUpperMiddleExpShiftBudget a
+      < ((8 * a : Nat) : ℚ) := by
+  have hrQ : (0 : ℚ) < (r : ℚ) := by exact_mod_cast hr1
+  have hratioK : (a : ℚ) / (r : ℚ) ≤ (a : ℚ) := by
+    rw [div_le_iff₀ hrQ]
+    have hrQge : (1 : ℚ) ≤ (r : ℚ) := by exact_mod_cast hr1
+    nlinarith
+  have hjpos : 0 < posJ a r :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hrhi
+  have hjQ : (0 : ℚ) < (posJ a r : ℚ) := by exact_mod_cast hjpos
+  have hratioJ : (a : ℚ) / (posJ a r : ℚ) ≤ 10 := by
+    rw [div_le_iff₀ hjQ]
+    exact_mod_cast self_le_ten_mul_posJ_of_le_posKmax hrhi
+  have haQ : (2000 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have hbudget : positiveTemperedUpperMiddleExpShiftBudget a ≤ 1 := by
+    unfold positiveTemperedUpperMiddleExpShiftBudget
+    rw [div_le_one]
+    · exact_mod_cast (by omega : 45 ≤ a)
+    · exact_mod_cast (by omega : 0 < a)
+  calc
+    positiveTemperedExponentUpper a r
+        + positiveTemperedUpperMiddleExpShiftBudget a
+        ≤ ((1/5) * (a : ℚ) + (57/10) * (a : ℚ)
+            + (29/10) * 10 + 2) + 1 := by
+          unfold positiveTemperedExponentUpper
+          gcongr
+    _ < ((8 * a : Nat) : ℚ) := by
+          norm_num
+          nlinarith
+
+set_option maxHeartbeats 800000 in
+/-- Uniform exponent-gap estimate on the remaining upper-middle band.
+
+The exact difference is
+`(a/10) * (57/(r(r-1)) - 29/(j(j+1)))`, with `j = a-r`.  The proof uses the
+middle-band lower edge `r ≥ a/3 + 12` to bound the positive part and the
+coarser envelope `j(j+1) ≤ ((2a/3)-10)^2` for the negative correction. -/
+theorem positiveTemperedExponentUpper_upperMiddlePred_le_shiftBudget
+    {a r : Nat} (ha : 2000 < a)
+    (hrlo : positiveLargeExpTemperedSplit a + 1 < r)
+    (hrhi : r ≤ posKmax a) (_hmid : 5 * r < 3 * a) :
+    positiveTemperedExponentUpper a (r - 1)
+      ≤ positiveTemperedExponentUpper a r
+        + positiveTemperedUpperMiddleExpShiftBudget a := by
+  have haPosNat : 0 < a := by omega
+  have hrm1posNat : 0 < r - 1 := by omega
+  have hleA : r ≤ a := by
+    unfold posKmax at hrhi
+    omega
+  have hjposNat : 0 < posJ a r :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hrhi
+  have hjPrev : posJ a (r - 1) = posJ a r + 1 := by
+    unfold posJ
+    omega
+  have hrQpos : (0 : ℚ) < (r : ℚ) := by exact_mod_cast (by omega : 0 < r)
+  have hrm1Qpos : (0 : ℚ) < ((r - 1 : Nat) : ℚ) := by
+    exact_mod_cast hrm1posNat
+  have hjQpos : (0 : ℚ) < ((posJ a r : Nat) : ℚ) := by
+    exact_mod_cast hjposNat
+  have hjp1Qpos : (0 : ℚ) < ((posJ a r + 1 : Nat) : ℚ) := by positivity
+  have hdiff_eq :
+      positiveTemperedExponentUpper a (r - 1)
+          - positiveTemperedExponentUpper a r
+        = ((a : ℚ) / 10) *
+          (57 / ((r : ℚ) * ((r - 1 : Nat) : ℚ)) -
+            29 / (((posJ a r : Nat) : ℚ) *
+              ((posJ a r + 1 : Nat) : ℚ))) := by
+    unfold positiveTemperedExponentUpper
+    rw [hjPrev]
+    field_simp [hrQpos.ne', hrm1Qpos.ne', hjQpos.ne', hjp1Qpos.ne']
+    rw [show ((r - 1 : Nat) : ℚ) = (r : ℚ) - 1 by
+      rw [Nat.cast_sub (by omega : 1 ≤ r)]
+      norm_num]
+    rw [show ((posJ a r + 1 : Nat) : ℚ) = (posJ a r : ℚ) + 1 by norm_num]
+    ring
+  have hdiv_lt : (a : ℚ) < 3 * (((a / 3 : Nat) : ℚ) + 1) := by
+    have hnat : a < 3 * (a / 3 + 1) := by
+      simpa [Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using
+        (Nat.div_lt_iff_lt_mul (by norm_num : 0 < 3)).mp
+          (Nat.lt_succ_self (a / 3))
+    exact_mod_cast hnat
+  have hfloor_lower : (a : ℚ) / 3 - 1 ≤ ((a / 3 : Nat) : ℚ) := by
+    nlinarith
+  have hrNatLower : a / 3 + 12 ≤ r := by
+    unfold positiveLargeExpTemperedSplit at hrlo
+    omega
+  have hr_lower : (a : ℚ) / 3 + 11 ≤ (r : ℚ) := by
+    have hcast : ((a / 3 : Nat) : ℚ) + 12 ≤ (r : ℚ) := by
+      exact_mod_cast hrNatLower
+    nlinarith
+  have hrm1_lower : (a : ℚ) / 3 + 10 ≤ ((r - 1 : Nat) : ℚ) := by
+    have hcast : ((r - 1 : Nat) : ℚ) = (r : ℚ) - 1 := by
+      rw [Nat.cast_sub (by omega : 1 ≤ r)]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hjCast : ((posJ a r : Nat) : ℚ) = (a : ℚ) - (r : ℚ) := by
+    unfold posJ
+    rw [Nat.cast_sub hleA]
+  have hj_upper : ((posJ a r : Nat) : ℚ) ≤ (2 * (a : ℚ)) / 3 - 11 := by
+    rw [hjCast]
+    nlinarith
+  have hjp1_upper :
+      ((posJ a r + 1 : Nat) : ℚ) ≤ (2 * (a : ℚ)) / 3 - 10 := by
+    norm_num
+    nlinarith
+  have hRpos : (0 : ℚ) < (a : ℚ) / 3 + 11 := by positivity
+  have hRm1pos : (0 : ℚ) < (a : ℚ) / 3 + 10 := by positivity
+  have hJenvpos : (0 : ℚ) < (2 * (a : ℚ)) / 3 - 10 := by
+    have haQ : (2000 : ℚ) < a := by exact_mod_cast ha
+    nlinarith
+  have hrprod_lower :
+      ((a : ℚ) / 3 + 11) * ((a : ℚ) / 3 + 10)
+        ≤ (r : ℚ) * ((r - 1 : Nat) : ℚ) := by
+    exact mul_le_mul hr_lower hrm1_lower (le_of_lt hRm1pos) (by positivity)
+  have hjprod_upper :
+      ((posJ a r : Nat) : ℚ) * ((posJ a r + 1 : Nat) : ℚ)
+        ≤ ((2 * (a : ℚ)) / 3 - 10)^2 := by
+    have hj_upper' :
+        ((posJ a r : Nat) : ℚ) ≤ (2 * (a : ℚ)) / 3 - 10 := by
+      linarith
+    have hmul :=
+      mul_le_mul hj_upper' hjp1_upper (by positivity) (le_of_lt hJenvpos)
+    simpa [sq] using hmul
+  have hposRprod :
+      (0 : ℚ) < ((a : ℚ) / 3 + 11) * ((a : ℚ) / 3 + 10) :=
+    mul_pos hRpos hRm1pos
+  have hposJprod :
+      (0 : ℚ) < ((posJ a r : Nat) : ℚ) * ((posJ a r + 1 : Nat) : ℚ) :=
+    mul_pos hjQpos hjp1Qpos
+  have hposTerm :
+      57 / ((r : ℚ) * ((r - 1 : Nat) : ℚ))
+        ≤ 513 / (((a : ℚ) + 33) * ((a : ℚ) + 30)) := by
+    have hrec := one_div_le_one_div_of_le hposRprod hrprod_lower
+    have hscale :=
+      mul_le_mul_of_nonneg_left hrec (by norm_num : (0 : ℚ) ≤ 57)
+    calc
+      57 / ((r : ℚ) * ((r - 1 : Nat) : ℚ))
+          ≤ 57 / (((a : ℚ) / 3 + 11) * ((a : ℚ) / 3 + 10)) := by
+            simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using hscale
+      _ = 513 / (((a : ℚ) + 33) * ((a : ℚ) + 30)) := by
+            field_simp
+            ring
+  have hnegTerm :
+      261 / (4 * ((a : ℚ) - 15)^2)
+        ≤ 29 / (((posJ a r : Nat) : ℚ) * ((posJ a r + 1 : Nat) : ℚ)) := by
+    have hrec := one_div_le_one_div_of_le hposJprod hjprod_upper
+    have hscale :=
+      mul_le_mul_of_nonneg_left hrec (by norm_num : (0 : ℚ) ≤ 29)
+    calc
+      261 / (4 * ((a : ℚ) - 15)^2)
+          = 29 / (((2 * (a : ℚ)) / 3 - 10)^2) := by
+            have h15 : ((a : ℚ) - 15) ≠ 0 := by nlinarith [hJenvpos]
+            have hsq :
+                ((2 * (a : ℚ)) / 3 - 10)^2 =
+                  (4 * ((a : ℚ) - 15)^2) / 9 := by
+              ring
+            rw [hsq]
+            field_simp [h15]
+            ring
+      _ ≤ 29 / (((posJ a r : Nat) : ℚ) * ((posJ a r + 1 : Nat) : ℚ)) := by
+            simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using hscale
+  have hcore :
+      57 / ((r : ℚ) * ((r - 1 : Nat) : ℚ)) -
+          29 / (((posJ a r : Nat) : ℚ) *
+              ((posJ a r + 1 : Nat) : ℚ))
+        ≤
+      513 / (((a : ℚ) + 33) * ((a : ℚ) + 30)) -
+          261 / (4 * ((a : ℚ) - 15)^2) := by
+    linarith
+  have hscaledCore :
+      ((a : ℚ) / 10) *
+        (57 / ((r : ℚ) * ((r - 1 : Nat) : ℚ)) -
+          29 / (((posJ a r : Nat) : ℚ) *
+              ((posJ a r + 1 : Nat) : ℚ)))
+      ≤ ((a : ℚ) / 10) *
+        (513 / (((a : ℚ) + 33) * ((a : ℚ) + 30)) -
+          261 / (4 * ((a : ℚ) - 15)^2)) :=
+    mul_le_mul_of_nonneg_left hcore (by positivity)
+  have hscalar :
+      ((a : ℚ) / 10) *
+        (513 / (((a : ℚ) + 33) * ((a : ℚ) + 30)) -
+          261 / (4 * ((a : ℚ) - 15)^2))
+        ≤ (45 : ℚ) / (a : ℚ) := by
+    have haQpos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast haPosNat
+    have h15 : (0 : ℚ) < (a : ℚ) - 15 := by
+      have haQ : (2000 : ℚ) < a := by exact_mod_cast ha
+      nlinarith
+    have h30 : (0 : ℚ) < (a : ℚ) + 30 := by nlinarith
+    have h33 : (0 : ℚ) < (a : ℚ) + 33 := by nlinarith
+    have hnum :
+        (0 : ℚ) ≤
+          (a : ℚ)^4 + 15267 * (a : ℚ)^3 - 157590 * (a : ℚ)^2
+            - 3105000 * (a : ℚ) + 44550000 := by
+      have hb : 0 ≤ (a : ℚ) - 2001 := by
+        have : (2001 : ℚ) ≤ a := by exact_mod_cast (by omega : 2001 ≤ a)
+        linarith
+      have hEq :
+          (a : ℚ)^4 + 15267 * (a : ℚ)^3 - 157590 * (a : ℚ)^2
+              - 3105000 * (a : ℚ) + 44550000
+            = ((a : ℚ) - 2001)^4
+              + 23271 * ((a : ℚ) - 2001)^3
+              + 115514217 * ((a : ℚ) - 2001)^2
+              + 214801493625 * ((a : ℚ) - 2001)
+              + 137714160552678 := by
+        ring
+      rw [hEq]
+      positivity
+    rw [le_div_iff₀ haQpos]
+    field_simp [haQpos.ne', h15.ne', h30.ne', h33.ne']
+    ring_nf
+    nlinarith [hnum]
+  have hdiff_le :
+      positiveTemperedExponentUpper a (r - 1)
+          - positiveTemperedExponentUpper a r
+        ≤ positiveTemperedUpperMiddleExpShiftBudget a := by
+    rw [hdiff_eq]
+    unfold positiveTemperedUpperMiddleExpShiftBudget
+    exact hscaledCore.trans hscalar
+  linarith
+
 /-- Upper-tempered reverse adjacent-step target reduced to one large-exp
 reverse-quotient estimate. -/
 structure PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate :
@@ -15267,6 +15502,70 @@ structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCro
         positiveTemperedLargeExp a (r - 1)
           ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
             positiveTemperedLargeExp a r
+
+/-- Budgeted upper-middle shift certificate.
+
+This interface is intentionally narrower than the TeX prose: Lean has already
+proved the rational exponent gap `E(a,r-1) ≤ E(a,r) + 45/a`, so the remaining
+field is only the generic upper-shift estimate for `partialExpUpper` at that
+budget. -/
+structure PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate :
+    Prop where
+  upperMiddleShiftBudgetCrossmul :
+    ∀ {a r : Nat}, 2000 < a →
+      positiveLargeExpTemperedSplit a + 1 < r → r ≤ posKmax a →
+      5 * r < 3 * a →
+        partialExpUpper
+            (positiveTemperedExponentUpper a r
+              + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a)
+          ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
+            partialExpUpper (positiveTemperedExponentUpper a r) (8 * a)
+
+theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate.toMiddleExpTargetCrossmulCertificate
+    (cert :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleShiftBudgetCertificate) :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate where
+  upperMiddleExpReverseQuotientTargetCrossmul := by
+    intro a r ha hrlo hrhi hmid
+    have hprevMem : r - 1 ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, by omega⟩
+    have hrMem : r ∈ positiveKRange a :=
+      mem_positiveKRange.mpr ⟨by omega, hrhi⟩
+    rcases mem_positiveKRange.mp hprevMem with ⟨hprev1, hprevMax⟩
+    have hprevJ : 0 < posJ a (r - 1) :=
+      posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hprevMax
+    have hgap :
+        positiveTemperedExponentUpper a (r - 1)
+          ≤ positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a :=
+      positiveTemperedExponentUpper_upperMiddlePred_le_shiftBudget
+        ha hrlo hrhi hmid
+    have hcut :
+        positiveTemperedExponentUpper a r
+            + positiveTemperedUpperMiddleExpShiftBudget a
+          < ((8 * a : Nat) : ℚ) :=
+      positiveTemperedExponentUpper_upperMiddleShiftBudget_lt_largeExpCutoff
+        ha (by omega : 1 ≤ r) hrhi
+    have hmono :
+        partialExpUpper (positiveTemperedExponentUpper a (r - 1)) (8 * a)
+          ≤ partialExpUpper
+            (positiveTemperedExponentUpper a r
+              + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) :=
+      partialExpUpper_mono_of_nonneg_le_lt
+        (positiveTemperedExponentUpper_nonneg hprev1 hprevJ) hgap hcut
+    calc
+      positiveTemperedLargeExp a (r - 1)
+          = partialExpUpper (positiveTemperedExponentUpper a (r - 1)) (8 * a) := by
+            rfl
+      _ ≤ partialExpUpper
+            (positiveTemperedExponentUpper a r
+              + positiveTemperedUpperMiddleExpShiftBudget a) (8 * a) := hmono
+      _ ≤ positiveTemperedUpperReverseExpQuotientTarget a r *
+            partialExpUpper (positiveTemperedExponentUpper a r) (8 * a) :=
+            cert.upperMiddleShiftBudgetCrossmul ha hrlo hrhi hmid
+      _ = positiveTemperedUpperReverseExpQuotientTarget a r *
+            positiveTemperedLargeExp a r := by
+            rfl
 
 theorem PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate.toTemperedUpperReverseExpTargetCrossmulCertificate
     (cert :
