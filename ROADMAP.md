@@ -747,7 +747,13 @@ Status:
       `positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_closed`
       and
       `positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed`.
-      The audit-facing wrappers
+      The preferred audit-facing wrappers are now
+      `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate`
+      and
+      `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate`;
+      they leave only the product bounds, solo bound, and two tempered
+      adjacent-step atoms as generated large-tail fields.  The older staging
+      wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
       and
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
@@ -770,6 +776,10 @@ Status:
       `--final-tail-tempered-raw-exp-ratio-ten-sevenths-reserve-envelope-bounds`
       and
       `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-reserve-envelope-bounds`.
+      The preferred closed-reserve generator flags are
+      `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-bounds`
+      and
+      `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-bounds`.
       If a proof already has the core
       `PositiveSaddleLargeTailAuditCertificate`,
       Lean also exposes reverse parts and atomic-parts views for audit.  If

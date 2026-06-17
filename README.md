@@ -273,7 +273,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateReserveEnvelopeCertificate_temperedTenSevenths_closed`,
   and
   `Prop51.positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed`.
-  The audit-facing wrappers
+  The preferred audit-facing wrappers are now
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate`;
+  they expose only the product bounds, solo bound, and the two tempered
+  adjacent-step atoms.  The older staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and
   `Prop51.PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsReserveEnvelopeBoundsAuditCertificate`
@@ -327,7 +332,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-tempered-raw-exp-ratio-ten-sevenths-reserve-envelope-bounds`
   or
   `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-reserve-envelope-bounds`
-  for the concrete `(10/7)^a` endpoint-envelope variants.
+  for the concrete `(10/7)^a` endpoint-envelope variants, and use
+  `--final-tail-tempered-raw-exp-ratio-ten-sevenths-closed-reserve-bounds`
+  or
+  `--final-tail-tempered-raw-exp-crossmul-ten-sevenths-closed-reserve-bounds`
+  for the preferred variants where both endpoint reserve budgets are filled in
+  Lean.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

@@ -1329,6 +1329,27 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate
     finite tail.toTemperedRawExpRatioTemperedReserveEnvelopeBoundsAuditCertificate
 
+/-- Final assembly with quotient-form tempered adjacent-step atoms after the
+two concrete `(10/7)^a` endpoint reserve budgets have been closed in Lean. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+    finite tail.toTemperedRawExpRatioTemperedReserveBoundsAuditCertificate
+
 /-- Final assembly using cross-multiplied tempered adjacent-step atoms and
 the two remaining tempered endpoint reserve atoms. -/
 theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
@@ -1394,6 +1415,27 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
     finite tail.toTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate
+
+/-- Final assembly with cross-multiplied tempered adjacent-step atoms after the
+two concrete `(10/7)^a` endpoint reserve budgets have been closed in Lean. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    {soloYBound : Nat → Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedRawExpCrossmulTenSeventhsClosedReserveBoundsAuditCertificate
+        smallXBound smallYBound temperedXBound temperedYBound soloYBound) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
+    finite tail.toTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate
 
 /-- Final assembly from the fine fixed-edge route and a large-tail bounds
 interface that keeps the candidate proof in the grouped raw-cleared
