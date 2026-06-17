@@ -806,7 +806,11 @@ Status:
       are the large-exp quotient bound and the scalar product budget.  The
       upper split separates the inverse raw quotient from the reverse large-exp
       quotient.  This is a translation aid for Lean, not a different TeX
-      argument.
+      argument.  The smallest current step targets are
+      `PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate`
+      and
+      `PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate`,
+      which leave only the two large-exp quotient estimates.
       The corresponding reduced audit wrappers and generator flags are
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveBoundsAuditCertificate`,
       `PositiveSaddleLargeTailTemperedRawExpCrossmulTemperedReserveEnvelopeBoundsAuditCertificate`,

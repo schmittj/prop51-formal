@@ -349,7 +349,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseFactorCertificate`,
   which separates the inverse raw quotient from the reverse large-exp quotient.
   This factorization is not a new mathematical route; it records the remaining
-  quantitative estimates in smaller Lean-facing pieces.
+  quantitative estimates in smaller Lean-facing pieces.  The most reduced
+  current Lean targets are
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedLowerExpTargetCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailCandidateTemperedUpperReverseExpTargetCertificate`,
+  which ask only for the two displayed large-exp quotient estimates after the
+  raw quotient bookkeeping has been discharged.
   The finite generator can target these split
   final-theorem interfaces with `--emit-final --final-tail-parts`,
   `--final-tail-bounds-parts`,
