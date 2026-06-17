@@ -6838,6 +6838,88 @@ theorem partialExpUpper_mono_of_nonneg_le_lt {y z : ℚ} {T₀ : Nat}
       (div_nonneg (by norm_num : (0 : ℚ) ≤ 1) hden_y_pos.le)
       (div_nonneg (pow_nonneg hz0 T₀) (by positivity))
 
+/-- Negative-binomial shell used to bound the variable-cutoff
+`partialExpUpper ((a : ℚ) * q) a`.
+
+The finite terms are compared with the multichoose coefficients of
+`(1-q)^(-a)`.  The final term keeps the same geometric tail shape as
+`partialExpUpper`; a later lemma only has to bound this one-dimensional
+weighted multichoose shell. -/
+def partialExpUpperNegativeBinomialShell (a : Nat) (q : ℚ) : ℚ :=
+  (∑ t ∈ Finset.range a, (a.multichoose t : ℚ) * q^t)
+    + (a.multichoose a : ℚ) * q^a * (1 / (1 - q))
+
+theorem partialExpUpper_scaled_term_le_multichoose
+    {a t : Nat} {q : ℚ} (hq : 0 ≤ q) :
+    ((a : ℚ) * q)^t / (t.factorial : ℚ)
+      ≤ (a.multichoose t : ℚ) * q^t := by
+  have hpowAscNat : a^t ≤ a.ascFactorial t :=
+    Nat.pow_succ_le_ascFactorial a t
+  have hpowAsc : (a : ℚ)^t ≤ (a.ascFactorial t : ℚ) := by
+    exact_mod_cast hpowAscNat
+  have hasc :
+      (a.ascFactorial t : ℚ) =
+        (t.factorial : ℚ) * (a.multichoose t : ℚ) := by
+    rw [Nat.ascFactorial_eq_factorial_mul_choose', Nat.multichoose_eq]
+    norm_num
+  have hfacpos : (0 : ℚ) < (t.factorial : ℚ) := by
+    exact_mod_cast t.factorial_pos
+  have hdiv :
+      (a : ℚ)^t / (t.factorial : ℚ) ≤ (a.multichoose t : ℚ) := by
+    rw [div_le_iff₀ hfacpos]
+    rw [hasc] at hpowAsc
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hpowAsc
+  calc
+    ((a : ℚ) * q)^t / (t.factorial : ℚ)
+        = ((a : ℚ)^t / (t.factorial : ℚ)) * q^t := by
+          rw [mul_pow]
+          ring
+    _ ≤ (a.multichoose t : ℚ) * q^t :=
+          mul_le_mul_of_nonneg_right hdiv (pow_nonneg hq t)
+
+theorem partialExpUpper_scaled_le_negativeBinomialShell
+    {a : Nat} (ha : 0 < a) {q : ℚ} (hq0 : 0 ≤ q) (hq1 : q < 1) :
+    partialExpUpper ((a : ℚ) * q) a
+      ≤ partialExpUpperNegativeBinomialShell a q := by
+  have haQ : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha
+  have hdenNonneg : 0 ≤ 1 / (1 - q) := by
+    have hden : (0 : ℚ) < 1 - q := by linarith
+    positivity
+  have htail :
+      ((a : ℚ) * q)^a / (a.factorial : ℚ)
+        ≤ (a.multichoose a : ℚ) * q^a :=
+    partialExpUpper_scaled_term_le_multichoose (a := a) (t := a) hq0
+  have hratio : ((a : ℚ) * q) / (a : ℚ) = q := by
+    field_simp [haQ.ne']
+  unfold partialExpUpper partialExpUpperNegativeBinomialShell
+  rw [hratio]
+  apply add_le_add
+  · exact Finset.sum_le_sum fun t _ =>
+      partialExpUpper_scaled_term_le_multichoose (a := a) (t := t) hq0
+  · exact mul_le_mul_of_nonneg_right htail hdenNonneg
+
+theorem partialExpUpper_threeTenths_le_negativeBinomialShell
+    {a : Nat} (ha : 0 < a) :
+    partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) a
+      ≤ partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ) := by
+  have hscaled :
+      (3 / 10 : ℚ) * (a : ℚ) = (a : ℚ) * (3 / 10 : ℚ) := by ring
+  rw [hscaled]
+  exact partialExpUpper_scaled_le_negativeBinomialShell
+    (a := a) ha (q := (3 / 10 : ℚ)) (by norm_num) (by norm_num)
+
+theorem partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
+    (hShell :
+      ∀ {a : Nat}, 2000 < a →
+        partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
+          ≤ (3 / 2 : ℚ)^a) :
+    ∀ {a : Nat}, 2000 < a →
+      partialExpUpper ((3 / 10 : ℚ) * (a : ℚ)) a
+        ≤ (3 / 2 : ℚ)^a := by
+  intro a ha
+  exact (partialExpUpper_threeTenths_le_negativeBinomialShell
+    (a := a) (by omega : 0 < a)).trans (hShell ha)
+
 theorem positiveSmallExponentUpper_nonneg {a k : Nat}
     (hj : 0 < posJ a k) :
     0 ≤ positiveSmallExponentUpper a k := by
@@ -11726,6 +11808,18 @@ theorem positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_thre
   exact
     (partialExpUpper_mono_of_nonneg_le_lt hexp_nonneg hexp_le
       hcutoff).trans (hEnvelope ha)
+
+theorem positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell
+    (hShell :
+      ∀ {a : Nat}, 2000 < a →
+        partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
+          ≤ (3 / 2 : ℚ)^a) :
+    ∀ {a : Nat}, 2000 < a →
+      positiveSmallLargeExp a 1
+        ≤ positiveSmallFirstReserveThreeHalvesExpBound a :=
+  positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths
+    (partialExpUpper_threeTenths_le_threeHalves_pow_of_negativeBinomialShell
+      hShell)
 
 theorem positiveSmallEntropyShadowBaseTerm_one_eq {a : Nat} (ha : 3 ≤ a) :
     positiveSmallEntropyShadowBaseTerm a 1 =

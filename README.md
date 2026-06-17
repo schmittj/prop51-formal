@@ -243,6 +243,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `partialExpUpper ((3/10) * a) a ≤ (3/2)^a`, via
   `Prop51.positiveSmallExponentUpper_one_le_three_tenths_self` and
   `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_partialExpUpper_threeTenths`.
+  Lean then compares that shell termwise with the weighted multichoose
+  expression
+  `Prop51.partialExpUpperNegativeBinomialShell a (3/10)`, exposing the final
+  small-reserve analytic core through
+  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp
