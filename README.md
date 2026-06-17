@@ -247,7 +247,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   expression
   `Prop51.partialExpUpperNegativeBinomialShell a (3/10)`, exposing the final
   small-reserve analytic core through
-  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`.
+  `Prop51.positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`
+  and the certificate constructor
+  `Prop51.positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_of_negativeBinomialShell`.
   For the
   lower-tempered
   adjacent-step atom, Lean proves that the lower-side tempered large-exp

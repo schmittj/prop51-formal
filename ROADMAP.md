@@ -694,7 +694,9 @@ Status:
       `partialExpUpperNegativeBinomialShell` comparison further reduces this
       to a weighted multichoose shell inequality, with
       `positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell`
-      as the reserve-facing wrapper.  For the
+      and
+      `positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_of_negativeBinomialShell`
+      as the reserve-facing wrappers.  For the
       lower-tempered
       adjacent-step atom, Lean proves `positiveTemperedLargeExp` decreases on
       the lower side of the split, but the pure raw-base `(4a-1)/(4a)` ratio

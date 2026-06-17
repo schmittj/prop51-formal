@@ -11922,6 +11922,17 @@ theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_thr
     intro a ha
     exact positiveSmallFirstReserveThreeHalvesEnvelopeUnit ha
 
+theorem positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves_of_negativeBinomialShell
+    (hShell :
+      ∀ {a : Nat}, 2000 < a →
+        partialExpUpperNegativeBinomialShell a (3 / 10 : ℚ)
+          ≤ (3 / 2 : ℚ)^a) :
+    PositiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate
+      positiveSmallFirstReserveThreeHalvesExpBound :=
+  positiveSaddleLargeTailCandidateSmallFirstReserveEnvelopeCertificate_threeHalves
+    (positiveSmallLargeExp_one_le_threeHalvesExpBound_of_negativeBinomialShell
+      hShell)
+
 /-- Atomic lower-tempered first-term reserve target for the large-tail
 candidate entropy reserve. -/
 structure PositiveSaddleLargeTailCandidateTemperedLowerFirstReserveCertificate :
