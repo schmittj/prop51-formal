@@ -48,30 +48,61 @@ structure BoundedPositiveCertificate where
 
 /-- The large-tail product obligation for the current canonical route.
 
-This is intentionally stated as the normalized `Xplus/Y` product target
-consumed by the candidate/reserve machinery, rather than as the older
-upper-edge/lower-`N` split-sum scalar.  The scalar route remains available via
-`LargeTailProductCertificate.ofFastUpperEdgeLowerNScalars` below, but the live
-assumption is now the product estimate that has to be closed. -/
+This is intentionally stated as the normalized combined actual product target,
+not as the older independent `Gcomp` majorant product.  This matches the TeX
+combined-product route: the raw `Bq * Qq` form can be supplied via
+`LargeTailProductCertificate.ofRawCleared`, while the stronger legacy
+upper-edge/lower-`N` `Gcomp` scalar route remains available only as a
+compatibility constructor below. -/
 structure LargeTailProductCertificate where
   largeSmall :
     ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
       k ∈ positiveKRange a → k ≤ ceilSqrt N →
-        positiveXplusYProductGcompBound a N k
+        Xnorm N k * Ynorm N (posJ a k)
           ≤ positiveSmallLargeGcompProductTarget a N k
   largeTempered :
     ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
       k ∈ positiveKRange a → ceilSqrt N < k →
-        positiveXplusYProductGcompBound a N k
+        Xnorm N k * Ynorm N (posJ a k)
           ≤ positiveTemperedLargeGcompProductTarget a N k
 
-/-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
-scalar route.
+/-- Constructor from denominator-cleared actual-product large-tail bounds.
 
-This records the Lean-side normalization from the split-sum certificate to the
-live normalized product target.  It is not a separate mathematical estimate:
-it composes the endpoint reduction, block-sum majorants, and denominator
-clearing already proved in `PositiveSaddle`. -/
+This is the preferred proof-production shape for the remaining analytic
+product work: it keeps rational denominator clearing local and uses
+`Xnorm_mul_Ynorm_eq_raw_div` through the bridge in `PositiveSaddle`. -/
+theorem LargeTailProductCertificate.ofRawCleared
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate where
+  largeSmall := by
+    intro a N k ha hrect hk hsmallN
+    exact
+      positiveSmallLargeXYProductTarget_of_rawCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+        (by omega : 1 ≤ a) hk
+        (hsmall ha hrect hk hsmallN)
+  largeTempered := by
+    intro a N k ha hrect hk htemperedN
+    exact
+      positiveTemperedLargeXYProductTarget_of_rawCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+        (by omega : 2 ≤ a) hk
+        (htempered ha hrect hk htemperedN)
+
+/-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
+`Gcomp` scalar route.
+
+This is stronger than the live combined-product target and should not be the
+main route to completion.  It is retained because the bounded prefix strip and
+some legacy generated artifacts still use the independent `Gcomp` product
+majorant. -/
 theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNScalars
     (hsmall :
       ∀ {a k : Nat}, 3000 ≤ a →
@@ -92,18 +123,28 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNScalars
     intro a N k ha hrect hk hsmallN
     have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
       hsmallN.trans (ceilSqrt_mono hrect.2)
-    exact
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k :=
       positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
         (by omega : 2000 < a) hrect hk
         (hsmall ha hk hsmallEdge)
+    exact
+      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
   largeTempered := by
     intro a N k ha hrect hk htemperedN
     have htemperedEdge : ceilSqrt (posNlo a) < k :=
       lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
-    exact
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k :=
       positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
         (by omega : 2000 < a) hrect hk
         (htempered ha hk htemperedEdge)
+    exact
+      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
 
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
@@ -125,44 +166,50 @@ theorem LargeTailProductCertificate.toPointwise
     PositiveSaddleEntropyShadowLargeExpPointwiseCertificate where
   small := by
     intro a N k ha hrect hk hsmall
-    have hprod :
-        positiveXplusYProductGcompBound a N k
+    have hXY :
+        Xnorm N k * Ynorm N (posJ a k)
           ≤ positiveSmallLargeGcompProductTarget a N k := by
       by_cases haLarge : 3000 ≤ a
       · exact hproduct.largeSmall haLarge hrect hk hsmall
       · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
         have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
           hsmall.trans (ceilSqrt_mono hrect.2)
-        exact
+        have hprod :
+            positiveXplusYProductGcompBound a N k
+              ≤ positiveSmallLargeGcompProductTarget a N k :=
           positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
             ha hrect hk
             (hprefix.toPrefixCertificate.smallScalar
               ha haPrefix hk hsmallEdge)
+        exact
+          (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+            (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
     exact
-      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
-        (by omega : 2 ≤ a) hrect hk).trans
-        (positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
-          ha hrect hk hprod)
+      normalizedPositiveIfTerm_le_smallEntropyShadowExp_of_XYProductTarget
+        ha hrect hk hXY
   tempered := by
     intro a N k ha hrect hk htempered
-    have hprod :
-        positiveXplusYProductGcompBound a N k
+    have hXY :
+        Xnorm N k * Ynorm N (posJ a k)
           ≤ positiveTemperedLargeGcompProductTarget a N k := by
       by_cases haLarge : 3000 ≤ a
       · exact hproduct.largeTempered haLarge hrect hk htempered
       · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
         have htemperedEdge : ceilSqrt (posNlo a) < k :=
           lt_of_le_of_lt (ceilSqrt_mono hrect.1) htempered
-        exact
+        have hprod :
+            positiveXplusYProductGcompBound a N k
+              ≤ positiveTemperedLargeGcompProductTarget a N k :=
           positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
             ha hrect hk
             (hprefix.toPrefixCertificate.temperedScalar
               ha haPrefix hk htemperedEdge)
+        exact
+          (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+            (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
     exact
-      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
-        (by omega : 2 ≤ a) hrect hk).trans
-        (positiveXplusYProductGcompFactoredTerm_le_temperedEntropyShadowExp_of_product
-          ha hrect hk hprod)
+      normalizedPositiveIfTerm_le_temperedEntropyShadowExp_of_XYProductTarget
+        ha hrect hk hXY
   soloBudget := by
     intro a N ha hrect
     exact le_positiveSoloBudget_of_mul_200000000_le_one

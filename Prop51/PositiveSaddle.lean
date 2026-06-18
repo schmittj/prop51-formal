@@ -11310,6 +11310,37 @@ def positiveTemperedLargeGcompProductTarget (a N k : Nat) : ℚ :=
   (192 / ((N : ℚ) * (posNlo a : ℚ))) *
     ((k : ℚ) * (posJ a k : ℚ)) * positiveTemperedLargeExp a k
 
+/-- Actual-coefficient raw product target for the large-tail small branch.
+
+This is the denominator-cleared form of
+`Xnorm N k * Ynorm N (a-k) ≤ positiveSmallLargeGcompProductTarget a N k`.
+Unlike the older `Gcomp` raw fields, this target uses the actual coefficients
+`Bq` and `Qq`; it is the combined-product inequality in the TeX argument. -/
+def positiveSmallLargeXYProductRawCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      Bq N k * Qq N (posJ a k)
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+/-- Actual-coefficient raw product target for the large-tail tempered branch. -/
+def positiveTemperedLargeXYProductRawCleared (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      Bq N k * Qq N (posJ a k)
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+instance decidablePositiveSmallLargeXYProductRawCleared (a N k : Nat) :
+    Decidable (positiveSmallLargeXYProductRawCleared a N k) := by
+  unfold positiveSmallLargeXYProductRawCleared
+  infer_instance
+
+instance decidablePositiveTemperedLargeXYProductRawCleared (a N k : Nat) :
+    Decidable (positiveTemperedLargeXYProductRawCleared a N k) := by
+  unfold positiveTemperedLargeXYProductRawCleared
+  infer_instance
+
 theorem positiveSmallLargeGcompProductTarget_nonneg
     {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
     (hkRange : k ∈ positiveKRange a) :
@@ -11333,6 +11364,238 @@ theorem positiveTemperedLargeGcompProductTarget_nonneg
     positiveTemperedLargeExp_nonneg_of_large ha hkRange
   unfold positiveTemperedLargeGcompProductTarget
   positivity
+
+theorem positiveSmallLargeXYProductTarget_of_rawCleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveSmallLargeXYProductRawCleared a N k) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveSmallLargeGcompProductTarget a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨hk1, hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos ha
+  have hck : 0 < c k := c_pos k hk1
+  have hcj : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (posJ_pos_of_le_posKmax ha hkmax)
+  have hden :
+      0 < (posNhi a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k)) := by
+    positivity
+  have hraw :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) := by
+    simpa [positiveSmallLargeXYProductRawCleared] using h
+  rw [Xnorm_mul_Ynorm_eq_raw_div hN (by omega : 1 ≤ a) hkRange]
+  calc
+    (2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)) /
+        (((N : ℚ)^2) * c k * c (posJ a k))
+        =
+      (2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)) /
+        ((posNhi a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k))) := by
+          field_simp [hhi.ne']
+    _ ≤
+      (130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) /
+        ((posNhi a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k))) :=
+          div_le_div_of_nonneg_right hraw hden.le
+    _ = positiveSmallLargeGcompProductTarget a N k := by
+          unfold positiveSmallLargeGcompProductTarget
+          field_simp [hNpos.ne', hhi.ne', hck.ne', hcj.ne']
+
+theorem positiveTemperedLargeXYProductTarget_of_rawCleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 2 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h : positiveTemperedLargeXYProductRawCleared a N k) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveTemperedLargeGcompProductTarget a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨hk1, hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos ha
+  have hck : 0 < c k := c_pos k hk1
+  have hcj : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax)
+  have hden :
+      0 < (posNlo a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k)) := by
+    positivity
+  have hraw :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) := by
+    simpa [positiveTemperedLargeXYProductRawCleared] using h
+  rw [Xnorm_mul_Ynorm_eq_raw_div hN (by omega : 1 ≤ a) hkRange]
+  calc
+    (2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)) /
+        (((N : ℚ)^2) * c k * c (posJ a k))
+        =
+      (2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          Bq N k * Qq N (posJ a k)) /
+        ((posNlo a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k))) := by
+          field_simp [hlo.ne']
+    _ ≤
+      (192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) /
+        ((posNlo a : ℚ) *
+          (((N : ℚ)^2) * c k * c (posJ a k))) :=
+          div_le_div_of_nonneg_right hraw hden.le
+    _ = positiveTemperedLargeGcompProductTarget a N k := by
+          unfold positiveTemperedLargeGcompProductTarget
+          field_simp [hNpos.ne', hlo.ne', hck.ne', hcj.ne']
+
+theorem normalizedPositiveIfTerm_le_smallEntropyShadowExp_of_XYProductTarget
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hkRange : k ∈ positiveKRange a)
+    (hXY :
+      Xnorm N k * Ynorm N (posJ a k)
+        ≤ positiveSmallLargeGcompProductTarget a N k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveSmallEntropyShadowExpMajorantTerm positiveSmallLargeExp a k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨hk1, hkmax⟩
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hExp : 0 ≤ positiveSmallLargeExp a k :=
+    positiveSmallLargeExp_nonneg_of_large ha hkRange
+  have hM :
+      0 ≤ positiveSmallEntropyShadowExpMajorantTerm
+          positiveSmallLargeExp a k :=
+    positiveSmallEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hkRange hExp
+  refine normalizedPositiveIfTerm_le_of_raw_le hM ?_
+  intro _hk1 hB
+  have hR :
+      positiveCRatio a k ≤ positiveBinomRatio a k :=
+    positiveCRatio_le_binomRatio (by omega : 2 ≤ a) hk1 hkmax
+  have hX0 : 0 ≤ Xnorm N k :=
+    ((Bq_pos_iff_Xnorm_pos hN hk1).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) :=
+    Ynorm_nonneg N (posJ a k)
+  have hprod :
+      positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))
+        ≤ positiveBinomRatio a k *
+            positiveSmallLargeGcompProductTarget a N k :=
+    mul_le_mul hR hXY (mul_nonneg hX0 hY0) positiveBinomRatio_nonneg
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg (by positivity) (positiveDyadicDecay_nonneg (posJ a k))
+  have hbinom :
+      positiveBinomRatio a k
+        ≤ positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large
+      (by omega : 20 ≤ a) hkRange
+  have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_nonneg (posJ a k)
+  calc
+    normalizedPositiveRawTerm a N k
+        = positiveFactorizedRawTerm a N k :=
+          normalizedPositiveRawTerm_eq_Xnorm_Ynorm hN (by omega : 1 ≤ a)
+            hk1 (posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax)
+    _ = ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+          (positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))) := by
+          unfold positiveFactorizedRawTerm
+          ring
+    _ ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+          (positiveBinomRatio a k *
+            positiveSmallLargeGcompProductTarget a N k) :=
+          mul_le_mul_of_nonneg_left hprod hcommon
+    _ = (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+          positiveSmallLargeExp a k := by
+          unfold positiveSmallLargeGcompProductTarget
+          field_simp [hNQ.ne', hhi.ne']
+          ring
+    _ ≤ (65 / (posNhi a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatioEntropyShadowPosJBound a k *
+          positiveDyadicDecay (posJ a k) * positiveSmallLargeExp a k := by
+          gcongr
+    _ = positiveSmallEntropyShadowExpMajorantTerm
+          positiveSmallLargeExp a k := rfl
+
+theorem normalizedPositiveIfTerm_le_temperedEntropyShadowExp_of_XYProductTarget
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hkRange : k ∈ positiveKRange a)
+    (hXY :
+      Xnorm N k * Ynorm N (posJ a k)
+        ≤ positiveTemperedLargeGcompProductTarget a N k) :
+    normalizedPositiveIfTerm a N k
+      ≤ positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨hk1, hkmax⟩
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hlo : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hExp : 0 ≤ positiveTemperedLargeExp a k :=
+    positiveTemperedLargeExp_nonneg_of_large ha hkRange
+  have hM :
+      0 ≤ positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a k :=
+    positiveTemperedEntropyShadowExpMajorantTerm_nonneg
+      (by omega : 20 ≤ a) hkRange hExp
+  refine normalizedPositiveIfTerm_le_of_raw_le hM ?_
+  intro _hk1 hB
+  have hR :
+      positiveCRatio a k ≤ positiveBinomRatio a k :=
+    positiveCRatio_le_binomRatio (by omega : 2 ≤ a) hk1 hkmax
+  have hX0 : 0 ≤ Xnorm N k :=
+    ((Bq_pos_iff_Xnorm_pos hN hk1).mp hB).le
+  have hY0 : 0 ≤ Ynorm N (posJ a k) :=
+    Ynorm_nonneg N (posJ a k)
+  have hprod :
+      positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))
+        ≤ positiveBinomRatio a k *
+            positiveTemperedLargeGcompProductTarget a N k :=
+    mul_le_mul hR hXY (mul_nonneg hX0 hY0) positiveBinomRatio_nonneg
+  have hcommon :
+      0 ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) := by
+    exact mul_nonneg (by positivity) (positiveDyadicDecay_nonneg (posJ a k))
+  have hbinom :
+      positiveBinomRatio a k
+        ≤ positiveBinomRatioEntropyShadowPosJBound a k :=
+    positiveBinomRatio_le_entropyShadowPosJBound_of_mem_large
+      (by omega : 20 ≤ a) hkRange
+  have hdecay : 0 ≤ positiveDyadicDecay (posJ a k) :=
+    positiveDyadicDecay_nonneg (posJ a k)
+  calc
+    normalizedPositiveRawTerm a N k
+        = positiveFactorizedRawTerm a N k :=
+          normalizedPositiveRawTerm_eq_Xnorm_Ynorm hN (by omega : 1 ≤ a)
+            hk1 (posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax)
+    _ = ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+          (positiveCRatio a k * (Xnorm N k * Ynorm N (posJ a k))) := by
+          unfold positiveFactorizedRawTerm
+          ring
+    _ ≤ ((N : ℚ) / 2) * positiveDyadicDecay (posJ a k) *
+          (positiveBinomRatio a k *
+            positiveTemperedLargeGcompProductTarget a N k) :=
+          mul_le_mul_of_nonneg_left hprod hcommon
+    _ = (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatio a k * positiveDyadicDecay (posJ a k) *
+          positiveTemperedLargeExp a k := by
+          unfold positiveTemperedLargeGcompProductTarget
+          field_simp [hNQ.ne', hlo.ne']
+          ring
+    _ ≤ (96 / (posNlo a : ℚ)) * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveBinomRatioEntropyShadowPosJBound a k *
+          positiveDyadicDecay (posJ a k) *
+          positiveTemperedLargeExp a k := by
+          gcongr
+    _ = positiveTemperedEntropyShadowExpMajorantTerm
+          positiveTemperedLargeExp a k := rfl
 
 theorem positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
     {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
