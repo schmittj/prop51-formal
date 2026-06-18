@@ -580,6 +580,67 @@ def positiveTemperedExponentUpper (a k : Nat) : ℚ :=
     + (29/10) * ((a : ℚ) / (posJ a k : ℚ))
     + 2
 
+/-! Exact natural numerator/denominator forms for the executable exponents.
+
+These are intentionally kept as simple common-denominator expressions.  They
+let the fixed-point exponential checker work with natural arithmetic while
+remaining definitionally close to the displayed rational exponents above. -/
+
+def positiveSmallExponentUpperNum (a k : Nat) : Nat :=
+  1139 * posSmallCutoff a * posJ a k
+    + 200 * (posJ a k)^2
+    + 2900 * a
+    + 1000 * posJ a k
+
+def positiveSmallExponentUpperDen (a k : Nat) : Nat :=
+  1000 * posJ a k
+
+theorem positiveSmallExponentUpperDen_pos {a k : Nat}
+    (hj : 0 < posJ a k) :
+    0 < positiveSmallExponentUpperDen a k := by
+  unfold positiveSmallExponentUpperDen
+  exact Nat.mul_pos (by norm_num) hj
+
+theorem positiveSmallExponentUpper_eq_num_div_den {a k : Nat}
+    (hj : 0 < posJ a k) :
+    positiveSmallExponentUpper a k =
+      (positiveSmallExponentUpperNum a k : ℚ) /
+        (positiveSmallExponentUpperDen a k : ℚ) := by
+  have hjQ : (posJ a k : ℚ) ≠ 0 := by exact_mod_cast hj.ne'
+  unfold positiveSmallExponentUpper positiveSmallExponentUpperNum
+    positiveSmallExponentUpperDen
+  field_simp [hjQ]
+  norm_num [Nat.cast_mul, Nat.cast_add, Nat.cast_pow]
+  ring
+
+def positiveTemperedExponentUpperNum (a k : Nat) : Nat :=
+  2 * a * k * posJ a k
+    + 57 * a * posJ a k
+    + 29 * a * k
+    + 20 * k * posJ a k
+
+def positiveTemperedExponentUpperDen (a k : Nat) : Nat :=
+  10 * k * posJ a k
+
+theorem positiveTemperedExponentUpperDen_pos {a k : Nat}
+    (hk : 1 ≤ k) (hj : 0 < posJ a k) :
+    0 < positiveTemperedExponentUpperDen a k := by
+  unfold positiveTemperedExponentUpperDen
+  exact Nat.mul_pos (Nat.mul_pos (by norm_num) (by omega)) hj
+
+theorem positiveTemperedExponentUpper_eq_num_div_den {a k : Nat}
+    (hk : 1 ≤ k) (hj : 0 < posJ a k) :
+    positiveTemperedExponentUpper a k =
+      (positiveTemperedExponentUpperNum a k : ℚ) /
+        (positiveTemperedExponentUpperDen a k : ℚ) := by
+  have hkQ : (k : ℚ) ≠ 0 := by exact_mod_cast (by omega : k ≠ 0)
+  have hjQ : (posJ a k : ℚ) ≠ 0 := by exact_mod_cast hj.ne'
+  unfold positiveTemperedExponentUpper positiveTemperedExponentUpperNum
+    positiveTemperedExponentUpperDen
+  field_simp [hkQ, hjQ]
+  norm_num [Nat.cast_mul, Nat.cast_add]
+  ring
+
 /-- Shared rational prefactor
 `C/N * k*j / ((a-1) * choose(a-2,k-1)) * 2^{-j}`. -/
 def positivePrefactor (C : ℚ) (a N k : Nat) : ℚ :=
@@ -10333,6 +10394,162 @@ theorem scaledExpSucc_sound
     _ ≤ ((scaledExpSucc u yn yd n : Nat) : ℚ) / (S : ℚ) := by
         simpa [scaledExpSucc] using hceil
 
+/-- Tail-recursive upward-rounded fixed-point evaluator for exponential
+prefix states.
+
+The state mirrors `partialExpUpperStateAux`: `acc` is the scaled prefix sum
+and `term` is the scaled current term.  The denominator scale is supplied only
+when the state is initialized and in the soundness theorem; the recurrence
+itself only needs the rational upper exponent `yn / yd`. -/
+def scaledExpStateAux (yn yd : Nat) : Nat → Nat → Nat → Nat → Nat × Nat
+  | 0, _n, acc, term => (acc, term)
+  | m + 1, n, acc, term =>
+      scaledExpStateAux yn yd m (n + 1) (acc + term)
+        (scaledExpSucc term yn yd n)
+
+theorem scaledExpStateAux_sound
+    {S yn yd : Nat} (hS : 0 < S) (hyd : 0 < yd) :
+    ∀ (m n accU termU : Nat) (acc term : ℚ),
+      acc ≤ (accU : ℚ) / (S : ℚ) →
+      term ≤ (termU : ℚ) / (S : ℚ) →
+      let exact :=
+        partialExpUpperStateAux ((yn : ℚ) / (yd : ℚ)) m n acc term
+      let approx := scaledExpStateAux yn yd m n accU termU
+      exact.1 ≤ (approx.1 : ℚ) / (S : ℚ) ∧
+        exact.2 ≤ (approx.2 : ℚ) / (S : ℚ)
+  | 0, _n, accU, termU, acc, term, hacc, hterm => by
+      simpa [partialExpUpperStateAux, scaledExpStateAux] using
+        And.intro hacc hterm
+  | m + 1, n, accU, termU, acc, term, hacc, hterm => by
+      rw [partialExpUpperStateAux, scaledExpStateAux]
+      have hacc' :
+          acc + term ≤ ((accU + termU : Nat) : ℚ) / (S : ℚ) := by
+        have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+        have hsum := add_le_add hacc hterm
+        rw [← add_div] at hsum
+        simpa using hsum
+      have hterm' :
+          term * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ)
+            ≤ ((scaledExpSucc termU yn yd n : Nat) : ℚ) / (S : ℚ) :=
+        scaledExpSucc_sound (S := S) (u := termU) (yn := yn) (yd := yd)
+          (n := n) (t := term) hS hyd hterm
+      exact scaledExpStateAux_sound hS hyd m (n + 1)
+        (accU + termU) (scaledExpSucc termU yn yd n)
+        (acc + term)
+        (term * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ))
+        hacc' hterm'
+
+/-- Initialize the upward-rounded exponential prefix state at scale `S`. -/
+def scaledExpState (S yn yd T : Nat) : Nat × Nat :=
+  scaledExpStateAux yn yd T 0 0 S
+
+/-- Upward-rounded geometric tail multiplier for `partialExpUpper`.
+
+For `y = yn / yd` and cutoff `T`, the exact tail factor is
+`1 / (1 - y / T) = yd*T / (yd*T - yn)`. -/
+def scaledExpTailCeil (termU yn yd T : Nat) : Nat :=
+  scaledMulDivCeil termU (yd * T) (yd * T - yn)
+
+theorem partialExpUpper_rational_tail_factor_eq
+    {yn yd T : Nat} (hyd : 0 < yd) (hynT : yn < yd * T) :
+    (1 : ℚ) / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ))
+      = ((yd * T : Nat) : ℚ) / ((yd * T - yn : Nat) : ℚ) := by
+  have hT : 0 < T := by
+    by_contra hnot
+    have hzero : T = 0 := Nat.eq_zero_of_not_pos hnot
+    subst T
+    simp at hynT
+  have hydQ : (yd : ℚ) ≠ 0 := by exact_mod_cast hyd.ne'
+  have hTQ : (T : ℚ) ≠ 0 := by exact_mod_cast hT.ne'
+  have hdenNat : 0 < yd * T - yn := Nat.sub_pos_of_lt hynT
+  have hdenQ : ((yd * T - yn : Nat) : ℚ) ≠ 0 := by
+    exact_mod_cast hdenNat.ne'
+  have hsub :
+      ((yd * T - yn : Nat) : ℚ) =
+        ((yd * T : Nat) : ℚ) - (yn : ℚ) := by
+    rw [Nat.cast_sub (Nat.le_of_lt hynT)]
+  have hmulCast : ((yd * T : Nat) : ℚ) = (yd : ℚ) * (T : ℚ) := by
+    norm_num
+  have hdenQ' : (yd : ℚ) * (T : ℚ) - (yn : ℚ) ≠ 0 := by
+    have hdenQ'' := hdenQ
+    rw [hsub, hmulCast] at hdenQ''
+    exact hdenQ''
+  rw [hsub]
+  rw [hmulCast]
+  field_simp [hydQ, hTQ, hdenQ']
+
+theorem scaledExpTailCeil_sound
+    {S termU yn yd T : Nat} (hS : 0 < S) (hyd : 0 < yd)
+    (hynT : yn < yd * T) :
+    ((termU : ℚ) / (S : ℚ)) *
+        (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ)))
+      ≤ ((scaledExpTailCeil termU yn yd T : Nat) : ℚ) / (S : ℚ) := by
+  have hden : 0 < yd * T - yn := Nat.sub_pos_of_lt hynT
+  rw [partialExpUpper_rational_tail_factor_eq hyd hynT]
+  simpa [scaledExpTailCeil] using
+    scaledMulDivCeil_sound (S := S) (u := termU) (num := yd * T)
+      (den := yd * T - yn) hS hden
+
+/-- Natural fixed-point upper bound for `partialExpUpper (yn/yd) T`. -/
+def scaledPartialExpUpperNat (S yn yd T : Nat) : Nat :=
+  let state := scaledExpState S yn yd T
+  state.1 + scaledExpTailCeil state.2 yn yd T
+
+theorem partialExpUpper_rational_le_scaledPartialExpUpperNat
+    {S yn yd T : Nat} (hS : 0 < S) (hyd : 0 < yd)
+    (hynT : yn < yd * T) :
+    partialExpUpper ((yn : ℚ) / (yd : ℚ)) T
+      ≤ ((scaledPartialExpUpperNat S yn yd T : Nat) : ℚ) / (S : ℚ) := by
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hterm0 : (1 : ℚ) ≤ (S : ℚ) / (S : ℚ) := by
+    rw [div_self hSℚ.ne']
+  have hstate :=
+    scaledExpStateAux_sound (S := S) (yn := yn) (yd := yd) hS hyd
+      T 0 0 S 0 1 (by norm_num) hterm0
+  have htail :
+      ((scaledExpState S yn yd T).2 : ℚ) / (S : ℚ) *
+          (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ)))
+        ≤
+          ((scaledExpTailCeil (scaledExpState S yn yd T).2 yn yd T : Nat) : ℚ) /
+            (S : ℚ) :=
+    scaledExpTailCeil_sound (S := S) (termU := (scaledExpState S yn yd T).2)
+      (yn := yn) (yd := yd) (T := T) hS hyd hynT
+  have htailFactor_nonneg :
+      0 ≤ (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ))) := by
+    rw [partialExpUpper_rational_tail_factor_eq hyd hynT]
+    positivity
+  rw [← partialExpUpperFast_eq ((yn : ℚ) / (yd : ℚ)) T]
+  simp only [partialExpUpperFast, partialExpUpperState,
+    scaledPartialExpUpperNat, scaledExpState] at hstate htail ⊢
+  have htailExact :
+      (partialExpUpperStateAux ((yn : ℚ) / (yd : ℚ)) T 0 0 1).2 *
+          (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ)))
+        ≤
+      ((scaledExpTailCeil (scaledExpStateAux yn yd T 0 0 S).2 yn yd T : Nat) : ℚ) /
+          (S : ℚ) := by
+    exact (mul_le_mul_of_nonneg_right hstate.2 htailFactor_nonneg).trans
+      htail
+  have hsum := add_le_add hstate.1 htailExact
+  rw [← add_div] at hsum
+  simpa using hsum
+
+theorem rational_upper_lt_nat_of_num_lt_mul
+    {yn yd T : Nat} (hyd : 0 < yd) (hynT : yn < yd * T) :
+    (yn : ℚ) / (yd : ℚ) < (T : ℚ) := by
+  have hydQ : (0 : ℚ) < (yd : ℚ) := by exact_mod_cast hyd
+  rw [div_lt_iff₀ hydQ]
+  exact_mod_cast (by simpa [Nat.mul_comm] using hynT)
+
+theorem partialExpUpper_le_scaledPartialExpUpperNat_of_le
+    {S yn yd T : Nat} {y : ℚ}
+    (hS : 0 < S) (hyd : 0 < yd) (hynT : yn < yd * T)
+    (hy0 : 0 ≤ y) (hy : y ≤ (yn : ℚ) / (yd : ℚ)) :
+    partialExpUpper y T
+      ≤ ((scaledPartialExpUpperNat S yn yd T : Nat) : ℚ) / (S : ℚ) :=
+  (partialExpUpper_mono_of_nonneg_le_lt hy0 hy
+      (rational_upper_lt_nat_of_num_lt_mul hyd hynT)).trans
+    (partialExpUpper_rational_le_scaledPartialExpUpperNat hS hyd hynT)
+
 /-- Fast-evaluator version of `positiveSmallMajorantTerm`.
 
 This has the same value as the canonical definition, but `native_decide`
@@ -12442,6 +12659,270 @@ theorem positiveTemperedMajorantTerm_nonneg {a k : Nat}
     (positivePrefactor_nonneg (by norm_num) (by
       exact Nat.succ_le_of_lt (posNlo_pos (by omega : 2 ≤ a)))
       (by omega : 2 ≤ a) hk1 hkmax) hExp
+
+/-- Natural numerator form of the small finite-window exponent is below the
+fixed cutoff denominator. -/
+theorem positiveSmallExponentUpperNum_lt_den_mul_cutoff {a k : Nat}
+    (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    positiveSmallExponentUpperNum a k <
+      positiveSmallExponentUpperDen a k * positiveExpCutoff := by
+  rcases mem_positiveKRange.mp hk with ⟨_hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax ha1 hkmax
+  have hdenNat : 0 < positiveSmallExponentUpperDen a k :=
+    positiveSmallExponentUpperDen_pos hj
+  have hdenQ : (0 : ℚ) < (positiveSmallExponentUpperDen a k : ℚ) := by
+    exact_mod_cast hdenNat
+  have hlt := positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax
+  rw [positiveSmallExponentUpper_eq_num_div_den hj] at hlt
+  have hmul :
+      (positiveSmallExponentUpperNum a k : ℚ) <
+        (positiveExpCutoff : ℚ) *
+          (positiveSmallExponentUpperDen a k : ℚ) := by
+    rw [div_lt_iff₀ hdenQ] at hlt
+    simpa [mul_comm] using hlt
+  have hmul' :
+      (positiveSmallExponentUpperNum a k : ℚ) <
+        ((positiveSmallExponentUpperDen a k * positiveExpCutoff : Nat) : ℚ) := by
+    simpa [Nat.cast_mul, mul_comm] using hmul
+  exact_mod_cast hmul'
+
+/-- Natural numerator form of the tempered finite-window exponent is below
+the fixed cutoff denominator. -/
+theorem positiveTemperedExponentUpperNum_lt_den_mul_cutoff {a k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
+    positiveTemperedExponentUpperNum a k <
+      positiveTemperedExponentUpperDen a k * positiveExpCutoff := by
+  rcases mem_positiveKRange.mp hk with ⟨hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hdenNat : 0 < positiveTemperedExponentUpperDen a k :=
+    positiveTemperedExponentUpperDen_pos hk1 hj
+  have hdenQ : (0 : ℚ) < (positiveTemperedExponentUpperDen a k : ℚ) := by
+    exact_mod_cast hdenNat
+  have hlt :=
+    positiveTemperedExponentUpper_lt_expCutoff ha401 ha2000 hkmax htempered
+  rw [positiveTemperedExponentUpper_eq_num_div_den hk1 hj] at hlt
+  have hmul :
+      (positiveTemperedExponentUpperNum a k : ℚ) <
+        (positiveExpCutoff : ℚ) *
+          (positiveTemperedExponentUpperDen a k : ℚ) := by
+    rw [div_lt_iff₀ hdenQ] at hlt
+    simpa [mul_comm] using hlt
+  have hmul' :
+      (positiveTemperedExponentUpperNum a k : ℚ) <
+        ((positiveTemperedExponentUpperDen a k * positiveExpCutoff : Nat) : ℚ) := by
+    simpa [Nat.cast_mul, mul_comm] using hmul
+  exact_mod_cast hmul'
+
+/-- Fixed-point upper bound for the small finite-window exponential shell. -/
+def positiveSmallPartialExpUpperScaledNat (S a k : Nat) : Nat :=
+  scaledPartialExpUpperNat S
+    (positiveSmallExponentUpperNum a k)
+    (positiveSmallExponentUpperDen a k)
+    positiveExpCutoff
+
+/-- Fixed-point upper bound for the tempered finite-window exponential shell. -/
+def positiveTemperedPartialExpUpperScaledNat (S a k : Nat) : Nat :=
+  scaledPartialExpUpperNat S
+    (positiveTemperedExponentUpperNum a k)
+    (positiveTemperedExponentUpperDen a k)
+    positiveExpCutoff
+
+theorem partialExpUpper_positiveSmallExponentUpper_le_scaled
+    {S a k : Nat} (hS : 0 < S) (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+      ≤ ((positiveSmallPartialExpUpperScaledNat S a k : Nat) : ℚ) /
+          (S : ℚ) := by
+  rcases mem_positiveKRange.mp hk with ⟨_hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax ha1 hkmax
+  have hden : 0 < positiveSmallExponentUpperDen a k :=
+    positiveSmallExponentUpperDen_pos hj
+  have hnum :
+      positiveSmallExponentUpperNum a k <
+        positiveSmallExponentUpperDen a k * positiveExpCutoff :=
+    positiveSmallExponentUpperNum_lt_den_mul_cutoff ha1 ha2000 hk
+  rw [positiveSmallExponentUpper_eq_num_div_den hj]
+  exact partialExpUpper_rational_le_scaledPartialExpUpperNat hS hden hnum
+
+theorem partialExpUpper_positiveTemperedExponentUpper_le_scaled
+    {S a k : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
+    partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff
+      ≤ ((positiveTemperedPartialExpUpperScaledNat S a k : Nat) : ℚ) /
+          (S : ℚ) := by
+  rcases mem_positiveKRange.mp hk with ⟨hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hden : 0 < positiveTemperedExponentUpperDen a k :=
+    positiveTemperedExponentUpperDen_pos hk1 hj
+  have hnum :
+      positiveTemperedExponentUpperNum a k <
+        positiveTemperedExponentUpperDen a k * positiveExpCutoff :=
+    positiveTemperedExponentUpperNum_lt_den_mul_cutoff ha401 ha2000 hk htempered
+  rw [positiveTemperedExponentUpper_eq_num_div_den hk1 hj]
+  exact partialExpUpper_rational_le_scaledPartialExpUpperNat hS hden hnum
+
+/-- Small majorant with only the exponential shell replaced by its
+upward-rounded fixed-point bound. -/
+def positiveSmallMajorantTermScaledExpUpper (S a k : Nat) : ℚ :=
+  positivePrefactor 65 a (posNhi a) k *
+    ((positiveSmallPartialExpUpperScaledNat S a k : Nat) : ℚ) / (S : ℚ)
+
+/-- Tempered majorant with only the exponential shell replaced by its
+upward-rounded fixed-point bound. -/
+def positiveTemperedMajorantTermScaledExpUpper (S a k : Nat) : ℚ :=
+  positivePrefactor 96 a (posNlo a) k *
+    ((positiveTemperedPartialExpUpperScaledNat S a k : Nat) : ℚ) / (S : ℚ)
+
+theorem positiveSmallMajorantTerm_le_scaledExpUpper
+    {S a k : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    positiveSmallMajorantTerm a k
+      ≤ positiveSmallMajorantTermScaledExpUpper S a k := by
+  rcases mem_positiveKRange.mp hk with ⟨hk1, hkmax⟩
+  have hExp :=
+    partialExpUpper_positiveSmallExponentUpper_le_scaled
+      (S := S) hS (by omega : 1 ≤ a) ha2000 hk
+  have hPref :
+      0 ≤ positivePrefactor 65 a (posNhi a) k :=
+    positivePrefactor_nonneg (by norm_num)
+      (Nat.succ_le_of_lt (posNhi_pos (by omega : 1 ≤ a)))
+      (by omega : 2 ≤ a) hk1 hkmax
+  unfold positiveSmallMajorantTerm positiveSmallMajorantTermScaledExpUpper
+  simpa [mul_div_assoc] using mul_le_mul_of_nonneg_left hExp hPref
+
+theorem positiveTemperedMajorantTerm_le_scaledExpUpper
+    {S a k : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) (htempered : posTemperedCutoff a < k) :
+    positiveTemperedMajorantTerm a k
+      ≤ positiveTemperedMajorantTermScaledExpUpper S a k := by
+  rcases mem_positiveKRange.mp hk with ⟨hk1, hkmax⟩
+  have hExp :=
+    partialExpUpper_positiveTemperedExponentUpper_le_scaled
+      (S := S) hS ha401 ha2000 hk htempered
+  have hPref :
+      0 ≤ positivePrefactor 96 a (posNlo a) k :=
+    positivePrefactor_nonneg (by norm_num)
+      (Nat.succ_le_of_lt (posNlo_pos (by omega : 2 ≤ a)))
+      (by omega : 2 ≤ a) hk1 hkmax
+  unfold positiveTemperedMajorantTerm positiveTemperedMajorantTermScaledExpUpper
+  simpa [mul_div_assoc] using mul_le_mul_of_nonneg_left hExp hPref
+
+/-- Edge majorant using fixed-point exponential upper bounds. -/
+def positiveEdgeMajorantTermScaledExpUpper (S a k : Nat) : ℚ :=
+  max
+    (if k ≤ posSmallCutoff a then
+      positiveSmallMajorantTermScaledExpUpper S a k
+    else
+      0)
+    (if posTemperedCutoff a < k then
+      positiveTemperedMajorantTermScaledExpUpper S a k
+    else
+      0)
+
+def positiveEdgeMajorantSumScaledExpUpper (S a : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a, positiveEdgeMajorantTermScaledExpUpper S a k
+
+def checkPositiveEdgeBudgetUnitRowScaledExp (S a : Nat) : Bool :=
+  decide ((200000000 : ℚ) *
+    positiveEdgeMajorantSumScaledExpUpper S a ≤ 1)
+
+def checkPositiveEdgeBudgetUnitRangeScaledExp (S lo len : Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveEdgeBudgetUnitRowScaledExp S a
+
+theorem positiveEdgeMajorantTerm_le_scaledExpUpper
+    {S a k : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    positiveEdgeMajorantTerm a k
+      ≤ positiveEdgeMajorantTermScaledExpUpper S a k := by
+  unfold positiveEdgeMajorantTerm positiveEdgeMajorantTermScaledExpUpper
+  apply max_le_max
+  · by_cases hsmall : k ≤ posSmallCutoff a
+    · simp [hsmall,
+        positiveSmallMajorantTerm_le_scaledExpUpper hS ha401 ha2000 hk]
+    · simp [hsmall]
+  · by_cases htempered : posTemperedCutoff a < k
+    · simp [htempered,
+        positiveTemperedMajorantTerm_le_scaledExpUpper
+          hS ha401 ha2000 hk htempered]
+    · simp [htempered]
+
+theorem positiveEdgeMajorantSum_le_scaledExpUpper
+    {S a : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    positiveEdgeMajorantSum a
+      ≤ positiveEdgeMajorantSumScaledExpUpper S a := by
+  unfold positiveEdgeMajorantSum positiveEdgeMajorantSumScaledExpUpper
+  exact Finset.sum_le_sum fun k hk =>
+    positiveEdgeMajorantTerm_le_scaledExpUpper hS ha401 ha2000 hk
+
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRowScaledExp
+    {S a : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (h : checkPositiveEdgeBudgetUnitRowScaledExp S a = true) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  have hscaled :
+      (200000000 : ℚ) * positiveEdgeMajorantSumScaledExpUpper S a ≤ 1 :=
+    of_decide_eq_true h
+  have hsum :
+      positiveEdgeMajorantSum a
+        ≤ positiveEdgeMajorantSumScaledExpUpper S a :=
+    positiveEdgeMajorantSum_le_scaledExpUpper hS ha401 ha2000
+  exact le_positiveEdgeBudget_of_mul_200000000_le_one
+    ((mul_le_mul_of_nonneg_left hsum (by norm_num)).trans hscaled)
+
+theorem mul_200000000_le_one_of_le_positiveEdgeBudget {x : ℚ}
+    (h : x ≤ positiveEdgeBudget) :
+    (200000000 : ℚ) * x ≤ 1 := by
+  have hscaled :=
+    mul_le_mul_of_nonneg_left h (by norm_num : (0 : ℚ) ≤ 200000000)
+  rw [positiveEdgeBudget_eq_inv_200000000] at hscaled
+  norm_num at hscaled
+  exact hscaled
+
+theorem checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRowScaledExp
+    {S a : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (h : checkPositiveEdgeBudgetUnitRowScaledExp S a = true) :
+    checkPositiveEdgeBudgetUnitRow a = true := by
+  exact decide_eq_true
+    (mul_200000000_le_one_of_le_positiveEdgeBudget
+      (positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRowScaledExp
+        hS ha401 ha2000 h))
+
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRangeScaledExp
+    {S lo len a : Nat} (hS : 0 < S)
+    (h : checkPositiveEdgeBudgetUnitRangeScaledExp S lo len = true)
+    (hlo : lo ≤ a) (hhi : a < lo + len)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  apply positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRowScaledExp
+    hS ha401 ha2000
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveEdgeBudgetUnitRowScaledExp S x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetUnitRangeScaledExp] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
+
+theorem checkPositiveEdgeBudgetUnitRange_of_checkPositiveEdgeBudgetUnitRangeScaledExp
+    {S lo len : Nat} (hS : 0 < S)
+    (hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h : checkPositiveEdgeBudgetUnitRangeScaledExp S lo len = true) :
+    checkPositiveEdgeBudgetUnitRange lo len = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveEdgeBudgetUnitRowScaledExp S x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetUnitRangeScaledExp] using h)
+  exact List.all_eq_true.mpr (by
+    intro x hx
+    rcases (List.mem_range'_1.mp hx) with ⟨hxlo, hxhi⟩
+    exact checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRowScaledExp
+      hS (by omega) (by omega) (hall x hx))
 
 theorem positiveSmallScalarProductBound_le_majorant {a k : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
