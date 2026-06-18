@@ -480,6 +480,165 @@ def positiveSmallFirstCellYUpperEdgeBudget (a : Nat) : Prop :=
 def positiveSmallFirstCellRawQBudget (a N : Nat) : Prop :=
   positiveSmallFirstCellQBudget a N (Qq N (posJ a 2))
 
+/-- Degree-two closed form for the product-side `X` upper-edge split sum.
+
+This is deliberately an upper majorant, not the actual signed `Bq N 2`
+coefficient.  The Lean product route uses it only to recover the direct
+first-cell `Qq` budget from the stronger exact upper-edge product scalar
+when a legacy product scalar package is supplied. -/
+theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_two
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N 2 =
+      (N : ℚ) * (144 / 25) + (N : ℚ)^2 * (25 / 72) := by
+  unfold positiveLargeTailProductXClosedFactorialSplitBlockBound
+  rw [positiveLargeTailXGcompClosedFactorialSplitBlockSum_eq_Icc]
+  norm_num [positiveLargeTailXGcompClosedFactorialSplitBlockSum,
+    Finset.sum_range_succ, c_one, c_two]
+  ring_nf
+
+/-- The degree-two upper-edge `X` split sum is large enough to pay for the
+actual first-cell linear `Bq` factor after the old product scalar inequality
+is rescaled by the lower rectangle edge. -/
+theorem positiveSmallFirstCell_linearFactor_le_scaledXUpperEdge
+    (a : Nat) (ha : 3000 ≤ a) :
+    (5 : ℚ) * (posNhi a : ℚ) - 72 ≤
+      (72 / (5 * (posNlo a : ℚ))) *
+        positiveLargeTailProductXUpperEdgeExactBound a 2 := by
+  have hlo_pos : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hX_nonneg :
+      0 ≤ (posNhi a : ℚ) * (144 / 25) := by
+    positivity
+  have hX_sq :
+      (posNhi a : ℚ)^2 * (25 / 72)
+        ≤ positiveLargeTailProductXUpperEdgeExactBound a 2 := by
+    unfold positiveLargeTailProductXUpperEdgeExactBound
+    rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_two]
+    linarith
+  have hscale_nonneg :
+      0 ≤ (72 / (5 * (posNlo a : ℚ)) : ℚ) := by
+    positivity
+  have hscaled :
+      (72 / (5 * (posNlo a : ℚ)) : ℚ) *
+          ((posNhi a : ℚ)^2 * (25 / 72))
+        ≤
+      (72 / (5 * (posNlo a : ℚ)) : ℚ) *
+        positiveLargeTailProductXUpperEdgeExactBound a 2 :=
+    mul_le_mul_of_nonneg_left hX_sq hscale_nonneg
+  have hcore :
+      (5 : ℚ) * (posNhi a : ℚ) - 72
+        ≤ (72 / (5 * (posNlo a : ℚ)) : ℚ) *
+            ((posNhi a : ℚ)^2 * (25 / 72)) := by
+    have hhi_cast : (posNhi a : ℚ) = 12 * (a : ℚ) - 8 := by
+      have hsub : 8 ≤ 12 * a := by omega
+      unfold posNhi
+      rw [Nat.cast_sub hsub]
+      norm_num
+    have hlo_cast : (posNlo a : ℚ) = 6 * (a : ℚ) - 7 := by
+      have hsub : 7 ≤ 6 * a := by omega
+      unfold posNlo
+      rw [Nat.cast_sub hsub]
+      norm_num
+    rw [div_mul_eq_mul_div]
+    field_simp [show (5 : ℚ) * (posNlo a : ℚ) ≠ 0 by positivity]
+    rw [hhi_cast, hlo_cast]
+    ring_nf
+    nlinarith [show (0 : ℚ) ≤ (a : ℚ) by positivity]
+  exact hcore.trans hscaled
+
+/-- The endpoint first-cell budget follows from the stronger exact
+upper-edge product scalar at `k = 2`.
+
+This is a Lean-side bridge from the older exact split-product scalar package
+to the current completion-facing first-cell route.  It does not revive the
+independent `Gcomp` product estimate as the final target; it only reuses a
+stronger scalar inequality when it is available. -/
+theorem positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
+    {a : Nat} (ha : 3000 ≤ a)
+    (hscalar :
+      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k) a 2) :
+    positiveSmallFirstCellYUpperEdgeBudget a := by
+  unfold positiveSmallFirstCellYUpperEdgeBudget positiveSmallFirstCellQBudget
+  have hscalar' := hscalar
+  unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+    at hscalar'
+  have hscale_nonneg :
+      0 ≤ (36 / (5 * (posNlo a : ℚ)) : ℚ) := by
+    have hlo_pos : (0 : ℚ) < (posNlo a : ℚ) := by
+      exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+    positivity
+  have hscaled :=
+    mul_le_mul_of_nonneg_left hscalar' hscale_nonneg
+  have hY_nonneg :
+      0 ≤ positiveLargeTailProductYUpperEdgeExactBound a 2 := by
+    unfold positiveLargeTailProductYUpperEdgeExactBound
+    exact positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+      a (posNhi a) 2
+  have hpow_hi_nonneg :
+      0 ≤ (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) := by
+    positivity
+  have hcoeff := positiveSmallFirstCell_linearFactor_le_scaledXUpperEdge a ha
+  have hcoeffY :
+      ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+          positiveLargeTailProductYUpperEdgeExactBound a 2
+        ≤
+      ((72 / (5 * (posNlo a : ℚ)) : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 2) *
+        positiveLargeTailProductYUpperEdgeExactBound a 2 :=
+    mul_le_mul_of_nonneg_right hcoeff hY_nonneg
+  have hleft :
+      (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+          positiveLargeTailProductYUpperEdgeExactBound a 2
+        ≤
+      (36 / (5 * (posNlo a : ℚ)) : ℚ) *
+        (2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (positiveLargeTailProductXUpperEdgeExactBound a 2 *
+            positiveLargeTailProductYUpperEdgeExactBound a 2)) := by
+    calc
+      (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+          positiveLargeTailProductYUpperEdgeExactBound a 2
+          =
+        ((2 : ℚ)^(posJ a 2) * (posNhi a : ℚ)) *
+          (((5 : ℚ) * (posNhi a : ℚ) - 72) *
+            positiveLargeTailProductYUpperEdgeExactBound a 2) := by
+          ring
+      _ ≤
+        ((2 : ℚ)^(posJ a 2) * (posNhi a : ℚ)) *
+          (((72 / (5 * (posNlo a : ℚ)) : ℚ) *
+              positiveLargeTailProductXUpperEdgeExactBound a 2) *
+            positiveLargeTailProductYUpperEdgeExactBound a 2) :=
+          mul_le_mul_of_nonneg_left hcoeffY hpow_hi_nonneg
+      _ =
+        (36 / (5 * (posNlo a : ℚ)) : ℚ) *
+          (2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+            (positiveLargeTailProductXUpperEdgeExactBound a 2 *
+              positiveLargeTailProductYUpperEdgeExactBound a 2)) := by
+          ring
+  exact hleft.trans (by
+    calc
+      (36 / (5 * (posNlo a : ℚ)) : ℚ) *
+        (2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (positiveLargeTailProductXUpperEdgeExactBound a 2 *
+            positiveLargeTailProductYUpperEdgeExactBound a 2))
+          ≤
+        (36 / (5 * (posNlo a : ℚ)) : ℚ) *
+          (130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+            positiveSmallLargeExpFast a 2 *
+              ((posNlo a : ℚ) * c 2 * c (posJ a 2))) := hscaled
+      _ =
+        9360 * (posJ a 2 : ℚ) *
+          positiveSmallLargeExp a 2 * c (posJ a 2) := by
+        have hlo_ne : (posNlo a : ℚ) ≠ 0 := by
+          exact_mod_cast (posNlo_pos (by omega : 2 ≤ a)).ne'
+        rw [positiveSmallLargeExpFast_eq, c_two]
+        field_simp [hlo_ne]
+        ring)
+
 /-- A bound on the shifted `Qq` coefficient reduces the first-cell budget to
 the scalar `positiveSmallFirstCellQBudget` inequality. -/
 theorem positiveSmallFirstCellRawQBudget_of_QBound
@@ -1364,6 +1523,65 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProd
         positiveLargeTailProductYUpperEdgeExactBound
       exact le_rfl)
     hbudgetTwoUpper hsmallGeThree htemperedGeThree
+
+/-- Compatibility constructor from the existing exact upper-edge/lower-`N`
+fast split-final-term scalar package.
+
+This packages that stronger product scalar theorem into the current
+completion-facing `LargeTailProductCertificate`: the `k = 2` cell is routed
+through the direct first-cell `Qq` budget above, while the `k ≥ 3` small and
+tempered tails are supplied by the old scalar fields.  The final target still
+uses the combined actual raw product and the sign-lock split. -/
+theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProductGeThreeNatSignLockComplement
+    (by
+      intro a ha
+      have hk : 2 ∈ positiveKRange a := by
+        refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+        unfold posKmax
+        rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+        omega
+      have hsmall : 2 ≤ ceilSqrt (posNhi a) := by
+        have hlt : 1 < ceilSqrt (posNhi a) :=
+          lt_ceilSqrt_of_sq_lt (n := posNhi a) (k := 1) (by
+            unfold posNhi
+            omega)
+        omega
+      exact
+        positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
+          ha
+          (by
+            have h := product.smallScalar (by omega : 2000 < a) hk hsmall
+            simpa [
+              positiveLargeTailProductXUpperEdgeExactBound,
+              positiveLargeTailProductYUpperEdgeExactBound,
+              positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
+              positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+              mul_assoc,
+            ] using h))
+    (by
+      intro a k ha hk hsmall _hk3
+      have h := product.smallScalar (by omega : 2000 < a) hk hsmall
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
+    (by
+      intro a k ha hk htempered _hnotLock _hk3
+      have h := product.temperedScalar (by omega : 2000 < a) hk htempered
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
 
 /-- Separate-`X`/`Y` variant of the first-term/remainder product-bound route.
 
