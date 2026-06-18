@@ -11957,6 +11957,29 @@ def positiveTemperedLargeXYProductRawCleared (a N k : Nat) : Prop :=
       positiveTemperedLargeExp a k *
         ((N : ℚ) * c k * c (posJ a k))
 
+/-- Fast-exp evaluator variant of
+`positiveSmallLargeXYProductRawCleared`.
+
+This is the same denominator-cleared actual product inequality, but with the
+definitionally faster executable exponential.  It is intended for bounded
+prefix and endpoint-reduced proof production; theorem-facing statements should
+still use `positiveSmallLargeXYProductRawCleared`. -/
+def positiveSmallLargeXYProductRawClearedFastExp (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      Bq N k * Qq N (posJ a k)
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExpFast a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+/-- Fast-exp evaluator variant of
+`positiveTemperedLargeXYProductRawCleared`. -/
+def positiveTemperedLargeXYProductRawClearedFastExp (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      Bq N k * Qq N (posJ a k)
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExpFast a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
 instance decidablePositiveSmallLargeXYProductRawCleared (a N k : Nat) :
     Decidable (positiveSmallLargeXYProductRawCleared a N k) := by
   unfold positiveSmallLargeXYProductRawCleared
@@ -11966,6 +11989,60 @@ instance decidablePositiveTemperedLargeXYProductRawCleared (a N k : Nat) :
     Decidable (positiveTemperedLargeXYProductRawCleared a N k) := by
   unfold positiveTemperedLargeXYProductRawCleared
   infer_instance
+
+instance decidablePositiveSmallLargeXYProductRawClearedFastExp (a N k : Nat) :
+    Decidable (positiveSmallLargeXYProductRawClearedFastExp a N k) := by
+  unfold positiveSmallLargeXYProductRawClearedFastExp
+  infer_instance
+
+instance decidablePositiveTemperedLargeXYProductRawClearedFastExp (a N k : Nat) :
+    Decidable (positiveTemperedLargeXYProductRawClearedFastExp a N k) := by
+  unfold positiveTemperedLargeXYProductRawClearedFastExp
+  infer_instance
+
+theorem positiveSmallLargeXYProductRawCleared_of_fastExp
+    {a N k : Nat}
+    (h : positiveSmallLargeXYProductRawClearedFastExp a N k) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  simpa [positiveSmallLargeXYProductRawCleared,
+    positiveSmallLargeXYProductRawClearedFastExp,
+    positiveSmallLargeExpFast_eq] using h
+
+theorem positiveTemperedLargeXYProductRawCleared_of_fastExp
+    {a N k : Nat}
+    (h : positiveTemperedLargeXYProductRawClearedFastExp a N k) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  simpa [positiveTemperedLargeXYProductRawCleared,
+    positiveTemperedLargeXYProductRawClearedFastExp,
+    positiveTemperedLargeExpFast_eq] using h
+
+/-- Boolean cell checker for the actual small-branch raw product with the
+fast large-exp evaluator. -/
+def checkPositiveSmallLargeXYProductRawClearedFastExpCell
+    (a N k : Nat) : Bool :=
+  decide (positiveSmallLargeXYProductRawClearedFastExp a N k)
+
+/-- Boolean cell checker for the actual tempered-branch raw product with the
+fast large-exp evaluator. -/
+def checkPositiveTemperedLargeXYProductRawClearedFastExpCell
+    (a N k : Nat) : Bool :=
+  decide (positiveTemperedLargeXYProductRawClearedFastExp a N k)
+
+theorem positiveSmallLargeXYProductRawCleared_of_checkFastExpCell
+    {a N k : Nat}
+    (h : checkPositiveSmallLargeXYProductRawClearedFastExpCell a N k = true) :
+    positiveSmallLargeXYProductRawCleared a N k :=
+  positiveSmallLargeXYProductRawCleared_of_fastExp
+    (of_decide_eq_true (by
+      simpa [checkPositiveSmallLargeXYProductRawClearedFastExpCell] using h))
+
+theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpCell
+    {a N k : Nat}
+    (h : checkPositiveTemperedLargeXYProductRawClearedFastExpCell a N k = true) :
+    positiveTemperedLargeXYProductRawCleared a N k :=
+  positiveTemperedLargeXYProductRawCleared_of_fastExp
+    (of_decide_eq_true (by
+      simpa [checkPositiveTemperedLargeXYProductRawClearedFastExpCell] using h))
 
 /-- If the actual `B_k(N)` coefficient is nonpositive, the large-tail
 small-branch raw product target is automatic.

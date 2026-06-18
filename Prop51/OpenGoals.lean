@@ -360,6 +360,41 @@ theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoA
       · exact htemperedGeThree ha haPrefix hrect hk htemperedN hnotLock
           (by omega) hB)
 
+/-- Fast-exp variant of
+`PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement`.
+
+The assumptions are the same reduced actual-product domain, but the
+denominator-cleared inequalities use the executable large-exp evaluator.
+This is the intended bounded-prefix proof surface once endpoint or compact row
+checking supplies the remaining cells. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedFastExpBqPositiveTwoAndGeThreeNatSignLockComplement
+    (hsmallTwo :
+      ∀ {a N : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        positiveSmallLargeXYProductRawClearedFastExp a N 2)
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawClearedFastExp a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawClearedFastExp a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha haPrefix hrect
+      exact positiveSmallLargeXYProductRawCleared_of_fastExp
+        (hsmallTwo ha haPrefix hrect))
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN hk3 hB
+      exact positiveSmallLargeXYProductRawCleared_of_fastExp
+        (hsmallGeThree ha haPrefix hrect hk hsmallN hk3 hB))
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock hk3 hB
+      exact positiveTemperedLargeXYProductRawCleared_of_fastExp
+        (htemperedGeThree ha haPrefix hrect hk htemperedN hnotLock hk3 hB))
+
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
@@ -1308,6 +1343,41 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLo
             exact hNgt)
         omega
       · exact htemperedGeThree ha hrect hk htemperedN hnotLock (by omega) hB)
+
+/-- Fast-exp variant of
+`LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement`.
+
+The theorem-facing large-tail product certificate remains stated with the
+canonical raw inequalities.  This wrapper lets the remaining product proof
+use the executable `positive*LargeExpFast` forms on exactly the reduced
+first-cell/`k ≥ 3`/sign-lock-complement domain. -/
+theorem LargeTailProductCertificate.ofRawClearedFastExpBqPositiveTwoAndGeThreeNatSignLockComplement
+    (hsmallTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallLargeXYProductRawClearedFastExp a N 2)
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawClearedFastExp a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawClearedFastExp a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha hrect
+      exact positiveSmallLargeXYProductRawCleared_of_fastExp
+        (hsmallTwo ha hrect))
+    (by
+      intro a N k ha hrect hk hsmallN hk3 hB
+      exact positiveSmallLargeXYProductRawCleared_of_fastExp
+        (hsmallGeThree ha hrect hk hsmallN hk3 hB))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk3 hB
+      exact positiveTemperedLargeXYProductRawCleared_of_fastExp
+        (htemperedGeThree ha hrect hk htemperedN hnotLock hk3 hB))
 
 /-- Product-tail constructor where the first retained cell is supplied by a
 direct bound for `Qq N (a-2)`.
