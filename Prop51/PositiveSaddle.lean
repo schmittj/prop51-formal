@@ -13,6 +13,7 @@ import Mathlib.Data.Nat.Sqrt
 import Mathlib.Data.Nat.Choose.Bounds
 import Mathlib.Data.Nat.Choose.Sum
 import Mathlib.Data.Nat.Factorial.BigOperators
+import Mathlib.Algebra.Order.Floor.Div
 import Mathlib.Analysis.SpecificLimits.Normed
 import Prop51.SignLock
 
@@ -10242,6 +10243,54 @@ theorem partialExpUpperFast_eq (y : ℚ) (T₀ : Nat) :
     partialExpUpperFast y T₀ = partialExpUpper y T₀ := by
   rw [partialExpUpperFast, partialExpUpperState_eq]
   simp [partialExpUpper]
+
+/-! ### Upward-rounded fixed-point primitives -/
+
+/-- A natural ceiling division is an upper bound for the corresponding
+rational quotient.
+
+This is the basic soundness lemma for compact fixed-point checkers: after
+computing an integer numerator `n`, replacing `n / d` by `n ⌈/⌉ d` can only
+increase its rational value. -/
+theorem natCast_div_le_ceilDiv (n d : Nat) (hd : 0 < d) :
+    (n : ℚ) / (d : ℚ) ≤ ((n ⌈/⌉ d : Nat) : ℚ) := by
+  have hmul : n ≤ d * (n ⌈/⌉ d) := by
+    simpa using (le_smul_ceilDiv (α := Nat) (β := Nat) hd (b := n))
+  have hdQ : (0 : ℚ) < (d : ℚ) := by
+    exact_mod_cast hd
+  have hmulQ : (n : ℚ) ≤ ((n ⌈/⌉ d : Nat) : ℚ) * (d : ℚ) := by
+    exact_mod_cast (by simpa [Nat.mul_comm] using hmul)
+  rw [div_le_iff₀ hdQ]
+  simpa [mul_comm] using hmulQ
+
+/-- One upward-rounded fixed-point multiplication/division step.
+
+If `u / S` is an upper bound for the current nonnegative quantity, then
+`scaledMulDivCeil u num den / S` is an upper bound after multiplying by
+`num / den`.  Formula-specific checkers can use this as the recurrence step
+without constructing a reduced rational at every iteration. -/
+def scaledMulDivCeil (u num den : Nat) : Nat :=
+  (u * num) ⌈/⌉ den
+
+theorem scaledMulDivCeil_sound
+    {S u num den : Nat} (hS : 0 < S) (hden : 0 < den) :
+    ((u : ℚ) / (S : ℚ)) * ((num : ℚ) / (den : ℚ))
+      ≤ ((scaledMulDivCeil u num den : Nat) : ℚ) / (S : ℚ) := by
+  have hceil :
+      ((u * num : Nat) : ℚ) / (den : ℚ)
+        ≤ ((scaledMulDivCeil u num den : Nat) : ℚ) := by
+    simpa [scaledMulDivCeil] using natCast_div_le_ceilDiv (u * num) den hden
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by
+    exact_mod_cast hS
+  have hdenℚ : (0 : ℚ) < (den : ℚ) := by
+    exact_mod_cast hden
+  calc
+    ((u : ℚ) / (S : ℚ)) * ((num : ℚ) / (den : ℚ))
+        = ((u * num : Nat) : ℚ) / (den : ℚ) / (S : ℚ) := by
+            field_simp [hSℚ.ne', hdenℚ.ne']
+            norm_num
+    _ ≤ ((scaledMulDivCeil u num den : Nat) : ℚ) / (S : ℚ) :=
+        div_le_div_of_nonneg_right hceil hSℚ.le
 
 /-- Fast-evaluator version of `positiveSmallMajorantTerm`.
 
