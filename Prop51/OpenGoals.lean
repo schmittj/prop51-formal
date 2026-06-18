@@ -103,6 +103,17 @@ structure LargeTailSoloCertificate where
     ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
       (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1
 
+theorem LargeTailSoloCertificate.ofSharpGcompSaddleTenSeventhsCleared
+    (hsharp :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    LargeTailSoloCertificate where
+  largeSolo := by
+    intro a N ha hrect
+    exact
+      positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
+        (by omega : 2000 < a) hrect (hsharp ha hrect)
+
 theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)

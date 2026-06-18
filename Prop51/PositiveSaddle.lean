@@ -19857,6 +19857,25 @@ def positiveLargeTailSoloGcompBlockSum (a N : Nat) : ℚ :=
         ((N : ℚ) / 50)^r * 6^(a - s) * Gcomp r (a - s) /
           (r.factorial : ℚ))
 
+/-- Sharp large-tail solo saddle sum based on `QqSharpGcompBound`.
+
+This is the solo-only replacement for `positiveLargeTailSoloGcompSaddleSum`:
+it keeps the dyadic decay in the nonlinear `Qq` coefficients by using
+`EplusSharpGcompBound`. -/
+def positiveLargeTailSoloSharpGcompSaddleSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      EplusSharpGcompBound N (a - s)
+
+/-- Sharp solo saddle sum with the nonlinear recurrence opened into the
+explicit `Gcomp` block majorant with base `3`. -/
+def positiveLargeTailSoloSharpGcompBlockSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ Finset.range (a - s + 1),
+        ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+          Gcomp r (a - s) / (r.factorial : ℚ))
+
 /-- Solo block sum with recursive `Gcomp` replaced by the closed composition
 bound. -/
 def positiveLargeTailSoloGcompClosedBlockSum (a N : Nat) : ℚ :=
@@ -19966,6 +19985,28 @@ theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
     positivity
   exact mul_le_mul_of_nonneg_left
     (EplusGcompBound_le_Gcomp_sum N (a - s)) hlin_nonneg
+
+theorem positiveLargeTailSoloSharpGcompSaddleSum_eq_QqSharpGcompBound
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompSaddleSum a N =
+      QqSharpGcompBound N a := by
+  unfold positiveLargeTailSoloSharpGcompSaddleSum
+  rw [QqSharpGcompBound_eq_linear_EplusSharpGcompBound_sum]
+
+/-- The decomposed sharp recurrence sum is bounded by the explicit sharp
+double block sum. -/
+theorem positiveLargeTailSoloSharpGcompSaddleSum_le_blockSum (a N : Nat) :
+    positiveLargeTailSoloSharpGcompSaddleSum a N
+      ≤ positiveLargeTailSoloSharpGcompBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompSaddleSum
+    positiveLargeTailSoloSharpGcompBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (EplusSharpGcompBound_le_Gcomp_sum N (a - s)) hlin_nonneg
 
 /-- The explicit solo `Gcomp` double sum is bounded by the closed-composition
 version. -/
@@ -20181,6 +20222,17 @@ def positiveLargeTailSoloGcompSaddleTenSeventhsCleared
   (4 : ℚ) * (2 : ℚ)^a * QqEplusGcompBound N a
     ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
 
+/-- Denominator-cleared sharp large-tail solo target with the final
+`(10/7)^a` envelope directly on the right.
+
+This is the theorem-facing solo target for the current completion route:
+unlike `positiveLargeTailSoloGcompSaddleTenSeventhsCleared`, it uses
+`QqSharpGcompBound`, whose nonlinear coefficients retain the dyadic decay. -/
+def positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * QqSharpGcompBound N a
+    ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
+
 /-- The sum-cleared and recurrence-cleared solo saddle targets are the same
 inequality after expanding `QqEplusGcompBound` into its exact linear
 exponential and nonlinear `EplusGcompBound` majorant. -/
@@ -20372,6 +20424,83 @@ theorem positiveLargeTailSoloGcompSaddleTenSeventhsCleared_of_closedFactorialSpl
                 a N).symm
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   exact (mul_le_mul_of_nonneg_left hQ_le_split hscale).trans h
+
+theorem positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_blockSum
+    {a N : Nat}
+    (h :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpGcompBlockSum a N
+        ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N := by
+  unfold positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared
+  have hQ_le_block :
+      QqSharpGcompBound N a ≤
+        positiveLargeTailSoloSharpGcompBlockSum a N := by
+    calc
+      QqSharpGcompBound N a
+          = positiveLargeTailSoloSharpGcompSaddleSum a N :=
+              (positiveLargeTailSoloSharpGcompSaddleSum_eq_QqSharpGcompBound
+                a N).symm
+      _ ≤ positiveLargeTailSoloSharpGcompBlockSum a N :=
+              positiveLargeTailSoloSharpGcompSaddleSum_le_blockSum a N
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hQ_le_block hscale).trans h
+
+theorem positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (h :
+      positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hsharpUnit :
+      (200000000 : ℚ) * positiveSoloSharpGcompBound a N ≤ 1 := by
+    unfold positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared at h
+    unfold positiveSoloSharpGcompBound
+    have hca_pos : 0 < c a := c_pos a (by omega : 1 ≤ a)
+    have hden_pos : (0 : ℚ) < (N : ℚ) * c a := by
+      have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+      exact mul_pos hNQ hca_pos
+    have hpow_pos : (0 : ℚ) < (2 : ℚ)^a := by positivity
+    have hscale_pos : (0 : ℚ) < 4 * (2 : ℚ)^a := by positivity
+    have hQ :
+        QqSharpGcompBound N a ≤
+          (29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+            (4 * (2 : ℚ)^a) := by
+      rw [le_div_iff₀ hscale_pos]
+      simpa [mul_assoc, mul_left_comm, mul_comm] using h
+    have hnorm :
+        QqSharpGcompBound N a / ((N : ℚ) * c a)
+          ≤ ((29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+              (4 * (2 : ℚ)^a)) / ((N : ℚ) * c a) :=
+      div_le_div_of_nonneg_right hQ hden_pos.le
+    have htarget :
+        (200000000 : ℚ) *
+            (((29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+              (4 * (2 : ℚ)^a)) / ((N : ℚ) * c a))
+          ≤ 1 := by
+      have hY :
+          positiveLargeTailSoloTenSeventhsBound a N =
+            (29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+              (2 * ((N : ℚ) * c a)) := by
+        unfold positiveLargeTailSoloTenSeventhsBound
+        field_simp [hden_pos.ne', hca_pos.ne']
+      have hrew :
+          (((29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+              (4 * (2 : ℚ)^a)) / ((N : ℚ) * c a))
+            =
+          positiveDyadicDecay a / 2 *
+            positiveLargeTailSoloTenSeventhsBound a N := by
+        unfold positiveDyadicDecay
+        rw [hY]
+        field_simp [hden_pos.ne', hpow_pos.ne', hca_pos.ne']
+        ring
+      rw [hrew]
+      exact positiveLargeTailSoloTenSeventhsScalarBudget ha hrect
+    exact
+      (mul_le_mul_of_nonneg_left hnorm
+        (by norm_num : (0 : ℚ) ≤ 200000000)).trans htarget
+  exact positiveLargeTailSoloNormUnit_of_sharp_unit hN
+    (by omega : 1 ≤ a) hsharpUnit
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/
