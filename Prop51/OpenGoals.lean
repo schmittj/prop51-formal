@@ -483,6 +483,82 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsNatSignLo
     hsmall
     htempered
 
+/-- Large-tail product constructor for separate rational upper-edge `X` and
+`Y` factor surrogates after both cheap raw-product reductions.
+
+This is the same completion-facing route as
+`ofFastUpperEdgeLowerNXYBoundScalarsNatSignLockComplement`, with the additional
+Lean-side reduction from `Bq N 1 ≤ 0`: future scalar witnesses only need to
+cover retained positive-`Bq` cells, hence `2 ≤ k`.  The statement is a proof
+surface reduction, not a new mathematical estimate; the raw product is still
+the actual combined `Bq * Qq` term. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsGeTwoNatSignLockComplement
+    {xBound yBound : Nat → Nat → ℚ}
+    (hxBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ xBound a k)
+    (hyBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ yBound a k)
+    (hsmall :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 2 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k)
+    (htempered :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 2 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k) :
+    LargeTailProductCertificate := by
+  have hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xBound a k * yBound a k := by
+    intro a k ha hk
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+    have hx := hxBound ha hk
+    have hy := hyBound ha hk
+    have hYnonneg :
+        0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k :=
+      positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k
+    have hxBoundNonneg : 0 ≤ xBound a k :=
+      (positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k).trans hx
+    exact mul_le_mul hx hy hYnonneg hxBoundNonneg
+  exact
+    LargeTailProductCertificate.ofRawClearedBqPositiveGeTwoNatSignLockComplement
+      (by
+        intro a N k ha hrect hk hsmallN hk2 _hB
+        have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+          hsmallN.trans (ceilSqrt_mono hrect.2)
+        exact
+          positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+            (by omega : 2000 < a) hrect hk
+            (hproductBound ha hk)
+            (hsmall ha hk hsmallEdge hk2))
+      (by
+        intro a N k ha hrect hk htemperedN hnotLock hk2 _hB
+        have htemperedEdge : ceilSqrt (posNlo a) < k :=
+          lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+        have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+          rcases hnotLock with hsmallK | hN
+          · exact Or.inl hsmallK
+          · exact Or.inr (by
+              have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+                Nat.mul_le_mul_left 3 hrect.2
+              omega)
+        exact
+          positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+            (by omega : 2000 < a) hrect hk
+            (hproductBound ha hk)
+            (htempered ha hk htemperedEdge hrowAlt hk2))
+
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
 machinery.
