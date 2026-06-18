@@ -89,23 +89,46 @@ theorem LargeTailProductCertificate.toFullHybrid
   largeSmall := hproduct.largeSmall
   largeTempered := hproduct.largeTempered
 
-/-- The large-tail solo obligation for the current canonical route. -/
+/-- The large-tail solo obligation for the current canonical route.
+
+The TeX-side target is the direct `(10/7)^a` solo envelope at the upper
+rectangle edge.  Earlier Lean proof-production layers also expose a stronger
+`partialExpUpperFast` scalar target; the dashboard keeps that stronger target
+only on the bounded prefix side, where it is already part of the generated
+certificate, and asks the analytic large-`a` input for the direct
+ten-sevenths statement. -/
 structure LargeTailSoloCertificate where
   largeSolo :
     ∀ {a : Nat}, 3000 ≤ a →
-      positiveLargeTailSoloFastUpperEdgeBoundScalar
-        positiveLargeTailSoloUpperEdgeExactBound a
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a)
 
-theorem LargeTailSoloCertificate.toFullHybrid
+theorem LargeTailSoloCertificate.toUpperEdgeTenSevenths
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)
     (hprefix :
       PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
         positiveLargeTailSoloUpperEdgeExactBound aLen) :
-    PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
-      positiveLargeTailSoloUpperEdgeExactBound
-      aLen :=
-  hprefix.toExactBoundFullHybridCertificate hsolo.largeSolo
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a) := by
+  intro a ha
+  by_cases haLarge : 3000 ≤ a
+  · exact hsolo.largeSolo haLarge
+  · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
+    have hscalar :
+        positiveLargeTailSoloFastUpperEdgeBoundScalar
+          positiveLargeTailSoloUpperEdgeExactBound a :=
+      hprefix.toPrefixCertificate.soloScalar ha haPrefix
+    have hfast :
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a) := by
+      unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
+      unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+      simpa [positiveLargeTailSoloUpperEdgeExactBound] using hscalar
+    exact
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared
+        ha hfast
 
 /-- Final assembly from the three live obligations.
 
@@ -115,10 +138,19 @@ theorem completion_of_three_inputs
     (hbounded : BoundedPositiveCertificate)
     (hproduct : LargeTailProductCertificate)
     (hsolo : LargeTailSoloCertificate) :
-    CoefficientNegativity :=
-  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail
+    CoefficientNegativity := by
+  let productBounds :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+    ((hproduct.toFullHybrid hbounded.productPrefix).toHybridCertificate
+      |>.toProductBoundCertificate
+      |>.toProductBoundsCertificate)
+  exact
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
     hbounded.cert
-    (hproduct.toFullHybrid hbounded.productPrefix)
-    (hsolo.toFullHybrid hbounded.soloPrefix)
+    (positiveSaddleLargeTailAuditCertificate_of_product_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+      productBounds
+      (hsolo.toUpperEdgeTenSevenths hbounded.soloPrefix))
 
 end Prop51
