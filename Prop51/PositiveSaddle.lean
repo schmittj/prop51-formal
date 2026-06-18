@@ -22007,6 +22007,171 @@ theorem positiveLargeTailSoloSharpTinyCrude_factorial_core
         exact hstep (3000 + n) hm ih
   exact htail n
 
+theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_sixteenth_target
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
+      ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hcrude :=
+    positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_crude
+      (a := a) ha
+  have hcore :=
+    positiveLargeTailSoloSharpTinyCrude_factorial_core (a := a) ha
+  have hfac3_pos :
+      (0 : ℚ) < (((a - 3).factorial : Nat) : ℚ) := by
+    positivity
+  have hpow_convert :
+      ((7 / 12 : ℚ) * (a : ℚ))^a * (60 / 7 : ℚ)^a =
+        ((5 : ℚ) * (a : ℚ))^a := by
+    rw [← mul_pow]
+    ring
+  have hcore_power :
+      (1152 : ℚ) * ((5 : ℚ) * (a : ℚ))^a
+        ≤ (145 / 576 : ℚ) *
+          ((((a - 3).factorial : Nat) : ℚ) *
+            (((a - 1).factorial : Nat) : ℚ)) *
+          (60 / 7 : ℚ)^a := by
+    have hscaled_left :
+        (145 / 576 : ℚ) *
+            ((663552 / 145 : ℚ) *
+              ((7 / 12 : ℚ) * (a : ℚ))^a)
+          ≤ (145 / 576 : ℚ) *
+            ((((a - 3).factorial : Nat) : ℚ) *
+              (((a - 1).factorial : Nat) : ℚ)) :=
+      mul_le_mul_of_nonneg_left hcore (by norm_num)
+    have hscaled :=
+      mul_le_mul_of_nonneg_right hscaled_left
+        (by positivity : 0 ≤ (60 / 7 : ℚ)^a)
+    calc
+      (1152 : ℚ) * ((5 : ℚ) * (a : ℚ))^a
+          =
+        (145 / 576 : ℚ) *
+            ((663552 / 145 : ℚ) *
+              ((7 / 12 : ℚ) * (a : ℚ))^a) *
+          (60 / 7 : ℚ)^a := by
+            rw [← hpow_convert]
+            ring
+      _ ≤ (145 / 576 : ℚ) *
+          ((((a - 3).factorial : Nat) : ℚ) *
+            (((a - 1).factorial : Nat) : ℚ)) *
+          (60 / 7 : ℚ)^a := hscaled
+  have hcrude_to_clb :
+      1152 * (a : ℚ) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ))
+        ≤ (29 / 16 : ℚ) * (a : ℚ) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a := by
+    have hscaled :=
+      mul_le_mul_of_nonneg_left hcore_power
+        (by positivity :
+          0 ≤ (a : ℚ) / (((a - 3).factorial : Nat) : ℚ))
+    calc
+      1152 * (a : ℚ) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ))
+          =
+        ((a : ℚ) / (((a - 3).factorial : Nat) : ℚ)) *
+          ((1152 : ℚ) * ((5 : ℚ) * (a : ℚ))^a) := by
+            field_simp [hfac3_pos.ne']
+      _ ≤
+        ((a : ℚ) / (((a - 3).factorial : Nat) : ℚ)) *
+          ((145 / 576 : ℚ) *
+            ((((a - 3).factorial : Nat) : ℚ) *
+              (((a - 1).factorial : Nat) : ℚ)) *
+            (60 / 7 : ℚ)^a) := hscaled
+      _ =
+        (145 / 576 : ℚ) * (a : ℚ) *
+          (((a - 1).factorial : Nat) : ℚ) *
+          (60 / 7 : ℚ)^a := by
+            field_simp [hfac3_pos.ne']
+      _ =
+        (29 / 16 : ℚ) * (a : ℚ) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a := by
+            rw [show (60 / 7 : ℚ)^a =
+                (6 : ℚ)^a * (10 / 7 : ℚ)^a by
+              rw [← mul_pow]
+              ring]
+            ring
+  have hc_lower :=
+    c_lb a (by omega : 1 ≤ a)
+  have htarget_lower :
+      (29 / 16 : ℚ) * (a : ℚ) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a
+        ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+    have hmul :=
+      mul_le_mul_of_nonneg_left hc_lower
+        (by positivity : 0 ≤ (29 / 16 : ℚ) * (a : ℚ))
+    have hscaled :=
+      mul_le_mul_of_nonneg_right hmul
+        (by positivity : 0 ≤ (10 / 7 : ℚ)^a)
+    calc
+      (29 / 16 : ℚ) * (a : ℚ) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a
+          =
+        ((29 / 16 : ℚ) * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a := by
+            ring
+      _ ≤ ((29 / 16 : ℚ) * (a : ℚ)) * c a *
+          (10 / 7 : ℚ)^a := hscaled
+      _ =
+        (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+          ring
+  exact hcrude.trans (hcrude_to_clb.trans htarget_lower)
+
+theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_eighth_target_of_deepLowDegreeRemainder
+    {a : Nat} (ha : 3000 ≤ a)
+    (hdeepLow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
+        ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+      ≤ (29 / 8 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have htiny :=
+    positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_sixteenth_target
+      (a := a) ha
+  have hsplit :=
+    positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
+      (a := a) ha
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
+    positivity
+  have hscaled_split :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+        ≤ (4 : ℚ) * (2 : ℚ)^a *
+          (positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a +
+            positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a) :=
+    mul_le_mul_of_nonneg_left hsplit hscale
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+        ≤ (4 : ℚ) * (2 : ℚ)^a *
+          (positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a +
+            positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a) :=
+          hscaled_split
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a := by
+          ring
+    _ ≤
+      (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a +
+        (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a :=
+          add_le_add htiny hdeepLow
+    _ = (29 / 8 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+          ring
+
 theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryLow
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
@@ -22874,6 +23039,21 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCl
     ha
     (positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_scaled_le_quarter_target_of_veryLowDegreeRemainder
       ha hveryLow)
+
+/-- After peeling off the exact `p < 4` exceptional degrees, it is enough to
+bound only the genuinely deep low-degree residual `4 ≤ p` and `3p < a`. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deepLowDegreeRemainderBlockSum
+    {a : Nat} (ha : 3000 ≤ a)
+    (hdeepLow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
+        ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a (posNhi a) :=
+  positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_veryLowDegreeRemainderBlockSum
+    ha
+    (positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_eighth_target_of_deepLowDegreeRemainder
+      ha hdeepLow)
 
 /-- The fast split-final-term solo shell is stronger than the direct
 `(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
