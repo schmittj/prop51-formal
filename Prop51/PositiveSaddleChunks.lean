@@ -1866,6 +1866,256 @@ theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificat
     PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate :=
   cert.toProductBoundCertificate.toUpperEdgeLowerNCertificate
 
+/-- Boolean atom for the prefix-strip `X` factor bound at the upper rectangle
+edge.  This closes the `xBound_le` side of a separate-factor surrogate
+certificate by computation on `2000 < a < 3000`. -/
+def checkPositiveLargeTailProductXUpperEdgeBound
+    (xBound : Nat → Nat → ℚ) (a k : Nat) : Bool :=
+  decide
+    (positiveLargeTailProductXClosedFactorialSplitBlockBound
+        a (posNhi a) k ≤ xBound a k)
+
+/-- Boolean atom for the prefix-strip `Y` factor bound at the upper rectangle
+edge. -/
+def checkPositiveLargeTailProductYUpperEdgeBound
+    (yBound : Nat → Nat → ℚ) (a k : Nat) : Bool :=
+  decide
+    (positiveLargeTailProductYClosedFactorialSplitBlockBound
+        a (posNhi a) k ≤ yBound a k)
+
+/-- Boolean chunk for prefix-strip `X` factor bound checks. -/
+def checkPositiveLargeTailProductXUpperEdgeBoundChunk
+    (xBound : Nat → Nat → ℚ) (aLo aLen kLo kLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' kLo kLen).all fun k =>
+      if 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a then
+        checkPositiveLargeTailProductXUpperEdgeBound xBound a k
+      else
+        true
+
+/-- Boolean chunk for prefix-strip `Y` factor bound checks. -/
+def checkPositiveLargeTailProductYUpperEdgeBoundChunk
+    (yBound : Nat → Nat → ℚ) (aLo aLen kLo kLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' kLo kLen).all fun k =>
+      if 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a then
+        checkPositiveLargeTailProductYUpperEdgeBound yBound a k
+      else
+        true
+
+theorem checkPositiveLargeTailProductXUpperEdgeBound_of_chunk
+    {xBound : Nat → Nat → ℚ} {aLo aLen kLo kLen a k : Nat}
+    (h :
+      checkPositiveLargeTailProductXUpperEdgeBoundChunk
+        xBound aLo aLen kLo kLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (hk_mem : k ∈ List.range' kLo kLen)
+    (ha : 2000 < a) (haPrefix : a < 3000)
+    (hk : k ∈ positiveKRange a) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound
+        a (posNhi a) k ≤ xBound a k := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' kLo kLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y ∈ positiveKRange x then
+            checkPositiveLargeTailProductXUpperEdgeBound xBound x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailProductXUpperEdgeBoundChunk] using h)
+  have hkAll :
+      ∀ y ∈ List.range' kLo kLen,
+        (if 2000 < a ∧ a < 3000 ∧ y ∈ positiveKRange a then
+            checkPositiveLargeTailProductXUpperEdgeBound xBound a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveLargeTailProductXUpperEdgeBound xBound a k = true := by
+    have hcond : 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a :=
+      ⟨ha, haPrefix, hk⟩
+    have hline := hkAll k hk_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailProductXUpperEdgeBound] using hcheck)
+
+theorem checkPositiveLargeTailProductYUpperEdgeBound_of_chunk
+    {yBound : Nat → Nat → ℚ} {aLo aLen kLo kLen a k : Nat}
+    (h :
+      checkPositiveLargeTailProductYUpperEdgeBoundChunk
+        yBound aLo aLen kLo kLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (hk_mem : k ∈ List.range' kLo kLen)
+    (ha : 2000 < a) (haPrefix : a < 3000)
+    (hk : k ∈ positiveKRange a) :
+    positiveLargeTailProductYClosedFactorialSplitBlockBound
+        a (posNhi a) k ≤ yBound a k := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' kLo kLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y ∈ positiveKRange x then
+            checkPositiveLargeTailProductYUpperEdgeBound yBound x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailProductYUpperEdgeBoundChunk] using h)
+  have hkAll :
+      ∀ y ∈ List.range' kLo kLen,
+        (if 2000 < a ∧ a < 3000 ∧ y ∈ positiveKRange a then
+            checkPositiveLargeTailProductYUpperEdgeBound yBound a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveLargeTailProductYUpperEdgeBound yBound a k = true := by
+    have hcond : 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a :=
+      ⟨ha, haPrefix, hk⟩
+    have hline := hkAll k hk_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailProductYUpperEdgeBound] using hcheck)
+
+/-- Prefix-strip certificate for separate upper-edge product-factor bounds. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundCertificate
+    (xBound yBound : Nat → Nat → ℚ) : Prop where
+  xBound_le :
+    ∀ {a k : Nat}, 2000 < a → a < 3000 →
+      k ∈ positiveKRange a →
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ xBound a k
+  yBound_le :
+    ∀ {a k : Nat}, 2000 < a → a < 3000 →
+      k ∈ positiveKRange a →
+        positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ yBound a k
+
+/-- Chunked prefix-strip certificate for separate upper-edge product-factor
+bounds. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunksCertificate
+    (xBound yBound : Nat → Nat → ℚ) (aLen kLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  kLenPos : 0 < kLen
+  xBoundChunk :
+    ∀ {aChunk kChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      kChunk ∈
+        positiveProductFixedKChunksUpTo kLen
+          (posKmax (aChunk.1 + aChunk.2)) →
+        checkPositiveLargeTailProductXUpperEdgeBoundChunk
+          xBound aChunk.1 aChunk.2 kChunk.1 kChunk.2 = true
+  yBoundChunk :
+    ∀ {aChunk kChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      kChunk ∈
+        positiveProductFixedKChunksUpTo kLen
+          (posKmax (aChunk.1 + aChunk.2)) →
+        checkPositiveLargeTailProductYUpperEdgeBoundChunk
+          yBound aChunk.1 aChunk.2 kChunk.1 kChunk.2 = true
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunksCertificate.toPrefixBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunksCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundCertificate
+      xBound yBound where
+  xBound_le := by
+    intro a k ha haPrefix hk
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    have haBound : a ≤ aChunk.1 + aChunk.2 :=
+      (List.mem_range'_1.mp haMem).2.le
+    have hkMax :
+        k ≤ posKmax (aChunk.1 + aChunk.2) :=
+      (mem_positiveKRange.mp hk).2.trans (posKmax_mono haBound)
+    rcases positiveProductFixedKChunksUpTo_cover
+        cert.kLenPos (mem_positiveKRange.mp hk).1 hkMax with
+      ⟨kChunk, hkChunk, hkMem⟩
+    exact
+      checkPositiveLargeTailProductXUpperEdgeBound_of_chunk
+        (cert.xBoundChunk haChunk hkChunk) haMem hkMem ha haPrefix hk
+  yBound_le := by
+    intro a k ha haPrefix hk
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    have haBound : a ≤ aChunk.1 + aChunk.2 :=
+      (List.mem_range'_1.mp haMem).2.le
+    have hkMax :
+        k ≤ posKmax (aChunk.1 + aChunk.2) :=
+      (mem_positiveKRange.mp hk).2.trans (posKmax_mono haBound)
+    rcases positiveProductFixedKChunksUpTo_cover
+        cert.kLenPos (mem_positiveKRange.mp hk).1 hkMax with
+      ⟨kChunk, hkChunk, hkMem⟩
+    exact
+      checkPositiveLargeTailProductYUpperEdgeBound_of_chunk
+        (cert.yBoundChunk haChunk hkChunk) haMem hkMem ha haPrefix hk
+
+/-- Full prefix/large hybrid certificate for separate product-factor
+surrogates: prefix bound inequalities and prefix scalar budgets are both
+generated chunks, while all `3000 ≤ a` obligations remain analytic fields. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+    (xBound yBound : Nat → Nat → ℚ) (aLen kLen : Nat) : Prop where
+  boundPrefixChunks :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunksCertificate
+      xBound yBound aLen kLen
+  scalarPrefixChunks :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+      (fun a k => xBound a k * yBound a k) aLen kLen
+  largeXBound :
+    ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+      positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ xBound a k
+  largeYBound :
+    ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+      positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ yBound a k
+  largeSmall :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+  largeTempered :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate.toHybridCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+      xBound yBound aLen kLen where
+  xBound_le := by
+    intro a k ha hk
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeXBound haLarge hk
+    · exact cert.boundPrefixChunks.toPrefixBoundCertificate.xBound_le
+        ha (Nat.lt_of_not_ge haLarge) hk
+  yBound_le := by
+    intro a k ha hk
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeYBound haLarge hk
+    · exact cert.boundPrefixChunks.toPrefixBoundCertificate.yBound_le
+        ha (Nat.lt_of_not_ge haLarge) hk
+  prefixChunks := cert.scalarPrefixChunks
+  largeSmall := cert.largeSmall
+  largeTempered := cert.largeTempered
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate.toXYBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+      xBound yBound :=
+  cert.toHybridCertificate.toXYBoundCertificate
+
 /-- Boolean atom for a fast upper-edge solo budget after replacing the
 actual split-factorial solo sum by a rational surrogate `soloBound`. -/
 def checkPositiveLargeTailSoloFastUpperEdgeBound
@@ -1974,6 +2224,125 @@ theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate.toBoundCe
     · exact cert.largeSolo haLarge
     · exact cert.prefixChunks.toPrefixCertificate.soloScalar
         ha (Nat.lt_of_not_ge haLarge)
+
+/-- Boolean atom for the prefix-strip solo upper-edge split-factorial bound
+against a rational surrogate `soloBound`. -/
+def checkPositiveLargeTailSoloUpperEdgeBound
+    (soloBound : Nat → ℚ) (a : Nat) : Bool :=
+  decide
+    (positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+      ≤ soloBound a)
+
+/-- Boolean chunk for prefix-strip solo upper-edge bound checks. -/
+def checkPositiveLargeTailSoloUpperEdgeBoundChunk
+    (soloBound : Nat → ℚ) (aLo aLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    if 2000 < a ∧ a < 3000 then
+      checkPositiveLargeTailSoloUpperEdgeBound soloBound a
+    else
+      true
+
+theorem checkPositiveLargeTailSoloUpperEdgeBound_of_chunk
+    {soloBound : Nat → ℚ} {aLo aLen a : Nat}
+    (h :
+      checkPositiveLargeTailSoloUpperEdgeBoundChunk
+        soloBound aLo aLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (ha : 2000 < a) (haPrefix : a < 3000) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+      ≤ soloBound a := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        (if 2000 < x ∧ x < 3000 then
+          checkPositiveLargeTailSoloUpperEdgeBound soloBound x
+        else
+          true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailSoloUpperEdgeBoundChunk] using h)
+  have hcheck :
+      checkPositiveLargeTailSoloUpperEdgeBound soloBound a = true := by
+    have hline := haAll a ha_mem
+    rw [if_pos ⟨ha, haPrefix⟩] at hline
+    exact hline
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailSoloUpperEdgeBound] using hcheck)
+
+/-- Prefix-strip certificate for the solo upper-edge surrogate bound. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundCertificate
+    (soloBound : Nat → ℚ) : Prop where
+  soloBound_le :
+    ∀ {a : Nat}, 2000 < a → a < 3000 →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+        ≤ soloBound a
+
+/-- Chunked prefix-strip certificate for the solo upper-edge surrogate
+bound. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificate
+    (soloBound : Nat → ℚ) (aLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  soloBoundChunk :
+    ∀ {aChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+        checkPositiveLargeTailSoloUpperEdgeBoundChunk
+          soloBound aChunk.1 aChunk.2 = true
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificate.toPrefixBoundCertificate
+    {soloBound : Nat → ℚ} {aLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificate
+        soloBound aLen) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundCertificate
+      soloBound where
+  soloBound_le := by
+    intro a ha haPrefix
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    exact checkPositiveLargeTailSoloUpperEdgeBound_of_chunk
+      (cert.soloBoundChunk haChunk) haMem ha haPrefix
+
+/-- Full prefix/large hybrid certificate for the solo surrogate: prefix
+bound inequalities and prefix scalar budgets are generated chunks, while
+the `3000 ≤ a` bound and scalar budget remain analytic fields. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+    (soloBound : Nat → ℚ) (aLen : Nat) : Prop where
+  boundPrefixChunks :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificate
+      soloBound aLen
+  scalarPrefixChunks :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
+      soloBound aLen
+  largeBound :
+    ∀ {a : Nat}, 3000 ≤ a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+        ≤ soloBound a
+  largeSolo :
+    ∀ {a : Nat}, 3000 ≤ a →
+      positiveLargeTailSoloFastUpperEdgeBoundScalar soloBound a
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate.toHybridCertificate
+    {soloBound : Nat → ℚ} {aLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+        soloBound aLen) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate
+      soloBound aLen where
+  soloBound_le := by
+    intro a ha
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeBound haLarge
+    · exact cert.boundPrefixChunks.toPrefixBoundCertificate.soloBound_le
+        ha (Nat.lt_of_not_ge haLarge)
+  prefixChunks := cert.scalarPrefixChunks
+  largeSolo := cert.largeSolo
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate.toBoundCertificate
+    {soloBound : Nat → ℚ} {aLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+        soloBound aLen) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound :=
+  cert.toHybridCertificate.toBoundCertificate
 
 /-- Product table check over one fixed `N`-chunk index across a row range and
 one retained-`k` chunk, for the small regime. -/

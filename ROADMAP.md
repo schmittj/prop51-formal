@@ -756,6 +756,12 @@ Status:
       keeps separate `xBound` and `yBound` witnesses for the product factors
       and routes them through the same scalar chunks on
       `xBound a k * yBound a k`.
+      The full-hybrid certificates
+      `PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate`
+      and
+      `PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate`
+      further split the finite-prefix bound fields themselves into Boolean
+      chunks, so the large analytic bound work starts at `3000 ≤ a`.
       Final finite-window capstones for this route are exposed as
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
       and the row-active sibling

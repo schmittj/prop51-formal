@@ -324,7 +324,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   records separate `xBound`/`yBound` fields and reuses the same scalar chunks
   on `xBound a k * yBound a k`; the wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundHybrid_soloFastUpperEdgeBoundHybrid`
-  converts it to the same audit target.  The corresponding final
+  converts it to the same audit target.  The full-hybrid certificates
+  `Prop51.PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate`
+  also chunk-check the finite-prefix bound fields themselves, leaving the
+  actual split-sum bound proofs analytic only for `3000 ≤ a`.  The
+  corresponding final
   finite-window capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
   and its row-active sibling
