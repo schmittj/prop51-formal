@@ -20411,12 +20411,127 @@ theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudgetWithSm
       (N := N) hp
   · rw [if_neg hp]
 
+/-- On the large inner-degree range used for the solo tail, the Δ-budget
+collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
+bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
+as part of the informal numerical envelope. -/
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSimple
+    {a p : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ p)
+    (hpa : 2 * a ≤ 3 * p) :
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
+      ≤ (posNhi a : ℚ) * c p *
+          ((3 / 5 : ℚ) * (1 / 2 : ℚ)^p) := by
+  unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+  rw [if_pos hp]
+  unfold positiveLargeTailSoloSharpInnerDeltaBudget
+  have ha_pos_nat : 0 < a := by omega
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha_pos_nat
+  have hN_nonneg : 0 ≤ ((posNhi a : ℚ) / 2) := by positivity
+  have hN40 :
+      ((posNhi a : ℚ) / 2) ≤ (40 / 3 : ℚ) * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hdelta :
+      DeltaRat p ((posNhi a : ℚ) / 2) ≤ (66 / 5 : ℚ) / (a : ℚ) :=
+    DeltaRat_le_final_envelope (p := p) (m := a)
+      (N := ((posNhi a : ℚ) / 2)) hN_nonneg hN40
+      (by omega : 361 ≤ a) hpa
+  have hpow_nonneg : 0 ≤ (1 / 2 : ℚ)^p := by positivity
+  have hdelta_coef :
+      (72 / 125 : ℚ) + (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (a : ℚ))
+        ≤ 3 / 5 := by
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    rw [div_eq_mul_inv]
+    field_simp [ha_pos.ne']
+    nlinarith
+  have hbracket :
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+        ≤ (3 / 5 : ℚ) * (1 / 2 : ℚ)^p := by
+    have hdelta_term :
+        ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+              ((66 / 5 : ℚ) / (a : ℚ)) := by
+      exact mul_le_mul_of_nonneg_left hdelta (by positivity)
+    calc
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+              ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+                ((66 / 5 : ℚ) / (a : ℚ)) := by
+            exact add_le_add le_rfl hdelta_term
+      _ =
+          ((72 / 125 : ℚ) +
+              (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (a : ℚ))) *
+            (1 / 2 : ℚ)^p := by
+            ring
+      _ ≤ (3 / 5 : ℚ) * (1 / 2 : ℚ)^p :=
+            mul_le_mul_of_nonneg_right hdelta_coef hpow_nonneg
+  have hscale : 0 ≤ (posNhi a : ℚ) * c p := by
+    exact mul_nonneg (Nat.cast_nonneg _) (c_nonneg p)
+  exact mul_le_mul_of_nonneg_left hbracket hscale
+
+/-- Inner budget with the large-degree Δ range replaced by the simple
+coefficient bound.  The complementary degrees are intentionally kept in the
+current exact/Δ form; later estimates can split them without changing the
+public solo certificate. -/
+def positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget
+    (a p : Nat) : ℚ :=
+  if 4 ≤ p ∧ 2 * a ≤ 3 * p then
+    (posNhi a : ℚ) * c p * ((3 / 5 : ℚ) * (1 / 2 : ℚ)^p)
+  else
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
+
+/-- Upper-edge sharp solo block budget after simplifying the large
+inner-degree range. -/
+def positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget a (a - s)
+
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
+    {a p : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
+      ≤ positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget a p := by
+  unfold positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget
+  by_cases hlarge : 4 ≤ p ∧ 2 * a ≤ 3 * p
+  · rw [if_pos hlarge]
+    exact
+      positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSimple
+        ha hlarge.1 hlarge.2
+  · rw [if_neg hlarge]
+
 /-- Full sharp solo block budget obtained by applying the Δ inner budget
 inside the outer linear-exponential convolution. -/
 def positiveLargeTailSoloSharpDeltaBudgetBlockSum (a N : Nat) : ℚ :=
   ∑ s ∈ Finset.range (a + 1),
     (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
       positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N (a - s)
+
+theorem positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+      ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a := by
+  unfold positiveLargeTailSoloSharpDeltaBudgetBlockSum
+    positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+        (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
+      (a := a) (p := a - s) ha)
+    hlin_nonneg
 
 theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_le_deltaBudgetBlockSum
     (a N : Nat) :
@@ -20634,6 +20749,24 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCl
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
     positivity
   exact (mul_le_mul_of_nonneg_left hsum hscale).trans h
+
+/-- Upper-edge cleared solo target from the large-degree split budget.  The
+large `p` part has already consumed the Δ-envelope; the complementary part is
+left unchanged for the next tail estimate. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_largeDegreeSplitBudgetBlockSum
+    {a : Nat} (ha : 3000 ≤ a)
+    (h :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
+        ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a (posNhi a) := by
+  exact
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deltaBudgetBlockSum
+      ((mul_le_mul_of_nonneg_left
+          (positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
+            ha)
+          (by positivity : 0 ≤ (4 : ℚ) * (2 : ℚ)^a)).trans h)
 
 /-- The fast split-final-term solo shell is stronger than the direct
 `(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
