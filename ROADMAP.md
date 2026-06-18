@@ -601,6 +601,12 @@ Status:
       proof-production shapes, including the full surrogate
       `...ActiveAnalyticProduct...HybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
       endpoint.
+      The shared downstream interface is now
+      `PositiveSaddleMajorantBudgetCertificate`, which asks directly for the
+      normalized small/tempered majorant inequalities plus the existing solo
+      and edge budgets.  Existing combined-product and tangent-product
+      certificates convert to it, and future finite saddle-majorant work can
+      target it without introducing raw product atoms.
       `Prop51/Main.lean` exposes final assembly adapters for this active
       route mirroring the fixed-edge tail interface family, from parts and
       product/solo bounds through atomic/refined bounds, grouped raw-cleared

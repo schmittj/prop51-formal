@@ -23478,6 +23478,33 @@ structure PositiveSaddleScalarBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Budgeted direct-majorant interface for the remaining finite-window work.
+
+This is the leanest finite §6 interface after the sign-lock and positive-side
+bookkeeping are in place: prove the small and tempered retained positive
+terms directly below the executable majorants, discharge the finite solo and
+edge budgets, and supply the large-`a` entropy tail.  It is useful for the
+finite saddle-majorant route because it does not force the proof through the
+current product/tangent decomposition when a direct normalized estimate is
+available. -/
+structure PositiveSaddleMajorantBudgetCertificate : Prop where
+  small :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+  entropyTail :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
+
 /-- Combined-product version of the budgeted §6 interface.  Its analytic
 fields ask directly for bounds on `X_k(N) * Y_{a-k}(N)` with the combined
 exponents used by the executable majorants, avoiding the false
@@ -24282,6 +24309,23 @@ theorem PositiveSaddleScalarBudgetCertificate.toScalarCertificate
       (cert.edgeBudget ha ha2000)
   entropyTail := cert.entropyTail
 
+theorem PositiveSaddleCombinedProductBudgetCertificate.toMajorantBudgetCertificate
+    (cert : PositiveSaddleCombinedProductBudgetCertificate) :
+    PositiveSaddleMajorantBudgetCertificate where
+  small := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact normalizedPositiveIfTerm_le_smallMajorant_of_XYProduct
+      ha ha2000 hrect hk
+      (fun hB => cert.smallXY ha ha2000 hrect hk hsmall hB)
+  tempered := by
+    intro a N k ha ha2000 hrect hk htemp
+    exact normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
+      ha ha2000 hrect hk htemp
+      (fun hB => cert.temperedXY ha ha2000 hrect hk htemp hB)
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
+
 theorem PositiveSaddleCombinedProductBudgetCertificate.toScalarBudgetCertificate
     (cert : PositiveSaddleCombinedProductBudgetCertificate) :
     PositiveSaddleScalarBudgetCertificate where
@@ -24333,6 +24377,19 @@ theorem PositiveSaddleTangentProductBudgetCertificate.temperedMajorant
   normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
     ha401 ha2000 hrect hkRange htempered
     (fun hB => cert.temperedXY ha401 ha2000 hrect hkRange htempered hB)
+
+theorem PositiveSaddleTangentProductBudgetCertificate.toMajorantBudgetCertificate
+    (cert : PositiveSaddleTangentProductBudgetCertificate) :
+    PositiveSaddleMajorantBudgetCertificate where
+  small := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact cert.smallMajorant ha ha2000 hrect hk hsmall
+  tempered := by
+    intro a N k ha ha2000 hrect hk htemp
+    exact cert.temperedMajorant ha ha2000 hrect hk htemp
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail := cert.entropyTail
 
 theorem PositiveSaddleTangentCheckedRowsCertificate.toTangentProductBudgetCertificate
     (cert : PositiveSaddleTangentCheckedRowsCertificate) :
@@ -25342,6 +25399,22 @@ theorem PositiveSaddleRawCertificate.toCertificate
   envelope := cert.envelope
   entropyTail := cert.entropyTail
 
+theorem PositiveSaddleMajorantBudgetCertificate.toCertificate
+    (cert : PositiveSaddleMajorantBudgetCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) where
+  small := cert.small
+  tempered := cert.tempered
+  solo := by
+    intro a N ha ha2000 hrect
+    rw [normalizedSoloTerm_eq_dyadic_Ynorm
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) (by omega : 1 ≤ a)]
+    exact cert.soloY ha ha2000 hrect
+  envelope := by
+    intro a ha ha2000
+    exact positiveEnvelopeBound_le_target_of_edgeBudget
+      (cert.edgeBudget ha ha2000)
+  entropyTail := cert.entropyTail
+
 theorem PositiveSaddleFactorCertificate.toCertificate
     {soloBound : Nat → ℚ} (cert : PositiveSaddleFactorCertificate soloBound) :
     PositiveSaddleCertificate soloBound :=
@@ -25360,12 +25433,12 @@ theorem PositiveSaddleScalarBudgetCertificate.toCertificate
 theorem PositiveSaddleCombinedProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleCombinedProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
-  cert.toScalarBudgetCertificate.toCertificate
+  cert.toMajorantBudgetCertificate.toCertificate
 
 theorem PositiveSaddleTangentProductBudgetCertificate.toCertificate
     (cert : PositiveSaddleTangentProductBudgetCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
-  cert.toCombinedProductBudgetCertificate.toCertificate
+  cert.toMajorantBudgetCertificate.toCertificate
 
 theorem PositiveSaddleTangentCheckedRowsCertificate.toCertificate
     (cert : PositiveSaddleTangentCheckedRowsCertificate) :

@@ -73,6 +73,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   as the corresponding saddle-edge finite target: it keeps the small and
   tempered product estimates as semantic analytic fields, while still using
   the active finite chunks for tangent-edge, solo, and edge-budget checks.
+  Downstream, these adapters now pass through
+  `Prop51.PositiveSaddleMajorantBudgetCertificate`, a direct-majorant budget
+  interface for the same finite-window obligations; it is the Lean insertion
+  point for a future proof that bounds `normalizedPositiveIfTerm` directly by
+  the small/tempered majorants instead of routing through product/tangent
+  estimates.
   This records the intended scalable alternative to exhaustive finite
   raw-product atoms, but does not replace the generated raw-product endpoint
   until those analytic product estimates are proved.  The corresponding

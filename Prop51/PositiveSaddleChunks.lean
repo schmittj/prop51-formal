@@ -13049,6 +13049,24 @@ theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdg
       |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
         tail.candidateSplitTemperedRawClearedUnitReserve.toRawClearedBoundsCertificate).entropyTail
 
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.toMajorantBudgetCertificate
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    PositiveSaddleMajorantBudgetCertificate where
+  small := cert.smallMajorant
+  tempered := cert.temperedMajorant
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail :=
+    (tail.productPointwiseYRawUnitSolo.toProductPointwiseYRawCertificate
+      |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+        tail.candidateSplitTemperedRawClearedUnitReserve.toRawClearedBoundsCertificate).entropyTail
+
 theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.toCertificate
     {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
       tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
@@ -13058,7 +13076,7 @@ theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdg
         tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen)
     (tail : PositiveSaddleLargeTailAuditCertificate) :
     PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
-  (cert.toTangentProductBudgetCertificate tail).toCertificate
+  (cert.toMajorantBudgetCertificate tail).toCertificate
 
 theorem PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate.toProductNChunkedTangentAuditCertificate
     {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
