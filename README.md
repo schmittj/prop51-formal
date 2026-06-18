@@ -68,7 +68,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAtomicBoundsAuditCertificate`.
   The non-active fixed-edge route is retained as an audit/profiling sibling;
   the active wrapper is a Lean proof-production optimization of the same
-  finite-window inequalities.
+  finite-window inequalities.  Lean also exposes
+  `Prop51.PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate`
+  as the corresponding saddle-edge finite target: it keeps the small and
+  tempered product estimates as semantic analytic fields, while still using
+  the active finite chunks for tangent-edge, solo, and edge-budget checks.
+  This records the intended scalable alternative to exhaustive finite
+  raw-product atoms, but does not replace the generated raw-product endpoint
+  until those analytic product estimates are proved.
   Older long-named capstones below are retained as audit and profiling
   alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`

@@ -1430,6 +1430,24 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
   coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
     (finite.toTangentProductBudgetCertificate tail)
 
+/-- Final assembly from the row-active analytic-product finite route.
+
+This is the proof-production variant of the row-active finite route: the
+small/tempered product estimates are supplied by analytic saddle majorants,
+while the tangent-edge, displayed-solo, and edge-budget checks remain finite
+active chunks. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen)
+    (tail : PositiveSaddleLargeTailAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+    (finite.toTangentProductBudgetCertificate tail)
+
 /-- Final assembly from the row-active finite route and the closed-factorial
 large-tail block-sum target.
 

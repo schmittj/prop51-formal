@@ -588,7 +588,14 @@ Status:
       This is a documented Lean proof-production divergence from the
       TeX-style fixed global chunk cover; the generator emits this route with
       `--active-row-covers`, including active manifests and active shard
-      slices.
+      slices.  There is also a Lean-only saddle-edge target,
+      `PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate`,
+      which removes the exact finite product atom family from the generated
+      side: the two product estimates are semantic analytic fields, while
+      tangent-edge, solo, and edge-budget obligations are still supplied by
+      the same active finite chunks.  This is the preferred insertion point
+      if the finite saddle majorant proof is completed instead of producing
+      all raw-product atoms.
       `Prop51/Main.lean` exposes final assembly adapters for this active
       route mirroring the fixed-edge tail interface family, from parts and
       product/solo bounds through atomic/refined bounds, grouped raw-cleared

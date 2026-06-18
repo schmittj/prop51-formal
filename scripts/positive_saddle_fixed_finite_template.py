@@ -23,6 +23,9 @@ Strategies include:
     split by a separate fixed-width retained-`k` cover.
   * combined-product-nk-tangent-solo-n-chunked: as above, but each product
     atom checks the small/tempered split in one shared-table pass.
+  * active-analytic-product-tangent-solo-n-fixed-edge-k-chunked: row-active
+    tangent, solo, and fixed-edge atoms, with the product estimates supplied
+    as analytic hypotheses rather than emitted raw-product atom theorems.
   * --emit-single-chunk FIELD: emit one cacheable `native_decide` theorem for
     a concrete product, tangent, solo, or edge chunk.
   * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
@@ -93,6 +96,9 @@ SINGLE_CHUNK_FIELDS = (
     "solo-budget-n",
     "edge",
     "edge-fixed",
+)
+ANALYTIC_PRODUCT_STRATEGY = (
+    "active-analytic-product-tangent-solo-n-fixed-edge-k-chunked"
 )
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -759,6 +765,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
         ),
         default="all-chunks",
         help="finite certificate shape to emit",
@@ -844,15 +851,28 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                 "--single-chunk-field cannot be combined with single atom "
                 "emission, suite emission, or full assembly from theorem names"
             )
+        if args.strategy == ANALYTIC_PRODUCT_STRATEGY and any(
+            field in ("product-small", "product-tempered", "product-combined")
+            for field in args.single_chunk_field
+        ):
+            parser.error(
+                f"--strategy {ANALYTIC_PRODUCT_STRATEGY} has no product atom fields"
+            )
     if (
         args.active_row_covers
         and args.strategy
-        != "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        not in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
     ):
         parser.error(
             "--active-row-covers is only supported for --strategy "
-            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked "
+            f"or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
+    if args.strategy == ANALYTIC_PRODUCT_STRATEGY and not args.active_row_covers:
+        parser.error(f"--strategy {ANALYTIC_PRODUCT_STRATEGY} requires --active-row-covers")
     if args.dry_run_counts and (
         args.emit_single_chunk is not None
         or args.emit_single_chunk_suite
@@ -953,6 +973,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--emit-single-chunk-suite is only supported for "
@@ -961,6 +982,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.emit_single_chunk_shard and args.strategy not in (
         "product-n-chunked-tangent",
@@ -968,6 +990,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--emit-single-chunk-shard is only supported for "
@@ -976,6 +999,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.emit_single_chunk_manifest and args.strategy not in (
         "product-n-chunked-tangent",
@@ -983,6 +1007,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--emit-single-chunk-manifest is only supported for "
@@ -991,6 +1016,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.dry_run_counts and args.strategy not in (
         "product-n-chunked-tangent",
@@ -998,6 +1024,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--dry-run-counts is only supported for "
@@ -1006,6 +1033,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.dry_run_active_counts and args.strategy not in (
         "product-n-chunked-tangent",
@@ -1013,6 +1041,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--dry-run-active-counts is only supported for "
@@ -1021,6 +1050,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.use_single_chunk_theorems and args.emit_single_chunk is not None:
         parser.error("--use-single-chunk-theorems cannot be combined with --emit-single-chunk")
@@ -1030,6 +1060,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         parser.error(
             "--use-single-chunk-theorems is only supported for "
@@ -1038,8 +1069,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--strategy product-nk-tangent-solo-n-chunked or "
             "--strategy combined-product-nk-tangent-solo-n-chunked"
             " or --strategy combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+            f" or --strategy {ANALYTIC_PRODUCT_STRATEGY}"
         )
     if args.emit_single_chunk is not None:
+        if args.strategy == ANALYTIC_PRODUCT_STRATEGY and args.emit_single_chunk in (
+            "product-small",
+            "product-tempered",
+            "product-combined",
+        ):
+            parser.error(
+                f"--strategy {ANALYTIC_PRODUCT_STRATEGY} has no product atom fields"
+            )
         if args.row_index is None:
             parser.error("--row-index is required with --emit-single-chunk")
         if args.emit_single_chunk in (
@@ -1083,6 +1123,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
         ):
             if args.tangent_n_len is None:
                 parser.error(f"--tangent-n-len is required for --strategy {args.strategy}")
@@ -1114,6 +1155,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         elif args.strategy == "combined-product-nk-tangent-solo-n-chunked":
             args.name = (
                 "positiveSaddleGeneratedFixedFiniteWindowCombinedProductNKChunkedTangentSoloNChunkedCertificate"
+            )
+        elif args.strategy == ANALYTIC_PRODUCT_STRATEGY:
+            args.name = (
+                "positiveSaddleGeneratedFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedCertificate"
             )
         else:
             if args.active_row_covers:
@@ -1337,6 +1382,10 @@ def active_product_k_len(args: argparse.Namespace) -> int:
     ):
         return args.product_k_len
     return 20
+
+
+def uses_product_atoms(args: argparse.Namespace) -> bool:
+    return args.strategy != ANALYTIC_PRODUCT_STRATEGY
 
 
 def active_product_k_count(args: argparse.Namespace) -> int:
@@ -1921,6 +1970,21 @@ def final_tail_arg(args: argparse.Namespace) -> str:
     return "tail"
 
 
+def analytic_product_binder_lines() -> list[str]:
+    return [
+        "    (hsmallXYTangent :",
+        "      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →",
+        "        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →",
+        "          Xnorm N k * Ynorm N (posJ a k) ≤",
+        "            positiveSmallXYProductTangentBound a N k)",
+        "    (htemperedXY :",
+        "      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →",
+        "        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →",
+        "          Xnorm N k * Ynorm N (posJ a k) ≤",
+        "            positiveTemperedXYProductBound a N k)",
+    ]
+
+
 def single_chunk_theorem_lines(
     args: argparse.Namespace,
     field: str,
@@ -2127,28 +2191,30 @@ def single_chunk_shapes(
     args: argparse.Namespace,
 ) -> list[tuple[str, int, int | None, int | None]]:
     shapes = []
-    product_fields = (
-        ("product-combined",)
-        if args.strategy in (
-            "combined-product-nk-tangent-solo-n-chunked",
-            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
-        )
-        else ("product-small", "product-tempered")
-    )
-    for field in product_fields:
-        shapes.append(
-            (
-                field,
-                row_count(args.product_row_len),
-                product_n_index_count(args.product_row_len, args.n_len),
-                active_product_k_count(args),
+    if uses_product_atoms(args):
+        product_fields = (
+            ("product-combined",)
+            if args.strategy in (
+                "combined-product-nk-tangent-solo-n-chunked",
+                "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
             )
+            else ("product-small", "product-tempered")
         )
+        for field in product_fields:
+            shapes.append(
+                (
+                    field,
+                    row_count(args.product_row_len),
+                    product_n_index_count(args.product_row_len, args.n_len),
+                    active_product_k_count(args),
+                )
+            )
     if args.strategy in (
         "product-tangent-solo-n-chunked",
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         shapes.append(
             (
@@ -2182,7 +2248,10 @@ def single_chunk_shapes(
     edge_field = (
         "edge-fixed"
         if args.strategy
-        == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
         else "edge"
     )
     edge_count = edge_k_count(args.edge_k_len) if edge_field == "edge-fixed" else 90
@@ -2194,26 +2263,29 @@ def active_single_chunk_shapes(
     args: argparse.Namespace,
 ) -> list[tuple[str, int, int | None, int | None]]:
     shapes = []
-    product_fields = (
-        ("product-combined",)
-        if args.strategy in (
-            "combined-product-nk-tangent-solo-n-chunked",
-            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+    if uses_product_atoms(args):
+        product_fields = (
+            ("product-combined",)
+            if args.strategy in (
+                "combined-product-nk-tangent-solo-n-chunked",
+                "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            )
+            else ("product-small", "product-tempered")
         )
-        else ("product-small", "product-tempered")
-    )
-    for field in product_fields:
-        for row_index in range(row_count(args.product_row_len)):
-            shapes.append(
-                (
-                    field,
-                    row_index,
-                    active_n_index_count(args.product_row_len, args.n_len, row_index),
-                    active_k_chunk_count(
-                        args.product_row_len, active_product_k_len(args), row_index
+        for field in product_fields:
+            for row_index in range(row_count(args.product_row_len)):
+                shapes.append(
+                    (
+                        field,
+                        row_index,
+                        active_n_index_count(
+                            args.product_row_len, args.n_len, row_index
+                        ),
+                        active_k_chunk_count(
+                            args.product_row_len, active_product_k_len(args), row_index
+                        ),
                     ),
                 )
-            )
     for row_index in range(row_count(args.tangent_row_len)):
         shapes.append(
             (
@@ -2687,6 +2759,8 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
 
 
 def count_product_atoms(args: argparse.Namespace) -> tuple[dict[str, int], dict[str, int]]:
+    if not uses_product_atoms(args):
+        return {}, {}
     product_rows = row_count(args.product_row_len)
     product_n = product_n_index_count(args.product_row_len, args.n_len)
     product_k = active_product_k_count(args)
@@ -2721,6 +2795,7 @@ def count_tangent_solo_atoms(args: argparse.Namespace) -> tuple[dict[str, int], 
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         tangent_n = product_n_index_count(args.tangent_row_len, args.tangent_n_len)
         dimensions["tangent_n_indices"] = tangent_n
@@ -2748,7 +2823,10 @@ def count_tangent_solo_atoms(args: argparse.Namespace) -> tuple[dict[str, int], 
 
 def count_edge_atoms(args: argparse.Namespace) -> tuple[dict[str, int], dict[str, int]]:
     edge_rows = row_count(args.edge_row_len)
-    if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked":
+    if args.strategy in (
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
+    ):
         edge_chunks = edge_k_count(args.edge_k_len)
         return (
             {"edge-fixed": edge_rows * edge_chunks},
@@ -2778,10 +2856,13 @@ def collect_count_payload(
 
 
 def dry_run_chunk_lengths(args: argparse.Namespace) -> dict[str, int | None]:
+    product_row_len = args.product_row_len if uses_product_atoms(args) else None
+    product_n_len = args.n_len if uses_product_atoms(args) else None
+    product_k_len = active_product_k_len(args) if uses_product_atoms(args) else None
     return {
-        "product_row_len": args.product_row_len,
-        "product_n_len": args.n_len,
-        "product_k_len": active_product_k_len(args),
+        "product_row_len": product_row_len,
+        "product_n_len": product_n_len,
+        "product_k_len": product_k_len,
         "tangent_row_len": args.tangent_row_len,
         "tangent_n_len": args.tangent_n_len,
         "tangent_k_len": args.tangent_k_len,
@@ -2792,7 +2873,10 @@ def dry_run_chunk_lengths(args: argparse.Namespace) -> dict[str, int | None]:
         "edge_row_len": args.edge_row_len,
         "edge_k_len": args.edge_k_len
         if args.strategy
-        == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
         else 20,
     }
 
@@ -2831,7 +2915,11 @@ def dry_run_max_cells_by_field(args: argparse.Namespace) -> dict[str, int]:
     solo_budget_cells = args.solo_budget_row_len * args.solo_budget_n_len
     edge_k_len = (
         args.edge_k_len
-        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        if args.strategy
+        in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
         else 20
     )
     edge_cells = args.edge_row_len * edge_k_len
@@ -3055,30 +3143,31 @@ def dry_run_active_row_samples(args: argparse.Namespace) -> dict[str, list[dict[
     use_row_bound = args.active_row_covers
     samples: dict[str, list[dict[str, int]]] = {}
 
-    product_samples = []
-    for a in DRY_RUN_SAMPLE_AS:
-        sample = active_row_sample_base(
-            args.product_row_len, a, use_row_bound=use_row_bound
-        )
-        sample["active_n_indices"] = active_row_sample_count(
-            args.product_row_len,
-            args.n_len,
-            pos_n_len_py,
-            a,
-            use_row_bound=use_row_bound,
-        )
-        sample["active_k_chunks"] = active_row_sample_count(
-            args.product_row_len,
-            product_k_len,
-            pos_kmax_py,
-            a,
-            use_row_bound=use_row_bound,
-        )
-        sample["active_nk_pairs"] = (
-            sample["active_n_indices"] * sample["active_k_chunks"]
-        )
-        product_samples.append(sample)
-    samples["product"] = product_samples
+    if uses_product_atoms(args):
+        product_samples = []
+        for a in DRY_RUN_SAMPLE_AS:
+            sample = active_row_sample_base(
+                args.product_row_len, a, use_row_bound=use_row_bound
+            )
+            sample["active_n_indices"] = active_row_sample_count(
+                args.product_row_len,
+                args.n_len,
+                pos_n_len_py,
+                a,
+                use_row_bound=use_row_bound,
+            )
+            sample["active_k_chunks"] = active_row_sample_count(
+                args.product_row_len,
+                product_k_len,
+                pos_kmax_py,
+                a,
+                use_row_bound=use_row_bound,
+            )
+            sample["active_nk_pairs"] = (
+                sample["active_n_indices"] * sample["active_k_chunks"]
+            )
+            product_samples.append(sample)
+        samples["product"] = product_samples
 
     tangent_samples = []
     for a in DRY_RUN_SAMPLE_AS:
@@ -3097,6 +3186,7 @@ def dry_run_active_row_samples(args: argparse.Namespace) -> dict[str, list[dict[
             "product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-chunked",
             "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
         ):
             sample["active_n_indices"] = active_row_sample_count(
                 args.tangent_row_len,
@@ -3116,6 +3206,7 @@ def dry_run_active_row_samples(args: argparse.Namespace) -> dict[str, list[dict[
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         samples["solo-saddle-n"] = [
             active_n_sample(
@@ -3151,12 +3242,20 @@ def dry_run_active_row_samples(args: argparse.Namespace) -> dict[str, list[dict[
 
     edge_k_len = (
         args.edge_k_len
-        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        if args.strategy
+        in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
         else 20
     )
     edge_field = (
         "edge-fixed"
-        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        if args.strategy
+        in (
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+            ANALYTIC_PRODUCT_STRATEGY,
+        )
         else "edge"
     )
     edge_samples = []
@@ -3222,6 +3321,8 @@ def count_active_single_chunk_atoms(
 def count_product_atoms_active(
     args: argparse.Namespace,
 ) -> tuple[dict[str, int], dict[str, int]]:
+    if not uses_product_atoms(args):
+        return {}, {}
     product_fields = (
         ("product-combined",)
         if args.strategy in (
@@ -3267,6 +3368,7 @@ def count_tangent_solo_atoms_active(
         "product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-chunked",
         "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
     ):
         tangent_n_counts = row_active_chunk_counts(
             args.tangent_row_len, args.tangent_n_len, pos_n_len_py
@@ -3308,7 +3410,10 @@ def count_edge_atoms_active(
     args: argparse.Namespace,
 ) -> tuple[dict[str, int], dict[str, int]]:
     edge_rows = row_count(args.edge_row_len)
-    if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked":
+    if args.strategy in (
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ANALYTIC_PRODUCT_STRATEGY,
+    ):
         edge_field = "edge-fixed"
         k_len = args.edge_k_len
         global_k_chunks = edge_k_count(args.edge_k_len)
@@ -3459,6 +3564,12 @@ def emit_single_chunk_suite(args: argparse.Namespace) -> str:
     elif args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked":
         lines.extend(
             combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
+                assembly_args
+            )
+        )
+    elif args.strategy == ANALYTIC_PRODUCT_STRATEGY:
+        lines.extend(
+            active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 assembly_args
             )
         )
@@ -5707,6 +5818,116 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
     return lines
 
 
+def active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
+    args: argparse.Namespace,
+) -> list[str]:
+    t = args.tangent_row_len
+    ss = args.solo_saddle_row_len
+    sb = args.solo_budget_row_len
+    e = args.edge_row_len
+    tangent_n = args.tangent_n_len
+    solo_saddle_n = args.solo_saddle_n_len
+    solo_budget_n = args.solo_budget_n_len
+    tangent_k = args.tangent_k_len
+    edge_k = args.edge_k_len
+    name = args.name
+    final_name = f"coefficientNegativity_of_{name}"
+
+    lines = [
+        f"theorem {name}",
+        *analytic_product_binder_lines(),
+        "    :",
+        "    PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate",
+        f"      {t} {ss} {sb} {e}",
+        f"      {tangent_n} {solo_saddle_n} {solo_budget_n} {tangent_k} {edge_k} where",
+        "  tangentRowLenPos := by norm_num",
+        "  soloSaddleRowLenPos := by norm_num",
+        "  soloBudgetRowLenPos := by norm_num",
+        "  edgeRowLenPos := by norm_num",
+        "  tangentNLenPos := by norm_num",
+        "  soloSaddleNLenPos := by norm_num",
+        "  soloBudgetNLenPos := by norm_num",
+        "  tangentKLenPos := by norm_num",
+        "  edgeKLenPos := by norm_num",
+        "  smallXYTangent := hsmallXYTangent",
+        "  temperedXY := htemperedXY",
+    ]
+    if args.use_single_chunk_theorems:
+        add_active_tangent_row_n_k_dispatch_field_from_single_chunks(
+            lines,
+            "smallTangentExpEdgeRowRangeNIndexKChunks",
+            t,
+            tangent_n,
+            tangent_k,
+            args.single_chunk_prefix,
+        )
+        add_active_solo_row_n_dispatch_field_from_single_chunks(
+            lines,
+            "soloYSaddleClearedRowRangeNIndexChunks",
+            ss,
+            solo_saddle_n,
+            "solo-saddle-n",
+            args.single_chunk_prefix,
+        )
+        add_active_solo_row_n_dispatch_field_from_single_chunks(
+            lines,
+            "soloYBudgetRowRangeNIndexChunks",
+            sb,
+            solo_budget_n,
+            "solo-budget-n",
+            args.single_chunk_prefix,
+        )
+        add_active_row_fixed_edge_dispatch_field_from_single_chunks(
+            lines,
+            "edgeKChunkUnitRowRanges",
+            e,
+            edge_k,
+            args.single_chunk_prefix,
+        )
+    else:
+        add_active_tangent_row_n_k_dispatch_field(
+            lines,
+            "smallTangentExpEdgeRowRangeNIndexKChunks",
+            t,
+            tangent_n,
+            tangent_k,
+        )
+        add_active_solo_row_n_dispatch_field(
+            lines,
+            "soloYSaddleClearedRowRangeNIndexChunks",
+            ss,
+            solo_saddle_n,
+        )
+        add_active_solo_row_n_dispatch_field(
+            lines,
+            "soloYBudgetRowRangeNIndexChunks",
+            sb,
+            solo_budget_n,
+        )
+        add_active_row_fixed_edge_dispatch_field(
+            lines,
+            "edgeKChunkUnitRowRanges",
+            e,
+            edge_k,
+        )
+
+    if args.emit_final:
+        lines.extend(
+            [
+                "",
+                f"theorem {final_name}",
+                *analytic_product_binder_lines(),
+                *final_tail_binder_lines(args),
+                "    CoefficientNegativity :=",
+                "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate",
+                f"    ({name} hsmallXYTangent htemperedXY)",
+                f"    {final_tail_arg(args)}",
+            ]
+        )
+
+    return lines
+
+
 def emit_product_tangent_solo_n_chunked(args: argparse.Namespace) -> str:
     lines = emit_header(args)
     lines.extend(product_tangent_solo_n_chunked_theorem_lines(args))
@@ -5741,6 +5962,17 @@ def emit_combined_product_nk_tangent_solo_n_fixed_edge_k_chunked(
     return "\n".join(lines)
 
 
+def emit_active_analytic_product_tangent_solo_n_fixed_edge_k_chunked(
+    args: argparse.Namespace,
+) -> str:
+    lines = emit_header(args)
+    lines.extend(
+        active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(args)
+    )
+    lines.extend(["", "end Prop51", ""])
+    return "\n".join(lines)
+
+
 def emit(args: argparse.Namespace) -> str:
     if args.dry_run_counts:
         return emit_dry_run_counts(args)
@@ -5770,6 +6002,8 @@ def emit(args: argparse.Namespace) -> str:
         return emit_product_nk_tangent_solo_n_chunked(args)
     if args.strategy == "combined-product-nk-tangent-solo-n-chunked":
         return emit_combined_product_nk_tangent_solo_n_chunked(args)
+    if args.strategy == ANALYTIC_PRODUCT_STRATEGY:
+        return emit_active_analytic_product_tangent_solo_n_fixed_edge_k_chunked(args)
     return emit_combined_product_nk_tangent_solo_n_fixed_edge_k_chunked(args)
 
 
