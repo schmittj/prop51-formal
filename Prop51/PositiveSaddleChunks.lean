@@ -8006,6 +8006,102 @@ structure PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedE
               positiveEdgeFixedKScaleUpTo
                 edgeKLen (posKmax (rowChunk.1 + rowChunk.2))) = true
 
+/-- Constructor for the active analytic finite-window target after removing
+the uniformly nonpositive first `B`-coefficient.
+
+The semantic product estimates are only needed on cells with `0 < Bq N k`.
+Since retained cells also have `1 ≤ k`, `two_le_of_Bq_pos` lets future bounded
+saddle-majorant work start at `k = 2`; the tangent, solo, and edge finite
+checks are exactly the original fields. -/
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.ofProductGeTwo
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (tangentRowLenPos : 0 < tangentRowLen)
+    (soloSaddleRowLenPos : 0 < soloSaddleRowLen)
+    (soloBudgetRowLenPos : 0 < soloBudgetRowLen)
+    (edgeRowLenPos : 0 < edgeRowLen)
+    (tangentNLenPos : 0 < tangentNLen)
+    (soloSaddleNLenPos : 0 < soloSaddleNLen)
+    (soloBudgetNLenPos : 0 < soloBudgetNLen)
+    (tangentKLenPos : 0 < tangentKLen)
+    (edgeKLenPos : 0 < edgeKLen)
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (smallTangentExpEdgeRowRangeNIndexKChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              tangentNLen rowChunk.1 rowChunk.2 →
+        ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+          checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+            tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true)
+    (soloYSaddleClearedRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloSaddleNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+            soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (soloYBudgetRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloBudgetNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+            soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (edgeKChunkUnitRowRanges :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks edgeRowLen →
+        ∀ {edgeChunk : Nat × Nat},
+          edgeChunk ∈
+            positiveEdgeFixedKChunksUpTo
+              edgeKLen (posKmax (rowChunk.1 + rowChunk.2)) →
+          checkPositiveEdgeMajorantKChunkUnitRowRange
+            rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+              (fun _ =>
+                positiveEdgeFixedKScaleUpTo
+                  edgeKLen (posKmax (rowChunk.1 + rowChunk.2))) = true) :
+    PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+      tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen where
+  tangentRowLenPos := tangentRowLenPos
+  soloSaddleRowLenPos := soloSaddleRowLenPos
+  soloBudgetRowLenPos := soloBudgetRowLenPos
+  edgeRowLenPos := edgeRowLenPos
+  tangentNLenPos := tangentNLenPos
+  soloSaddleNLenPos := soloSaddleNLenPos
+  soloBudgetNLenPos := soloBudgetNLenPos
+  tangentKLenPos := tangentKLenPos
+  edgeKLenPos := edgeKLenPos
+  smallXYTangent := by
+    intro a N k ha h2000 hrect hk hsmall hB
+    exact smallXYTangent ha h2000 hrect hk hsmall
+      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB
+  temperedXY := by
+    intro a N k ha h2000 hrect hk htempered hB
+    exact temperedXY ha h2000 hrect hk htempered
+      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB
+  smallTangentExpEdgeRowRangeNIndexKChunks :=
+    smallTangentExpEdgeRowRangeNIndexKChunks
+  soloYSaddleClearedRowRangeNIndexChunks :=
+    soloYSaddleClearedRowRangeNIndexChunks
+  soloYBudgetRowRangeNIndexChunks := soloYBudgetRowRangeNIndexChunks
+  edgeKChunkUnitRowRanges := edgeKChunkUnitRowRanges
+
 /-- Large-`a` part shared by the generated fixed finite-window targets. -/
 structure PositiveSaddleLargeTailAuditCertificate : Prop where
   productPointwiseYRawUnitSolo :

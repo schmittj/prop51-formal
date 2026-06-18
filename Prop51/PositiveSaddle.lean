@@ -30002,6 +30002,48 @@ structure PositiveSaddleTangentProductBudgetCertificate : Prop where
   entropyTail :
     ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0
 
+/-- Constructor for the shared finite tangent-product budget after the
+first-coefficient sign reduction.
+
+This keeps the same certificate target, but future semantic product proofs
+only have to handle the retained positive cells with `2 ≤ k`; the `k = 1`
+case cannot occur under `0 < Bq N k`. -/
+theorem PositiveSaddleTangentProductBudgetCertificate.ofProductGeTwo
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (smallTangentEdge :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          positiveSmallTangentExpEdgeGap a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤ positiveTemperedXYProductBound a N k)
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (edgeBudget :
+      ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+        positiveEdgeMajorantSum a ≤ positiveEdgeBudget)
+    (entropyTail :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N → Unorm a N < 0) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := by
+    intro a N k ha h2000 hrect hk hsmall hB
+    exact smallXYTangent ha h2000 hrect hk hsmall
+      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB
+  smallTangentEdge := smallTangentEdge
+  temperedXY := by
+    intro a N k ha h2000 hrect hk htempered hB
+    exact temperedXY ha h2000 hrect hk htempered
+      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB
+  soloY := soloY
+  edgeBudget := edgeBudget
+  entropyTail := entropyTail
+
 /-- Row-checked version of the corrected tangent certificate.
 
 This is meant for generated finite certificates: each generated row theorem can
