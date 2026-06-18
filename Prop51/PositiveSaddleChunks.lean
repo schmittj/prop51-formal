@@ -12894,6 +12894,64 @@ theorem positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_edgeBudget
         (rowChunk := rowChunk) hrowChunk (edgeChunk := edgeChunk) hedgeChunk)
     ha h2000
 
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.smallTangentEdge
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveSmallTangentExpEdgeGap a N k :=
+  positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallTangentEdge cert
+
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.smallMajorant
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k :=
+  positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallMajorant cert
+
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.temperedMajorant
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k :=
+  positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_temperedMajorant cert
+
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.soloY
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget :=
+  positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_soloY cert
+
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.edgeBudget
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget :=
+  positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_edgeBudget cert
+
 theorem PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate.toTangentProductBudgetCertificate
     {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
       productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
@@ -12982,13 +13040,10 @@ theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdg
     (tail : PositiveSaddleLargeTailAuditCertificate) :
     PositiveSaddleTangentProductBudgetCertificate where
   smallXYTangent := cert.smallXYTangent
-  smallTangentEdge :=
-    positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallTangentEdge cert
+  smallTangentEdge := cert.smallTangentEdge
   temperedXY := cert.temperedXY
-  soloY :=
-    positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_soloY cert
-  edgeBudget :=
-    positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_edgeBudget cert
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
   entropyTail :=
     (tail.productPointwiseYRawUnitSolo.toProductPointwiseYRawCertificate
       |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
