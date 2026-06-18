@@ -613,6 +613,113 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsGeTwoNatS
             (hproductBound ha hk)
             (htempered ha hk htemperedEdge hrowAlt hk2))
 
+/-- Product-bound scalar constructor with the `k = 2` cell split off.
+
+This is the completion-facing first-term/remainder surface for a combined
+rational majorant `xyBound`: prove the first retained cell directly, then
+prove the row-level scalar inequalities only for the genuine tail `k ≥ 3`.
+It is a proof-production split of the same combined raw product route. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoAndGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsmallTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallLargeXYProductRawCleared a N 2)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    hsmallTwo
+    (by
+      intro a N k ha hrect hk hsmallN hk3 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (hproductBound ha hk)
+          (hsmallGeThree ha hk hsmallEdge hk3))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk3 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (hproductBound ha hk)
+          (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
+
+/-- Separate-`X`/`Y` variant of the first-term/remainder product-bound route.
+
+The two factor majorants only serve to prove the combined `xyBound`
+upper-edge product bound; the live scalar obligations remain the first
+retained raw product cell and the `k ≥ 3` combined-product tail. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsTwoAndGeThreeNatSignLockComplement
+    {xBound yBound : Nat → Nat → ℚ}
+    (hxBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ xBound a k)
+    (hyBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ yBound a k)
+    (hsmallTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallLargeXYProductRawCleared a N 2)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k) :
+    LargeTailProductCertificate := by
+  have hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xBound a k * yBound a k := by
+    intro a k ha hk
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+    have hx := hxBound ha hk
+    have hy := hyBound ha hk
+    have hYnonneg :
+        0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k :=
+      positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k
+    have hxBoundNonneg : 0 ≤ xBound a k :=
+      (positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k).trans hx
+    exact mul_le_mul hx hy hYnonneg hxBoundNonneg
+  exact
+    LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoAndGeThreeNatSignLockComplement
+      (xyBound := fun a k => xBound a k * yBound a k)
+      hproductBound hsmallTwo hsmallGeThree htemperedGeThree
+
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
 machinery.
