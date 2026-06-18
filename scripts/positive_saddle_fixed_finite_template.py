@@ -1970,6 +1970,38 @@ def final_tail_arg(args: argparse.Namespace) -> str:
     return "tail"
 
 
+def active_analytic_final_theorem_and_arg(args: argparse.Namespace) -> tuple[str, str]:
+    prefix = (
+        "coefficientNegativity_of_positiveSaddleFixedFiniteWindow"
+        "ActiveAnalyticProductTangentSoloNFixedEdgeKChunked"
+    )
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_ten_sevenths_closed_reserve_solo_upper_edge_product_upper_edge_lower_n_bounds:
+        return (
+            prefix
+            + "TemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate",
+            "tail",
+        )
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+        return (
+            prefix
+            + "TemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail",
+            "product soloY",
+        )
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_xy_bound_solo_bound:
+        return (
+            prefix
+            + "TemperedSharpTopOffsetHybridRatioChunkedXYBoundSoloBoundTail",
+            "product soloY",
+        )
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_xy_bound_full_solo_bound_full:
+        return (
+            prefix
+            + "TemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail",
+            "product soloY",
+        )
+    return (prefix + "AuditCertificate", final_tail_arg(args))
+
+
 def analytic_product_binder_lines() -> list[str]:
     return [
         "    (hsmallXYTangent :",
@@ -5926,6 +5958,7 @@ def active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         )
 
     if args.emit_final:
+        final_theorem, final_arg = active_analytic_final_theorem_and_arg(args)
         lines.extend(
             [
                 "",
@@ -5933,9 +5966,9 @@ def active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 *analytic_product_binder_lines(),
                 *final_tail_binder_lines(args),
                 "    CoefficientNegativity :=",
-                "  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate",
+                f"  {final_theorem}",
                 f"    ({name} hsmallXYTangent htemperedXY)",
-                f"    {final_tail_arg(args)}",
+                f"    {final_arg}",
             ]
         )
 
