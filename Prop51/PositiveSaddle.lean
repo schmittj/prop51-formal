@@ -21630,6 +21630,77 @@ theorem positiveLargeTailSoloSharpDeepLowStart_deep
   unfold positiveLargeTailSoloSharpDeepLowStart
   omega
 
+theorem one_add_three_div_pow_le_twohundred
+    {a s : Nat} (ha : 3000 ≤ a) (hs : s ≤ a) :
+    (1 + (3 : ℚ) / (a : ℚ))^s ≤ 200 := by
+  let n : Nat := a / 3
+  have ha_pos_nat : 0 < a := by omega
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha_pos_nat
+  have hn_pos_nat : 0 < n := by
+    dsimp [n]
+    omega
+  have hn_pos : (0 : ℚ) < (n : ℚ) := by exact_mod_cast hn_pos_nat
+  have hbase_ge_one : (1 : ℚ) ≤ 1 + (3 : ℚ) / (a : ℚ) := by
+    have hnonneg : (0 : ℚ) ≤ (3 : ℚ) / (a : ℚ) := by positivity
+    linarith
+  have hpow_s_a :
+      (1 + (3 : ℚ) / (a : ℚ))^s
+        ≤ (1 + (3 : ℚ) / (a : ℚ))^a :=
+    pow_le_pow_right₀ hbase_ge_one hs
+  have hmul : (3 : ℚ) * (n : ℚ) ≤ (a : ℚ) := by
+    have hnat : a / 3 * 3 ≤ a := Nat.div_mul_le_self a 3
+    have hq : ((a / 3 * 3 : Nat) : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast hnat
+    dsimp [n]
+    simpa [Nat.cast_mul, mul_comm] using hq
+  have hbase_le :
+      1 + (3 : ℚ) / (a : ℚ) ≤ 1 + 1 / (n : ℚ) := by
+    field_simp [ha_pos.ne', hn_pos.ne']
+    nlinarith
+  have hpow_base :
+      (1 + (3 : ℚ) / (a : ℚ))^a
+        ≤ (1 + 1 / (n : ℚ))^a :=
+    pow_le_pow_left₀ (by positivity) hbase_le a
+  have hexp : a ≤ 3 * (n + 1) := by
+    dsimp [n]
+    omega
+  have hbase2_ge_one : (1 : ℚ) ≤ 1 + 1 / (n : ℚ) := by
+    have hnonneg : (0 : ℚ) ≤ 1 / (n : ℚ) := by positivity
+    linarith
+  have hpow_exp :
+      (1 + 1 / (n : ℚ))^a
+        ≤ (1 + 1 / (n : ℚ))^(3 * (n + 1)) :=
+    pow_le_pow_right₀ hbase2_ge_one hexp
+  have hsplit :
+      (1 + 1 / (n : ℚ))^(3 * (n + 1))
+        =
+      ((1 + 1 / (n : ℚ))^n)^3 *
+        (1 + 1 / (n : ℚ))^3 := by
+    have hnat : 3 * (n + 1) = n * 3 + 3 := by ring
+    rw [hnat, pow_add, pow_mul]
+  have hmain :
+      (1 + 1 / (n : ℚ))^(3 * (n + 1)) ≤ 200 := by
+    have he := one_add_inv_pow_le n (by omega : 1 ≤ n)
+    have hb2 : 1 + 1 / (n : ℚ) ≤ 2 := by
+      field_simp [hn_pos.ne']
+      have hn_ge : (1 : ℚ) ≤ (n : ℚ) := by
+        exact_mod_cast (by omega : 1 ≤ n)
+      linarith
+    have hfirst :
+        ((1 + 1 / (n : ℚ))^n)^3 ≤ (68 / 25 : ℚ)^3 :=
+      pow_le_pow_left₀ (by positivity) he 3
+    have hsecond :
+        (1 + 1 / (n : ℚ))^3 ≤ (2 : ℚ)^3 :=
+      pow_le_pow_left₀ (by positivity) hb2 3
+    rw [hsplit]
+    calc
+      ((1 + 1 / (n : ℚ))^n)^3 *
+          (1 + 1 / (n : ℚ))^3
+          ≤ (68 / 25 : ℚ)^3 * (2 : ℚ)^3 := by
+            exact mul_le_mul hfirst hsecond (by positivity) (by positivity)
+      _ ≤ 200 := by norm_num
+  exact hpow_s_a.trans (hpow_base.trans (hpow_exp.trans hmain))
+
 theorem positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
     {a s : Nat} (ha : 3000 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
