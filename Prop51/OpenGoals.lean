@@ -901,7 +901,7 @@ theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_two
 actual first-cell linear `Bq` factor after the old product scalar inequality
 is rescaled by the lower rectangle edge. -/
 theorem positiveSmallFirstCell_linearFactor_le_scaledXUpperEdge
-    (a : Nat) (ha : 3000 ≤ a) :
+    (a : Nat) (ha : 2000 < a) :
     (5 : ℚ) * (posNhi a : ℚ) - 72 ≤
       (72 / (5 * (posNlo a : ℚ))) *
         positiveLargeTailProductXUpperEdgeExactBound a 2 := by
@@ -955,7 +955,7 @@ to the current completion-facing first-cell route.  It does not revive the
 independent `Gcomp` product estimate as the final target; it only reuses a
 stronger scalar inequality when it is available. -/
 theorem positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
-    {a : Nat} (ha : 3000 ≤ a)
+    {a : Nat} (ha : 2000 < a)
     (hscalar :
       positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
         (fun a k =>
@@ -1043,7 +1043,7 @@ theorem positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
 /-- A bound on the shifted `Qq` coefficient reduces the first-cell budget to
 the scalar `positiveSmallFirstCellQBudget` inequality. -/
 theorem positiveSmallFirstCellRawQBudget_of_QBound
-    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     {qBound : ℚ}
     (hQ : Qq N (posJ a 2) ≤ qBound)
     (hbudget : positiveSmallFirstCellQBudget a N qBound) :
@@ -1177,7 +1177,7 @@ The proof is just algebra plus the closed form for `Bq N 2`; it is kept as a
 small named bridge so later analytic work can focus on bounding
 `Qq N (a-2)` rather than expanding the full product target. -/
 theorem positiveSmallLargeXYProductRawCleared_two_of_rawQBudget
-    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     (hbudget : positiveSmallFirstCellRawQBudget a N) :
     positiveSmallLargeXYProductRawCleared a N 2 := by
   have hNpos : (0 : ℚ) < (N : ℚ) := by
@@ -1223,7 +1223,7 @@ theorem positiveSmallLargeXYProductRawCleared_two_of_rawQBudget
 /-- Combined first-cell bridge from a direct `Qq` upper bound and its scalar
 budget. -/
 theorem positiveSmallLargeXYProductRawCleared_two_of_QBound
-    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     {qBound : ℚ}
     (hQ : Qq N (posJ a 2) ≤ qBound)
     (hbudget : positiveSmallFirstCellQBudget a N qBound) :
@@ -1234,7 +1234,7 @@ theorem positiveSmallLargeXYProductRawCleared_two_of_QBound
 /-- First-cell bridge using the upper-edge split-factorial `Y` majorant as
 the direct `Qq` budget. -/
 theorem positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
-    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     (hbudget :
       positiveSmallFirstCellQBudget a N
         (positiveLargeTailProductYUpperEdgeExactBound a 2)) :
@@ -1243,6 +1243,59 @@ theorem positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
     (Qq_le_positiveLargeTailProductYUpperEdgeExactBound
       (a := a) (N := N) (k := 2) hrect)
     hbudget
+
+/-- Prefix-strip constructor with the same first-cell split used by the
+large-tail product route.
+
+The bounded prefix `2000 < a < 3000` can now use the direct upper-edge
+`Qq N (a-2)` budget for `k = 2`, and reserve the split-factorial product
+scalar checks for the genuine tail `k ≥ 3`.  This is a Lean-side
+proof-production refinement of the older prefix chunks; it does not change
+the mathematical product estimate, which is still the combined raw
+`Bq * Qq` target. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (hbudgetTwoUpper :
+      ∀ {a : Nat}, 2000 < a → a < 3000 →
+        positiveSmallFirstCellYUpperEdgeBudget a)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 2000 < a → a < 3000 →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 2000 < a → a < 3000 →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha haPrefix hrect
+      exact positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
+        ha hrect
+        (positiveSmallFirstCellQBudget_of_YUpperEdgeBudgetAtUpperEdge
+          hrect (hbudgetTwoUpper ha haPrefix)))
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN hk3 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact positiveSmallLargeXYProductRawCleared_of_upperEdgeLowerN
+        ha hrect hk (hsmallGeThree ha haPrefix hk hsmallEdge hk3))
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock hk3 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      exact positiveTemperedLargeXYProductRawCleared_of_upperEdgeLowerN
+        ha hrect hk
+        (htemperedGeThree ha haPrefix hk htemperedEdge hrowAlt hk3))
 
 /-- Explicit first retained product-cell budget after replacing
 `Y_{a-2}(N)` by the ten-sevenths solo envelope.
@@ -1485,7 +1538,8 @@ theorem LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
     (by
       intro a N ha hrect
       exact positiveSmallLargeXYProductRawCleared_two_of_QBound
-        ha hrect (hQTwo ha hrect) (hbudgetTwo ha hrect))
+        (by omega : 2000 < a) hrect (hQTwo ha hrect)
+        (hbudgetTwo ha hrect))
     hsmallGeThree htemperedGeThree
 
 /-- Canonical first-cell specialization of the product-tail constructor:
@@ -1881,7 +1935,7 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoAndFastUpperEdgeLowerNProduct
     (by
       intro a N ha hrect
       exact positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
-        ha hrect (hbudgetTwo ha hrect))
+        (by omega : 2000 < a) hrect (hbudgetTwo ha hrect))
     hsmallGeThree htemperedGeThree
 
 /-- Endpoint first-cell variant of the canonical combined-product constructor.
@@ -2037,7 +2091,7 @@ theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpU
         omega
       exact
         positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
-          ha
+          (by omega : 2000 < a)
           (by
             have h := product.smallScalar (by omega : 2000 < a) hk hsmall
             simpa [
