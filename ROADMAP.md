@@ -679,7 +679,12 @@ Status:
       and audit wrapper
       `positiveSaddleLargeTailAuditCertificate_of_productClosedActiveBlockSumScalars_soloGcompClosedActiveBlockSumCleared`
       make that truncated form directly usable by generated or analytic
-      large-tail witnesses.
+      large-tail witnesses.  The still more concrete factorial-only target
+      `PositiveSaddleLargeTailProductClosedFactorialBlockSumScalarCertificate`
+      and wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
+      rewrite the active `GcompClosedBound` factors to the explicit Lemma
+      3.1 factorial expression.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

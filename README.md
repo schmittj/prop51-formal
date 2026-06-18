@@ -245,7 +245,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate`
   and
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedActiveBlockSumScalars_soloGcompClosedActiveBlockSumCleared`
-  expose that active form as a large-tail audit input.
+  expose that active form as a large-tail audit input.  The further
+  factorial-only target
+  `Prop51.PositiveSaddleLargeTailProductClosedFactorialBlockSumScalarCertificate`
+  and wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
+  replace the active `GcompClosedBound` terms by the explicit Lemma 3.1
+  factorial expression.
   For final
   assembly from
   these lower-level product and solo proofs,

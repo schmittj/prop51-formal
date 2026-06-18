@@ -252,4 +252,18 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedActiveBlockSumSc
       positiveLargeTailSoloGcompClosedBlockSumCleared_of_active
         (soloY (a := a) (N := N) ha hrect))
 
+/-- Large-tail audit certificate with the product and solo sides supplied
+through factorial-only active closed-composition block-sum targets. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared
+    (product : PositiveSaddleLargeTailProductClosedFactorialBlockSumScalarCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialBlockSumCleared a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  positiveSaddleLargeTailAuditCertificate_of_productClosedBlockSumScalars_soloGcompClosedBlockSumCleared
+    product.toClosedBlockSumScalarCertificate
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedBlockSumCleared_of_factorial
+        (soloY (a := a) (N := N) ha hrect))
+
 end Prop51

@@ -301,6 +301,18 @@ theorem GcompClosedBound_eq_zero_of_mem_range_not_active
     · exact False.elim (hpred (Or.inr ⟨hr1, hle⟩))
     · exact GcompClosedBound_eq_zero_of_lt (by omega)
 
+theorem GcompClosedBound_eq_factorial_of_mem_active {r p : Nat}
+    (h : r ∈ GcompClosedActiveRange p) :
+    GcompClosedBound r p =
+      4^(r - 1) * ((p - 2*r + 1).factorial : ℚ) := by
+  rcases (Finset.mem_filter.mp h).2 with h0 | hpos
+  · rcases h0 with ⟨hr, hp⟩
+    subst r
+    subst p
+    norm_num [GcompClosedBound]
+  · rcases hpos with ⟨hr, hle⟩
+    exact GcompClosedBound_eq_factorial_of_pos_le hr hle
+
 theorem Gcomp_le_closedBound (r p : Nat) :
     Gcomp r p ≤ GcompClosedBound r p := by
   by_cases hr0 : r = 0
