@@ -18,7 +18,10 @@ It targets the prefix chunk inputs used by the full-hybrid large-tail route:
 
 The analytic fields for 3000 <= a are intentionally not generated here.
 Those remain ordinary Lean theorem arguments in the final full-hybrid
-certificate.
+certificate.  The `exact-bound-full-hybrid` certificate profile uses the
+exact upper-edge split sums for xBound/yBound/soloBound, so Lean closes the
+prefix-bound fields and generated proof production only needs scalar prefix
+atoms.
 """
 
 from __future__ import annotations
@@ -53,11 +56,16 @@ SINGLE_CHUNK_FIELDS = (*PRODUCT_FIELDS, *SOLO_FIELDS)
 
 CERTIFICATES = (
     "all-prefixes",
+    "exact-bound-full-hybrid",
     "product-bound-prefix",
     "product-scalar-prefix",
     "solo-bound-prefix",
     "solo-scalar-prefix",
 )
+
+EXACT_X_BOUND = "positiveLargeTailProductXUpperEdgeExactBound"
+EXACT_Y_BOUND = "positiveLargeTailProductYUpperEdgeExactBound"
+EXACT_SOLO_BOUND = "positiveLargeTailSoloUpperEdgeExactBound"
 
 
 class ChunkSpec(NamedTuple):
@@ -143,6 +151,8 @@ def single_chunk_name(
 
 def selected_fields(args: argparse.Namespace) -> set[str]:
     if args.single_chunk_field is None:
+        if args.certificate == "exact-bound-full-hybrid":
+            return certificate_fields(args.certificate)
         return set(SINGLE_CHUNK_FIELDS)
     return set(args.single_chunk_field)
 
@@ -176,6 +186,12 @@ def field_requires_solo(field: str) -> bool:
 def certificate_fields(certificate: str) -> set[str]:
     if certificate == "all-prefixes":
         return set(SINGLE_CHUNK_FIELDS)
+    if certificate == "exact-bound-full-hybrid":
+        return {
+            "product-small-scalar",
+            "product-tempered-scalar",
+            "solo-scalar",
+        }
     if certificate == "product-bound-prefix":
         return {"product-x-bound", "product-y-bound"}
     if certificate == "product-scalar-prefix":
@@ -328,6 +344,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     args = parser.parse_args(argv)
+    if args.certificate == "exact-bound-full-hybrid":
+        if args.x_bound is None:
+            args.x_bound = EXACT_X_BOUND
+        if args.y_bound is None:
+            args.y_bound = EXACT_Y_BOUND
+        if args.solo_bound is None:
+            args.solo_bound = EXACT_SOLO_BOUND
 
     if args.emit_single_chunk is not None:
         if args.a_index is None:
@@ -426,6 +449,8 @@ def common_emit_args(args: argparse.Namespace) -> list[str]:
         "--k-len",
         str(args.k_len),
     ]
+    if args.certificate != "all-prefixes":
+        emit_args.extend(["--certificate", args.certificate])
     if args.x_bound is not None:
         emit_args.extend(["--x-bound", args.x_bound])
     if args.y_bound is not None:
@@ -1085,9 +1110,45 @@ def emit_solo_full_hybrid_wrapper(args: argparse.Namespace) -> list[str]:
     ]
 
 
+def emit_exact_product_full_hybrid_wrapper(args: argparse.Namespace) -> list[str]:
+    return [
+        f"theorem {product_full_hybrid_theorem_name(args)}",
+        "    (large :",
+        "      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :",
+        "    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate",
+        f"      {EXACT_X_BOUND} {EXACT_Y_BOUND} {args.a_len} {args.k_len} :=",
+        f"  {product_scalar_theorem_name(args)}.toExactXYBoundFullHybridCertificate large",
+    ]
+
+
+def emit_exact_solo_full_hybrid_wrapper(args: argparse.Namespace) -> list[str]:
+    return [
+        f"theorem {solo_full_hybrid_theorem_name(args)}",
+        "    (largeSolo :",
+        "      ∀ {a : Nat}, 3000 ≤ a →",
+        "        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared",
+        "          a (posNhi a)) :",
+        "    PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate",
+        f"      {EXACT_SOLO_BOUND} {args.a_len} :=",
+        f"  {solo_scalar_theorem_name(args)}.toExactBoundFullHybridCertificate_of_fastCleared",
+        "    largeSolo",
+    ]
+
+
 def emit_prefix_certificates(args: argparse.Namespace) -> str:
     lines = emit_header(args)
     blocks: list[list[str]] = []
+    if args.certificate == "exact-bound-full-hybrid":
+        blocks.append(emit_product_scalar_prefix(args))
+        blocks.append(emit_solo_scalar_prefix(args))
+        blocks.append(emit_exact_product_full_hybrid_wrapper(args))
+        blocks.append(emit_exact_solo_full_hybrid_wrapper(args))
+        for index, block in enumerate(blocks):
+            if index:
+                lines.append("")
+            lines.extend(block)
+        lines.extend(["", "end Prop51", ""])
+        return "\n".join(lines)
     if args.certificate in ("all-prefixes", "product-bound-prefix"):
         blocks.append(emit_product_bound_prefix(args))
     if args.certificate in ("all-prefixes", "product-scalar-prefix"):

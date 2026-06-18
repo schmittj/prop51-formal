@@ -1903,6 +1903,60 @@ def checkPositiveLargeTailProductYUpperEdgeBoundChunk
       else
         true
 
+theorem checkPositiveLargeTailProductXUpperEdgeBound_exact
+    (a k : Nat) :
+    checkPositiveLargeTailProductXUpperEdgeBound
+      positiveLargeTailProductXUpperEdgeExactBound a k = true := by
+  unfold checkPositiveLargeTailProductXUpperEdgeBound
+    positiveLargeTailProductXUpperEdgeExactBound
+  exact decide_eq_true le_rfl
+
+theorem checkPositiveLargeTailProductYUpperEdgeBound_exact
+    (a k : Nat) :
+    checkPositiveLargeTailProductYUpperEdgeBound
+      positiveLargeTailProductYUpperEdgeExactBound a k = true := by
+  unfold checkPositiveLargeTailProductYUpperEdgeBound
+    positiveLargeTailProductYUpperEdgeExactBound
+  exact decide_eq_true le_rfl
+
+/-- Exact upper-edge `X` bound chunks are tautological: the chosen surrogate
+is the split-factorial `X` sum itself.  This lets full-hybrid proof
+production omit generated atoms for the `xBound` prefix-bound field when
+using the exact surrogate profile. -/
+theorem checkPositiveLargeTailProductXUpperEdgeBoundChunk_exact
+    (aLo aLen kLo kLen : Nat) :
+    checkPositiveLargeTailProductXUpperEdgeBoundChunk
+      positiveLargeTailProductXUpperEdgeExactBound
+      aLo aLen kLo kLen = true := by
+  unfold checkPositiveLargeTailProductXUpperEdgeBoundChunk
+  exact List.all_eq_true.mpr (by
+    intro a _ha
+    exact List.all_eq_true.mpr (by
+      intro k _hk
+      by_cases hcond :
+          2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a
+      · rw [if_pos hcond]
+        exact checkPositiveLargeTailProductXUpperEdgeBound_exact a k
+      · rw [if_neg hcond]))
+
+/-- Exact upper-edge `Y` bound chunks are tautological: the chosen surrogate
+is the split-factorial `Y` sum itself. -/
+theorem checkPositiveLargeTailProductYUpperEdgeBoundChunk_exact
+    (aLo aLen kLo kLen : Nat) :
+    checkPositiveLargeTailProductYUpperEdgeBoundChunk
+      positiveLargeTailProductYUpperEdgeExactBound
+      aLo aLen kLo kLen = true := by
+  unfold checkPositiveLargeTailProductYUpperEdgeBoundChunk
+  exact List.all_eq_true.mpr (by
+    intro a _ha
+    exact List.all_eq_true.mpr (by
+      intro k _hk
+      by_cases hcond :
+          2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a
+      · rw [if_pos hcond]
+        exact checkPositiveLargeTailProductYUpperEdgeBound_exact a k
+      · rw [if_neg hcond]))
+
 theorem checkPositiveLargeTailProductXUpperEdgeBound_of_chunk
     {xBound : Nat → Nat → ℚ} {aLo aLen kLo kLen a k : Nat}
     (h :
@@ -2054,6 +2108,25 @@ theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunk
       checkPositiveLargeTailProductYUpperEdgeBound_of_chunk
         (cert.yBoundChunk haChunk hkChunk) haMem hkMem ha haPrefix hk
 
+/-- Prefix-bound chunks for the exact upper-edge product surrogates require
+no generated atoms: both fields reduce to reflexivity inside the Boolean
+checker. -/
+theorem positiveSaddleLargeTailProductExactUpperEdgePrefixBoundChunksCertificate
+    {aLen kLen : Nat} (haLen : 0 < aLen) (hkLen : 0 < kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundPrefixBoundChunksCertificate
+      positiveLargeTailProductXUpperEdgeExactBound
+      positiveLargeTailProductYUpperEdgeExactBound aLen kLen where
+  aLenPos := haLen
+  kLenPos := hkLen
+  xBoundChunk := by
+    intro aChunk kChunk _haChunk _hkChunk
+    exact checkPositiveLargeTailProductXUpperEdgeBoundChunk_exact
+      aChunk.1 aChunk.2 kChunk.1 kChunk.2
+  yBoundChunk := by
+    intro aChunk kChunk _haChunk _hkChunk
+    exact checkPositiveLargeTailProductYUpperEdgeBoundChunk_exact
+      aChunk.1 aChunk.2 kChunk.1 kChunk.2
+
 /-- Full prefix/large hybrid certificate for separate product-factor
 surrogates: prefix bound inequalities and prefix scalar budgets are both
 generated chunks, while all `3000 ≤ a` obligations remain analytic fields. -/
@@ -2115,6 +2188,59 @@ theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertif
     PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
       xBound yBound :=
   cert.toHybridCertificate.toXYBoundCertificate
+
+/-- Build a full-hybrid product certificate using the exact upper-edge
+split-factorial `X` and `Y` sums as the surrogate bounds.
+
+This Lean-side reduction removes the product prefix-bound atom families from
+the generated workload.  Generated data still supplies the scalar prefix
+chunks against the exact product, and the existing analytic certificate
+supplies the `3000 ≤ a` scalar fields. -/
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate.toExactXYBoundFullHybridCertificate
+    {aLen kLen : Nat}
+    (scalarPrefixChunks :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k)
+        aLen kLen)
+    (large :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+      positiveLargeTailProductXUpperEdgeExactBound
+      positiveLargeTailProductYUpperEdgeExactBound aLen kLen where
+  boundPrefixChunks :=
+    positiveSaddleLargeTailProductExactUpperEdgePrefixBoundChunksCertificate
+      scalarPrefixChunks.aLenPos scalarPrefixChunks.kLenPos
+  scalarPrefixChunks := scalarPrefixChunks
+  largeXBound := by
+    intro a k _ha _hk
+    exact le_rfl
+  largeYBound := by
+    intro a k _ha _hk
+    exact le_rfl
+  largeSmall := by
+    intro a k ha hk hsmall
+    have ha2000 : 2000 < a := by omega
+    have h := large.smallScalar ha2000 hk hsmall
+    simpa [
+      positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound,
+      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+      mul_assoc,
+    ] using h
+  largeTempered := by
+    intro a k ha hk htempered
+    have ha2000 : 2000 < a := by omega
+    have h := large.temperedScalar ha2000 hk htempered
+    simpa [
+      positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound,
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar,
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+      mul_assoc,
+    ] using h
 
 /-- Boolean atom for a fast upper-edge solo budget after replacing the
 actual split-factorial solo sum by a rational surrogate `soloBound`. -/
@@ -2242,6 +2368,28 @@ def checkPositiveLargeTailSoloUpperEdgeBoundChunk
     else
       true
 
+theorem checkPositiveLargeTailSoloUpperEdgeBound_exact
+    (a : Nat) :
+    checkPositiveLargeTailSoloUpperEdgeBound
+      positiveLargeTailSoloUpperEdgeExactBound a = true := by
+  unfold checkPositiveLargeTailSoloUpperEdgeBound
+    positiveLargeTailSoloUpperEdgeExactBound
+  exact decide_eq_true le_rfl
+
+/-- Exact upper-edge solo-bound chunks are tautological: the chosen
+surrogate is the split-factorial solo sum itself. -/
+theorem checkPositiveLargeTailSoloUpperEdgeBoundChunk_exact
+    (aLo aLen : Nat) :
+    checkPositiveLargeTailSoloUpperEdgeBoundChunk
+      positiveLargeTailSoloUpperEdgeExactBound aLo aLen = true := by
+  unfold checkPositiveLargeTailSoloUpperEdgeBoundChunk
+  exact List.all_eq_true.mpr (by
+    intro a _ha
+    by_cases hcond : 2000 < a ∧ a < 3000
+    · rw [if_pos hcond]
+      exact checkPositiveLargeTailSoloUpperEdgeBound_exact a
+    · rw [if_neg hcond])
+
 theorem checkPositiveLargeTailSoloUpperEdgeBound_of_chunk
     {soloBound : Nat → ℚ} {aLo aLen a : Nat}
     (h :
@@ -2301,6 +2449,19 @@ theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificat
     exact checkPositiveLargeTailSoloUpperEdgeBound_of_chunk
       (cert.soloBoundChunk haChunk) haMem ha haPrefix
 
+/-- Prefix-bound chunks for the exact upper-edge solo surrogate require no
+generated atoms: the field reduces to reflexivity inside the Boolean
+checker. -/
+theorem positiveSaddleLargeTailSoloExactUpperEdgePrefixBoundChunksCertificate
+    {aLen : Nat} (haLen : 0 < aLen) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixBoundChunksCertificate
+      positiveLargeTailSoloUpperEdgeExactBound aLen where
+  aLenPos := haLen
+  soloBoundChunk := by
+    intro aChunk _haChunk
+    exact checkPositiveLargeTailSoloUpperEdgeBoundChunk_exact
+      aChunk.1 aChunk.2
+
 /-- Full prefix/large hybrid certificate for the solo surrogate: prefix
 bound inequalities and prefix scalar budgets are generated chunks, while
 the `3000 ≤ a` bound and scalar budget remain analytic fields. -/
@@ -2343,6 +2504,55 @@ theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate.toBou
         soloBound aLen) :
     PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound :=
   cert.toHybridCertificate.toBoundCertificate
+
+/-- Build a full-hybrid solo certificate using the exact upper-edge
+split-factorial solo sum as the surrogate bound.
+
+Generated data supplies only the scalar prefix chunks.  The prefix bound
+field is closed by reflexivity, and the `3000 ≤ a` scalar field remains an
+explicit analytic input. -/
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate.toExactBoundFullHybridCertificate
+    {aLen : Nat}
+    (scalarPrefixChunks :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
+        positiveLargeTailSoloUpperEdgeExactBound aLen)
+    (largeSolo :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloFastUpperEdgeBoundScalar
+          positiveLargeTailSoloUpperEdgeExactBound a) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+      positiveLargeTailSoloUpperEdgeExactBound aLen where
+  boundPrefixChunks :=
+    positiveSaddleLargeTailSoloExactUpperEdgePrefixBoundChunksCertificate
+      scalarPrefixChunks.aLenPos
+  scalarPrefixChunks := scalarPrefixChunks
+  largeBound := by
+    intro a _ha
+    exact le_rfl
+  largeSolo := largeSolo
+
+/-- Variant of
+`PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate.toExactBoundFullHybridCertificate`
+whose large-side input is the older fast-cleared upper-edge theorem. -/
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate.toExactBoundFullHybridCertificate_of_fastCleared
+    {aLen : Nat}
+    (scalarPrefixChunks :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
+        positiveLargeTailSoloUpperEdgeExactBound aLen)
+    (largeSolo :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+      positiveLargeTailSoloUpperEdgeExactBound aLen :=
+  scalarPrefixChunks.toExactBoundFullHybridCertificate (by
+    intro a ha
+    have h := largeSolo ha
+    simpa [
+      positiveLargeTailSoloUpperEdgeExactBound,
+      positiveLargeTailSoloFastUpperEdgeBoundScalar,
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared,
+    ] using h)
 
 /-- Product table check over one fixed `N`-chunk index across a row range and
 one retained-`k` chunk, for the small regime. -/

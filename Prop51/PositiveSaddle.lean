@@ -14528,6 +14528,20 @@ def positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
   positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
     positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
 
+/-- Exact upper-edge `X` split-factorial product bound, exposed as a
+surrogate function for the full-hybrid generated-prefix route.
+
+This is not a new estimate: it is the expensive split sum itself.  It lets
+Lean close the `xBound` prefix-bound fields by reflexivity while generated
+data focuses on the scalar budget inequalities. -/
+def positiveLargeTailProductXUpperEdgeExactBound (a k : Nat) : ℚ :=
+  positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k
+
+/-- Exact upper-edge `Y` split-factorial product bound, exposed as a
+surrogate function for the full-hybrid generated-prefix route. -/
+def positiveLargeTailProductYUpperEdgeExactBound (a k : Nat) : ℚ :=
+  positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
+
 /-- Small-branch upper-edge/lower-`N` product target after replacing the
 actual split-factorial product by an externally supplied rational bound.
 
@@ -19673,6 +19687,15 @@ def positiveLargeTailSoloFastUpperEdgeBoundScalar
   (4 : ℚ) * (2 : ℚ)^a * soloBound a
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpperFast (positiveSoloYExponent a) (8 * a)
+
+/-- Exact upper-edge split-factorial solo bound, exposed as a surrogate
+function for the full-hybrid generated-prefix route.
+
+This is the expensive split sum itself.  It closes the prefix `soloBound`
+bound field by reflexivity and leaves only the scalar budget field for
+generated proof production. -/
+def positiveLargeTailSoloUpperEdgeExactBound (a : Nat) : ℚ :=
+  positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
 
 /-- Denominator-cleared split-final-term solo target with the final
 `(10/7)^a` envelope directly on the right.

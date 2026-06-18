@@ -352,6 +352,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   from the large-side estimates.  The default `all-prefixes` output also
   emits short full-hybrid wrapper theorems that take those large-side fields
   as arguments.
+  When no cheaper rational surrogate has been chosen yet, the
+  `--certificate exact-bound-full-hybrid` profile uses the exact upper-edge
+  split sums
+  `positiveLargeTailProductXUpperEdgeExactBound`,
+  `positiveLargeTailProductYUpperEdgeExactBound`, and
+  `positiveLargeTailSoloUpperEdgeExactBound`.  Lean closes the corresponding
+  prefix-bound fields by reflexivity, so this profile generates only the
+  product scalar and solo scalar prefix atoms and then wraps the existing
+  large-side product/solo analytic fields.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -754,6 +763,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   after importing all generated shard modules; it still supplies only the
   prefix fields, while its full-hybrid wrapper theorems take the analytic
   `3000 ≤ a` obligations as explicit arguments.
+  For the exact-bound fallback profile, pass
+  `--certificate exact-bound-full-hybrid`; its manifests omit the
+  product-bound and solo-bound atom families because those exact prefix-bound
+  fields are closed directly in Lean.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the

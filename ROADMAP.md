@@ -792,6 +792,12 @@ Status:
       `3000 ≤ a` estimates remain separate Lean fields.  Its default
       `all-prefixes` output also emits full-hybrid wrapper theorems that take
       those large-side fields as arguments.
+      The exact-bound fallback profile
+      `--certificate exact-bound-full-hybrid` uses the exact upper-edge split
+      sums as the `xBound`, `yBound`, and `soloBound` surrogates.  The
+      product/solo prefix-bound fields are then Lean tautologies, so the
+      generated workload is only the product scalar and solo scalar prefix
+      atoms plus the existing `3000 ≤ a` analytic fields.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
