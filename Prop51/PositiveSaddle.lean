@@ -2830,6 +2830,55 @@ def positiveLargeTailYGcompClosedFactorialBlockSum (N j : Nat) : ℚ :=
   norm_num [positiveLargeTailYGcompClosedFactorialBlockSum,
     Finset.sum_range_succ, c_one]
 
+/-- Split the final linear-exponential term from the factorial-only `X`
+block sum.  On all earlier outer indices the remaining total degree is
+positive, so the inner exceptional active term `r = p = 0` disappears and the
+inner range can be written as `GcompClosedPositiveRange`. -/
+theorem positiveLargeTailXGcompClosedFactorialBlockSum_eq_initPositiveRange_add_last
+    (N k : Nat) :
+    positiveLargeTailXGcompClosedFactorialBlockSum N k =
+      (∑ s ∈ Finset.range k,
+        (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+          (∑ r ∈ GcompClosedPositiveRange (k - s),
+            ((N : ℚ) * (4/25))^r * 6^(k - s) *
+                (4^(r - 1) * ((k - s - 2*r + 1).factorial : ℚ)) /
+              (r.factorial : ℚ))) +
+        (((N : ℚ) * c 1)^k / (k.factorial : ℚ)) := by
+  unfold positiveLargeTailXGcompClosedFactorialBlockSum
+  rw [show k + 1 = Nat.succ k by omega, Finset.sum_range_succ]
+  simp only [Nat.sub_self, positiveLargeTailXGcompClosedInnerFactorial_zero,
+    mul_one]
+  congr 1
+  refine Finset.sum_congr rfl fun s hs => ?_
+  have hslt : s < k := by simpa using hs
+  have hp : 0 < k - s := by omega
+  rw [positiveLargeTailXGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    (N := N) hp]
+
+/-- Split the final linear-exponential term from the factorial-only `Y`/solo
+block sum, leaving positive inner composition ranges on all earlier outer
+indices. -/
+theorem positiveLargeTailYGcompClosedFactorialBlockSum_eq_initPositiveRange_add_last
+    (N j : Nat) :
+    positiveLargeTailYGcompClosedFactorialBlockSum N j =
+      (∑ s ∈ Finset.range j,
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          (∑ r ∈ GcompClosedPositiveRange (j - s),
+            ((N : ℚ) / 50)^r * 6^(j - s) *
+                (4^(r - 1) * ((j - s - 2*r + 1).factorial : ℚ)) /
+              (r.factorial : ℚ))) +
+        (((N : ℚ) / 2 * c 1 / 2)^j / (j.factorial : ℚ)) := by
+  unfold positiveLargeTailYGcompClosedFactorialBlockSum
+  rw [show j + 1 = Nat.succ j by omega, Finset.sum_range_succ]
+  simp only [Nat.sub_self, positiveLargeTailYGcompClosedInnerFactorial_zero,
+    mul_one]
+  congr 1
+  refine Finset.sum_congr rfl fun s hs => ?_
+  have hslt : s < j := by simpa using hs
+  have hp : 0 < j - s := by omega
+  rw [positiveLargeTailYGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    (N := N) hp]
+
 theorem positiveLargeTailXGcompClosedActiveBlockSum_eq_closedBlockSum
     (N k : Nat) :
     positiveLargeTailXGcompClosedActiveBlockSum N k =
