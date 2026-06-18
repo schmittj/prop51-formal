@@ -129,6 +129,185 @@ theorem positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProd
       (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
         (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
 
+/-- Constructor from denominator-cleared actual-product bounds on the bounded
+prefix strip.
+
+This is the proof surface intended for the endpoint-reduced bounded checker:
+it proves the same theorem-facing product target as the legacy exact prefix
+chunks, but its inputs are the actual `Bq * Qq` raw inequalities. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawCleared
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise where
+  small := by
+    intro a N k ha haPrefix hrect hk hsmallN
+    exact
+      positiveSmallLargeXYProductTarget_of_rawCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+        (by omega : 1 ≤ a) hk
+        (hsmall ha haPrefix hrect hk hsmallN)
+  tempered := by
+    intro a N k ha haPrefix hrect hk htemperedN
+    exact
+      positiveTemperedLargeXYProductTarget_of_rawCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+        (by omega : 2 ≤ a) hk
+        (htempered ha haPrefix hrect hk htemperedN)
+
+/-- Constructor from raw actual-product bounds away from the sign-lock zone
+on the bounded prefix strip.
+
+The sign-lock cells contribute a nonpositive actual product, so the bounded
+checker only needs to prove raw-cleared inequalities on the complement. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedAwayFromSignLock
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise where
+  small := by
+    intro a N k ha haPrefix hrect hk hsmallN
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    by_cases hlock :
+        361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)
+    · exact
+        positiveSmallLargeXYProductTarget_of_signLock
+          ha hN hk hlock.1 hlock.2
+    · exact
+        positiveSmallLargeXYProductTarget_of_rawCleared hN
+          (by omega : 1 ≤ a) hk
+          (hsmall ha haPrefix hrect hk hsmallN hlock)
+  tempered := by
+    intro a N k ha haPrefix hrect hk htemperedN
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    by_cases hlock :
+        361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)
+    · exact
+        positiveTemperedLargeXYProductTarget_of_signLock
+          ha hN hk hlock.1 hlock.2
+    · exact
+        positiveTemperedLargeXYProductTarget_of_rawCleared hN
+          (by omega : 2 ≤ a) hk
+          (htempered ha haPrefix hrect hk htemperedN hlock)
+
+/-- Prefix-strip constructor with the sign-lock complement stated as the
+integer inequality used by executable checkers. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedAwayFromSignLock
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN _hnotLock
+      exact hsmall ha haPrefix hrect hk hsmallN)
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock
+      exact htempered ha haPrefix hrect hk htemperedN
+        (signLock_natAlternative_of_not hnotLock))
+
+/-- Prefix-strip constructor from raw actual-product bounds only on cells
+where the coefficient `Bq N k` is positive. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositive
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawCleared
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN
+      by_cases hB : 0 < Bq N k
+      · exact hsmall ha haPrefix hrect hk hsmallN hB
+      · exact
+          positiveSmallLargeXYProductRawCleared_of_Bq_nonpos
+            ha hk (le_of_not_gt hB))
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN
+      by_cases hB : 0 < Bq N k
+      · exact htempered ha haPrefix hrect hk htemperedN hB
+      · exact
+          positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
+            ha hk (le_of_not_gt hB))
+
+/-- Prefix-strip constructor combining the nonpositive-`Bq` shortcut with the
+integer sign-lock complement for the tempered branch. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedNatSignLockComplement
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN
+      by_cases hB : 0 < Bq N k
+      · exact hsmall ha haPrefix hrect hk hsmallN hB
+      · exact
+          positiveSmallLargeXYProductRawCleared_of_Bq_nonpos
+            ha hk (le_of_not_gt hB))
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock
+      by_cases hB : 0 < Bq N k
+      · exact htempered ha haPrefix hrect hk htemperedN hnotLock hB
+      · exact
+          positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
+            ha hk (le_of_not_gt hB))
+
+/-- Prefix-strip constructor after the first-coefficient sign reduction.
+
+Since `Bq N 1 ≤ 0`, the checker-facing positive-`Bq` domain starts at
+`k = 2`; this version records that reduction explicitly. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveGeTwoNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 2 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveNatSignLockComplement
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN hB
+      exact hsmall ha haPrefix hrect hk hsmallN
+        (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock hB
+      exact htempered ha haPrefix hrect hk htemperedN hnotLock
+        (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
+
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
