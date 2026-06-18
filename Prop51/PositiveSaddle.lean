@@ -12153,6 +12153,204 @@ theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableCell
     (positiveTemperedLargeXYProductRawClearedFastExp_of_tableCell
       ha hkRange (of_decide_eq_true h))
 
+/-- Guarded table-backed `k`-chunk checker for the large-tail small raw
+product at one `(a,N)`.
+
+Only retained small-regime cells with positive actual `Bq` are checked.  Cells
+with `Bq ≤ 0` are discharged separately by
+`positiveSmallLargeXYProductRawCleared_of_Bq_nonpos`, so this is the executable
+shape used by the live reduced product route. -/
+def checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN
+    (a N kLo kLen : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (List.range' kLo kLen).all fun k =>
+    if k ∈ positiveKRange a ∧ k ≤ ceilSqrt N ∧ 0 < B.getD k 0 then
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableCell cl B Q a N k
+    else
+      true
+
+/-- Guarded table-backed `k`-chunk checker for the large-tail tempered raw
+product at one `(a,N)`.
+
+The guard matches the live reduced domain: retained tempered cells, outside
+the §5 sign-lock zone, and with positive actual `Bq`. -/
+def checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN
+    (a N kLo kLen : Nat) : Bool :=
+  let cl := cList a
+  let B := BListQ cl N a
+  let Q := QListQ cl N a
+  (List.range' kLo kLen).all fun k =>
+    if k ∈ positiveKRange a ∧ ceilSqrt N < k ∧
+        (k < 361 ∨ 40 * k < 3 * N) ∧ 0 < B.getD k 0 then
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableCell cl B Q a N k
+    else
+      true
+
+/-- Guarded table-backed small-product checker over an `N` range and a
+`k` chunk.  Values of `N` outside the positive rectangle are ignored so row
+shards can use simple half-open ranges. -/
+def checkPositiveSmallLargeXYProductRawClearedFastExpTableNRangeKChunk
+    (a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if positiveRectangle a N then
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen
+    else
+      true
+
+/-- Guarded table-backed tempered-product checker over an `N` range and a
+`k` chunk. -/
+def checkPositiveTemperedLargeXYProductRawClearedFastExpTableNRangeKChunk
+    (a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if positiveRectangle a N then
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen
+    else
+      true
+
+theorem positiveSmallLargeXYProductRawCleared_of_checkFastExpTableKChunkAtN
+    {a N k kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen = true)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N)
+    (hB : 0 < Bq N k) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a :=
+    le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hkList : k ∈ List.range' kLo kLen := by
+    exact (List.mem_range'_1).mpr (by
+      simpa [Finset.mem_Ico] using hkChunk)
+  have hBtable : 0 < (BListQ (cList a) N a).getD k 0 := by
+    rw [BListQ_getD_eq N a k hk_le_a]
+    exact hB
+  have hall :
+      ∀ x ∈ List.range' kLo kLen,
+        (if x ∈ positiveKRange a ∧ x ≤ ceilSqrt N ∧
+              0 < (BListQ (cList a) N a).getD x 0 then
+            checkPositiveSmallLargeXYProductRawClearedFastExpTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN]
+        using h)
+  have hcell :
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+        a N k = true := by
+    have hguard :
+        k ∈ positiveKRange a ∧ k ≤ ceilSqrt N ∧
+          0 < (BListQ (cList a) N a).getD k 0 :=
+      ⟨hkRange, hsmall, hBtable⟩
+    have hline := hall k hkList
+    rwa [if_pos hguard] at hline
+  exact positiveSmallLargeXYProductRawCleared_of_checkFastExpTableCell
+    ha hkRange hcell
+
+theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableKChunkAtN
+    {a N k kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen = true)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (htempered : ceilSqrt N < k)
+    (hnotLock : k < 361 ∨ 40 * k < 3 * N) (hB : 0 < Bq N k) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a :=
+    le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hkList : k ∈ List.range' kLo kLen := by
+    exact (List.mem_range'_1).mpr (by
+      simpa [Finset.mem_Ico] using hkChunk)
+  have hBtable : 0 < (BListQ (cList a) N a).getD k 0 := by
+    rw [BListQ_getD_eq N a k hk_le_a]
+    exact hB
+  have hall :
+      ∀ x ∈ List.range' kLo kLen,
+        (if x ∈ positiveKRange a ∧ ceilSqrt N < x ∧
+              (x < 361 ∨ 40 * x < 3 * N) ∧
+              0 < (BListQ (cList a) N a).getD x 0 then
+            checkPositiveTemperedLargeXYProductRawClearedFastExpTableCell
+              (cList a) (BListQ (cList a) N a)
+              (QListQ (cList a) N a) a N x
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN]
+        using h)
+  have hcell :
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a)
+        a N k = true := by
+    have hguard :
+        k ∈ positiveKRange a ∧ ceilSqrt N < k ∧
+          (k < 361 ∨ 40 * k < 3 * N) ∧
+          0 < (BListQ (cList a) N a).getD k 0 :=
+      ⟨hkRange, htempered, hnotLock, hBtable⟩
+    have hline := hall k hkList
+    rwa [if_pos hguard] at hline
+  exact positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableCell
+    ha hkRange hcell
+
+theorem positiveSmallLargeXYProductRawCleared_of_checkFastExpTableNRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNChunk : N ∈ List.range' nLo nLen)
+    (hrect : positiveRectangle a N)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N)
+    (hB : 0 < Bq N k) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallLargeXYProductRawClearedFastExpTableNRangeKChunk]
+        using h)
+  have hAtN :
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hall N hNChunk
+  exact positiveSmallLargeXYProductRawCleared_of_checkFastExpTableKChunkAtN
+    ha hAtN hkChunk hkRange hsmall hB
+
+theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableNRangeKChunk
+    {a N k nLo nLen kLo kLen : Nat} (ha : 1 ≤ a)
+    (h :
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableNRangeKChunk
+        a nLo nLen kLo kLen = true)
+    (hNChunk : N ∈ List.range' nLo nLen)
+    (hrect : positiveRectangle a N)
+    (hkChunk : k ∈ Finset.Ico kLo (kLo + kLen))
+    (hkRange : k ∈ positiveKRange a) (htempered : ceilSqrt N < k)
+    (hnotLock : k < 361 ∨ 40 * k < 3 * N) (hB : 0 < Bq N k) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  have hall :
+      ∀ x ∈ List.range' nLo nLen,
+        (if positiveRectangle a x then
+            checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN
+              a x kLo kLen
+          else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveTemperedLargeXYProductRawClearedFastExpTableNRangeKChunk]
+        using h)
+  have hAtN :
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableKChunkAtN
+        a N kLo kLen = true := by
+    simpa [hrect] using hall N hNChunk
+  exact positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableKChunkAtN
+    ha hAtN hkChunk hkRange htempered hnotLock hB
+
 /-- If the actual `B_k(N)` coefficient is nonpositive, the large-tail
 small-branch raw product target is automatic.
 
