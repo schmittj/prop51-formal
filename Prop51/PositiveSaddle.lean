@@ -21755,6 +21755,128 @@ theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_le_top
               (((a - 3).factorial : Nat) : ℚ))) := by
           exact mul_le_mul_of_nonneg_right hcardQ htop_nonneg
 
+theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_crude
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
+      ≤ 1152 * (a : ℚ) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+  have htop :=
+    positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_le_top
+      (a := a) ha
+  have hscale_nonneg : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
+    positivity
+  have hscaled :=
+    mul_le_mul_of_nonneg_left htop hscale_nonneg
+  have hN_le : (posNhi a : ℚ) ≤ 12 * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hbase_nonneg :
+      0 ≤ (5 : ℚ) * (posNhi a : ℚ) / 12 := by
+    positivity
+  have hbase_le :
+      (5 : ℚ) * (posNhi a : ℚ) / 12 ≤ 5 * (a : ℚ) := by
+    nlinarith
+  have hpow_le :
+      ((5 : ℚ) * (posNhi a : ℚ) / 12)^a
+        ≤ ((5 : ℚ) * (a : ℚ))^a :=
+    pow_le_pow_left₀ hbase_nonneg hbase_le a
+  have hden_nonneg :
+      0 ≤ (((a - 3).factorial : Nat) : ℚ) := by
+    positivity
+  have hden_pos :
+      (0 : ℚ) < (((a - 3).factorial : Nat) : ℚ) := by
+    positivity
+  have hpow_div :
+      ((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+          (((a - 3).factorial : Nat) : ℚ)
+        ≤ ((5 : ℚ) * (a : ℚ))^a /
+          (((a - 3).factorial : Nat) : ℚ) :=
+    div_le_div_of_nonneg_right hpow_le hden_nonneg
+  have hpow_div_nonneg :
+      0 ≤ ((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+          (((a - 3).factorial : Nat) : ℚ) := by
+    positivity
+  have hmain :
+      (96 : ℚ) * (posNhi a : ℚ) *
+          (((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+            (((a - 3).factorial : Nat) : ℚ))
+        ≤
+      1152 * (a : ℚ) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+    calc
+      (96 : ℚ) * (posNhi a : ℚ) *
+          (((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+            (((a - 3).factorial : Nat) : ℚ))
+          ≤
+        96 * (12 * (a : ℚ)) *
+          (((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+          exact mul_le_mul_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hN_le (by norm_num))
+            hpow_div_nonneg
+      _ ≤
+        96 * (12 * (a : ℚ)) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+          exact mul_le_mul_of_nonneg_left hpow_div
+            (by positivity)
+      _ =
+        1152 * (a : ℚ) *
+          (((5 : ℚ) * (a : ℚ))^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+          ring
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        (4 *
+          ((6 : ℚ) * (posNhi a : ℚ) *
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+              (((a - 3).factorial : Nat) : ℚ)))) := hscaled
+    _ =
+      (96 : ℚ) * (posNhi a : ℚ) *
+          (((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+          have hpow_eq :
+              (2 : ℚ)^a *
+                  ((5 : ℚ) * (posNhi a : ℚ) / 24)^a =
+                ((5 : ℚ) * (posNhi a : ℚ) / 12)^a := by
+            rw [← mul_pow]
+            ring
+          rw [c_one]
+          rw [show ((posNhi a : ℚ) / 2 * (5 / 6 : ℚ) / 2) =
+              (5 : ℚ) * (posNhi a : ℚ) / 24 by ring]
+          calc
+            (4 : ℚ) * (2 : ℚ)^a *
+                (4 *
+                  ((6 : ℚ) * (posNhi a : ℚ) *
+                    (((5 : ℚ) * (posNhi a : ℚ) / 24)^a /
+                      (((a - 3).factorial : Nat) : ℚ))))
+                =
+              (96 : ℚ) * (posNhi a : ℚ) *
+                (((2 : ℚ)^a *
+                    ((5 : ℚ) * (posNhi a : ℚ) / 24)^a) /
+                  (((a - 3).factorial : Nat) : ℚ)) := by
+                field_simp [hden_pos.ne']
+                ring
+            _ =
+              (96 : ℚ) * (posNhi a : ℚ) *
+                (((5 : ℚ) * (posNhi a : ℚ) / 12)^a /
+                  (((a - 3).factorial : Nat) : ℚ)) := by
+                rw [hpow_eq]
+    _ ≤
+      1152 * (a : ℚ) *
+        (((5 : ℚ) * (a : ℚ))^a /
+          (((a - 3).factorial : Nat) : ℚ)) := hmain
+
 theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryLow
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
