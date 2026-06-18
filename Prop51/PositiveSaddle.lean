@@ -2614,6 +2614,45 @@ theorem BplusqGcompBound_le_positiveLargeTailXGcompBlockSum (N k : Nat) :
   rw [BplusqGcompBound_eq_positiveLargeTailXGcompSaddleSum]
   exact positiveLargeTailXGcompSaddleSum_le_blockSum N k
 
+/-- Linear-exponential/nonlinear-block sum for the positive `Q` `Gcomp`
+majorant used on the product `Y` side. -/
+def positiveLargeTailYGcompSaddleSum (N j : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (j + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      EplusGcompBound N (j - s)
+
+/-- The product-side `Y` majorant with the nonlinear recurrence opened into
+the explicit `Gcomp` block sum. -/
+def positiveLargeTailYGcompBlockSum (N j : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (j + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ Finset.range (j - s + 1),
+        ((N : ℚ) / 50)^r * 6^(j - s) * Gcomp r (j - s) /
+          (r.factorial : ℚ))
+
+theorem QqEplusGcompBound_eq_positiveLargeTailYGcompSaddleSum
+    (N j : Nat) :
+    QqEplusGcompBound N j = positiveLargeTailYGcompSaddleSum N j := by
+  unfold positiveLargeTailYGcompSaddleSum
+  rw [QqEplusGcompBound_eq_linear_EplusGcompBound_sum]
+
+theorem positiveLargeTailYGcompSaddleSum_le_blockSum (N j : Nat) :
+    positiveLargeTailYGcompSaddleSum N j
+      ≤ positiveLargeTailYGcompBlockSum N j := by
+  unfold positiveLargeTailYGcompSaddleSum positiveLargeTailYGcompBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (EplusGcompBound_le_Gcomp_sum N (j - s)) hlin_nonneg
+
+theorem QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum (N j : Nat) :
+    QqEplusGcompBound N j ≤ positiveLargeTailYGcompBlockSum N j := by
+  rw [QqEplusGcompBound_eq_positiveLargeTailYGcompSaddleSum]
+  exact positiveLargeTailYGcompSaddleSum_le_blockSum N j
+
 theorem positiveXplusGcompBound_nonneg (N k : Nat) :
     0 ≤ positiveXplusGcompBound N k := by
   unfold positiveXplusGcompBound
@@ -13371,6 +13410,68 @@ structure PositiveSaddleLargeTailProductBoundsCertificate
           ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
             positiveTemperedLargeExp a k *
               ((N : ℚ) * c k * c (posJ a k))
+
+/-- Product-side `X` block bound used by the reduced explicit `Gcomp`
+product certificate.  The `a` argument is present only to fit the generic
+large-tail product-bound interface. -/
+def positiveLargeTailProductXBlockBound (_a N k : Nat) : ℚ :=
+  positiveLargeTailXGcompBlockSum N k
+
+/-- Product-side `Y` block bound used by the reduced explicit `Gcomp`
+product certificate. -/
+def positiveLargeTailProductYBlockBound (a N k : Nat) : ℚ :=
+  positiveLargeTailYGcompBlockSum N (posJ a k)
+
+/-- Reduced product certificate with both coefficient majorants opened into
+explicit `Gcomp` block sums.
+
+This leaves only the two scalar product comparisons, one for the small branch
+and one for the tempered branch.  The `BplusqGcompBound` and
+`QqEplusGcompBound` coefficient bounds are supplied by the block-sum lemmas
+above. -/
+structure PositiveSaddleLargeTailProductBlockSumCertificate : Prop where
+  smallProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            positiveLargeTailProductXBlockBound a N k *
+              positiveLargeTailProductYBlockBound a N k
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+  temperedProduct :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            positiveLargeTailProductXBlockBound a N k *
+              positiveLargeTailProductYBlockBound a N k
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k))
+
+theorem PositiveSaddleLargeTailProductBlockSumCertificate.toProductBoundsCertificate
+    (cert : PositiveSaddleLargeTailProductBlockSumCertificate) :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      positiveLargeTailProductXBlockBound
+      positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound
+      positiveLargeTailProductYBlockBound where
+  smallX := by
+    intro a N k _ha _hrect _hk _hsmall
+    exact BplusqGcompBound_le_positiveLargeTailXGcompBlockSum N k
+  smallY := by
+    intro a N k _ha _hrect _hk _hsmall
+    exact QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum
+      N (posJ a k)
+  smallProduct := cert.smallProduct
+  temperedX := by
+    intro a N k _ha _hrect _hk _htempered
+    exact BplusqGcompBound_le_positiveLargeTailXGcompBlockSum N k
+  temperedY := by
+    intro a N k _ha _hrect _hk _htempered
+    exact QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum
+      N (posJ a k)
+  temperedProduct := cert.temperedProduct
 
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :

@@ -200,4 +200,16 @@ theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumClea
       positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
         (soloY (a := a) (N := N) ha hrect))
 
+/-- Large-tail audit certificate with the product side reduced to the explicit
+`Gcomp` block-sum product certificate and the solo side reduced to the
+explicit solo block-sum target. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared
+    (product : PositiveSaddleLargeTailProductBlockSumCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompBlockSumCleared a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared
+    product.toProductBoundsCertificate soloY
+
 end Prop51

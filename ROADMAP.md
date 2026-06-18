@@ -650,7 +650,13 @@ Status:
       `BplusqGcompBound_le_positiveLargeTailXGcompBlockSum` expose the
       executable `BplusqGcompBound` recurrence as an explicit linear/nonlinear
       `Gcomp` block sum for future small/tempered product estimates.  The
-      solo field can
+      `QqEplusGcompBound` product-side `Y` factor now has the matching
+      `QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum` helper.
+      `PositiveSaddleLargeTailProductBlockSumCertificate` reduces the product
+      certificate to two explicit block-sum scalar comparisons, and
+      `positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
+      combines that product route with the reduced solo block-sum target.
+      The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
       `PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those

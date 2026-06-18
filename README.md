@@ -217,7 +217,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.BplusNonlinearGcompBound_le_Gcomp_sum` open the executable
   `BplusqGcompBound` recurrence into the explicit helper
   `Prop51.positiveLargeTailXGcompBlockSum`, with packaged bound
-  `Prop51.BplusqGcompBound_le_positiveLargeTailXGcompBlockSum`.  For final
+  `Prop51.BplusqGcompBound_le_positiveLargeTailXGcompBlockSum`.  The `Y`
+  side has the matching helper
+  `Prop51.QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum`, and
+  `Prop51.PositiveSaddleLargeTailProductBlockSumCertificate` reduces the
+  product certificate to the two explicit block-sum scalar product
+  comparisons.  The wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
+  combines this reduced product route with the reduced solo block-sum target.
+  For final
   assembly from
   these lower-level product and solo proofs,
   `Prop51.PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those
