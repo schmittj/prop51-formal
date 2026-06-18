@@ -407,6 +407,16 @@ theorem bSeries_eq_B_mul_prod (μ : List Nat) :
 /-- `B_k(N) = [X^k] C(X)^{-N}` (official; cf. `coeff_BSeriesQ`). -/
 def Bq (N k : Nat) : ℚ := expCoeff (fun r => -(N : ℚ) * c r) k
 
+/-- The first `B`-coefficient is explicitly negative. -/
+theorem Bq_one (N : Nat) : Bq N 1 = -((N : ℚ) * c 1) := by
+  unfold Bq
+  have h := expCoeff_succ_mul (fun r => -(N : ℚ) * c r) 0
+  simpa [mul_assoc] using h
+
+theorem Bq_one_nonpos (N : Nat) : Bq N 1 ≤ 0 := by
+  rw [Bq_one]
+  exact neg_nonpos.mpr (mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1))
+
 /-- `\overline B_k(N) = [X^k] C(X)^N`, the positive exponential majorant for
 `B_k(N)` used in the positive-saddle estimates. -/
 def Bplusq (N k : Nat) : ℚ := expCoeff (fun r => (N : ℚ) * c r) k

@@ -259,6 +259,42 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveNatSignLockComplement
           positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
             (by omega : 2000 < a) hk (le_of_not_gt hB))
 
+/-- Product-tail constructor after the first-coefficient sign reduction.
+
+Since `Bq N 1 ≤ 0`, the live actual-product obligations with `0 < Bq N k`
+start at `k = 2`.  This is the version future tail-product checkers should
+target: it keeps both free reductions from
+`ofRawClearedBqPositiveNatSignLockComplement` and removes the uniformly
+nonpositive first coefficient from the remaining domain. -/
+theorem LargeTailProductCertificate.ofRawClearedBqPositiveGeTwoNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 2 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveNatSignLockComplement
+    (by
+      intro a N k ha hrect hk hsmallN hB
+      by_cases hk2 : 2 ≤ k
+      · exact hsmall ha hrect hk hsmallN hk2 hB
+      · have hk1 : 1 ≤ k := (mem_positiveKRange.mp hk).1
+        have hk_eq : k = 1 := by omega
+        subst k
+        exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hB
+      by_cases hk2 : 2 ≤ k
+      · exact htempered ha hrect hk htemperedN hnotLock hk2 hB
+      · have hk1 : 1 ≤ k := (mem_positiveKRange.mp hk).1
+        have hk_eq : k = 1 := by omega
+        subst k
+        exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB))
+
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
 
