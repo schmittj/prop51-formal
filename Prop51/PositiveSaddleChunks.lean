@@ -3032,6 +3032,194 @@ def checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
     checkPositiveSmallTangentExpEdgeNRangeKChunk
       a (posNlo a + nLen * nIndex) nLen kLo kLen
 
+/-- Fixed-point version of `checkPositiveSmallTangentExpEdgeNRangeKChunk`.
+
+This is a Lean proof-production deviation from the TeX presentation: the
+paper compares rational exponential envelopes directly, while Lean certifies
+the same tangent-edge inequality by upper-rounding the left exponential and
+lower-rounding the right exponential at a fixed natural scale. -/
+def checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp
+    (S a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if _hrect : positiveRectangle a N then
+      (List.range' kLo kLen).all fun k =>
+        if _hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N then
+          checkPositiveSmallTangentExpEdgeCellScaledExp S a N k
+        else true
+    else true
+
+/-- Fixed-point tangent check over one fixed `N`-chunk index across a row
+range and one small-regime `k` chunk. -/
+def checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExp
+    (S nLen lo len nIndex kLo kLen : Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp
+      S a (posNlo a + nLen * nIndex) nLen kLo kLen
+
+/-- Hybrid fixed-point/exact version of
+`checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp`.  Exact rational cells
+are evaluated only when the scaled checker is too conservative. -/
+def checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExpFallback
+    (S a nLo nLen kLo kLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if _hrect : positiveRectangle a N then
+      (List.range' kLo kLen).all fun k =>
+        if _hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N then
+          checkPositiveSmallTangentExpEdgeCellScaledExpFallback S a N k
+        else true
+    else true
+
+/-- Fixed-`N`-index row-range wrapper for the hybrid tangent checker. -/
+def checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExpFallback
+    (S nLen lo len nIndex kLo kLen : Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExpFallback
+      S a (posNlo a + nLen * nIndex) nLen kLo kLen
+
+theorem checkPositiveSmallTangentExpEdgeNRangeKChunk_of_scaledExp
+    {S a nLo nLen kLo kLen : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (h :
+      checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp
+        S a nLo nLen kLo kLen = true) :
+    checkPositiveSmallTangentExpEdgeNRangeKChunk
+      a nLo nLen kLo kLen = true := by
+  have hNs :
+      ∀ x ∈ List.range' nLo nLen,
+        (if hrect : positiveRectangle a x then
+          (List.range' kLo kLen).all fun y =>
+            if _hcell : y ∈ positiveKRange a ∧ y ≤ ceilSqrt x then
+              checkPositiveSmallTangentExpEdgeCellScaledExp S a x y
+            else true
+        else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp] using h)
+  unfold checkPositiveSmallTangentExpEdgeNRangeKChunk
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  by_cases hrect : positiveRectangle a N
+  · have hN := hNs N hNmem
+    have hks :
+        ∀ y ∈ List.range' kLo kLen,
+          (if _hcell : y ∈ positiveKRange a ∧ y ≤ ceilSqrt N then
+            checkPositiveSmallTangentExpEdgeCellScaledExp S a N y
+          else true) = true := by
+      exact List.all_eq_true.mp (by simpa [hrect] using hN)
+    simp [hrect]
+    intro k hklo hkhi
+    have hkmem : k ∈ List.range' kLo kLen :=
+      (List.mem_range'_1).mpr ⟨hklo, hkhi⟩
+    by_cases hkRange : k ∈ positiveKRange a
+    · by_cases hsmall : k ≤ ceilSqrt N
+      · have hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N :=
+          ⟨hkRange, hsmall⟩
+        have hscaled :
+            checkPositiveSmallTangentExpEdgeCellScaledExp S a N k = true := by
+          simpa [hcell] using hks k hkmem
+        have hgap : positiveSmallTangentExpEdgeGap a N k :=
+          positiveSmallTangentExpEdgeGap_of_checkCellScaledExp
+            hS ha401 ha2000 hrect hkRange hscaled
+        have hexact : checkPositiveSmallTangentExpEdgeCell a N k = true :=
+          decide_eq_true hgap
+        exact Or.inr hexact
+      · exact Or.inl (Or.inr (Nat.lt_of_not_ge hsmall))
+    · exact Or.inl (Or.inl hkRange)
+  · simp [hrect]
+
+theorem checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_scaledExp
+    {S nLen lo len nIndex kLo kLen : Nat} (hS : 0 < S)
+    (hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h :
+      checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExp
+        S nLen lo len nIndex kLo kLen = true) :
+    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+      nLen lo len nIndex kLo kLen = true := by
+  have hall :
+      ∀ a ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExp
+          S a (posNlo a + nLen * nIndex) nLen kLo kLen = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExp]
+        using h)
+  unfold checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+  apply List.all_eq_true.mpr
+  intro a haMem
+  rcases List.mem_range'_1.mp haMem with ⟨ha_lo, ha_hi⟩
+  exact checkPositiveSmallTangentExpEdgeNRangeKChunk_of_scaledExp
+    hS (by omega) (by omega) (hall a haMem)
+
+theorem checkPositiveSmallTangentExpEdgeNRangeKChunk_of_scaledExpFallback
+    {S a nLo nLen kLo kLen : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (h :
+      checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExpFallback
+        S a nLo nLen kLo kLen = true) :
+    checkPositiveSmallTangentExpEdgeNRangeKChunk
+      a nLo nLen kLo kLen = true := by
+  have hNs :
+      ∀ x ∈ List.range' nLo nLen,
+        (if hrect : positiveRectangle a x then
+          (List.range' kLo kLen).all fun y =>
+            if _hcell : y ∈ positiveKRange a ∧ y ≤ ceilSqrt x then
+              checkPositiveSmallTangentExpEdgeCellScaledExpFallback S a x y
+            else true
+        else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExpFallback] using h)
+  unfold checkPositiveSmallTangentExpEdgeNRangeKChunk
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  by_cases hrect : positiveRectangle a N
+  · have hN := hNs N hNmem
+    have hks :
+        ∀ y ∈ List.range' kLo kLen,
+          (if _hcell : y ∈ positiveKRange a ∧ y ≤ ceilSqrt N then
+            checkPositiveSmallTangentExpEdgeCellScaledExpFallback S a N y
+          else true) = true := by
+      exact List.all_eq_true.mp (by simpa [hrect] using hN)
+    simp [hrect]
+    intro k hklo hkhi
+    have hkmem : k ∈ List.range' kLo kLen :=
+      (List.mem_range'_1).mpr ⟨hklo, hkhi⟩
+    by_cases hkRange : k ∈ positiveKRange a
+    · by_cases hsmall : k ≤ ceilSqrt N
+      · have hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N :=
+          ⟨hkRange, hsmall⟩
+        have hhybrid :
+            checkPositiveSmallTangentExpEdgeCellScaledExpFallback S a N k = true := by
+          simpa [hcell] using hks k hkmem
+        have hgap : positiveSmallTangentExpEdgeGap a N k :=
+          positiveSmallTangentExpEdgeGap_of_checkCellScaledExpFallback
+            hS ha401 ha2000 hrect hkRange hhybrid
+        have hexact : checkPositiveSmallTangentExpEdgeCell a N k = true :=
+          decide_eq_true hgap
+        exact Or.inr hexact
+      · exact Or.inl (Or.inr (Nat.lt_of_not_ge hsmall))
+    · exact Or.inl (Or.inl hkRange)
+  · simp [hrect]
+
+theorem checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_scaledExpFallback
+    {S nLen lo len nIndex kLo kLen : Nat} (hS : 0 < S)
+    (hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h :
+      checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExpFallback
+        S nLen lo len nIndex kLo kLen = true) :
+    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+      nLen lo len nIndex kLo kLen = true := by
+  have hall :
+      ∀ a ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeNRangeKChunkScaledExpFallback
+          S a (posNlo a + nLen * nIndex) nLen kLo kLen = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunkScaledExpFallback]
+        using h)
+  unfold checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+  apply List.all_eq_true.mpr
+  intro a haMem
+  rcases List.mem_range'_1.mp haMem with ⟨ha_lo, ha_hi⟩
+  exact checkPositiveSmallTangentExpEdgeNRangeKChunk_of_scaledExpFallback
+    hS (by omega) (by omega) (hall a haMem)
+
 theorem checkPositiveSmallTangentExpEdgeCell_of_NRangeKChunk
     {a N k nLo nLen kLo kLen : Nat}
     (h :

@@ -613,6 +613,48 @@ theorem positiveSmallExponentUpper_eq_num_div_den {a k : Nat}
   norm_num [Nat.cast_mul, Nat.cast_add, Nat.cast_pow]
   ring
 
+/-- Natural numerator for the tangent-line small-regime exponent at actual
+`N`.  For `N > 0`, its denominator is
+`2000 * ceilSqrt N * posJ a k`.
+
+This is the Lean-side replacement for the paper's informal square-root
+tangent comparison: the finite checker evaluates this exact rational tangent
+surrogate by fixed-point arithmetic rather than by expanding large rational
+exponential sums. -/
+def positiveSmallTangentExponentAtNum (a N k : Nat) : Nat :=
+  1139 * (N + (ceilSqrt N)^2) * posJ a k
+    + 400 * ceilSqrt N * (posJ a k)^2
+    + 5800 * ceilSqrt N * a
+    + 2000 * ceilSqrt N * posJ a k
+
+def positiveSmallTangentExponentAtDen (a N k : Nat) : Nat :=
+  2000 * ceilSqrt N * posJ a k
+
+theorem positiveSmallTangentExponentAtDen_pos {a N k : Nat}
+    (hN : 1 ≤ N) (hj : 0 < posJ a k) :
+    0 < positiveSmallTangentExponentAtDen a N k := by
+  have hs : 0 < ceilSqrt N := one_le_ceilSqrt_of_pos (by omega)
+  unfold positiveSmallTangentExponentAtDen
+  exact Nat.mul_pos (Nat.mul_pos (by norm_num) hs) hj
+
+theorem positiveSmallTangentExponentAt_eq_num_div_den {a N k : Nat}
+    (hN : 1 ≤ N) (hj : 0 < posJ a k) :
+    positiveSmallTangentExponentAt a N k =
+      (positiveSmallTangentExponentAtNum a N k : ℚ) /
+        (positiveSmallTangentExponentAtDen a N k : ℚ) := by
+  have hNne : N ≠ 0 := by omega
+  have hs : (ceilSqrt N : ℚ) ≠ 0 := by
+    have hsNat : 0 < ceilSqrt N :=
+      lt_of_lt_of_le Nat.zero_lt_one (one_le_ceilSqrt_of_pos (by omega : 0 < N))
+    exact_mod_cast hsNat.ne'
+  have hjQ : (posJ a k : ℚ) ≠ 0 := by exact_mod_cast hj.ne'
+  unfold positiveSmallTangentExponentAt positiveSqrtTangentUpper
+    positiveSmallTangentExponentAtNum positiveSmallTangentExponentAtDen
+  simp [hNne]
+  field_simp [hs, hjQ]
+  norm_num [Nat.cast_mul, Nat.cast_add, Nat.cast_pow]
+  ring
+
 def positiveTemperedExponentUpperNum (a k : Nat) : Nat :=
   2 * a * k * posJ a k
     + 57 * a * posJ a k
@@ -10735,6 +10777,208 @@ theorem partialExpPrefixFast_le_partialExpUpper
   unfold partialExpUpper
   linarith
 
+/-! ### Downward-rounded fixed-point primitives -/
+
+/-- A natural floor division is a lower bound for the corresponding rational
+quotient. -/
+theorem natCast_floorDiv_le_div (n d : Nat) (hd : 0 < d) :
+    ((n / d : Nat) : ℚ) ≤ (n : ℚ) / (d : ℚ) := by
+  have hmul : n / d * d ≤ n := Nat.div_mul_le_self n d
+  have hdQ : (0 : ℚ) < (d : ℚ) := by exact_mod_cast hd
+  rw [le_div_iff₀ hdQ]
+  exact_mod_cast (by simpa [Nat.mul_comm] using hmul)
+
+/-- One downward-rounded fixed-point multiplication/division step. -/
+def scaledMulDivFloor (u num den : Nat) : Nat :=
+  (u * num) / den
+
+theorem scaledMulDivFloor_sound
+    {S u num den : Nat} (hS : 0 < S) (hden : 0 < den) :
+    ((scaledMulDivFloor u num den : Nat) : ℚ) / (S : ℚ)
+      ≤ ((u : ℚ) / (S : ℚ)) * ((num : ℚ) / (den : ℚ)) := by
+  have hfloor :
+      ((scaledMulDivFloor u num den : Nat) : ℚ)
+        ≤ ((u * num : Nat) : ℚ) / (den : ℚ) := by
+    simpa [scaledMulDivFloor] using natCast_floorDiv_le_div (u * num) den hden
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hdenℚ : (0 : ℚ) < (den : ℚ) := by exact_mod_cast hden
+  calc
+    ((scaledMulDivFloor u num den : Nat) : ℚ) / (S : ℚ)
+        ≤ (((u * num : Nat) : ℚ) / (den : ℚ)) / (S : ℚ) :=
+          div_le_div_of_nonneg_right hfloor hSℚ.le
+    _ = ((u : ℚ) / (S : ℚ)) * ((num : ℚ) / (den : ℚ)) := by
+          field_simp [hSℚ.ne', hdenℚ.ne']
+          norm_num
+
+/-- Downward-rounded successor update for one exponential-series term. -/
+def scaledExpSuccFloor (u yn yd n : Nat) : Nat :=
+  scaledMulDivFloor u yn (yd * (n + 1))
+
+theorem scaledExpSuccFloor_sound
+    {S u yn yd n : Nat} {t : ℚ}
+    (hS : 0 < S) (hyd : 0 < yd)
+    (ht : ((u : ℚ) / (S : ℚ)) ≤ t) :
+    ((scaledExpSuccFloor u yn yd n : Nat) : ℚ) / (S : ℚ)
+      ≤ t * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ) := by
+  have hden : 0 < yd * (n + 1) := by
+    exact Nat.mul_pos hyd (Nat.succ_pos n)
+  have hfactor_nonneg :
+      0 ≤ (yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ) := by
+    positivity
+  have hfloor :=
+    scaledMulDivFloor_sound (S := S) (u := u) (num := yn)
+      (den := yd * (n + 1)) hS hden
+  have hmul :
+      ((u : ℚ) / (S : ℚ)) *
+          ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ))
+        ≤ t * ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) :=
+    mul_le_mul_of_nonneg_right ht hfactor_nonneg
+  calc
+    ((scaledExpSuccFloor u yn yd n : Nat) : ℚ) / (S : ℚ)
+        ≤ ((u : ℚ) / (S : ℚ)) *
+            ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) := by
+          simpa [scaledExpSuccFloor] using hfloor
+    _ ≤ t * ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) := hmul
+    _ = t * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ) := by
+          have hydℚ : (yd : ℚ) ≠ 0 := by exact_mod_cast hyd.ne'
+          have hnℚ : (((n + 1 : Nat) : ℚ)) ≠ 0 := by positivity
+          rw [show ((yd * (n + 1) : Nat) : ℚ) =
+              (yd : ℚ) * ((n + 1 : Nat) : ℚ) by norm_num]
+          field_simp [hydℚ, hnℚ]
+
+/-- Tail-recursive downward-rounded fixed-point evaluator for exponential
+prefix states.  It only certifies the finite prefix; the nonnegative geometric
+tail in `partialExpUpper` is then ignored on the lower-bound side. -/
+def scaledExpLowerStateAux (yn yd : Nat) : Nat → Nat → Nat → Nat → Nat × Nat
+  | 0, _n, acc, term => (acc, term)
+  | m + 1, n, acc, term =>
+      scaledExpLowerStateAux yn yd m (n + 1) (acc + term)
+        (scaledExpSuccFloor term yn yd n)
+
+theorem scaledExpLowerStateAux_sound
+    {S yn yd : Nat} (hS : 0 < S) (hyd : 0 < yd) :
+    ∀ (m n accL termL : Nat) (acc term : ℚ),
+      ((accL : ℚ) / (S : ℚ)) ≤ acc →
+      ((termL : ℚ) / (S : ℚ)) ≤ term →
+      let exact :=
+        partialExpUpperStateAux ((yn : ℚ) / (yd : ℚ)) m n acc term
+      let approx := scaledExpLowerStateAux yn yd m n accL termL
+      ((approx.1 : ℚ) / (S : ℚ)) ≤ exact.1 ∧
+        ((approx.2 : ℚ) / (S : ℚ)) ≤ exact.2
+  | 0, _n, accL, termL, acc, term, hacc, hterm => by
+      simpa [partialExpUpperStateAux, scaledExpLowerStateAux] using
+        And.intro hacc hterm
+  | m + 1, n, accL, termL, acc, term, hacc, hterm => by
+      rw [partialExpUpperStateAux, scaledExpLowerStateAux]
+      have hacc' :
+          (((accL + termL : Nat) : ℚ) / (S : ℚ)) ≤ acc + term := by
+        have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+        have hsum := add_le_add hacc hterm
+        rw [← add_div] at hsum
+        simpa using hsum
+      have hterm' :
+          ((scaledExpSuccFloor termL yn yd n : Nat) : ℚ) / (S : ℚ)
+            ≤ term * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ) :=
+        scaledExpSuccFloor_sound (S := S) (u := termL) (yn := yn) (yd := yd)
+          (n := n) (t := term) hS hyd hterm
+      exact scaledExpLowerStateAux_sound hS hyd m (n + 1)
+        (accL + termL) (scaledExpSuccFloor termL yn yd n)
+        (acc + term)
+        (term * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ))
+        hacc' hterm'
+
+/-- Initialize the downward-rounded exponential prefix state at scale `S`. -/
+def scaledExpLowerState (S yn yd T : Nat) : Nat × Nat :=
+  scaledExpLowerStateAux yn yd T 0 0 S
+
+/-- Downward-rounded geometric tail term for `partialExpUpper`. -/
+def scaledExpTailFloor (termL yn yd T : Nat) : Nat :=
+  scaledMulDivFloor termL (yd * T) (yd * T - yn)
+
+theorem scaledExpTailFloor_sound
+    {S termL yn yd T : Nat} (hS : 0 < S) (hyd : 0 < yd)
+    (hynT : yn < yd * T) :
+    ((scaledExpTailFloor termL yn yd T : Nat) : ℚ) / (S : ℚ)
+      ≤ ((termL : ℚ) / (S : ℚ)) *
+          (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ))) := by
+  have hden : 0 < yd * T - yn := Nat.sub_pos_of_lt hynT
+  rw [partialExpUpper_rational_tail_factor_eq hyd hynT]
+  simpa [scaledExpTailFloor] using
+    scaledMulDivFloor_sound (S := S) (u := termL) (num := yd * T)
+      (den := yd * T - yn) hS hden
+
+/-- Natural fixed-point lower bound for the finite prefix inside
+`partialExpUpper (yn/yd) T`. -/
+def scaledPartialExpPrefixLowerNat (S yn yd T : Nat) : Nat :=
+  (scaledExpLowerState S yn yd T).1
+
+/-- Natural fixed-point lower bound for the whole rational
+`partialExpUpper (yn/yd) T`, including a downward-rounded geometric tail. -/
+def scaledPartialExpUpperLowerNat (S yn yd T : Nat) : Nat :=
+  let state := scaledExpLowerState S yn yd T
+  state.1 + scaledExpTailFloor state.2 yn yd T
+
+theorem scaledPartialExpPrefixLowerNat_le_partialExpUpper_rational
+    {S yn yd T : Nat} (hS : 0 < S) (hyd : 0 < yd)
+    (hynT : yn < yd * T) :
+    ((scaledPartialExpPrefixLowerNat S yn yd T : Nat) : ℚ) / (S : ℚ)
+      ≤ partialExpUpper ((yn : ℚ) / (yd : ℚ)) T := by
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hterm0 : (S : ℚ) / (S : ℚ) ≤ (1 : ℚ) := by
+    rw [div_self hSℚ.ne']
+  have hstate :=
+    scaledExpLowerStateAux_sound (S := S) (yn := yn) (yd := yd) hS hyd
+      T 0 0 S 0 1 (by norm_num) hterm0
+  have hy0 : 0 ≤ (yn : ℚ) / (yd : ℚ) := by positivity
+  have hyT : (yn : ℚ) / (yd : ℚ) < (T : ℚ) :=
+    rational_upper_lt_nat_of_num_lt_mul hyd hynT
+  have hprefix :
+      (((scaledExpLowerStateAux yn yd T 0 0 S).1 : ℚ) / (S : ℚ))
+        ≤ partialExpPrefixFast ((yn : ℚ) / (yd : ℚ)) T := by
+    simpa [scaledExpLowerState, scaledPartialExpPrefixLowerNat,
+      partialExpPrefixFast, partialExpUpperState] using hstate.1
+  exact hprefix.trans
+    (partialExpPrefixFast_le_partialExpUpper (n := T) (T₀ := T)
+      (le_rfl) hy0 hyT)
+
+theorem scaledPartialExpUpperLowerNat_le_partialExpUpper_rational
+    {S yn yd T : Nat} (hS : 0 < S) (hyd : 0 < yd)
+    (hynT : yn < yd * T) :
+    ((scaledPartialExpUpperLowerNat S yn yd T : Nat) : ℚ) / (S : ℚ)
+      ≤ partialExpUpper ((yn : ℚ) / (yd : ℚ)) T := by
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hterm0 : (S : ℚ) / (S : ℚ) ≤ (1 : ℚ) := by
+    rw [div_self hSℚ.ne']
+  have hstate :=
+    scaledExpLowerStateAux_sound (S := S) (yn := yn) (yd := yd) hS hyd
+      T 0 0 S 0 1 (by norm_num) hterm0
+  let factor : ℚ := 1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ))
+  have htail :
+      ((scaledExpTailFloor (scaledExpLowerState S yn yd T).2 yn yd T : Nat) : ℚ) /
+          (S : ℚ)
+        ≤ ((scaledExpLowerState S yn yd T).2 : ℚ) / (S : ℚ) * factor := by
+    simpa [factor] using
+      scaledExpTailFloor_sound (S := S)
+        (termL := (scaledExpLowerState S yn yd T).2)
+        (yn := yn) (yd := yd) (T := T) hS hyd hynT
+  have hfactor_nonneg : 0 ≤ factor := by
+    change 0 ≤ (1 / (1 - ((yn : ℚ) / (yd : ℚ)) / (T : ℚ)))
+    rw [partialExpUpper_rational_tail_factor_eq hyd hynT]
+    positivity
+  rw [← partialExpUpperFast_eq ((yn : ℚ) / (yd : ℚ)) T]
+  simp only [partialExpUpperFast, partialExpUpperState,
+    scaledPartialExpUpperLowerNat, scaledExpLowerState] at hstate htail ⊢
+  have htailExact :
+      ((scaledExpTailFloor (scaledExpLowerStateAux yn yd T 0 0 S).2 yn yd T : Nat) : ℚ) /
+          (S : ℚ)
+        ≤ (partialExpUpperStateAux ((yn : ℚ) / (yd : ℚ)) T 0 0 1).2 *
+            factor := by
+    exact htail.trans
+      (mul_le_mul_of_nonneg_right hstate.2 hfactor_nonneg)
+  have hsum := add_le_add hstate.1 htailExact
+  rw [← add_div] at hsum
+  simpa [factor] using hsum
+
 theorem partialExpUpper_tail_term_le (y : ℚ) (hy : 0 ≤ y)
     (L j : Nat) (hL : 1 ≤ L) :
     y^(L+j) / ((L+j).factorial : ℚ)
@@ -12688,6 +12932,38 @@ theorem positiveSmallExponentUpperNum_lt_den_mul_cutoff {a k : Nat}
     simpa [Nat.cast_mul, mul_comm] using hmul
   exact_mod_cast hmul'
 
+/-- Natural numerator form of the tangent finite-window exponent is below the
+fixed cutoff denominator. -/
+theorem positiveSmallTangentExponentAtNum_lt_den_mul_cutoff {a N k : Nat}
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a) :
+    positiveSmallTangentExponentAtNum a N k <
+      positiveSmallTangentExponentAtDen a N k * positiveExpCutoff := by
+  rcases mem_positiveKRange.mp hk with ⟨_hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hdenNat : 0 < positiveSmallTangentExponentAtDen a N k :=
+    positiveSmallTangentExponentAtDen_pos hN hj
+  have hdenQ :
+      (0 : ℚ) < (positiveSmallTangentExponentAtDen a N k : ℚ) := by
+    exact_mod_cast hdenNat
+  have hlt :=
+    positiveSmallTangentExponentAt_lt_expCutoff
+      (by omega : 1 ≤ a) ha2000 hrect hk
+  rw [positiveSmallTangentExponentAt_eq_num_div_den hN hj] at hlt
+  have hmul :
+      (positiveSmallTangentExponentAtNum a N k : ℚ) <
+        (positiveExpCutoff : ℚ) *
+          (positiveSmallTangentExponentAtDen a N k : ℚ) := by
+    rw [div_lt_iff₀ hdenQ] at hlt
+    simpa [mul_comm] using hlt
+  have hmul' :
+      (positiveSmallTangentExponentAtNum a N k : ℚ) <
+        ((positiveSmallTangentExponentAtDen a N k * positiveExpCutoff : Nat) : ℚ) := by
+    simpa [Nat.cast_mul, mul_comm] using hmul
+  exact_mod_cast hmul'
+
 /-- Natural numerator form of the tempered finite-window exponent is below
 the fixed cutoff denominator. -/
 theorem positiveTemperedExponentUpperNum_lt_den_mul_cutoff {a k : Nat}
@@ -12724,6 +13000,24 @@ def positiveSmallPartialExpUpperScaledNat (S a k : Nat) : Nat :=
     (positiveSmallExponentUpperDen a k)
     positiveExpCutoff
 
+/-- Fixed-point lower bound for the small finite-window exponential shell.
+This includes a downward-rounded version of the geometric tail in
+`partialExpUpper`; the prefix-only lower bound is too weak near the top
+small-regime edge. -/
+def positiveSmallPartialExpLowerScaledNat (S a k : Nat) : Nat :=
+  scaledPartialExpUpperLowerNat S
+    (positiveSmallExponentUpperNum a k)
+    (positiveSmallExponentUpperDen a k)
+    positiveExpCutoff
+
+/-- Fixed-point upper bound for the tangent-line small finite-window
+exponential shell. -/
+def positiveSmallTangentPartialExpUpperScaledNat (S a N k : Nat) : Nat :=
+  scaledPartialExpUpperNat S
+    (positiveSmallTangentExponentAtNum a N k)
+    (positiveSmallTangentExponentAtDen a N k)
+    positiveExpCutoff
+
 /-- Fixed-point upper bound for the tempered finite-window exponential shell. -/
 def positiveTemperedPartialExpUpperScaledNat (S a k : Nat) : Nat :=
   scaledPartialExpUpperNat S
@@ -12748,6 +13042,237 @@ theorem partialExpUpper_positiveSmallExponentUpper_le_scaled
     positiveSmallExponentUpperNum_lt_den_mul_cutoff ha1 ha2000 hk
   rw [positiveSmallExponentUpper_eq_num_div_den hj]
   exact partialExpUpper_rational_le_scaledPartialExpUpperNat hS hden hnum
+
+theorem positiveSmallPartialExpLowerScaled_le_partialExpUpper
+    {S a k : Nat} (hS : 0 < S) (ha1 : 1 ≤ a) (ha2000 : a ≤ 2000)
+    (hk : k ∈ positiveKRange a) :
+    ((positiveSmallPartialExpLowerScaledNat S a k : Nat) : ℚ) /
+        (S : ℚ)
+      ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+  rcases mem_positiveKRange.mp hk with ⟨_hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax ha1 hkmax
+  have hden : 0 < positiveSmallExponentUpperDen a k :=
+    positiveSmallExponentUpperDen_pos hj
+  have hnum :
+      positiveSmallExponentUpperNum a k <
+        positiveSmallExponentUpperDen a k * positiveExpCutoff :=
+    positiveSmallExponentUpperNum_lt_den_mul_cutoff ha1 ha2000 hk
+  rw [positiveSmallExponentUpper_eq_num_div_den hj]
+  exact scaledPartialExpUpperLowerNat_le_partialExpUpper_rational
+    (S := S) (yn := positiveSmallExponentUpperNum a k)
+    (yd := positiveSmallExponentUpperDen a k)
+    (T := positiveExpCutoff) hS hden hnum
+
+theorem partialExpUpper_positiveSmallTangentExponentAt_le_scaled
+    {S a N k : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a) :
+    partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+      ≤ ((positiveSmallTangentPartialExpUpperScaledNat S a N k : Nat) : ℚ) /
+          (S : ℚ) := by
+  rcases mem_positiveKRange.mp hk with ⟨_hk1, hkmax⟩
+  have hj : 0 < posJ a k :=
+    posJ_pos_of_le_posKmax (by omega : 1 ≤ a) hkmax
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hden : 0 < positiveSmallTangentExponentAtDen a N k :=
+    positiveSmallTangentExponentAtDen_pos hN hj
+  have hnum :
+      positiveSmallTangentExponentAtNum a N k <
+        positiveSmallTangentExponentAtDen a N k * positiveExpCutoff :=
+    positiveSmallTangentExponentAtNum_lt_den_mul_cutoff ha401 ha2000 hrect hk
+  rw [positiveSmallTangentExponentAt_eq_num_div_den hN hj]
+  exact partialExpUpper_rational_le_scaledPartialExpUpperNat hS hden hnum
+
+/-- Scaled Boolean checker for one corrected tangent small-edge exponential
+gap.  It upper-rounds the actual-`N` tangent exponential on the left and
+lower-rounds the upper-edge exponential on the right, then checks the
+cross-multiplied natural inequality. -/
+def checkPositiveSmallTangentExpEdgeCellScaledExp
+    (S a N k : Nat) : Bool :=
+  decide
+    (posNhi a * positiveSmallTangentPartialExpUpperScaledNat S a N k
+      ≤ N * positiveSmallPartialExpLowerScaledNat S a k)
+
+/-- Hybrid tangent-edge cell checker: try the fixed-point certificate first
+and fall back to the exact rational cell only on conservative misses. -/
+def checkPositiveSmallTangentExpEdgeCellScaledExpFallback
+    (S a N k : Nat) : Bool :=
+  if checkPositiveSmallTangentExpEdgeCellScaledExp S a N k then
+    true
+  else
+    checkPositiveSmallTangentExpEdgeCell a N k
+
+def checkPositiveSmallTangentExpEdgeAtNScaledExp
+    (S a N : Nat) : Bool :=
+  (positiveKRangeList a).all fun k =>
+    if k ≤ ceilSqrt N then
+      checkPositiveSmallTangentExpEdgeCellScaledExp S a N k
+    else
+      true
+
+def checkPositiveSmallTangentExpEdgeRowScaledExp
+    (S a : Nat) : Bool :=
+  (positiveNRangeList a).all fun N =>
+    checkPositiveSmallTangentExpEdgeAtNScaledExp S a N
+
+def checkPositiveSmallTangentExpEdgeRangeScaledExp
+    (S lo len : Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveSmallTangentExpEdgeRowScaledExp S a
+
+theorem positiveSmallTangentExpEdgeGap_of_checkCellScaledExp
+    {S a N k : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (h : checkPositiveSmallTangentExpEdgeCellScaledExp S a N k = true) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  let U := positiveSmallTangentPartialExpUpperScaledNat S a N k
+  let L := positiveSmallPartialExpLowerScaledNat S a k
+  have hNat : posNhi a * U ≤ N * L := by
+    exact of_decide_eq_true h
+  have hNatQ : (posNhi a : ℚ) * (U : ℚ) ≤ (N : ℚ) * (L : ℚ) := by
+    exact_mod_cast hNat
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hscaled :
+      (posNhi a : ℚ) * ((U : ℚ) / (S : ℚ))
+        ≤ (N : ℚ) * ((L : ℚ) / (S : ℚ)) := by
+    have hdiv :
+        ((posNhi a : ℚ) * (U : ℚ)) / (S : ℚ)
+          ≤ ((N : ℚ) * (L : ℚ)) / (S : ℚ) :=
+      div_le_div_of_nonneg_right hNatQ hSℚ.le
+    have hleft :
+        (posNhi a : ℚ) * ((U : ℚ) / (S : ℚ))
+          = ((posNhi a : ℚ) * (U : ℚ)) / (S : ℚ) := by
+      ring
+    have hright :
+        (N : ℚ) * ((L : ℚ) / (S : ℚ))
+          = ((N : ℚ) * (L : ℚ)) / (S : ℚ) := by
+      ring
+    rw [hleft, hright]
+    exact hdiv
+  have hEat :
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+        ≤ (U : ℚ) / (S : ℚ) := by
+    change
+      partialExpUpper (positiveSmallTangentExponentAt a N k) positiveExpCutoff
+        ≤ ((positiveSmallTangentPartialExpUpperScaledNat S a N k : Nat) : ℚ) /
+          (S : ℚ)
+    exact partialExpUpper_positiveSmallTangentExponentAt_le_scaled
+      (S := S) hS ha401 ha2000 hrect hk
+  have hEupLower :
+      (L : ℚ) / (S : ℚ)
+        ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+    change
+      ((positiveSmallPartialExpLowerScaledNat S a k : Nat) : ℚ) / (S : ℚ)
+        ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff
+    exact positiveSmallPartialExpLowerScaled_le_partialExpUpper
+      (S := S) hS (by omega : 1 ≤ a) ha2000 hk
+  have hhi_nonneg : 0 ≤ (posNhi a : ℚ) := by
+    exact_mod_cast (Nat.zero_le (posNhi a))
+  have hN_nonneg : 0 ≤ (N : ℚ) := by
+    exact_mod_cast (Nat.zero_le N)
+  unfold positiveSmallTangentExpEdgeGap
+  exact
+    (mul_le_mul_of_nonneg_left hEat hhi_nonneg).trans
+      (hscaled.trans (mul_le_mul_of_nonneg_left hEupLower hN_nonneg))
+
+theorem positiveSmallTangentExpEdgeGap_of_checkCellScaledExpFallback
+    {S a N k : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (h : checkPositiveSmallTangentExpEdgeCellScaledExpFallback S a N k = true) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  unfold checkPositiveSmallTangentExpEdgeCellScaledExpFallback at h
+  by_cases hscaled : checkPositiveSmallTangentExpEdgeCellScaledExp S a N k = true
+  · exact positiveSmallTangentExpEdgeGap_of_checkCellScaledExp
+      hS ha401 ha2000 hrect hk hscaled
+  · have hexact : checkPositiveSmallTangentExpEdgeCell a N k = true := by
+      simpa [hscaled] using h
+    exact positiveSmallTangentExpEdgeGap_of_checkCell hexact
+
+theorem positiveSmallTangentExpEdgeGap_of_checkAtNScaledExp
+    {S a N k : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N)
+    (h : checkPositiveSmallTangentExpEdgeAtNScaledExp S a N = true)
+    (hk : k ∈ positiveKRange a) (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  have hall :
+      ∀ x ∈ positiveKRangeList a,
+        (if x ≤ ceilSqrt N then
+            checkPositiveSmallTangentExpEdgeCellScaledExp S a N x
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeAtNScaledExp] using h)
+  have hx := hall k (mem_positiveKRangeList_of_mem hk)
+  exact positiveSmallTangentExpEdgeGap_of_checkCellScaledExp
+    hS ha401 ha2000 hrect hk (by simpa [hsmall] using hx)
+
+theorem positiveSmallTangentExpEdgeGap_of_checkRowScaledExp
+    {S a N k : Nat} (hS : 0 < S)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (h : checkPositiveSmallTangentExpEdgeRowScaledExp S a = true)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  have hall :
+      ∀ x ∈ positiveNRangeList a,
+        checkPositiveSmallTangentExpEdgeAtNScaledExp S a x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeRowScaledExp] using h)
+  exact positiveSmallTangentExpEdgeGap_of_checkAtNScaledExp
+    hS ha401 ha2000 hrect
+    (hall N (mem_positiveNRangeList_of_rectangle hrect)) hk hsmall
+
+theorem positiveSmallTangentExpEdgeGap_of_checkRangeScaledExp
+    {S lo len a N k : Nat} (hS : 0 < S)
+    (h : checkPositiveSmallTangentExpEdgeRangeScaledExp S lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len)
+    (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    positiveSmallTangentExpEdgeGap a N k := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeRowScaledExp S x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSmallTangentExpEdgeRangeScaledExp] using h)
+  exact positiveSmallTangentExpEdgeGap_of_checkRowScaledExp
+    hS ha401 ha2000
+    (hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)) hrect hk hsmall
+
+theorem checkPositiveSmallTangentExpEdgeRange_of_checkRangeScaledExp
+    {S lo len : Nat} (hS : 0 < S)
+    (hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h : checkPositiveSmallTangentExpEdgeRangeScaledExp S lo len = true) :
+    checkPositiveSmallTangentExpEdgeRange lo len = true := by
+  have hall :
+      ∀ a ∈ List.range' lo len,
+        checkPositiveSmallTangentExpEdgeRow a = true := by
+    intro a haMem
+    rcases List.mem_range'_1.mp haMem with ⟨ha_lo, ha_hi⟩
+    apply List.all_eq_true.mpr
+    intro N hNMem
+    apply List.all_eq_true.mpr
+    intro k hkMem
+    by_cases hsmall : k ≤ ceilSqrt N
+    · have hrect : positiveRectangle a N :=
+        positiveRectangle_of_mem_positiveNRangeList
+          (by omega : 1 ≤ a) hNMem
+      have hk : k ∈ positiveKRange a :=
+        positiveKRange_of_mem_positiveKRangeList hkMem
+      have hgap : positiveSmallTangentExpEdgeGap a N k :=
+        positiveSmallTangentExpEdgeGap_of_checkRangeScaledExp
+          hS h ha_lo ha_hi (by omega) (by omega) hrect hk hsmall
+      have hcell : checkPositiveSmallTangentExpEdgeCell a N k = true :=
+        decide_eq_true hgap
+      simpa [hsmall] using hcell
+    · simp [hsmall]
+  exact List.all_eq_true.mpr (by
+    intro a haMem
+    exact hall a haMem)
 
 theorem partialExpUpper_positiveTemperedExponentUpper_le_scaled
     {S a k : Nat} (hS : 0 < S) (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
