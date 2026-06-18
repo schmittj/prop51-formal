@@ -657,6 +657,10 @@ Status:
       `PositiveSaddleLargeTailProductBlockSumScalarCertificate` names those
       fields as `positiveLargeTailSmallProductBlockSumScalar` and
       `positiveLargeTailTemperedProductBlockSumScalar`.
+      The direct audit wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productBlockSumScalars_soloGcompBlockSumCleared`
+      is the most reduced current large-tail interface for this explicit
+      product/solo block-sum route.
       `positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
       combines that product route with the reduced solo block-sum target.
       The solo field can

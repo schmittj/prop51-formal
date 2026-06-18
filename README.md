@@ -227,8 +227,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailTemperedProductBlockSumScalar`, with
   `Prop51.PositiveSaddleLargeTailProductBlockSumScalarCertificate` packaging
   exactly those two families.  The wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productBlockSumScalars_soloGcompBlockSumCleared`
+  is the most reduced current large-tail assembly interface for the explicit
+  product and solo block-sum route; the sibling
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
-  combines this reduced product route with the reduced solo block-sum target.
+  accepts the already-assembled block-sum product certificate.
   For final
   assembly from
   these lower-level product and solo proofs,
