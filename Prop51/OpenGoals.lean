@@ -1960,6 +1960,55 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProd
       exact le_rfl)
     hbudgetTwoUpper hsmallGeThree htemperedGeThree
 
+/-- Split-final-term scalar specialization of the endpoint first-cell
+constructor.
+
+This is the completion-facing product split: the retained first cell `k = 2`
+is proved by the direct `Qq`/upper-edge-`Y` budget, while the exact
+split-factorial scalar product estimate is needed only for the genuine tail
+`k ≥ 3`.  This differs from the older compatibility constructor below, which
+derives the first-cell budget from the full scalar product package; the split
+here records the intended Lean route toward closing the live product
+assumption. -/
+theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (hbudgetTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellYUpperEdgeBudget a)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProductGeThreeNatSignLockComplement
+    hbudgetTwoUpper
+    (by
+      intro a k ha hk hsmall hk3
+      have h := hsmallGeThree ha hk hsmall hk3
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
+    (by
+      intro a k ha hk htempered hnotLock hk3
+      have h := htemperedGeThree ha hk htempered hnotLock hk3
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
+
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
 fast split-final-term scalar package.
 
@@ -1972,7 +2021,7 @@ theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpU
     (product :
       PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
     LargeTailProductCertificate :=
-  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProductGeThreeNatSignLockComplement
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
     (by
       intro a ha
       have hk : 2 ∈ positiveKRange a := by
@@ -2000,24 +2049,10 @@ theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpU
             ] using h))
     (by
       intro a k ha hk hsmall _hk3
-      have h := product.smallScalar (by omega : 2000 < a) hk hsmall
-      simpa [
-        positiveLargeTailProductXUpperEdgeExactBound,
-        positiveLargeTailProductYUpperEdgeExactBound,
-        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
-        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
-        mul_assoc,
-      ] using h)
+      exact product.smallScalar (by omega : 2000 < a) hk hsmall)
     (by
       intro a k ha hk htempered _hnotLock _hk3
-      have h := product.temperedScalar (by omega : 2000 < a) hk htempered
-      simpa [
-        positiveLargeTailProductXUpperEdgeExactBound,
-        positiveLargeTailProductYUpperEdgeExactBound,
-        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar,
-        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
-        mul_assoc,
-      ] using h)
+      exact product.temperedScalar (by omega : 2000 < a) hk htempered)
 
 /-- Direct adapter from the existing product-bound certificate structure to
 the completion-facing product certificate.
