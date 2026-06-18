@@ -252,10 +252,19 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
   replace the active `GcompClosedBound` terms by the explicit Lemma 3.1
   factorial expression.  This is a Lean proof-production refinement of the
-  TeX block-sum estimate; the matching top-level coefficient capstones are
+  TeX block-sum estimate.  The sibling split-final-term target
+  `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate`
+  and wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared`
+  expose the same factorial expression with the final linear-exponential term
+  split off from the active positive block; this is a Lean-facing
+  normalization of the same large-tail estimate.  The matching top-level
+  coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
   and its row-active sibling
-  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`.
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`,
+  plus the corresponding `...ClosedFactorialSplitBlockSumTail` pair for the
+  split-final-term certificate shape.
   For final
   assembly from
   these lower-level product and solo proofs,
@@ -471,6 +480,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-refined-atomic-bounds` for the explicit refined atomic route
   above, `--final-tail-closed-factorial-block-sum` for the reduced
   factorial-only product/solo block-sum tail target,
+  `--final-tail-closed-factorial-split-block-sum` for the split-final-term
+  factorial-only product/solo block-sum target,
   `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for

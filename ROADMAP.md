@@ -686,11 +686,20 @@ Status:
       `positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
       rewrite the active `GcompClosedBound` factors to the explicit Lemma
       3.1 factorial expression.  This is recorded as a Lean
-      proof-production refinement of the TeX block-sum estimate; the
+      proof-production refinement of the TeX block-sum estimate.  The
+      split-final-term sibling
+      `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate`
+      and wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared`
+      expose the same factorial expression after separating the final
+      linear-exponential term from the active positive block; this divergence
+      from the TeX display is a Lean-facing normalization only.  The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
       and
-      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`.
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`,
+      with matching `...ClosedFactorialSplitBlockSumTail` wrappers for the
+      split-final-term certificate shape.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -717,7 +726,9 @@ Status:
       a deliberate Lean refinement of the raw-cleared LaTeX presentation.
       Generated final files can also target the reduced factorial-only
       product/solo block-sum tail interface with
-      `--emit-final --final-tail-closed-factorial-block-sum`.
+      `--emit-final --final-tail-closed-factorial-block-sum`, or its
+      split-final-term version with
+      `--emit-final --final-tail-closed-factorial-split-block-sum`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so

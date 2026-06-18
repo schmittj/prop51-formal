@@ -246,6 +246,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-closed-factorial-split-block-sum",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the product "
+            "split-final-term closed-factorial block-sum scalar certificate "
+            "and the solo split-final-term closed-factorial block-sum target"
+        ),
+    )
+    parser.add_argument(
         "--final-tail-tempered-raw-exp-ratio-reserve-bounds",
         action="store_true",
         help=(
@@ -661,6 +670,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_raw_cleared_unit_bounds,
         args.final_tail_refined_atomic_bounds,
         args.final_tail_closed_factorial_block_sum,
+        args.final_tail_closed_factorial_split_block_sum,
         args.final_tail_tempered_raw_exp_ratio_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds,
@@ -1145,7 +1155,10 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
     imports = ["Prop51.Main"]
     if args is not None:
         if (
-            args.final_tail_closed_factorial_block_sum
+            (
+                args.final_tail_closed_factorial_block_sum
+                or args.final_tail_closed_factorial_split_block_sum
+            )
             and "Prop51.PositiveSaddleHybridRatioCertificate" not in imports
         ):
             imports.append("Prop51.PositiveSaddleHybridRatioCertificate")
@@ -1172,6 +1185,8 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "ratio step atoms with product/solo bound splits.",
         "Pass `--final-tail-closed-factorial-block-sum` for the factorial-only",
         "closed block-sum product/solo large-tail interface.",
+        "Pass `--final-tail-closed-factorial-split-block-sum` for the",
+        "split-final-term factorial-only product/solo block-sum interface.",
         "Pass `--final-tail-tempered-raw-exp-ratio-reserve-bounds` after",
         "the small step is filled by Lean's raw-base half certificate.",
         "Pass `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds`",
@@ -1334,6 +1349,14 @@ def final_tail_type(args: argparse.Namespace) -> str:
 
 
 def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
+    if args.final_tail_closed_factorial_split_block_sum:
+        return [
+            "    (product :",
+            "      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate)",
+            "    (soloY :",
+            "      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →",
+            "        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N) :",
+        ]
     if args.final_tail_closed_factorial_block_sum:
         return [
             "    (product :",
@@ -1448,6 +1471,11 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
 
 
 def final_tail_arg(args: argparse.Namespace) -> str:
+    if args.final_tail_closed_factorial_split_block_sum:
+        return (
+            "(positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared "
+            "product soloY)"
+        )
     if args.final_tail_closed_factorial_block_sum:
         return (
             "(positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared "
@@ -1938,6 +1966,8 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
         emit_args.append("--final-tail-refined-atomic-bounds")
     if args.final_tail_closed_factorial_block_sum:
         emit_args.append("--final-tail-closed-factorial-block-sum")
+    if args.final_tail_closed_factorial_split_block_sum:
+        emit_args.append("--final-tail-closed-factorial-split-block-sum")
     if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
         emit_args.append("--final-tail-tempered-raw-exp-ratio-reserve-bounds")
     if args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds:
@@ -4553,7 +4583,12 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
 
     if args.emit_final:
         if args.active_row_covers:
-            if args.final_tail_closed_factorial_block_sum:
+            if args.final_tail_closed_factorial_split_block_sum:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumTail"
+                )
+                final_arg = "product soloY"
+            elif args.final_tail_closed_factorial_block_sum:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail"
                 )
@@ -4713,6 +4748,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
                 )
                 final_arg = final_tail_arg(args)
+        elif args.final_tail_closed_factorial_split_block_sum:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumTail"
+            )
+            final_arg = "product soloY"
         elif args.final_tail_closed_factorial_block_sum:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail"
