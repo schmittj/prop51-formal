@@ -20391,6 +20391,57 @@ theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudget
               DeltaRat p ((N : ℚ) / 2)) := by
           ring
 
+/-- Inner sharp solo budget that leaves the tiny degrees exact and applies the
+Δ-budget from degree `4` onward. -/
+def positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+    (N p : Nat) : ℚ :=
+  if 4 ≤ p then
+    positiveLargeTailSoloSharpInnerDeltaBudget N p
+  else
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N p
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudgetWithSmall
+    (N p : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N p
+      ≤ positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N p := by
+  unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+  by_cases hp : 4 ≤ p
+  · rw [if_pos hp]
+    exact positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudget
+      (N := N) hp
+  · rw [if_neg hp]
+
+/-- Full sharp solo block budget obtained by applying the Δ inner budget
+inside the outer linear-exponential convolution. -/
+def positiveLargeTailSoloSharpDeltaBudgetBlockSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N (a - s)
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_le_deltaBudgetBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N
+      ≤ positiveLargeTailSoloSharpDeltaBudgetBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+    positiveLargeTailSoloSharpDeltaBudgetBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudgetWithSmall
+      N (a - s))
+    hlin_nonneg
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_le_deltaBudgetBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
+      ≤ positiveLargeTailSoloSharpDeltaBudgetBlockSum a N := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  exact positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_le_deltaBudgetBlockSum
+    a N
+
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
 theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
@@ -20562,6 +20613,27 @@ def positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleare
   (4 : ℚ) * (2 : ℚ)^a *
       positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
     ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
+
+/-- It is enough to prove the coarser denominator-cleared Δ-budget block
+sum bound.  The Δ-budget leaves `p < 4` exact and applies the rational
+envelope from the reusable residual estimate for `p ≥ 4`. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deltaBudgetBlockSum
+    {a N : Nat}
+    (h :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeltaBudgetBlockSum a N
+        ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a N := by
+  unfold positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+  have hsum :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
+        ≤ positiveLargeTailSoloSharpDeltaBudgetBlockSum a N :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_le_deltaBudgetBlockSum
+      a N
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
+    positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans h
 
 /-- The fast split-final-term solo shell is stronger than the direct
 `(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
