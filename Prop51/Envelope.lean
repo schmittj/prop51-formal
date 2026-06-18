@@ -954,6 +954,49 @@ theorem EminusResidualBlock_eq_zero_of_half_lt {p r : Nat} (hr : 1 ≤ r)
   rw [Gcomp_eq_zero r p hr hp_lt]
   simp
 
+/-- Closed factorial version of one residual block is dominated by the
+corresponding rationalized Δ block after multiplying back by `N c_p`.
+
+This is the closed-composition part of
+`EminusResidualBlock_le_Nc_mul_DeltaRatTerm`, exposed separately so later
+large-tail estimates can reuse the factorial block without routing through
+`Gcomp`. -/
+theorem EminusResidualClosedBlock_le_Nc_mul_DeltaRatTerm
+    {p r : Nat} {N : ℚ} (hN : 0 ≤ N) (hp : 2 ≤ p) (hr : 1 ≤ r)
+    (_hrp : 2*r ≤ p) :
+    (N*(4/25))^r * 6^p
+        * (4^(r-1) * ((p - 2*r + 1).factorial : ℚ))
+        / (r.factorial : ℚ)
+      ≤ N * c p * DeltaRatTerm p N r := by
+  have hc := c_lb p (by omega : 1 ≤ p)
+  have hc' : (5/36) * (6:ℚ)^p * ((p-1).factorial : ℚ) ≤ c p := by
+    simpa [mul_assoc] using hc
+  have hterm_nonneg : 0 ≤ DeltaRatTerm p N r :=
+    DeltaRatTerm_nonneg p r hN
+  have hNc :
+      N * ((5/36) * (6:ℚ)^p * ((p-1).factorial : ℚ)) * DeltaRatTerm p N r
+        ≤ N * c p * DeltaRatTerm p N r := by
+    exact mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hc' hN) hterm_nonneg
+  have hrf : ((r.factorial : ℕ) : ℚ) ≠ 0 := by positivity
+  have hpf : (((p-1).factorial : ℕ) : ℚ) ≠ 0 := by positivity
+  have hpowN : N^r = N * N^(r-1) := by
+    cases r with
+    | zero => omega
+    | succ k => simp [pow_succ, mul_comm]
+  have halg :
+      (N*(4/25))^r * 6^p
+            * (4^(r-1) * ((p - 2*r + 1).factorial : ℚ))
+            / (r.factorial : ℚ)
+        =
+      N * ((5/36) * (6:ℚ)^p * ((p-1).factorial : ℚ))
+        * DeltaRatTerm p N r := by
+    unfold DeltaRatTerm
+    rw [mul_pow, hpowN]
+    field_simp [hrf, hpf]
+  rw [halg]
+  exact hNc
+
 /-- One residual block is dominated by the corresponding rationalized Δ
 block after multiplying back by `N c_p`. -/
 theorem EminusResidualBlock_le_Nc_mul_DeltaRatTerm

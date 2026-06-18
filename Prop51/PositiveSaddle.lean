@@ -20231,6 +20231,166 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
     positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
   exact positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_mono_N hNM
 
+/-- Pointwise Δ-budget for the sharp nonlinear solo inner block.
+
+The `r = 1` closed-composition term is kept explicitly; the `r ≥ 2` tail is
+the usual rationalized `DeltaRat` envelope at effective parameter `N/2`,
+with the extra dyadic factor coming from the sharp base `3^p` rather than
+the older `6^p`. -/
+def positiveLargeTailSoloSharpInnerDeltaBudget (N p : Nat) : ℚ :=
+  (N : ℚ) * c p *
+    ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+      ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+        DeltaRat p ((N : ℚ) / 2))
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudget
+    {N p : Nat} (hp : 4 ≤ p) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N p
+      ≤ positiveLargeTailSoloSharpInnerDeltaBudget N p := by
+  let T : Nat → ℚ := fun r =>
+    ((2 * (N : ℚ)) / 25)^r * 3^p *
+        (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+      (r.factorial : ℚ)
+  have hp_pos : 0 < p := by omega
+  have hp_half : 1 < p / 2 := by omega
+  have hsplit :
+      positiveLargeTailSoloSharpGcompClosedInnerFactorial N p =
+        T 1 + ∑ r ∈ Finset.Icc 2 (p / 2), T r := by
+    unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+    rw [GcompClosedActiveRange_eq_positiveRange_of_pos hp_pos,
+      GcompClosedPositiveRange_eq_Icc]
+    rw [sum_Icc_eq_sum_Icc_add_sum_Icc_succ T
+      (by omega : 1 ≤ 1) hp_half]
+    simp [T]
+  rw [hsplit]
+  unfold positiveLargeTailSoloSharpInnerDeltaBudget
+  have hN_nonneg : 0 ≤ ((N : ℚ) / 2) := by positivity
+  have hc_nonneg : 0 ≤ c p := c_nonneg p
+  have hNc_nonneg : 0 ≤ (N : ℚ) * c p :=
+    mul_nonneg (by positivity) hc_nonneg
+  have hbase_nonneg : 0 ≤ (1 / 2 : ℚ)^p := by positivity
+  have hdelta_nonneg : 0 ≤ DeltaRat p ((N : ℚ) / 2) :=
+    DeltaRat_nonneg p hN_nonneg
+  have htail :
+      (∑ r ∈ Finset.Icc 2 (p / 2), T r)
+        ≤ (N : ℚ) * c p *
+            (((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+              DeltaRat p ((N : ℚ) / 2)) := by
+    calc
+      (∑ r ∈ Finset.Icc 2 (p / 2), T r)
+          ≤ ∑ r ∈ Finset.Icc 2 (p / 2),
+              ((1 / 2 : ℚ)^p *
+                (((N : ℚ) / 2 * (4 / 25))^r * 6^p *
+                  (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+                  (r.factorial : ℚ))) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            obtain ⟨hr2, _hrhi⟩ := Finset.mem_Icc.mp hr
+            have hterm_eq :
+                T r =
+                  (1 / 2 : ℚ)^p *
+                    (((N : ℚ) / 2 * (4 / 25))^r * 6^p *
+                      (4^(r - 1) *
+                        ((p - 2*r + 1).factorial : ℚ)) /
+                      (r.factorial : ℚ)) := by
+              dsimp [T]
+              rw [show ((N : ℚ) / 2 * (4 / 25)) =
+                    (2 * (N : ℚ)) / 25 by ring]
+              rw [show (3 : ℚ)^p = (1 / 2 : ℚ)^p * 6^p by
+                rw [← mul_pow]
+                norm_num]
+              ring
+            rw [hterm_eq]
+          _ ≤ ∑ r ∈ Finset.Icc 2 (p / 2),
+              ((1 / 2 : ℚ)^p *
+                (((N : ℚ) / 2) * c p *
+                  DeltaRatTerm p ((N : ℚ) / 2) r)) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            obtain ⟨hr2, hrhalf⟩ := Finset.mem_Icc.mp hr
+            have hrp : 2 * r ≤ p := by
+              have hInt : (r : ℤ) * 2 ≤ (p : ℤ) :=
+                Nat.le_div_two_iff_mul_two_le.mp hrhalf
+              omega
+            exact mul_le_mul_of_nonneg_left
+              (EminusResidualClosedBlock_le_Nc_mul_DeltaRatTerm
+                (N := (N : ℚ) / 2) hN_nonneg (by omega : 2 ≤ p)
+                (by omega : 1 ≤ r) hrp)
+              hbase_nonneg
+          _ =
+              (1 / 2 : ℚ)^p *
+                (((N : ℚ) / 2) * c p *
+                  DeltaRat p ((N : ℚ) / 2)) := by
+            unfold DeltaRat
+            calc
+              (∑ r ∈ Finset.Icc 2 (p / 2),
+                (1 / 2 : ℚ)^p *
+                  (((N : ℚ) / 2) * c p *
+                    DeltaRatTerm p ((N : ℚ) / 2) r))
+                  =
+                (1 / 2 : ℚ)^p *
+                  ∑ r ∈ Finset.Icc 2 (p / 2),
+                    (((N : ℚ) / 2) * c p *
+                      DeltaRatTerm p ((N : ℚ) / 2) r) := by
+                    exact
+                      (Finset.mul_sum
+                        (s := Finset.Icc 2 (p / 2))
+                        (f := fun r =>
+                          ((N : ℚ) / 2) * c p *
+                            DeltaRatTerm p ((N : ℚ) / 2) r)
+                        ((1 / 2 : ℚ)^p)).symm
+              _ =
+                (1 / 2 : ℚ)^p *
+                  (((N : ℚ) / 2) * c p *
+                    ∑ r ∈ Finset.Icc 2 (p / 2),
+                      DeltaRatTerm p ((N : ℚ) / 2) r) := by
+                    congr 1
+                    exact
+                      (Finset.mul_sum
+                        (s := Finset.Icc 2 (p / 2))
+                        (f := fun r =>
+                          DeltaRatTerm p ((N : ℚ) / 2) r)
+                        (((N : ℚ) / 2) * c p)).symm
+          _ =
+              (N : ℚ) * c p *
+                (((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+                  DeltaRat p ((N : ℚ) / 2)) := by
+            ring
+  have hhead :
+      T 1 ≤ (N : ℚ) * c p * ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p) := by
+    have hc_lb := c_lb p (by omega : 1 ≤ p)
+    have hcoef_nonneg :
+        0 ≤ (N : ℚ) * ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p) := by
+      positivity
+    have hmul :=
+      mul_le_mul_of_nonneg_left hc_lb hcoef_nonneg
+    have hterm_eq :
+        T 1 =
+          (N : ℚ) *
+            ((5 / 36 : ℚ) * (6 : ℚ)^p *
+              ((p - 1).factorial : ℚ)) *
+            ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p) := by
+      dsimp [T]
+      have hp_sub : p - 2 * 1 + 1 = p - 1 := by omega
+      rw [hp_sub]
+      rw [show (3 : ℚ)^p = (1 / 2 : ℚ)^p * 6^p by
+        rw [← mul_pow]
+        norm_num]
+      ring
+    rw [hterm_eq]
+    simpa [mul_assoc, mul_left_comm, mul_comm] using hmul
+  have hsum := add_le_add hhead htail
+  calc
+    T 1 + ∑ r ∈ Finset.Icc 2 (p / 2), T r
+        ≤ (N : ℚ) * c p * ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p) +
+            (N : ℚ) * c p *
+              (((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+                DeltaRat p ((N : ℚ) / 2)) := hsum
+    _ =
+        (N : ℚ) * c p *
+          ((72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+            ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+              DeltaRat p ((N : ℚ) / 2)) := by
+          ring
+
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
 theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
