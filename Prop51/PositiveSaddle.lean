@@ -20411,6 +20411,111 @@ theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudgetWithSm
       (N := N) hp
   · rw [if_neg hp]
 
+/-- Cross-multiplied coefficient-ratio bound for a tail coefficient.
+
+For `p = a-s`, this is the large-solo analogue of the usual `c_ub/c_lb`
+argument, stated without division so later term estimates can use it under
+positive multipliers. -/
+theorem c_tail_mul_pow_factorial_le
+    {a s : Nat} (hp : 1 ≤ a - s) :
+    c (a - s) * ((6 : ℚ)^s * ((a - 1).factorial : ℚ))
+      ≤ (144 / 125 : ℚ) * c a *
+          (((a - s - 1).factorial : Nat) : ℚ) := by
+  have ha : 1 ≤ a := by omega
+  have hcub := c_ub (a - s) hp
+  have hclb := c_lb a ha
+  have hright_nonneg :
+      0 ≤ (6 : ℚ)^s * ((a - 1).factorial : ℚ) := by
+    positivity
+  have hleft :
+      c (a - s) * ((6 : ℚ)^s * ((a - 1).factorial : ℚ))
+        ≤
+      (4 / 25 : ℚ) *
+        (6^(a - s) * (((a - s - 1).factorial : Nat) : ℚ)) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ)) := by
+    exact mul_le_mul_of_nonneg_right hcub hright_nonneg
+  have hpow :
+      (6 : ℚ)^(a - s) * (6 : ℚ)^s = (6 : ℚ)^a := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have hmid_eq :
+      (4 / 25 : ℚ) *
+        (6^(a - s) * (((a - s - 1).factorial : Nat) : ℚ)) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ))
+        =
+      (144 / 125 : ℚ) *
+        ((5 / 36 : ℚ) * (6^a * ((a - 1).factorial : ℚ))) *
+          (((a - s - 1).factorial : Nat) : ℚ) := by
+    rw [← hpow]
+    ring
+  have hright :
+      (144 / 125 : ℚ) *
+        ((5 / 36 : ℚ) * (6^a * ((a - 1).factorial : ℚ))) *
+          (((a - s - 1).factorial : Nat) : ℚ)
+        ≤
+      (144 / 125 : ℚ) * c a *
+          (((a - s - 1).factorial : Nat) : ℚ) := by
+    exact mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hclb (by norm_num))
+      (by positivity)
+  exact hleft.trans (hmid_eq.trans_le hright)
+
+/-- The factorial ratio `(a-s-1)!/(a-1)!` is controlled by `(a-s)^{-s}`.
+This is again stated in cross-multiplied form. -/
+theorem factorial_tail_mul_pow_le
+    {a s : Nat} (hp : 1 ≤ a - s) :
+    (((a - s - 1).factorial : Nat) : ℚ) *
+        (((a - s : Nat) : ℚ)^s)
+      ≤ ((a - 1).factorial : ℚ) := by
+  have hnat :
+      (a - s - 1).factorial * (a - s)^s ≤ (a - 1).factorial := by
+    have hpow :
+        (a - s)^s ≤ (a - s).ascFactorial s :=
+      Nat.pow_succ_le_ascFactorial (a - s) s
+    have hmul :=
+      Nat.mul_le_mul_left (a - s - 1).factorial hpow
+    have hfac :=
+      Nat.factorial_mul_ascFactorial' (a - s) s (by omega : 0 < a - s)
+    have hsum : a - s + s - 1 = a - 1 := by omega
+    rw [hsum] at hfac
+    exact hmul.trans_eq hfac
+  exact_mod_cast hnat
+
+/-- Large-degree factorial ratio in the form needed by the solo convolution:
+if `2a ≤ 3p` with `p = a-s`, then the factorial ratio can absorb `a^s`
+at cost `(3/2)^s`. -/
+theorem factorial_tail_mul_a_pow_le_three_halves
+    {a s : Nat} (hp : 1 ≤ a - s) (hlarge : 2 * a ≤ 3 * (a - s)) :
+    (((a - s - 1).factorial : Nat) : ℚ) * ((a : ℚ)^s)
+      ≤ ((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s := by
+  have hfac := factorial_tail_mul_pow_le (a := a) (s := s) hp
+  have hbase :
+      (a : ℚ) ≤ (3 / 2 : ℚ) * ((a - s : Nat) : ℚ) := by
+    have hlargeQ : (2 : ℚ) * (a : ℚ) ≤ 3 * ((a - s : Nat) : ℚ) := by
+      exact_mod_cast hlarge
+    linarith
+  have hpow :
+      (a : ℚ)^s ≤
+        ((3 / 2 : ℚ) * ((a - s : Nat) : ℚ))^s :=
+    pow_le_pow_left₀ (by positivity) hbase s
+  rw [mul_pow] at hpow
+  have hfac_nonneg :
+      0 ≤ (((a - s - 1).factorial : Nat) : ℚ) := by positivity
+  have hmul :=
+    mul_le_mul_of_nonneg_left hpow hfac_nonneg
+  calc
+    (((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s
+        ≤ (((a - s - 1).factorial : Nat) : ℚ) *
+            ((3 / 2 : ℚ)^s * ((a - s : Nat) : ℚ)^s) := by
+          simpa [mul_assoc, mul_left_comm, mul_comm] using hmul
+    _ =
+        ((((a - s - 1).factorial : Nat) : ℚ) *
+            ((a - s : Nat) : ℚ)^s) * (3 / 2 : ℚ)^s := by
+          ring
+    _ ≤ ((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s := by
+          exact mul_le_mul_of_nonneg_right hfac (by positivity)
+
 /-- On the large inner-degree range used for the solo tail, the Δ-budget
 collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
 bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
@@ -20496,6 +20601,45 @@ def positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum
   ∑ s ∈ Finset.range (a + 1),
     (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
       positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget a (a - s)
+
+/-- The simplified large-inner-degree part of the upper-edge split budget. -/
+def positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s) then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        ((posNhi a : ℚ) * c (a - s) *
+          ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+    else
+      0
+
+/-- The complementary part of the upper-edge split budget.  This keeps the
+current exact/Δ inner budget on the degrees where the final Δ-envelope does
+not apply with `m = a`. -/
+def positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s) then
+      0
+    else
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+          (posNhi a) (a - s)
+
+theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_remainder
+    (a : Nat) :
+    positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a =
+      positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a +
+        positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a := by
+  unfold positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum
+    positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum
+    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun s _ => ?_
+  by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+  · simp [hlarge]
+  · simp [hlarge]
 
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
     {a p : Nat} (ha : 3000 ≤ a) :
