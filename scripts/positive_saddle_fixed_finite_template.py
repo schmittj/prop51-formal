@@ -69,6 +69,7 @@ LEAN_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_']*$")
 LEAN_MODULE_RE = re.compile(
     r"^[A-Za-z_][A-Za-z0-9_']*(\.[A-Za-z_][A-Za-z0-9_']*)*$"
 )
+DRY_RUN_SAMPLE_AS = (401, 1000, 2000)
 
 
 def positive_nat(text: str) -> int:
@@ -2304,6 +2305,176 @@ def add_count_stats(
     dimensions[f"{prefix}_max"] = max(values) if values else 0
 
 
+def finite_row_index_for_a(row_len: int, a: int) -> int:
+    return (a - 401) // row_len
+
+
+def active_row_sample_base(
+    row_len: int, a: int, *, use_row_bound: bool
+) -> dict[str, int]:
+    row_index = finite_row_index_for_a(row_len, a)
+    count_bound_a = (
+        active_row_bound_a(row_len, row_index)
+        if use_row_bound
+        else finite_row_max_a(row_len, row_index)
+    )
+    return {
+        "a": a,
+        "row_index": row_index,
+        "row_lo": finite_row_lo(row_len, row_index),
+        "row_hi": finite_row_max_a(row_len, row_index),
+        "count_bound_a": count_bound_a,
+    }
+
+
+def active_row_sample_count(
+    row_len: int, chunk_len: int, row_bound, a: int, *, use_row_bound: bool
+) -> int:
+    row_index = finite_row_index_for_a(row_len, a)
+    count_bound_a = (
+        active_row_bound_a(row_len, row_index)
+        if use_row_bound
+        else finite_row_max_a(row_len, row_index)
+    )
+    return ceil_div(row_bound(count_bound_a), chunk_len)
+
+
+def active_n_sample(
+    row_len: int, n_len: int, a: int, *, use_row_bound: bool
+) -> dict[str, int]:
+    sample = active_row_sample_base(row_len, a, use_row_bound=use_row_bound)
+    sample["active_n_indices"] = active_row_sample_count(
+        row_len, n_len, pos_n_len_py, a, use_row_bound=use_row_bound
+    )
+    return sample
+
+
+def dry_run_active_row_samples(args: argparse.Namespace) -> dict[str, list[dict[str, int]]]:
+    product_k_len = active_product_k_len(args)
+    use_row_bound = args.active_row_covers
+    samples: dict[str, list[dict[str, int]]] = {}
+
+    product_samples = []
+    for a in DRY_RUN_SAMPLE_AS:
+        sample = active_row_sample_base(
+            args.product_row_len, a, use_row_bound=use_row_bound
+        )
+        sample["active_n_indices"] = active_row_sample_count(
+            args.product_row_len,
+            args.n_len,
+            pos_n_len_py,
+            a,
+            use_row_bound=use_row_bound,
+        )
+        sample["active_k_chunks"] = active_row_sample_count(
+            args.product_row_len,
+            product_k_len,
+            pos_kmax_py,
+            a,
+            use_row_bound=use_row_bound,
+        )
+        sample["active_nk_pairs"] = (
+            sample["active_n_indices"] * sample["active_k_chunks"]
+        )
+        product_samples.append(sample)
+    samples["product"] = product_samples
+
+    tangent_samples = []
+    for a in DRY_RUN_SAMPLE_AS:
+        sample = active_row_sample_base(
+            args.tangent_row_len, a, use_row_bound=use_row_bound
+        )
+        sample["active_k_chunks"] = active_row_sample_count(
+            args.tangent_row_len,
+            args.tangent_k_len,
+            pos_small_cutoff_py,
+            a,
+            use_row_bound=use_row_bound,
+        )
+        if args.strategy in (
+            "product-tangent-solo-n-chunked",
+            "product-nk-tangent-solo-n-chunked",
+            "combined-product-nk-tangent-solo-n-chunked",
+            "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+        ):
+            sample["active_n_indices"] = active_row_sample_count(
+                args.tangent_row_len,
+                args.tangent_n_len,
+                pos_n_len_py,
+                a,
+                use_row_bound=use_row_bound,
+            )
+            sample["active_nk_pairs"] = (
+                sample["active_n_indices"] * sample["active_k_chunks"]
+            )
+        tangent_samples.append(sample)
+    samples["tangent"] = tangent_samples
+
+    if args.strategy in (
+        "product-tangent-solo-n-chunked",
+        "product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-chunked",
+        "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked",
+    ):
+        samples["solo-saddle-n"] = [
+            active_n_sample(
+                args.solo_saddle_row_len,
+                args.solo_saddle_n_len,
+                a,
+                use_row_bound=use_row_bound,
+            )
+            for a in DRY_RUN_SAMPLE_AS
+        ]
+        samples["solo-budget-n"] = [
+            active_n_sample(
+                args.solo_budget_row_len,
+                args.solo_budget_n_len,
+                a,
+                use_row_bound=use_row_bound,
+            )
+            for a in DRY_RUN_SAMPLE_AS
+        ]
+    else:
+        samples["solo-saddle"] = [
+            active_row_sample_base(
+                args.solo_saddle_row_len, a, use_row_bound=use_row_bound
+            )
+            for a in DRY_RUN_SAMPLE_AS
+        ]
+        samples["solo-budget"] = [
+            active_row_sample_base(
+                args.solo_budget_row_len, a, use_row_bound=use_row_bound
+            )
+            for a in DRY_RUN_SAMPLE_AS
+        ]
+
+    edge_k_len = (
+        args.edge_k_len
+        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        else 20
+    )
+    edge_field = (
+        "edge-fixed"
+        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        else "edge"
+    )
+    edge_samples = []
+    for a in DRY_RUN_SAMPLE_AS:
+        sample = active_row_sample_base(
+            args.edge_row_len, a, use_row_bound=use_row_bound
+        )
+        sample["active_k_chunks"] = active_row_sample_count(
+            args.edge_row_len,
+            edge_k_len,
+            pos_kmax_py,
+            a,
+            use_row_bound=use_row_bound,
+        )
+        edge_samples.append(sample)
+    samples[edge_field] = edge_samples
+    return samples
+
+
 def count_active_single_chunk_atoms(
     args: argparse.Namespace,
 ) -> tuple[dict[str, int], dict[str, int]]:
@@ -2499,6 +2670,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "global_counts": global_counts,
         "global_total": sum(global_counts.values()),
         "skipped_vs_global": skipped,
+        "row_samples": dry_run_active_row_samples(args),
         "materialized_chunks": False,
     }
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"

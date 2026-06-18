@@ -573,8 +573,9 @@ Status:
       `--dry-run-counts` prints the same field-level atom counts from closed
       formulas without materializing the atom list; `--dry-run-active-counts`
       additionally reports row-local active-geometry estimates and
-      skipped-vs-global totals, which is useful when choosing row, `N`, or
-      `k` lengths before committing to a manifest.  For the fixed-edge
+      skipped-vs-global totals, with representative `row_samples` at
+      `a = 401, 1000, 2000`, which is useful when choosing row, `N`, or `k`
+      lengths before committing to a manifest.  For the fixed-edge
       combined strategy, `--active-row-covers` makes the generated certificate,
       manifest, and shard emission use the row-local active `N` and retained
       `k` covers.  Shard emission now uses direct index slicing, so large

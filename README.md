@@ -575,9 +575,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   emitting a full manifest, run the same command with `--dry-run-counts` to
   print formula-based atom counts without materializing the atom list, or with
   `--dry-run-active-counts` to also report the row-local active-geometry
-  estimate and the skipped-vs-global totals.  Those active estimates now have
-  a matching Lean certificate interface, but not yet a first-class active
-  manifest/shard emitter.
+  estimate, skipped-vs-global totals, and `row_samples` at `a = 401, 1000,
+  2000`.  Those active estimates have a matching Lean certificate interface
+  and first-class active manifest/shard emission for the fixed-edge combined
+  strategy.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.
