@@ -20617,6 +20617,143 @@ theorem c_tail_mul_five_a_pow_le
             _ = (144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s := by
                 rw [hpow_eq]
 
+/-- Factorial-ratio estimate for the proportional remainder band
+`9a ≤ 20(a-s)`.  This is a Lean-side bookkeeping split of the paper's final
+solo envelope: it reuses the same coefficient-ratio argument as the large
+degree band, but with the deliberately looser constant `20/9`. -/
+theorem factorial_tail_mul_a_pow_le_twenty_ninths
+    {a s : Nat} (hp : 1 ≤ a - s)
+    (hprop : 9 * a ≤ 20 * (a - s)) :
+    (((a - s - 1).factorial : Nat) : ℚ) * ((a : ℚ)^s)
+      ≤ ((a - 1).factorial : ℚ) * (20 / 9 : ℚ)^s := by
+  have hfac := factorial_tail_mul_pow_le (a := a) (s := s) hp
+  have hbase :
+      (a : ℚ) ≤ (20 / 9 : ℚ) * ((a - s : Nat) : ℚ) := by
+    have hpropQ : (9 : ℚ) * (a : ℚ) ≤
+        20 * ((a - s : Nat) : ℚ) := by
+      exact_mod_cast hprop
+    nlinarith
+  have hpow :
+      (a : ℚ)^s ≤
+        ((20 / 9 : ℚ) * ((a - s : Nat) : ℚ))^s :=
+    pow_le_pow_left₀ (by positivity) hbase s
+  rw [mul_pow] at hpow
+  have hfac_nonneg :
+      0 ≤ (((a - s - 1).factorial : Nat) : ℚ) := by positivity
+  have hmul :=
+    mul_le_mul_of_nonneg_left hpow hfac_nonneg
+  calc
+    (((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s
+        ≤ (((a - s - 1).factorial : Nat) : ℚ) *
+            ((20 / 9 : ℚ)^s * ((a - s : Nat) : ℚ)^s) := by
+          simpa [mul_assoc, mul_left_comm, mul_comm] using hmul
+    _ =
+        ((((a - s - 1).factorial : Nat) : ℚ) *
+            ((a - s : Nat) : ℚ)^s) * (20 / 9 : ℚ)^s := by
+          ring
+    _ ≤ ((a - 1).factorial : ℚ) * (20 / 9 : ℚ)^s := by
+          exact mul_le_mul_of_nonneg_right hfac (by positivity)
+
+/-- Combined coefficient/factorial estimate for the proportional solo
+remainder band. -/
+theorem c_tail_mul_five_a_pow_le_twenty_ninths
+    {a s : Nat} (hp : 1 ≤ a - s)
+    (hprop : 9 * a ≤ 20 * (a - s)) :
+    c (a - s) * ((5 : ℚ) * (a : ℚ))^s
+      ≤ (144 / 125 : ℚ) * c a * (50 / 27 : ℚ)^s := by
+  have hc := c_tail_mul_pow_factorial_le (a := a) (s := s) hp
+  have hf :=
+    factorial_tail_mul_a_pow_le_twenty_ninths
+      (a := a) (s := s) hp hprop
+  have hfac_pos : (0 : ℚ) < ((a - 1).factorial : ℚ) := by
+    positivity
+  have hpow6_pos : (0 : ℚ) < (6 : ℚ)^s := by positivity
+  have hden_pos :
+      (0 : ℚ) < (6 : ℚ)^s * ((a - 1).factorial : ℚ) := by
+    positivity
+  have hcoef_nonneg : 0 ≤ (144 / 125 : ℚ) * c a := by
+    exact mul_nonneg (by norm_num) (c_nonneg a)
+  have hc_mul :
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+        ≤
+      (144 / 125 : ℚ) * c a *
+          ((((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s) := by
+    calc
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+          =
+        (c (a - s) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ))) * (a : ℚ)^s := by
+            ring
+      _ ≤
+        ((144 / 125 : ℚ) * c a *
+          (((a - s - 1).factorial : Nat) : ℚ)) * (a : ℚ)^s := by
+            exact mul_le_mul_of_nonneg_right hc (by positivity)
+      _ =
+        (144 / 125 : ℚ) * c a *
+          ((((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s) := by
+            ring
+  have hmul_fac :
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+        ≤
+      (144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (20 / 9 : ℚ)^s) := by
+    exact hc_mul.trans
+      (mul_le_mul_of_nonneg_left hf hcoef_nonneg)
+  have hdiv :
+      c (a - s) * (a : ℚ)^s
+        ≤ (144 / 125 : ℚ) * c a *
+            ((20 / 9 : ℚ)^s / (6 : ℚ)^s) := by
+    have hrhs_eq :
+        (144 / 125 : ℚ) * c a *
+            ((20 / 9 : ℚ)^s / (6 : ℚ)^s)
+          =
+        ((144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (20 / 9 : ℚ)^s)) /
+            ((6 : ℚ)^s * ((a - 1).factorial : ℚ)) := by
+      field_simp [hpow6_pos.ne', hfac_pos.ne']
+    rw [hrhs_eq]
+    rw [le_div_iff₀ hden_pos]
+    calc
+      (c (a - s) * (a : ℚ)^s) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ))
+          =
+        c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s) := by
+            ring
+      _ ≤
+        (144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (20 / 9 : ℚ)^s) := hmul_fac
+  have hpow5_nonneg : 0 ≤ (5 : ℚ)^s := by positivity
+  calc
+    c (a - s) * ((5 : ℚ) * (a : ℚ))^s
+        = (c (a - s) * (a : ℚ)^s) * (5 : ℚ)^s := by
+            rw [mul_pow]
+            ring
+    _ ≤
+        ((144 / 125 : ℚ) * c a *
+            ((20 / 9 : ℚ)^s / (6 : ℚ)^s)) *
+          (5 : ℚ)^s := by
+            exact mul_le_mul_of_nonneg_right hdiv hpow5_nonneg
+    _ = (144 / 125 : ℚ) * c a * (50 / 27 : ℚ)^s := by
+          have hpow_eq :
+              ((20 / 9 : ℚ)^s / (6 : ℚ)^s) * (5 : ℚ)^s =
+                (50 / 27 : ℚ)^s := by
+            rw [← div_pow, ← mul_pow]
+            norm_num
+          calc
+            ((144 / 125 : ℚ) * c a *
+                ((20 / 9 : ℚ)^s / (6 : ℚ)^s)) *
+                (5 : ℚ)^s
+                =
+              (144 / 125 : ℚ) * c a *
+                (((20 / 9 : ℚ)^s / (6 : ℚ)^s) * (5 : ℚ)^s) := by
+                ring
+            _ = (144 / 125 : ℚ) * c a * (50 / 27 : ℚ)^s := by
+                rw [hpow_eq]
+
 /-- Pointwise bound for a simplified large-degree solo summand after the
 denominator-clearing factor `4 * 2^a` has been applied. -/
 theorem positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
@@ -20714,6 +20851,102 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
           field_simp [hfac_pos.ne']
           ring
 
+/-- Pointwise bound for the proportional part of the solo remainder.  The
+only change from the large-degree estimate is the looser factorial-ratio
+constant coming from `9a ≤ 20(a-s)`. -/
+theorem positiveLargeTailSoloSharpProportionalSimpleTerm_scaled_le_expTerm
+    {a s : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ a - s)
+    (hprop : 9 * a ≤ 20 * (a - s)) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) *
+          ((posNhi a : ℚ) * c (a - s) *
+            ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          ((50 / 27 : ℚ)^s / (s.factorial : ℚ)) := by
+  have hN_le : (posNhi a : ℚ) ≤ 12 * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hbase_nonneg : 0 ≤ (5 * (posNhi a : ℚ) / 12) := by
+    positivity
+  have hbase_le :
+      5 * (posNhi a : ℚ) / 12 ≤ 5 * (a : ℚ) := by
+    nlinarith
+  have hpow_le :
+      (5 * (posNhi a : ℚ) / 12)^s ≤ (5 * (a : ℚ))^s :=
+    pow_le_pow_left₀ hbase_nonneg hbase_le s
+  have hcoeff :=
+    c_tail_mul_five_a_pow_le_twenty_ninths
+      (a := a) (s := s) (by omega : 1 ≤ a - s) hprop
+  have hpow_split :
+      (2 : ℚ)^a * (1 / 2 : ℚ)^(a - s) = (2 : ℚ)^s := by
+    nth_rewrite 1 [show a = s + (a - s) by omega]
+    rw [pow_add]
+    have hcancel :
+        (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s) = 1 := by
+      rw [← mul_pow]
+      norm_num
+    calc
+      (2 : ℚ)^s * (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)
+          = (2 : ℚ)^s *
+              ((2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)) := by
+            ring
+      _ = (2 : ℚ)^s := by
+            rw [hcancel]
+            ring
+  have hscaled_eq :
+      (4 : ℚ) * (2 : ℚ)^a *
+          ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) *
+            ((posNhi a : ℚ) * c (a - s) *
+              ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+        =
+      (12 / 5 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+          ((5 * (posNhi a : ℚ) / 12)^s /
+            (s.factorial : ℚ)) := by
+    rw [c_one]
+    rw [show ((posNhi a : ℚ) / 2 * (5 / 6 : ℚ) / 2) =
+        5 * (posNhi a : ℚ) / 24 by ring]
+    rw [show (5 * (posNhi a : ℚ) / 12) =
+        (2 : ℚ) * (5 * (posNhi a : ℚ) / 24) by ring]
+    rw [mul_pow]
+    rw [← hpow_split]
+    ring
+  rw [hscaled_eq]
+  have hfac_nonneg : 0 ≤ (s.factorial : ℚ) := by positivity
+  have hfac_pos : 0 < (s.factorial : ℚ) := by positivity
+  calc
+    (12 / 5 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+        ((5 * (posNhi a : ℚ) / 12)^s /
+          (s.factorial : ℚ))
+        ≤
+      (12 / 5 : ℚ) * (12 * (a : ℚ)) * c (a - s) *
+        ((5 * (a : ℚ))^s / (s.factorial : ℚ)) := by
+          gcongr
+          · exact mul_nonneg (by positivity) (c_nonneg (a - s))
+          · exact c_nonneg (a - s)
+    _ =
+      (144 / 5 : ℚ) * (a : ℚ) *
+        (c (a - s) * ((5 : ℚ) * (a : ℚ))^s) /
+          (s.factorial : ℚ) := by
+          ring
+    _ ≤
+      (144 / 5 : ℚ) * (a : ℚ) *
+        ((144 / 125 : ℚ) * c a * (50 / 27 : ℚ)^s) /
+          (s.factorial : ℚ) := by
+          exact div_le_div_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hcoeff (by positivity))
+            hfac_nonneg
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        ((50 / 27 : ℚ)^s / (s.factorial : ℚ)) := by
+          field_simp [hfac_pos.ne']
+          ring
+
 /-- On the large inner-degree range used for the solo tail, the Δ-budget
 collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
 bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
@@ -20781,6 +21014,77 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSimple
     exact mul_nonneg (Nat.cast_nonneg _) (c_nonneg p)
   exact mul_le_mul_of_nonneg_left hbracket hscale
 
+/-- The same Δ-budget simplification on the wider proportional band
+`9a ≤ 20p`.  This is not a new mathematical hypothesis; it is a Lean-side
+split that applies the existing final Δ envelope with `m = p`, leaving only
+the low-inner-degree tail for the final solo estimate. -/
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimple
+    {a p : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ p)
+    (hprop : 9 * a ≤ 20 * p) :
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
+      ≤ (posNhi a : ℚ) * c p *
+          ((3 / 5 : ℚ) * (1 / 2 : ℚ)^p) := by
+  unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+  rw [if_pos hp]
+  unfold positiveLargeTailSoloSharpInnerDeltaBudget
+  have hp_pos_nat : 0 < p := by omega
+  have hp_pos : (0 : ℚ) < (p : ℚ) := by exact_mod_cast hp_pos_nat
+  have hp_large : 1350 ≤ p := by omega
+  have hN_nonneg : 0 ≤ ((posNhi a : ℚ) / 2) := by positivity
+  have hN40 :
+      ((posNhi a : ℚ) / 2) ≤ (40 / 3 : ℚ) * (p : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    have hpropQ : (9 : ℚ) * (a : ℚ) ≤ 20 * (p : ℚ) := by
+      exact_mod_cast hprop
+    rw [hcast]
+    nlinarith
+  have hdelta :
+      DeltaRat p ((posNhi a : ℚ) / 2) ≤ (66 / 5 : ℚ) / (p : ℚ) :=
+    DeltaRat_le_final_envelope (p := p) (m := p)
+      (N := ((posNhi a : ℚ) / 2)) hN_nonneg hN40
+      (by omega : 361 ≤ p) (by omega : 2 * p ≤ 3 * p)
+  have hpow_nonneg : 0 ≤ (1 / 2 : ℚ)^p := by positivity
+  have hdelta_coef :
+      (72 / 125 : ℚ) + (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (p : ℚ))
+        ≤ 3 / 5 := by
+    have hpQ : (275 : ℚ) ≤ (p : ℚ) := by
+      exact_mod_cast (by omega : 275 ≤ p)
+    rw [div_eq_mul_inv]
+    field_simp [hp_pos.ne']
+    nlinarith
+  have hbracket :
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+        ≤ (3 / 5 : ℚ) * (1 / 2 : ℚ)^p := by
+    have hdelta_term :
+        ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+              ((66 / 5 : ℚ) / (p : ℚ)) := by
+      exact mul_le_mul_of_nonneg_left hdelta (by positivity)
+    calc
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+              ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+                ((66 / 5 : ℚ) / (p : ℚ)) := by
+            exact add_le_add le_rfl hdelta_term
+      _ =
+          ((72 / 125 : ℚ) +
+              (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (p : ℚ))) *
+            (1 / 2 : ℚ)^p := by
+            ring
+      _ ≤ (3 / 5 : ℚ) * (1 / 2 : ℚ)^p :=
+            mul_le_mul_of_nonneg_right hdelta_coef hpow_nonneg
+  have hscale : 0 ≤ (posNhi a : ℚ) * c p := by
+    exact mul_nonneg (Nat.cast_nonneg _) (c_nonneg p)
+  exact mul_le_mul_of_nonneg_left hbracket hscale
+
 /-- Inner budget with the large-degree Δ range replaced by the simple
 coefficient bound.  The complementary degrees are intentionally kept in the
 current exact/Δ form; later estimates can split them without changing the
@@ -20823,6 +21127,65 @@ def positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum
       (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
         positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
           (posNhi a) (a - s)
+
+/-- Proportional part of the complementary solo remainder, where the same
+Δ-envelope applies with `m = p = a-s`.  This is Lean bookkeeping rather than
+a separate argument in the TeX proof. -/
+def positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+        4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        ((posNhi a : ℚ) * c (a - s) *
+          ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+    else
+      0
+
+/-- The remaining low-inner-degree tail after removing both the large-degree
+and proportional Δ-envelope bands. -/
+def positiveLargeTailSoloSharpLowDegreeRemainderBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s) then
+      0
+    else if 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+      0
+    else
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+          (posNhi a) (a - s)
+
+theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+      ≤ positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+        positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a := by
+  unfold positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum
+    positiveLargeTailSoloSharpLowDegreeRemainderBlockSum
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+  · simp [hlarge]
+  · by_cases hprop : 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+    · have hlin_nonneg :
+          0 ≤ (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) := by
+        rw [c_one]
+        positivity
+      have hinner :=
+        positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimple
+          (a := a) (p := a - s) ha hprop.1 hprop.2
+      have hmul := mul_le_mul_of_nonneg_left hinner hlin_nonneg
+      have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+        intro hsecond
+        exact hlarge ⟨hprop.1, hsecond⟩
+      have hlargeSecondLt : 3 * (a - s) < 2 * a :=
+        Nat.lt_of_not_ge hnotLargeSecond
+      simpa [hprop.1, hprop.2, hnotLargeSecond, hlargeSecondLt]
+        using hmul
+    · simp [hlarge, hprop]
 
 theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_remainder
     (a : Nat) :
@@ -20946,6 +21309,162 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_targe
               exact mul_le_mul_of_nonneg_left hscalar hac_nonneg
         _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
               ring)
+
+theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_expSum
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          (∑ s ∈ Finset.range (a + 1),
+            (50 / 27 : ℚ)^s / (s.factorial : ℚ)) := by
+  unfold positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        (∑ s ∈ Finset.range (a + 1),
+          if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0)
+        =
+      ∑ s ∈ Finset.range (a + 1),
+        (4 : ℚ) * (2 : ℚ)^a *
+          (if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0) := by
+          rw [Finset.mul_sum]
+    _ ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          ((50 / 27 : ℚ)^s / (s.factorial : ℚ)) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hprop :
+              ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+                4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+          · rw [if_pos hprop]
+            exact
+              positiveLargeTailSoloSharpProportionalSimpleTerm_scaled_le_expTerm
+                (a := a) (s := s) ha hprop.2.1 hprop.2.2
+          · rw [if_neg hprop]
+            have hrhs_nonneg :
+                0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+                  ((50 / 27 : ℚ)^s / (s.factorial : ℚ)) :=
+              mul_nonneg
+              (mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+                (c_nonneg a))
+              (div_nonneg (by positivity) (by positivity))
+            simpa using hrhs_nonneg
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        (∑ s ∈ Finset.range (a + 1),
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ)) := by
+          rw [Finset.mul_sum]
+
+theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_quarter_target
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+      ≤ (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hsum :=
+    positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_expSum
+      (a := a) ha
+  have hpoisson :
+      (∑ s ∈ Finset.range (a + 1),
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ)) ≤ 10 := by
+    calc
+      (∑ s ∈ Finset.range (a + 1),
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ))
+          ≤ partialExpUpper (50 / 27 : ℚ) 5 :=
+            poissonZero_sum_le_partialExpUpper
+              (50 / 27 : ℚ) 5 (a + 1) (by norm_num) (by norm_num)
+      _ ≤ 10 := by
+            norm_num [partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+  have hK_nonneg :
+      0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  have hsum_ten :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+        ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a * 10 :=
+    hsum.trans (mul_le_mul_of_nonneg_left hpoisson hK_nonneg)
+  have hpow_ge :
+      (10 / 7 : ℚ)^20 ≤ (10 / 7 : ℚ)^a :=
+    pow_le_pow_right₀ (by norm_num : (1 : ℚ) ≤ 10 / 7)
+      (by omega : 20 ≤ a)
+  have hscalar :
+      (20736 / 625 : ℚ) * 10 ≤ (29 / 4 : ℚ) * (10 / 7 : ℚ)^a := by
+    have hbase :
+        (20736 / 625 : ℚ) * 10 ≤
+          (29 / 4 : ℚ) * (10 / 7 : ℚ)^20 := by
+      norm_num
+    nlinarith
+  have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
+    mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
+  exact hsum_ten.trans
+    (by
+      calc
+        (20736 / 625 : ℚ) * (a : ℚ) * c a * 10
+            = ((a : ℚ) * c a) * ((20736 / 625 : ℚ) * 10) := by
+              ring
+        _ ≤ ((a : ℚ) * c a) *
+              ((29 / 4 : ℚ) * (10 / 7 : ℚ)^a) := by
+              exact mul_le_mul_of_nonneg_left hscalar hac_nonneg
+        _ = (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+              ring)
+
+theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_half_target_of_lowDegreeRemainder
+    {a : Nat} (ha : 3000 ≤ a)
+    (hlow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+        ≤ (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+      ≤ (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hprop :=
+    positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_quarter_target
+      (a := a) ha
+  have hsplit :=
+    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
+      (a := a) ha
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hscaled_split :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a) :=
+    mul_le_mul_of_nonneg_left hsplit hscale
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a) := hscaled_split
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a := by
+          ring
+    _ ≤
+      (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a +
+        (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a :=
+          add_le_add hprop hlow
+    _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+          ring
 
 theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_remainder
     {a : Nat} (ha : 3000 ≤ a)
@@ -21265,6 +21784,21 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCl
     ha
     (positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_remainder
       ha hremainder)
+
+/-- After the proportional `m = p` band is removed from the solo remainder, it
+is enough to bound the residual low-inner-degree block. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_lowDegreeRemainderBlockSum
+    {a : Nat} (ha : 3000 ≤ a)
+    (hlow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+        ≤ (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a (posNhi a) :=
+  positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_largeDegreeRemainderBlockSum
+    ha
+    (positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_half_target_of_lowDegreeRemainder
+      ha hlow)
 
 /-- The fast split-final-term solo shell is stronger than the direct
 `(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
