@@ -693,7 +693,11 @@ Status:
       `positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared`
       expose the same factorial expression after separating the final
       linear-exponential term from the active positive block; this divergence
-      from the TeX display is a Lean-facing normalization only.  The split
+      from the TeX display is a Lean-facing normalization only.  The active
+      positive nonlinear-block range now has the exact interval form
+      `GcompClosedPositiveRange_eq_Icc`, and the split sums have matching
+      `...SplitBlockSum_eq_Icc` rewrites over `Finset.Icc 1 (p / 2)`.
+      These are exact proof-production normal forms, not new estimates.  The split
       route now constructs the preferred concrete
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
       before converting to the audit certificate.  The

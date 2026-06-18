@@ -258,7 +258,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared`
   expose the same factorial expression with the final linear-exponential term
   split off from the active positive block; this is a Lean-facing
-  normalization of the same large-tail estimate.  This split route now also
+  normalization of the same large-tail estimate.  The active positive
+  nonlinear-block range also has the exact interval form
+  `Prop51.GcompClosedPositiveRange_eq_Icc`, so the inner split sums can be
+  rewritten over `Finset.Icc 1 (p / 2)` by
+  `Prop51.positiveLargeTailXGcompClosedFactorialSplitBlockSum_eq_Icc` and
+  its `Y`/solo analogue.  This split route now also
   constructs the preferred concrete
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
   before converting to the audit certificate.  The fast-evaluator sibling

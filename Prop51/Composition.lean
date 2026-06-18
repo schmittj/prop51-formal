@@ -292,6 +292,28 @@ theorem GcompClosedPositiveRange_subset_range (p : Nat) :
   intro r hr
   exact (Finset.mem_filter.mp hr).1
 
+/-- The positive active indices are exactly the interval
+`1 ≤ r ≤ p / 2`.  This removes the filtered-range presentation when later
+proof-production code wants a plain interval over the nonlinear block
+index. -/
+theorem GcompClosedPositiveRange_eq_Icc (p : Nat) :
+    GcompClosedPositiveRange p = Finset.Icc 1 (p / 2) := by
+  ext r
+  constructor
+  · intro hr
+    rcases Finset.mem_filter.mp hr with ⟨_, hr1, hr2⟩
+    exact Finset.mem_Icc.mpr
+      ⟨hr1,
+        (Nat.le_div_iff_mul_le (by norm_num : 0 < 2)).2
+          (by simpa [Nat.mul_comm] using hr2)⟩
+  · intro hr
+    rcases Finset.mem_Icc.mp hr with ⟨hr1, hrle⟩
+    have hr2 : 2 * r ≤ p := by
+      simpa [Nat.mul_comm] using
+      (Nat.le_div_iff_mul_le (by norm_num : 0 < 2)).1 hrle
+    exact Finset.mem_filter.mpr
+      ⟨Finset.mem_range.mpr (by omega), hr1, hr2⟩
+
 @[simp] theorem GcompClosedActiveRange_zero :
     GcompClosedActiveRange 0 = {0} := by
   ext r

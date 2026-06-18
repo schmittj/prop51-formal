@@ -2757,6 +2757,30 @@ theorem positiveLargeTailYGcompClosedInnerFactorial_eq_positiveRange_of_pos
   unfold positiveLargeTailYGcompClosedInnerFactorial
   rw [GcompClosedActiveRange_eq_positiveRange_of_pos hp]
 
+/-- Interval form of the positive-degree factorial-only `X` inner closed
+composition sum. -/
+theorem positiveLargeTailXGcompClosedInnerFactorial_eq_Icc_of_pos
+    {N p : Nat} (hp : 0 < p) :
+    positiveLargeTailXGcompClosedInnerFactorial N p =
+      ∑ r ∈ Finset.Icc 1 (p / 2),
+        ((N : ℚ) * (4/25))^r * 6^p *
+            (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ) := by
+  rw [positiveLargeTailXGcompClosedInnerFactorial_eq_positiveRange_of_pos hp,
+    GcompClosedPositiveRange_eq_Icc]
+
+/-- Interval form of the positive-degree factorial-only `Y`/solo inner
+closed-composition sum. -/
+theorem positiveLargeTailYGcompClosedInnerFactorial_eq_Icc_of_pos
+    {N p : Nat} (hp : 0 < p) :
+    positiveLargeTailYGcompClosedInnerFactorial N p =
+      ∑ r ∈ Finset.Icc 1 (p / 2),
+        ((N : ℚ) / 50)^r * 6^p *
+            (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ) := by
+  rw [positiveLargeTailYGcompClosedInnerFactorial_eq_positiveRange_of_pos hp,
+    GcompClosedPositiveRange_eq_Icc]
+
 theorem positiveLargeTailXGcompClosedInnerActive_eq_all (N p : Nat) :
     positiveLargeTailXGcompClosedInnerActive N p =
       ∑ r ∈ Finset.range (p + 1),
@@ -2900,6 +2924,39 @@ def positiveLargeTailYGcompClosedFactorialSplitBlockSum (N j : Nat) : ℚ :=
             (4^(r - 1) * ((j - s - 2*r + 1).factorial : ℚ)) /
           (r.factorial : ℚ))) +
     (((N : ℚ) / 2 * c 1 / 2)^j / (j.factorial : ℚ))
+
+/-- Interval form of the split-final-term factorial-only `X` block sum. -/
+theorem positiveLargeTailXGcompClosedFactorialSplitBlockSum_eq_Icc
+    (N k : Nat) :
+    positiveLargeTailXGcompClosedFactorialSplitBlockSum N k =
+      (∑ s ∈ Finset.range k,
+        (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+          (∑ r ∈ Finset.Icc 1 ((k - s) / 2),
+            ((N : ℚ) * (4/25))^r * 6^(k - s) *
+                (4^(r - 1) * ((k - s - 2*r + 1).factorial : ℚ)) /
+              (r.factorial : ℚ))) +
+        (((N : ℚ) * c 1)^k / (k.factorial : ℚ)) := by
+  unfold positiveLargeTailXGcompClosedFactorialSplitBlockSum
+  congr 1
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [GcompClosedPositiveRange_eq_Icc]
+
+/-- Interval form of the split-final-term factorial-only `Y`/solo block
+sum. -/
+theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_eq_Icc
+    (N j : Nat) :
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum N j =
+      (∑ s ∈ Finset.range j,
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          (∑ r ∈ Finset.Icc 1 ((j - s) / 2),
+            ((N : ℚ) / 50)^r * 6^(j - s) *
+                (4^(r - 1) * ((j - s - 2*r + 1).factorial : ℚ)) /
+              (r.factorial : ℚ))) +
+        (((N : ℚ) / 2 * c 1 / 2)^j / (j.factorial : ℚ)) := by
+  unfold positiveLargeTailYGcompClosedFactorialSplitBlockSum
+  congr 1
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [GcompClosedPositiveRange_eq_Icc]
 
 theorem positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum
     (N k : Nat) :
