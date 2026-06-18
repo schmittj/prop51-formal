@@ -10,8 +10,28 @@ The intended split is `401 ≤ a < 3000` for bounded checking and `3000 ≤ a` f
 the analytic tail.  The currently available Lean assembly still has separate
 generated interfaces for the old `401 ≤ a ≤ 2000` finite window and the
 `2001 ≤ a < 3000` prefix strip; this dashboard packages both on the bounded
-side so the product and solo inputs are the genuine large-`a` analytic fields.
+side through theorem-facing product/solo pointwise obligations, so the product
+and solo inputs are the genuine large-`a` analytic fields.
 -/
+
+/-- The actual theorem-facing product prefix obligation on `2000 < a < 3000`.
+
+This is the bounded-strip counterpart of `LargeTailProductCertificate`.  It is
+deliberately stated as the normalized combined-product target used downstream,
+not as the older exact upper-edge split-factorial product chunks.  Those chunks
+are still available below as a compatibility proof producer, but the bounded
+checker route should target this pointwise statement directly. -/
+structure PositiveSaddleLargeTailProductPrefixPointwise : Prop where
+  small :
+    ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        Xnorm N k * Ynorm N (posJ a k)
+          ≤ positiveSmallLargeGcompProductTarget a N k
+  tempered :
+    ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        Xnorm N k * Ynorm N (posJ a k)
+          ≤ positiveTemperedLargeGcompProductTarget a N k
 
 /-- The actual theorem-facing solo prefix obligation on `2000 < a < 3000`.
 
@@ -64,6 +84,51 @@ theorem positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChu
     (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
     (by omega : 1 ≤ a) hYUnit
 
+/-- Compatibility bridge from the older exact fast-upper-edge product prefix
+chunks to the actual product prefix pointwise target.
+
+The bounded certificate now asks for
+`PositiveSaddleLargeTailProductPrefixPointwise` directly.  This theorem keeps
+the legacy exact-split route usable for comparison and small exceptions, while
+allowing the main bounded checker to avoid compiling those heavy chunks. -/
+theorem positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProductBoundPrefixChunks
+    {aLen kLen : Nat}
+    (hprefix :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k)
+        aLen kLen) :
+    PositiveSaddleLargeTailProductPrefixPointwise where
+  small := by
+    intro a N k ha haPrefix hrect hk hsmall
+    have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+      hsmall.trans (ceilSqrt_mono hrect.2)
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k :=
+      positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
+        ha hrect hk
+        (hprefix.toPrefixCertificate.smallScalar
+          ha haPrefix hk hsmallEdge)
+    exact
+      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
+  tempered := by
+    intro a N k ha haPrefix hrect hk htempered
+    have htemperedEdge : ceilSqrt (posNlo a) < k :=
+      lt_of_le_of_lt (ceilSqrt_mono hrect.1) htempered
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k :=
+      positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
+        ha hrect hk
+        (hprefix.toPrefixCertificate.temperedScalar
+          ha haPrefix hk htemperedEdge)
+    exact
+      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
+        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
+
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
@@ -72,22 +137,16 @@ from the live large-tail pointwise and candidate/reserve inputs.  This lets the
 bounded route consume either the older fixed-`k` edge chunks or the newer
 semantic edge-budget checker without changing `Completion.lean`.
 
-The `2001 ≤ a < 3000` strip is carried by product prefix chunks and by the
-direct solo prefix norm target above, rather than by the older exact
-upper-edge solo scalar chunks. -/
+The `2001 ≤ a < 3000` strip is carried by the direct product prefix pointwise
+and solo prefix norm targets above.  This is a Lean-side divergence from the
+older generated exact upper-edge chunks: those chunks are kept as compatibility
+proof producers, not as theorem-facing fields. -/
 structure BoundedPositiveCertificate where
   toTangentProductBudget :
     PositiveSaddleEntropyShadowLargeExpPointwiseCertificate →
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate →
         PositiveSaddleTangentProductBudgetCertificate
-  productPrefixALen : Nat
-  productPrefixKLen : Nat
-  productPrefix :
-    PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
-      (fun a k =>
-        positiveLargeTailProductXUpperEdgeExactBound a k *
-          positiveLargeTailProductYUpperEdgeExactBound a k)
-      productPrefixALen productPrefixKLen
+  productPrefixPointwise : PositiveSaddleLargeTailProductPrefixPointwise
   soloPrefixNormUnit : PositiveSaddleLargeTailSoloPrefixNormUnit
 
 /-- Compatibility constructor for the previous bounded route, which supplies
@@ -113,9 +172,9 @@ def BoundedPositiveCertificate.ofActiveAnalyticFixedEdge
     BoundedPositiveCertificate where
   toTangentProductBudget := fun pointwise candidate =>
     cert.toTangentProductBudgetCertificate_of_pointwise pointwise candidate
-  productPrefixALen := productPrefixALen
-  productPrefixKLen := productPrefixKLen
-  productPrefix := productPrefix
+  productPrefixPointwise :=
+    positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProductBoundPrefixChunks
+      productPrefix
   soloPrefixNormUnit :=
     positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
       soloPrefix
@@ -195,9 +254,9 @@ def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge
       smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
       soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
       edgeBudget pointwise candidate
-  productPrefixALen := productPrefixALen
-  productPrefixKLen := productPrefixKLen
-  productPrefix := productPrefix
+  productPrefixPointwise :=
+    positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProductBoundPrefixChunks
+      productPrefix
   soloPrefixNormUnit :=
     positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
       soloPrefix
@@ -1762,22 +1821,16 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndFastUpperEdgeLower
       (xyBound := fun a k => xBound a k * yBound a k)
       hproductBound hbudgetTwoUpper hsmallGeThree htemperedGeThree
 
-/-- Convert the live product certificate and its lower-prefix scalar chunks
+/-- Convert the live product certificate and its lower-prefix pointwise proof
 directly into the large-tail pointwise estimate used by the candidate/reserve
 machinery.
 
 This is the route-facing product bridge: for `3000 ≤ a` it uses
 `LargeTailProductCertificate`, and for `2000 < a < 3000` it uses the bounded
-prefix chunks packaged in `BoundedPositiveCertificate`. -/
+prefix pointwise field packaged in `BoundedPositiveCertificate`. -/
 theorem LargeTailProductCertificate.toPointwise
-    {aLen kLen : Nat}
     (hproduct : LargeTailProductCertificate)
-    (hprefix :
-      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
-        (fun a k =>
-          positiveLargeTailProductXUpperEdgeExactBound a k *
-            positiveLargeTailProductYUpperEdgeExactBound a k)
-        aLen kLen)
+    (hprefix : PositiveSaddleLargeTailProductPrefixPointwise)
     (hsolo : PositiveSaddleLargeTailSoloNormUnitCertificate) :
     PositiveSaddleEntropyShadowLargeExpPointwiseCertificate where
   small := by
@@ -1788,18 +1841,7 @@ theorem LargeTailProductCertificate.toPointwise
       by_cases haLarge : 3000 ≤ a
       · exact hproduct.largeSmall haLarge hrect hk hsmall
       · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
-        have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
-          hsmall.trans (ceilSqrt_mono hrect.2)
-        have hprod :
-            positiveXplusYProductGcompBound a N k
-              ≤ positiveSmallLargeGcompProductTarget a N k :=
-          positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
-            ha hrect hk
-            (hprefix.toPrefixCertificate.smallScalar
-              ha haPrefix hk hsmallEdge)
-        exact
-          (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
-            (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
+        exact hprefix.small ha haPrefix hrect hk hsmall
     exact
       normalizedPositiveIfTerm_le_smallEntropyShadowExp_of_XYProductTarget
         ha hrect hk hXY
@@ -1811,18 +1853,7 @@ theorem LargeTailProductCertificate.toPointwise
       by_cases haLarge : 3000 ≤ a
       · exact hproduct.largeTempered haLarge hrect hk htempered
       · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
-        have htemperedEdge : ceilSqrt (posNlo a) < k :=
-          lt_of_le_of_lt (ceilSqrt_mono hrect.1) htempered
-        have hprod :
-            positiveXplusYProductGcompBound a N k
-              ≤ positiveTemperedLargeGcompProductTarget a N k :=
-          positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
-            ha hrect hk
-            (hprefix.toPrefixCertificate.temperedScalar
-              ha haPrefix hk htemperedEdge)
-        exact
-          (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
-            (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
+        exact hprefix.tempered ha haPrefix hrect hk htempered
     exact
       normalizedPositiveIfTerm_le_temperedEntropyShadowExp_of_XYProductTarget
         ha hrect hk hXY
@@ -1997,7 +2028,7 @@ theorem completion_of_three_inputs
   let soloNorm : PositiveSaddleLargeTailSoloNormUnitCertificate :=
     hsolo.toNormUnitOfPrefixNorm hbounded.soloPrefixNormUnit
   let pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate :=
-    hproduct.toPointwise hbounded.productPrefix soloNorm
+    hproduct.toPointwise hbounded.productPrefixPointwise soloNorm
   exact
     coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
       (hbounded.toTangentProductBudget
