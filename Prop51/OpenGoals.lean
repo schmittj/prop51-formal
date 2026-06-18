@@ -235,6 +235,57 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNScalars
           (by omega : 2000 < a) hrect hk
           (htempered ha hk htemperedEdge))
 
+/-- One-dimensional fast-scalar constructor after applying the sign-lock
+split to the tempered branch.
+
+The TeX sign-lock branch is `N ≤ (40/3)k`.  On the raw-estimate branch Lean
+receives the denominator-cleared complement `k < 361 ∨ 40*k < 3*N`; since
+`N ≤ posNhi a` in the rectangle, the second alternative can be weakened to
+the row-only condition `40*k < 3*posNhi a`.  This is the scalar surface a
+large-tail checker should target if the full tempered upper-edge/lower-`N`
+inequality is too strong in sign-lock-covered cells. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNScalarsNatSignLockComplement
+    (hsmall :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k)
+    (htempered :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedNatSignLockComplement
+    (by
+      intro a N k ha hrect hk hsmallN
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+          (by omega : 2000 < a) hrect hk
+          (hsmall ha hk hsmallEdge))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+          (by omega : 2000 < a) hrect hk
+          (htempered ha hk htemperedEdge hrowAlt))
+
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
 machinery.
