@@ -16033,31 +16033,21 @@ theorem PositiveSaddleLargeTailProductBoundsCertificate.temperedXYProductRawClea
     (cert.temperedY ha hrect hk htempered)
     (cert.temperedProduct ha hrect hk htempered)
 
-/-- Direct raw-cleared bridge from the live upper-edge/lower-`N` small scalar
-target.
+/-- Raw-cleared small product bridge from the strengthened upper-edge/lower-`N`
+split-sum scalar target.
 
-This is the raw-product version of
-`positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN`:
-the scalar hypothesis is first converted through the existing split-block
-bound chain, then reassembled as an actual `Bq * Qq` inequality. -/
-theorem positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+This is the common core used both by the exact split-sum route and by later
+rational-surrogate routes.  It is a Lean proof-production normalization of
+the TeX combined product estimate: the upstream hypothesis may be proved by a
+coarser `xyBound`, but once the upper-edge scalar target is available the
+downstream actual-product target is unchanged. -/
+theorem positiveSmallLargeXYProductRawCleared_of_upperEdgeLowerN
     {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     (hk : k ∈ positiveKRange a)
-    (h :
-      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
-        (fun a k =>
-          positiveLargeTailProductXUpperEdgeExactBound a k *
-            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    (hUpper :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k) :
     positiveSmallLargeXYProductRawCleared a N k := by
-  have hUpper :
-      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
-        a k := by
-    unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
-      at h
-    unfold
-      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
-    simpa [positiveLargeTailProductXUpperEdgeExactBound,
-      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
   have hFast :
       positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
         a N k :=
@@ -16089,27 +16079,15 @@ theorem positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerN
       QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum N (posJ a k)
   exact positiveSmallLargeXYProductRawCleared_of_BQ_bounds hB hQ hBlock
 
-/-- Direct raw-cleared bridge from the live upper-edge/lower-`N` tempered
-scalar target. -/
-theorem positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+/-- Tempered analogue of
+`positiveSmallLargeXYProductRawCleared_of_upperEdgeLowerN`. -/
+theorem positiveTemperedLargeXYProductRawCleared_of_upperEdgeLowerN
     {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
     (hk : k ∈ positiveKRange a)
-    (h :
-      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
-        (fun a k =>
-          positiveLargeTailProductXUpperEdgeExactBound a k *
-            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    (hUpper :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k) :
     positiveTemperedLargeXYProductRawCleared a N k := by
-  have hUpper :
-      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
-        a k := by
-    unfold
-      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
-      at h
-    unfold
-      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
-    simpa [positiveLargeTailProductXUpperEdgeExactBound,
-      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
   have hFast :
       positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
         a N k :=
@@ -16140,6 +16118,140 @@ theorem positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerN
     simpa [positiveLargeTailProductYBlockBound] using
       QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum N (posJ a k)
   exact positiveTemperedLargeXYProductRawCleared_of_BQ_bounds hB hQ hBlock
+
+/-- Raw-cleared small product bridge from a rational upper bound on the
+upper-edge split-sum product plus the corresponding scalar budget.
+
+This is the route needed for completion: future work can prove
+`positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k ≤
+xyBound a k` using a compact analytic/recurrence checker, then avoid
+evaluating the exact split product inside every scalar comparison. -/
+theorem positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+    {xyBound : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (hprod :
+      positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+        ≤ xyBound a k)
+    (hscalar :
+      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+        xyBound a k) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  have hUpper :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      at hscalar
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+      at hprod
+    unfold
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+      positivity
+    have hleft :
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            positiveLargeTailProductXClosedFactorialSplitBlockBound
+              a (posNhi a) k *
+              positiveLargeTailProductYClosedFactorialSplitBlockBound
+                a (posNhi a) k
+          ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+              xyBound a k := by
+      simpa [mul_assoc] using
+        mul_le_mul_of_nonneg_left hprod hscale
+    exact hleft.trans hscalar
+  exact positiveSmallLargeXYProductRawCleared_of_upperEdgeLowerN
+    ha hrect hk hUpper
+
+/-- Tempered analogue of
+`positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound`. -/
+theorem positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+    {xyBound : Nat → Nat → ℚ} {a N k : Nat}
+    (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (hprod :
+      positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+        ≤ xyBound a k)
+    (hscalar :
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+        xyBound a k) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  have hUpper :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+      at hscalar
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+      at hprod
+    unfold
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+      positivity
+    have hleft :
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            positiveLargeTailProductXClosedFactorialSplitBlockBound
+              a (posNhi a) k *
+              positiveLargeTailProductYClosedFactorialSplitBlockBound
+                a (posNhi a) k
+          ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+              xyBound a k := by
+      simpa [mul_assoc] using
+        mul_le_mul_of_nonneg_left hprod hscale
+    exact hleft.trans hscalar
+  exact positiveTemperedLargeXYProductRawCleared_of_upperEdgeLowerN
+    ha hrect hk hUpper
+
+/-- Direct raw-cleared bridge from the live upper-edge/lower-`N` small scalar
+target.
+
+This is the raw-product version of
+`positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN`:
+the scalar hypothesis is first converted through the existing split-block
+bound chain, then reassembled as an actual `Bq * Qq` inequality. -/
+theorem positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  have hUpper :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      at h
+    unfold
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    simpa [positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
+  exact positiveSmallLargeXYProductRawCleared_of_upperEdgeLowerN
+    ha hrect hk hUpper
+
+/-- Direct raw-cleared bridge from the live upper-edge/lower-`N` tempered
+scalar target. -/
+theorem positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  have hUpper :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+      at h
+    unfold
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    simpa [positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
+  exact positiveTemperedLargeXYProductRawCleared_of_upperEdgeLowerN
+    ha hrect hk hUpper
 
 /-- Direct normalized-product bridge from the live upper-edge/lower-`N`
 small scalar target.
