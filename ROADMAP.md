@@ -643,7 +643,14 @@ Status:
       supplied through `PositiveSaddleLargeTailProductBoundsCertificate`,
       which further splits each raw product inequality into separate `Bplus`
       and `Qplus/Y` saddle bounds plus a scalar product comparison, matching
-      the TeX-style saddle-bound staging more closely.  The solo field can
+      the TeX-style saddle-bound staging more closely.  The product `X` side
+      now has the analogous block opening:
+      `BplusqGcompBound_eq_linear_BplusNonlinearGcompBound_sum`,
+      `BplusNonlinearGcompBound_le_Gcomp_sum`, and
+      `BplusqGcompBound_le_positiveLargeTailXGcompBlockSum` expose the
+      executable `BplusqGcompBound` recurrence as an explicit linear/nonlinear
+      `Gcomp` block sum for future small/tempered product estimates.  The
+      solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
       `PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those

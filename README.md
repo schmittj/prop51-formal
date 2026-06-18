@@ -212,7 +212,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   raw product inequality into separate `Bplus` and `Qplus/Y` saddle bounds
   plus a scalar product comparison.  The solo subtarget similarly has the
   `Prop51.PositiveSaddleLargeTailSoloYBoundCertificate` split between a
-  `Y_a(N)` saddle bound and the dyadic unit budget.  For final assembly from
+  `Y_a(N)` saddle bound and the dyadic unit budget.  On the product `X` side,
+  `Prop51.BplusqGcompBound_eq_linear_BplusNonlinearGcompBound_sum` and
+  `Prop51.BplusNonlinearGcompBound_le_Gcomp_sum` open the executable
+  `BplusqGcompBound` recurrence into the explicit helper
+  `Prop51.positiveLargeTailXGcompBlockSum`, with packaged bound
+  `Prop51.BplusqGcompBound_le_positiveLargeTailXGcompBlockSum`.  For final
+  assembly from
   these lower-level product and solo proofs,
   `Prop51.PositiveSaddleLargeTailBoundsPartsAuditCertificate` bundles those
   bound certificates with the grouped candidate step/reserve fields.  The finer

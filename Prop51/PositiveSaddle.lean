@@ -2575,6 +2575,45 @@ theorem BplusqGcompBound_nonneg (N k : Nat) :
     · simp [h0, h1]
       positivity
 
+/-- Linear-exponential/nonlinear-block sum for the positive `B` `Gcomp`
+majorant used on the product `X` side. -/
+def positiveLargeTailXGcompSaddleSum (N k : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (k + 1),
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+      BplusNonlinearGcompBound N (k - s)
+
+/-- The same product-side `X` majorant with the nonlinear recurrence opened
+into the explicit `Gcomp` block sum. -/
+def positiveLargeTailXGcompBlockSum (N k : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (k + 1),
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ Finset.range (k - s + 1),
+        ((N : ℚ) * (4/25))^r * 6^(k - s) * Gcomp r (k - s) /
+          (r.factorial : ℚ))
+
+theorem BplusqGcompBound_eq_positiveLargeTailXGcompSaddleSum
+    (N k : Nat) :
+    BplusqGcompBound N k = positiveLargeTailXGcompSaddleSum N k := by
+  unfold positiveLargeTailXGcompSaddleSum
+  rw [BplusqGcompBound_eq_linear_BplusNonlinearGcompBound_sum]
+
+theorem positiveLargeTailXGcompSaddleSum_le_blockSum (N k : Nat) :
+    positiveLargeTailXGcompSaddleSum N k
+      ≤ positiveLargeTailXGcompBlockSum N k := by
+  unfold positiveLargeTailXGcompSaddleSum positiveLargeTailXGcompBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (BplusNonlinearGcompBound_le_Gcomp_sum N (k - s)) hlin_nonneg
+
+theorem BplusqGcompBound_le_positiveLargeTailXGcompBlockSum (N k : Nat) :
+    BplusqGcompBound N k ≤ positiveLargeTailXGcompBlockSum N k := by
+  rw [BplusqGcompBound_eq_positiveLargeTailXGcompSaddleSum]
+  exact positiveLargeTailXGcompSaddleSum_le_blockSum N k
+
 theorem positiveXplusGcompBound_nonneg (N k : Nat) :
     0 ≤ positiveXplusGcompBound N k := by
   unfold positiveXplusGcompBound
