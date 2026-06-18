@@ -20617,6 +20617,103 @@ theorem c_tail_mul_five_a_pow_le
             _ = (144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s := by
                 rw [hpow_eq]
 
+/-- Pointwise bound for a simplified large-degree solo summand after the
+denominator-clearing factor `4 * 2^a` has been applied. -/
+theorem positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
+    {a s : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ a - s)
+    (hlarge : 2 * a ≤ 3 * (a - s)) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) *
+          ((posNhi a : ℚ) * c (a - s) *
+            ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          ((5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
+  have hs_le : s ≤ a := by omega
+  have hN_nonneg : 0 ≤ (posNhi a : ℚ) := by positivity
+  have hN_le : (posNhi a : ℚ) ≤ 12 * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hbase_nonneg : 0 ≤ (5 * (posNhi a : ℚ) / 12) := by
+    positivity
+  have hbase_le :
+      5 * (posNhi a : ℚ) / 12 ≤ 5 * (a : ℚ) := by
+    nlinarith
+  have hpow_le :
+      (5 * (posNhi a : ℚ) / 12)^s ≤ (5 * (a : ℚ))^s :=
+    pow_le_pow_left₀ hbase_nonneg hbase_le s
+  have hcoeff :=
+    c_tail_mul_five_a_pow_le
+      (a := a) (s := s) (by omega : 1 ≤ a - s) hlarge
+  have hpow_split :
+      (2 : ℚ)^a * (1 / 2 : ℚ)^(a - s) = (2 : ℚ)^s := by
+    nth_rewrite 1 [show a = s + (a - s) by omega]
+    rw [pow_add]
+    have hcancel :
+        (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s) = 1 := by
+      rw [← mul_pow]
+      norm_num
+    calc
+      (2 : ℚ)^s * (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)
+          = (2 : ℚ)^s *
+              ((2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)) := by
+            ring
+      _ = (2 : ℚ)^s := by
+            rw [hcancel]
+            ring
+  have hscaled_eq :
+      (4 : ℚ) * (2 : ℚ)^a *
+          ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) *
+            ((posNhi a : ℚ) * c (a - s) *
+              ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+        =
+      (12 / 5 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+          ((5 * (posNhi a : ℚ) / 12)^s /
+            (s.factorial : ℚ)) := by
+    rw [c_one]
+    rw [show ((posNhi a : ℚ) / 2 * (5 / 6 : ℚ) / 2) =
+        5 * (posNhi a : ℚ) / 24 by ring]
+    rw [show (5 * (posNhi a : ℚ) / 12) =
+        (2 : ℚ) * (5 * (posNhi a : ℚ) / 24) by ring]
+    rw [mul_pow]
+    rw [← hpow_split]
+    ring
+  rw [hscaled_eq]
+  have hfac_nonneg : 0 ≤ (s.factorial : ℚ) := by positivity
+  have hfac_pos : 0 < (s.factorial : ℚ) := by positivity
+  calc
+    (12 / 5 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+        ((5 * (posNhi a : ℚ) / 12)^s /
+          (s.factorial : ℚ))
+        ≤
+      (12 / 5 : ℚ) * (12 * (a : ℚ)) * c (a - s) *
+        ((5 * (a : ℚ))^s / (s.factorial : ℚ)) := by
+          gcongr
+          · exact mul_nonneg (by positivity) (c_nonneg (a - s))
+          · exact c_nonneg (a - s)
+    _ =
+      (144 / 5 : ℚ) * (a : ℚ) *
+        (c (a - s) * ((5 : ℚ) * (a : ℚ))^s) /
+          (s.factorial : ℚ) := by
+          ring
+    _ ≤
+      (144 / 5 : ℚ) * (a : ℚ) *
+        ((144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s) /
+          (s.factorial : ℚ) := by
+          exact div_le_div_of_nonneg_right
+            (mul_le_mul_of_nonneg_left hcoeff (by positivity))
+            hfac_nonneg
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        ((5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
+          field_simp [hfac_pos.ne']
+          ring
+
 /-- On the large inner-degree range used for the solo tail, the Δ-budget
 collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
 bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
@@ -20741,6 +20838,114 @@ theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_r
   by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
   · simp [hlarge]
   · simp [hlarge]
+
+theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          (∑ s ∈ Finset.range (a + 1),
+            (5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
+  unfold positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        (∑ s ∈ Finset.range (a + 1),
+          if 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0)
+        =
+      ∑ s ∈ Finset.range (a + 1),
+        (4 : ℚ) * (2 : ℚ)^a *
+          (if 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0) := by
+          rw [Finset.mul_sum]
+    _ ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          ((5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+          · rw [if_pos hlarge]
+            exact
+              positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
+                (a := a) (s := s) ha hlarge.1 hlarge.2
+          · rw [if_neg hlarge]
+            have hrhs_nonneg :
+                0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+                  ((5 / 4 : ℚ)^s / (s.factorial : ℚ)) :=
+              mul_nonneg
+              (mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+                (c_nonneg a))
+              (div_nonneg (by positivity) (by positivity))
+            simpa using hrhs_nonneg
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        (∑ s ∈ Finset.range (a + 1),
+          (5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
+          rw [Finset.mul_sum]
+
+theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_target
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
+      ≤ (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hsum :=
+    positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
+      (a := a) ha
+  have hpoisson :
+      (∑ s ∈ Finset.range (a + 1),
+          (5 / 4 : ℚ)^s / (s.factorial : ℚ)) ≤ 4 := by
+    calc
+      (∑ s ∈ Finset.range (a + 1),
+          (5 / 4 : ℚ)^s / (s.factorial : ℚ))
+          ≤ partialExpUpper (5 / 4 : ℚ) 3 :=
+            poissonZero_sum_le_partialExpUpper
+              (5 / 4 : ℚ) 3 (a + 1) (by norm_num) (by norm_num)
+      _ ≤ 4 := by
+            norm_num [partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+  have hK_nonneg :
+      0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  have hsum_four :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
+        ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a * 4 :=
+    hsum.trans (mul_le_mul_of_nonneg_left hpoisson hK_nonneg)
+  have hpow_ge :
+      (10 / 7 : ℚ)^10 ≤ (10 / 7 : ℚ)^a :=
+    pow_le_pow_right₀ (by norm_num : (1 : ℚ) ≤ 10 / 7)
+      (by omega : 10 ≤ a)
+  have hscalar :
+      (20736 / 625 : ℚ) * 4 ≤ (29 / 2 : ℚ) * (10 / 7 : ℚ)^a := by
+    have hbase :
+        (20736 / 625 : ℚ) * 4 ≤
+          (29 / 2 : ℚ) * (10 / 7 : ℚ)^10 := by
+      norm_num
+    nlinarith
+  have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
+    mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
+  exact hsum_four.trans
+    (by
+      calc
+        (20736 / 625 : ℚ) * (a : ℚ) * c a * 4
+            = ((a : ℚ) * c a) * ((20736 / 625 : ℚ) * 4) := by
+              ring
+        _ ≤ ((a : ℚ) * c a) *
+              ((29 / 2 : ℚ) * (10 / 7 : ℚ)^a) := by
+              exact mul_le_mul_of_nonneg_left hscalar hac_nonneg
+        _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+              ring)
 
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
     {a p : Nat} (ha : 3000 ≤ a) :
