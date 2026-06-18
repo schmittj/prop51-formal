@@ -26,6 +26,8 @@ Strategies include:
   * active-analytic-product-tangent-solo-n-fixed-edge-k-chunked: row-active
     tangent, solo, and fixed-edge atoms, with the product estimates supplied
     as analytic hypotheses rather than emitted raw-product atom theorems.
+    Those product hypotheses start at k >= 2; the generated theorem inserts
+    Lean's `Bq N 1 <= 0` reduction when rebuilding the existing certificate.
   * --emit-single-chunk FIELD: emit one cacheable `native_decide` theorem for
     a concrete product, tangent, solo, or edge chunk.
   * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
@@ -2006,12 +2008,12 @@ def analytic_product_binder_lines() -> list[str]:
     return [
         "    (hsmallXYTangent :",
         "      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →",
-        "        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →",
+        "        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →",
         "          Xnorm N k * Ynorm N (posJ a k) ≤",
         "            positiveSmallXYProductTangentBound a N k)",
         "    (htemperedXY :",
         "      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →",
-        "        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →",
+        "        k ∈ positiveKRange a → ceilSqrt N < k → 2 ≤ k → 0 < Bq N k →",
         "          Xnorm N k * Ynorm N (posJ a k) ≤",
         "            positiveTemperedXYProductBound a N k)",
     ]
@@ -5899,8 +5901,14 @@ def active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         "  soloBudgetNLenPos := by norm_num",
         "  tangentKLenPos := by norm_num",
         "  edgeKLenPos := by norm_num",
-        "  smallXYTangent := hsmallXYTangent",
-        "  temperedXY := htemperedXY",
+        "  smallXYTangent := by",
+        "    intro a N k ha h2000 hrect hk hsmall hB",
+        "    exact hsmallXYTangent ha h2000 hrect hk hsmall",
+        "      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB",
+        "  temperedXY := by",
+        "    intro a N k ha h2000 hrect hk htempered hB",
+        "    exact htemperedXY ha h2000 hrect hk htempered",
+        "      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB",
     ]
     if args.use_single_chunk_theorems:
         add_active_tangent_row_n_k_dispatch_field_from_single_chunks(
