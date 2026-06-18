@@ -11365,6 +11365,53 @@ theorem positiveTemperedLargeGcompProductTarget_nonneg
   unfold positiveTemperedLargeGcompProductTarget
   positivity
 
+theorem positiveSmallLargeXYProductTarget_of_Xnorm_nonpos
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) (hX : Xnorm N k ≤ 0) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveSmallLargeGcompProductTarget a N k := by
+  have hprod : Xnorm N k * Ynorm N (posJ a k) ≤ 0 :=
+    mul_nonpos_of_nonpos_of_nonneg hX (Ynorm_nonneg N (posJ a k))
+  exact hprod.trans
+    (positiveSmallLargeGcompProductTarget_nonneg ha hN hkRange)
+
+theorem positiveTemperedLargeXYProductTarget_of_Xnorm_nonpos
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) (hX : Xnorm N k ≤ 0) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveTemperedLargeGcompProductTarget a N k := by
+  have hprod : Xnorm N k * Ynorm N (posJ a k) ≤ 0 :=
+    mul_nonpos_of_nonpos_of_nonneg hX (Ynorm_nonneg N (posJ a k))
+  exact hprod.trans
+    (positiveTemperedLargeGcompProductTarget_nonneg ha hN hkRange)
+
+/-- Product target closure in the sign-lock zone.
+
+When the already-formalized §5 estimate gives `Xnorm N k ≤ 0`, no positive
+product estimate is needed for this cell.  This is most useful in the top
+tempered range where `(N : ℚ) ≤ (40/3) * k` is available. -/
+theorem positiveSmallLargeXYProductTarget_of_signLock
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) (hk361 : 361 ≤ k)
+    (hN40 : (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveSmallLargeGcompProductTarget a N k :=
+  positiveSmallLargeXYProductTarget_of_Xnorm_nonpos ha hN hkRange
+    (Xnorm_nonpos_of_signLockMargin_bound hk361
+      (Xnorm_le_neg_signLockMargin (N := N) (m := k) hN hN40 hk361))
+
+/-- Tempered analogue of
+`positiveSmallLargeXYProductTarget_of_signLock`. -/
+theorem positiveTemperedLargeXYProductTarget_of_signLock
+    {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
+    (hkRange : k ∈ positiveKRange a) (hk361 : 361 ≤ k)
+    (hN40 : (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) :
+    Xnorm N k * Ynorm N (posJ a k)
+      ≤ positiveTemperedLargeGcompProductTarget a N k :=
+  positiveTemperedLargeXYProductTarget_of_Xnorm_nonpos ha hN hkRange
+    (Xnorm_nonpos_of_signLockMargin_bound hk361
+      (Xnorm_le_neg_signLockMargin (N := N) (m := k) hN hN40 hk361))
+
 theorem positiveSmallLargeXYProductTarget_of_rawCleared
     {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
     (hkRange : k ∈ positiveKRange a)
