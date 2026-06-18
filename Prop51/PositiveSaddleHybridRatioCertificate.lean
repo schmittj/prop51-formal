@@ -593,6 +593,26 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertifica
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
         (a := a) (N := N) hrect (soloY (a := a) ha))
 
+/-- Preferred hybrid-ratio large-tail certificate with the strengthened
+upper-edge/lower-`N` product target and the direct solo target checked only
+at the upper rectangle edge.  The product target is intentionally stronger
+than the TeX scalar comparison; its conversion is recorded in
+`PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate.toClosedFactorialSplitBlockSumScalarFastExpCertificate`.
+-/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    product.toClosedFactorialSplitBlockSumScalarFastExpCertificate soloY
+
 /-- Large-tail audit certificate with fast split-final-term product targets
 and the split-final-term factorial solo target estimated directly against
 the final `(10/7)^a` envelope. -/
@@ -618,6 +638,20 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
           a (posNhi a)) :
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    product soloY).toLargeTailAuditCertificate
+
+/-- Large-tail audit certificate with the strengthened upper-edge/lower-`N`
+product target and the direct split-final-term solo target checked only at
+`N = posNhi a`. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
     product soloY).toLargeTailAuditCertificate
 
 end Prop51

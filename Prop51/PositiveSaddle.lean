@@ -14383,6 +14383,177 @@ def positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
       positiveTemperedLargeExpFast a k *
         ((N : ℚ) * c k * c (posJ a k))
 
+/-- Monotonicity of the small-branch fast scalar right-hand side in the
+rectangle variable `N`. -/
+theorem positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_rhs_mono_N
+    {a N M k : Nat} (ha : 2000 < a) (hk : k ∈ positiveKRange a)
+    (hNM : N ≤ M) :
+    130 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveSmallLargeExpFast a k *
+          ((N : ℚ) * c k * c (posJ a k))
+      ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveSmallLargeExpFast a k *
+          ((M : ℚ) * c k * c (posJ a k)) := by
+  have hN : (N : ℚ) ≤ (M : ℚ) := by exact_mod_cast hNM
+  have hexp : 0 ≤ positiveSmallLargeExpFast a k := by
+    rw [positiveSmallLargeExpFast_eq]
+    exact positiveSmallLargeExp_nonneg_of_large ha hk
+  have hck : 0 ≤ c k := c_nonneg k
+  have hcj : 0 ≤ c (posJ a k) := c_nonneg (posJ a k)
+  have hfactor :
+      0 ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExpFast a k * c k * c (posJ a k) := by
+    positivity
+  simpa [mul_assoc, mul_left_comm, mul_comm] using
+    mul_le_mul_of_nonneg_left hN hfactor
+
+/-- Monotonicity of the tempered-branch fast scalar right-hand side in the
+rectangle variable `N`. -/
+theorem positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp_rhs_mono_N
+    {a N M k : Nat} (ha : 2000 < a) (hk : k ∈ positiveKRange a)
+    (hNM : N ≤ M) :
+    192 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveTemperedLargeExpFast a k *
+          ((N : ℚ) * c k * c (posJ a k))
+      ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveTemperedLargeExpFast a k *
+          ((M : ℚ) * c k * c (posJ a k)) := by
+  have hN : (N : ℚ) ≤ (M : ℚ) := by exact_mod_cast hNM
+  have hexp : 0 ≤ positiveTemperedLargeExpFast a k := by
+    rw [positiveTemperedLargeExpFast_eq]
+    exact positiveTemperedLargeExp_nonneg_of_large ha hk
+  have hck : 0 ≤ c k := c_nonneg k
+  have hcj : 0 ≤ c (posJ a k) := c_nonneg (posJ a k)
+  have hfactor :
+      0 ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExpFast a k * c k * c (posJ a k) := by
+    positivity
+  simpa [mul_assoc, mul_left_comm, mul_comm] using
+    mul_le_mul_of_nonneg_left hN hfactor
+
+/-- Strengthened small-branch product target checked at the upper rectangle
+edge, with the right-hand side deliberately kept at the lower edge.
+
+This is a Lean proof-production strengthening of the TeX product scalar
+comparison, not a new mathematical estimate: monotonicity of the split
+factorial block sums moves the left-hand side to `posNhi a`, while
+`N ≥ posNlo a` moves the right-hand side back to the actual rectangle
+variable. -/
+def positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    (a k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExpFast a k *
+        ((posNlo a : ℚ) * c k * c (posJ a k))
+
+/-- Strengthened tempered-branch product target checked at the upper
+rectangle edge, with the right-hand side deliberately kept at the lower edge.
+See
+`positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN`
+for the proof-production rationale. -/
+def positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    (a k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExpFast a k *
+        ((posNlo a : ℚ) * c k * c (posJ a k))
+
+/-- The strengthened upper-edge/lower-`N` small product target implies the
+ordinary fast split-final-term target at every `N` in the rectangle. -/
+theorem positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k) :
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+      a N k := by
+  unfold
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp at *
+  have hprod :
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+        ≤
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k :=
+    positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_mono_N
+      (a := a) (N := N) (M := posNhi a) (k := k) hrect.2
+  have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+            positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+        ≤
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          positiveLargeTailProductXClosedFactorialSplitBlockBound
+            a (posNhi a) k *
+            positiveLargeTailProductYClosedFactorialSplitBlockBound
+              a (posNhi a) k := by
+    simpa [mul_assoc] using mul_le_mul_of_nonneg_left hprod hscale
+  have hright :
+      130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExpFast a k *
+            ((posNlo a : ℚ) * c k * c (posJ a k))
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExpFast a k *
+            ((N : ℚ) * c k * c (posJ a k)) :=
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_rhs_mono_N
+      (a := a) (N := posNlo a) (M := N) (k := k) ha hk hrect.1
+  exact hleft.trans (h.trans hright)
+
+/-- The strengthened upper-edge/lower-`N` tempered product target implies
+the ordinary fast split-final-term target at every `N` in the rectangle. -/
+theorem positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k) :
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+      a N k := by
+  unfold
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp at *
+  have hprod :
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+        ≤
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k :=
+    positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_mono_N
+      (a := a) (N := N) (M := posNhi a) (k := k) hrect.2
+  have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+            positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+        ≤
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          positiveLargeTailProductXClosedFactorialSplitBlockBound
+            a (posNhi a) k *
+            positiveLargeTailProductYClosedFactorialSplitBlockBound
+              a (posNhi a) k := by
+    simpa [mul_assoc] using mul_le_mul_of_nonneg_left hprod hscale
+  have hright :
+      192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExpFast a k *
+            ((posNlo a : ℚ) * c k * c (posJ a k))
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExpFast a k *
+            ((N : ℚ) * c k * c (posJ a k)) :=
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp_rhs_mono_N
+      (a := a) (N := posNlo a) (M := N) (k := k) ha hk hrect.1
+  exact hleft.trans (h.trans hright)
+
 theorem positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar_of_fastExp
     {a N k : Nat}
     (h :
@@ -14659,6 +14830,44 @@ structure PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastEx
       k ∈ positiveKRange a → ceilSqrt N < k →
         positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
           a N k
+
+/-- Strengthened proof-production wrapper for the fast split-final-term
+product target.  The two scalar fields are checked only at the upper
+rectangle edge `N = posNhi a`, but with the right-hand side denominator kept
+at `posNlo a`.  This is intentionally stronger than the TeX scalar target;
+the conversion below records the monotonicity argument that makes it sound.
+-/
+structure PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate :
+    Prop where
+  smallScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+  temperedScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+
+theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate.toClosedFactorialSplitBlockSumScalarFastExpCertificate
+    (cert :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate where
+  smallScalar := by
+    intro a N k ha hrect hk hsmall
+    have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+      hsmall.trans (ceilSqrt_mono hrect.2)
+    exact
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+        ha hrect hk (cert.smallScalar ha hk hsmallEdge)
+  temperedScalar := by
+    intro a N k ha hrect hk htempered
+    have htemperedEdge : ceilSqrt (posNlo a) < k :=
+      lt_of_le_of_lt (ceilSqrt_mono hrect.1) htempered
+    exact
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+        ha hrect hk (cert.temperedScalar ha hk htemperedEdge)
 
 theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate.toClosedFactorialSplitBlockSumScalarCertificate
     (cert :

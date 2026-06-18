@@ -1265,6 +1265,31 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
       product soloY)
 
+/-- Final assembly from the fixed-edge finite route, the strengthened
+upper-edge/lower-`N` fast split-final-term closed-factorial product target,
+and a split-final-term factorial solo target checked only at the upper
+rectangle edge `N = posNhi a`. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+      product soloY)
+
 /-- Final assembly from the row-active combined-product finite route.
 
 This is the same mathematical finite-window proof as the fixed-edge route
@@ -1429,6 +1454,31 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+      product soloY)
+
+/-- Final assembly from the row-active finite route, the strengthened
+upper-edge/lower-`N` fast split-final-term closed-factorial product target,
+and a split-final-term factorial solo target checked only at the upper
+rectangle edge `N = posNhi a`. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
       product soloY)
 
 /-- Final assembly from the row-active finite route and the fully split

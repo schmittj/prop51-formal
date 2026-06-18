@@ -714,6 +714,15 @@ Status:
       i.e. the split-final-term factorial solo sum cleared directly against
       `(10/7)^a`; this is weaker than the `partialExpUpperFast` solo shell and
       is converted internally to the same hybrid-ratio solo envelope.
+      The Lean proof-production interface also exposes the strengthened
+      product wrapper
+      `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
+      This asks for the fast split-final-term product scalar target at the
+      upper rectangle edge, but keeps the right-hand `N` factor at `posNlo a`;
+      it is therefore stronger than the TeX scalar comparison.  The conversion
+      is sound by monotonicity of the closed factorial product bound and the
+      rectangle lower bound `posNlo a ≤ N`, and the code documents this
+      deliberate Lean-side strengthening.
       The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -729,7 +738,9 @@ Status:
       `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`; its
       upper-edge sibling
       `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsUpperEdgeTail`
-      only asks for that solo target at `N = posNhi a`.
+      only asks for that solo target at `N = posNhi a`.  The strengthened
+      product/upper-edge solo route is exposed by
+      `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

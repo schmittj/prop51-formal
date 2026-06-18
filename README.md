@@ -281,6 +281,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`
   proves that it is enough to supply this direct solo check at
   `N = posNhi a`, with monotonicity filling the positive rectangle.
+  A Lean-only strengthened product sibling
+  `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
+  asks for the fast split-final-term product scalar checks only at the upper
+  rectangle edge, while deliberately keeping the right-hand `N` factor at
+  `posNlo a`.  This is stronger than the TeX scalar comparison and is
+  documented in code; the conversion uses monotonicity of the closed
+  factorial product bound and the lower rectangle bound `posNlo a ≤ N`.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -291,7 +298,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   for the fast-evaluator certificate shape.  The direct solo-envelope variant
   is exposed as `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`;
   the structured direct ten-sevenths solo variant is exposed as
-  `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`.
+  `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`, with
+  `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`
+  exposing the strengthened product/upper-edge solo route.
   For final
   assembly from
   these lower-level product and solo proofs,

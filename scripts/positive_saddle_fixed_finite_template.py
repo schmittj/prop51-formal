@@ -289,6 +289,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-ten-sevenths-upper-edge",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take the strengthened "
+            "upper-edge/lower-N fast split-final-term product target and the "
+            "split-final-term solo target cleared directly against (10/7)^a "
+            "only at N = posNhi a"
+        ),
+    )
+    parser.add_argument(
         "--final-tail-tempered-raw-exp-ratio-reserve-bounds",
         action="store_true",
         help=(
@@ -719,6 +729,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_closed_factorial_split_block_sum_fast_product_solo_envelope,
         args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths,
         args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge,
+        args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge,
         args.final_tail_tempered_raw_exp_ratio_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_tempered_reserve_bounds,
         args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds,
@@ -1211,6 +1222,7 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
                 or args.final_tail_closed_factorial_split_block_sum_fast_product_solo_envelope
                 or args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths
                 or args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge
+                or args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge
             )
             and "Prop51.PositiveSaddleHybridRatioCertificate" not in imports
         ):
@@ -1418,6 +1430,15 @@ def final_tail_type(args: argparse.Namespace) -> str:
 
 
 def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
+    if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge:
+        return [
+            "    (product :",
+            "      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate)",
+            "    (soloY :",
+            "      ∀ {a : Nat}, 2000 < a →",
+            "        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared",
+            "          a (posNhi a)) :",
+        ]
     if args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
         return [
             "    (product :",
@@ -1580,6 +1601,11 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
 
 
 def final_tail_arg(args: argparse.Namespace) -> str:
+    if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge:
+        return (
+            "(positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge "
+            "product soloY)"
+        )
     if args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
         return (
             "(positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge "
@@ -2111,6 +2137,10 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
     if args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
         emit_args.append(
             "--final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths-upper-edge"
+        )
+    if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge:
+        emit_args.append(
+            "--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-ten-sevenths-upper-edge"
         )
     if args.final_tail_tempered_raw_exp_ratio_reserve_bounds:
         emit_args.append("--final-tail-tempered-raw-exp-ratio-reserve-bounds")
@@ -4731,7 +4761,12 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
 
     if args.emit_final:
         if args.active_row_covers:
-            if args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
+            if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail"
+                )
+                final_arg = "product soloY"
+            elif args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductSoloTenSeventhsUpperEdgeTail"
                 )
@@ -4921,6 +4956,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate"
                 )
                 final_arg = final_tail_arg(args)
+        elif args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_ten_sevenths_upper_edge:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail"
+            )
+            final_arg = "product soloY"
         elif args.final_tail_closed_factorial_split_block_sum_fast_product_solo_ten_sevenths_upper_edge:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastProductSoloTenSeventhsUpperEdgeTail"
