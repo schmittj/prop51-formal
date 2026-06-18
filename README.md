@@ -277,7 +277,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared`;
   this is another Lean proof-production target, weaker than the
   `partialExpUpperFast` solo shell and converted internally to the same solo
-  envelope.  Its upper-edge reduction
+  envelope.  The bridge
+  `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared`
+  now also lets a proof of the stronger fast solo shell feed this direct
+  `(10/7)^a` target.  Its upper-edge reduction
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`
   proves that it is enough to supply this direct solo check at
   `N = posNhi a`, with monotonicity filling the positive rectangle.
@@ -312,7 +315,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`, with
   `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`
   exposing the direct audit route for the strengthened product/upper-edge
-  solo target.  The canonical refined-atomic version is exposed as
+  solo target.  The stronger fast-solo upper-edge bridge is exposed as
+  `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloFastUpperEdgeTail`.
+  The canonical refined-atomic version is exposed as
   `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`,
   while the preferred concrete hybrid-ratio version is exposed as
   `...TemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
@@ -645,6 +650,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   For the concrete strengthened product plus upper-edge solo tail whose
   candidate side is already closed by those certificates, use
   `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-ten-sevenths-closed-reserve-solo-upper-edge-product-upper-edge-lower-n-bounds`.
+  If the solo witness is produced in the stronger fast-shell form at
+  `N = posNhi a`, use
+  `--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-fast-upper-edge`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

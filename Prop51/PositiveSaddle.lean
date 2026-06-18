@@ -19445,6 +19445,27 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
     ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
 
+/-- The fast split-final-term solo shell is stronger than the direct
+`(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
+applied. -/
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared
+    {a N : Nat} (ha : 2000 < a)
+    (h :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a N) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a N := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared at h
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+  rw [partialExpUpperFast_eq] at h
+  have ha_nonneg : 0 ≤ (a : ℚ) := by exact_mod_cast Nat.zero_le a
+  have hcoef : 0 ≤ 29 * (a : ℚ) * c a :=
+    mul_nonneg (mul_nonneg (by norm_num) ha_nonneg) (c_nonneg a)
+  exact h.trans
+    (mul_le_mul_of_nonneg_left
+      (partialExpUpper_positiveSoloYExponent_eight_le_tenSevenths_pow ha)
+      hcoef)
+
 /-- Since the direct split-final-term solo target is monotone increasing in
 `N` on the left and its right side is independent of `N`, checking it at the
 upper rectangle edge `posNhi a` implies the same target throughout the

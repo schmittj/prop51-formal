@@ -713,7 +713,11 @@ Status:
       `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared`,
       i.e. the split-final-term factorial solo sum cleared directly against
       `(10/7)^a`; this is weaker than the `partialExpUpperFast` solo shell and
-      is converted internally to the same hybrid-ratio solo envelope.
+      is converted internally to the same hybrid-ratio solo envelope.  The
+      bridge
+      `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared`
+      now lets a proof of the stronger fast solo shell feed this direct
+      `(10/7)^a` target as well.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
@@ -751,6 +755,8 @@ Status:
       only asks for that solo target at `N = posNhi a`.  The strengthened
       product/upper-edge solo route is exposed by
       `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`,
+      the stronger fast-solo upper-edge bridge by
+      `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloFastUpperEdgeTail`,
       and the canonical refined-atomic sibling by
       `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
       The preferred concrete hybrid-ratio sibling is
@@ -1046,6 +1052,9 @@ Status:
       For the concrete strengthened product plus upper-edge solo tail whose
       candidate side is already closed by those certificates, use
       `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-ten-sevenths-closed-reserve-solo-upper-edge-product-upper-edge-lower-n-bounds`.
+      If the solo witness is produced in the stronger fast-shell form at
+      `N = posNhi a`, use
+      `--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-fast-upper-edge`.
       Since the upper-middle target is now supplied by Lean, the helper
       `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
       the product bounds and solo `Y` envelope as large-tail inputs on this
