@@ -1362,6 +1362,31 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
     (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundHybrid_soloFastUpperEdgeBoundHybrid
       product soloY)
 
+/-- Final assembly from the fixed-edge finite route and the full surrogate
+large-tail proof-production shape.  The finite prefix bound fields and
+finite prefix scalar budgets are both generated chunks. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen productALen productTailKLen soloALen : Nat}
+    {xBound yBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+        xBound yBound productALen productTailKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+        soloBound soloALen) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundFullHybrid_soloFastUpperEdgeBoundFullHybrid
+      product soloY)
+
 /-- Final assembly from the fixed-edge finite route, the strengthened
 upper-edge/lower-`N` product target, and the stronger fast split-factorial
 solo shell checked only at the upper rectangle edge. -/
@@ -1644,6 +1669,30 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite
     (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundHybrid_soloFastUpperEdgeBoundHybrid
+      product soloY)
+
+/-- Final assembly from the row-active finite route and the full surrogate
+large-tail proof-production shape. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen productALen productTailKLen soloALen : Nat}
+    {xBound yBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+        xBound yBound productALen productTailKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate
+        soloBound soloALen) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundFullHybrid_soloFastUpperEdgeBoundFullHybrid
       product soloY)
 
 /-- Final assembly from the row-active finite route, the strengthened

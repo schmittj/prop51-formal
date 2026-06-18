@@ -768,7 +768,10 @@ Status:
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
       The separate-factor sibling capstones are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundSoloBoundTail`
-      and its row-active analogue.
+      and its row-active analogue.  The full-hybrid sibling capstones are
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
+      and its row-active analogue, and the generator emits that shape with
+      `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-full-solo-bound-full`.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.

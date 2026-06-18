@@ -337,7 +337,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
   The separate-factor sibling capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundSoloBoundTail`
-  and the corresponding row-active theorem.
+  and the corresponding row-active theorem.  The full-hybrid sibling
+  capstones are
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
+  and its row-active theorem; the generator selects them with
+  `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-full-solo-bound-full`.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
