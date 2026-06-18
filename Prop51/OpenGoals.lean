@@ -114,6 +114,20 @@ theorem LargeTailSoloCertificate.ofSharpGcompSaddleTenSeventhsCleared
       positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
         (by omega : 2000 < a) hrect (hsharp ha hrect)
 
+theorem LargeTailSoloCertificate.ofSharpGcompClosedFactorialSplitBlockSumTenSeventhsClearedUpperEdge
+    (hsharpEdge :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    LargeTailSoloCertificate :=
+  LargeTailSoloCertificate.ofSharpGcompSaddleTenSeventhsCleared
+    (by
+      intro a N ha hrect
+      exact
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+          (positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+            hrect (hsharpEdge ha)))
+
 theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)

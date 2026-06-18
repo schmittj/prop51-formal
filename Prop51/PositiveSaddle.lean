@@ -19876,6 +19876,60 @@ def positiveLargeTailSoloSharpGcompBlockSum (a N : Nat) : ℚ :=
         ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
           Gcomp r (a - s) / (r.factorial : ℚ))
 
+/-- Sharp solo block sum with recursive `Gcomp` replaced by the closed
+composition bound. -/
+def positiveLargeTailSoloSharpGcompClosedBlockSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ Finset.range (a - s + 1),
+        ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+            GcompClosedBound r (a - s) /
+          (r.factorial : ℚ))
+
+/-- Active closed-composition inner sum for the sharp solo factor. -/
+def positiveLargeTailSoloSharpGcompClosedInnerActive
+    (N p : Nat) : ℚ :=
+  ∑ r ∈ GcompClosedActiveRange p,
+    ((2 * (N : ℚ)) / 25)^r * 3^p *
+        GcompClosedBound r p /
+      (r.factorial : ℚ)
+
+/-- Factorial-only active closed-composition inner sum for the sharp solo
+factor. -/
+def positiveLargeTailSoloSharpGcompClosedInnerFactorial
+    (N p : Nat) : ℚ :=
+  ∑ r ∈ GcompClosedActiveRange p,
+    ((2 * (N : ℚ)) / 25)^r * 3^p *
+        (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+      (r.factorial : ℚ)
+
+/-- Sharp solo closed block sum with inactive closed-composition terms
+removed. -/
+def positiveLargeTailSoloSharpGcompClosedActiveBlockSum
+    (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      positiveLargeTailSoloSharpGcompClosedInnerActive N (a - s)
+
+/-- Sharp solo closed block sum in factorial-only active form. -/
+def positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+    (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s)
+
+/-- Sharp solo factorial-only block sum with the final linear-exponential
+term split off. -/
+def positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+    (a N : Nat) : ℚ :=
+  (∑ s ∈ Finset.range a,
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ GcompClosedPositiveRange (a - s),
+        ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+            (4^(r - 1) * ((a - s - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ))) +
+    (((N : ℚ) / 2 * c 1 / 2)^a / (a.factorial : ℚ))
+
 /-- Solo block sum with recursive `Gcomp` replaced by the closed composition
 bound. -/
 def positiveLargeTailSoloGcompClosedBlockSum (a N : Nat) : ℚ :=
@@ -19971,6 +20025,212 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N
   exact positiveLargeTailYGcompClosedFactorialSplitBlockSum_mono_N
     (j := a) hNM
 
+/-- On the active range, the sharp closed-composition bound is the
+factorial expression. -/
+theorem positiveLargeTailSoloSharpGcompClosedInnerActive_eq_factorial
+    (N p : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerActive N p =
+      positiveLargeTailSoloSharpGcompClosedInnerFactorial N p := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerActive
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  refine Finset.sum_congr rfl fun r hr => ?_
+  rw [GcompClosedBound_eq_factorial_of_mem_active hr]
+
+@[simp] theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_zero
+    (N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N 0 = 1 := by
+  simp [positiveLargeTailSoloSharpGcompClosedInnerFactorial]
+
+@[simp] theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_one
+    (N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N 1 = 0 := by
+  simp [positiveLargeTailSoloSharpGcompClosedInnerFactorial,
+    GcompClosedActiveRange_one]
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    {N p : Nat} (hp : 0 < p) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N p =
+      ∑ r ∈ GcompClosedPositiveRange p,
+        ((2 * (N : ℚ)) / 25)^r * 3^p *
+            (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  rw [GcompClosedActiveRange_eq_positiveRange_of_pos hp]
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerActive_eq_all
+    (N p : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerActive N p =
+      ∑ r ∈ Finset.range (p + 1),
+        ((2 * (N : ℚ)) / 25)^r * 3^p *
+            GcompClosedBound r p /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerActive
+  exact Finset.sum_subset (GcompClosedActiveRange_subset_range p)
+    (fun r hr hnot => by
+      have hz := GcompClosedBound_eq_zero_of_mem_range_not_active hr hnot
+      simp [hz])
+
+theorem positiveLargeTailSoloSharpGcompClosedActiveBlockSum_eq_closedBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedActiveBlockSum a N =
+      positiveLargeTailSoloSharpGcompClosedBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompClosedActiveBlockSum
+    positiveLargeTailSoloSharpGcompClosedBlockSum
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [positiveLargeTailSoloSharpGcompClosedInnerActive_eq_all]
+
+theorem positiveLargeTailSoloSharpGcompClosedActiveBlockSum_eq_factorialBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedActiveBlockSum a N =
+      positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompClosedActiveBlockSum
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [positiveLargeTailSoloSharpGcompClosedInnerActive_eq_factorial]
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_closedBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N =
+      positiveLargeTailSoloSharpGcompClosedBlockSum a N := by
+  rw [← positiveLargeTailSoloSharpGcompClosedActiveBlockSum_eq_factorialBlockSum,
+    positiveLargeTailSoloSharpGcompClosedActiveBlockSum_eq_closedBlockSum]
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_initPositiveRange_add_last
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N =
+      (∑ s ∈ Finset.range a,
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          (∑ r ∈ GcompClosedPositiveRange (a - s),
+            ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+                (4^(r - 1) * ((a - s - 2*r + 1).factorial : ℚ)) /
+              (r.factorial : ℚ))) +
+        (((N : ℚ) / 2 * c 1 / 2)^a / (a.factorial : ℚ)) := by
+  unfold positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+  rw [show a + 1 = Nat.succ a by omega, Finset.sum_range_succ]
+  simp only [Nat.sub_self,
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial_zero, mul_one]
+  congr 1
+  refine Finset.sum_congr rfl fun s hs => ?_
+  have hslt : s < a := by simpa using hs
+  have hp : 0 < a - s := by omega
+  rw [positiveLargeTailSoloSharpGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    (N := N) hp]
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_splitBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N =
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_initPositiveRange_add_last]
+  rfl
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N =
+      positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N :=
+  (positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_splitBlockSum
+    a N).symm
+
+theorem positiveLargeTailSoloSharpGcompClosedBlockSum_nonneg
+    (a N : Nat) :
+    0 ≤ positiveLargeTailSoloSharpGcompClosedBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompClosedBlockSum
+  refine Finset.sum_nonneg fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hinner_nonneg :
+      0 ≤ ∑ r ∈ Finset.range (a - s + 1),
+        ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+            GcompClosedBound r (a - s) /
+          (r.factorial : ℚ) := by
+    refine Finset.sum_nonneg fun r _ => ?_
+    have hcoef_nonneg :
+        0 ≤ ((2 * (N : ℚ)) / 25)^r * 3^(a - s) := by
+      positivity
+    have hnum_nonneg :
+        0 ≤ ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+            GcompClosedBound r (a - s) :=
+      mul_nonneg hcoef_nonneg (GcompClosedBound_nonneg r (a - s))
+    have hdenpos : (0 : ℚ) < (r.factorial : ℚ) := by
+      exact_mod_cast r.factorial_pos
+    exact div_nonneg hnum_nonneg hdenpos.le
+  exact mul_nonneg hlin_nonneg hinner_nonneg
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_nonneg
+    (a N : Nat) :
+    0 ≤ positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_closedBlockSum]
+  exact positiveLargeTailSoloSharpGcompClosedBlockSum_nonneg a N
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_nonneg
+    (a N : Nat) :
+    0 ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  exact positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_nonneg a N
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_nonneg
+    (N p : Nat) :
+    0 ≤ positiveLargeTailSoloSharpGcompClosedInnerFactorial N p := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  refine Finset.sum_nonneg fun r _ => ?_
+  positivity
+
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_mono_N
+    {N M p : Nat} (hNM : N ≤ M) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N p
+      ≤ positiveLargeTailSoloSharpGcompClosedInnerFactorial M p := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hbase :
+      (2 * (N : ℚ)) / 25 ≤ (2 * (M : ℚ)) / 25 := by
+    have hNMq : (N : ℚ) ≤ (M : ℚ) := by exact_mod_cast hNM
+    exact div_le_div_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hNMq (by norm_num : (0 : ℚ) ≤ 2))
+      (by norm_num : (0 : ℚ) ≤ 25)
+  have hpow :
+      ((2 * (N : ℚ)) / 25)^r ≤ ((2 * (M : ℚ)) / 25)^r :=
+    pow_le_pow_left₀
+      (by positivity : 0 ≤ (2 * (N : ℚ)) / 25) hbase r
+  have hcoef :
+      0 ≤ 3^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ) := by
+    positivity
+  simpa [mul_assoc, div_eq_mul_inv] using
+    mul_le_mul_of_nonneg_right hpow hcoef
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_mono_N
+    {a N M : Nat} (hNM : N ≤ M) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N
+      ≤ positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a M := by
+  unfold positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin :
+      (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+        ≤ (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) :=
+    positiveLargeTailYGcompClosedFactorialLinear_mono_N hNM
+  have hinner :
+      positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s)
+        ≤ positiveLargeTailSoloSharpGcompClosedInnerFactorial M (a - s) :=
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial_mono_N hNM
+  have hinner_nonneg :
+      0 ≤ positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s) :=
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial_nonneg N (a - s)
+  have hlin_nonneg :
+      0 ≤ (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul hlin hinner hinner_nonneg hlin_nonneg
+
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
+    {a N M : Nat} (hNM : N ≤ M) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
+      ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a M := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum,
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  exact positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_mono_N hNM
+
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
 theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
@@ -20015,6 +20275,34 @@ theorem positiveLargeTailSoloGcompBlockSum_le_closedBlockSum (a N : Nat) :
       ≤ positiveLargeTailSoloGcompClosedBlockSum a N := by
   unfold positiveLargeTailSoloGcompClosedBlockSum
   exact positiveLargeTailYGcompBlockSum_le_closedBlockSum N a
+
+/-- The explicit sharp solo `Gcomp` double sum is bounded by the sharp
+closed-composition version. -/
+theorem positiveLargeTailSoloSharpGcompBlockSum_le_closedBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloSharpGcompBlockSum a N
+      ≤ positiveLargeTailSoloSharpGcompClosedBlockSum a N := by
+  unfold positiveLargeTailSoloSharpGcompBlockSum
+    positiveLargeTailSoloSharpGcompClosedBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  refine mul_le_mul_of_nonneg_left ?_ hlin_nonneg
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hcoef_nonneg :
+      0 ≤ ((2 * (N : ℚ)) / 25)^r * 3^(a - s) := by
+    positivity
+  have hnum :
+      ((2 * (N : ℚ)) / 25)^r * 3^(a - s) * Gcomp r (a - s)
+        ≤ ((2 * (N : ℚ)) / 25)^r * 3^(a - s) *
+            GcompClosedBound r (a - s) :=
+    mul_le_mul_of_nonneg_left (Gcomp_le_closedBound r (a - s))
+      hcoef_nonneg
+  have hdenpos : (0 : ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  exact div_le_div_of_nonneg_right hnum hdenpos.le
 
 /-- Denominator-cleared large-tail solo saddle target in the decomposed
 linear/nonlinear sum form. -/
@@ -20103,6 +20391,16 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
     (a N : Nat) : Prop :=
   (4 : ℚ) * (2 : ℚ)^a *
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+    ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
+
+/-- Sharp split-final-term solo target with the final `(10/7)^a` envelope.
+
+This is the next solo completion target: after upper-edge monotonicity it only
+needs to be proved at `N = posNhi a` for all `a ≥ 3000`. -/
+def positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a *
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
     ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
 
 /-- The fast split-final-term solo shell is stronger than the direct
@@ -20202,6 +20500,27 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
         ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
             a (posNhi a) :=
     positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
+/-- The sharp split-final-term solo target is also reduced to the upper
+rectangle edge. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a)) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a N := by
+  unfold
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    at hEdge ⊢
+  have hsum :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N
+        ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            a (posNhi a) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
+      hrect.2
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
 
@@ -20421,6 +20740,37 @@ theorem positiveLargeTailSoloGcompSaddleTenSeventhsCleared_of_closedFactorialSpl
                 a N).symm
       _ = positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N :=
               (positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum
+                a N).symm
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hQ_le_split hscale).trans h
+
+theorem positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+    {a N : Nat}
+    (h :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a N) :
+    positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N := by
+  unfold
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared at *
+  have hQ_le_split :
+      QqSharpGcompBound N a
+        ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            a N := by
+    calc
+      QqSharpGcompBound N a
+          = positiveLargeTailSoloSharpGcompSaddleSum a N :=
+              (positiveLargeTailSoloSharpGcompSaddleSum_eq_QqSharpGcompBound
+                a N).symm
+      _ ≤ positiveLargeTailSoloSharpGcompBlockSum a N :=
+              positiveLargeTailSoloSharpGcompSaddleSum_le_blockSum a N
+      _ ≤ positiveLargeTailSoloSharpGcompClosedBlockSum a N :=
+              positiveLargeTailSoloSharpGcompBlockSum_le_closedBlockSum a N
+      _ = positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N :=
+              (positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_closedBlockSum
+                a N).symm
+      _ = positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N :=
+              (positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum
                 a N).symm
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   exact (mul_le_mul_of_nonneg_left hQ_le_split hscale).trans h
