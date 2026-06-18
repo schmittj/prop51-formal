@@ -3433,6 +3433,90 @@ theorem positiveLargeTailYGcompClosedFactorialLinear_mono_N
       hbase s
   exact div_le_div_of_nonneg_right hpow (by positivity)
 
+/-- Multiplicative rectangle-edge scaling for the outer `Y` linear factor. -/
+theorem positiveLargeTailYGcompClosedFactorialLinear_le_scaled_of_natCast_le
+    {N M s : Nat} {R : ℚ} (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+      ≤ R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) := by
+  have hbase :
+      (M : ℚ) / 2 * c 1 / 2
+        ≤ R * ((N : ℚ) / 2 * c 1 / 2) := by
+    rw [c_one]
+    nlinarith
+  have hpow :
+      ((M : ℚ) / 2 * c 1 / 2)^s
+        ≤ (R * ((N : ℚ) / 2 * c 1 / 2))^s :=
+    pow_le_pow_left₀
+      (by rw [c_one]; positivity : 0 ≤ (M : ℚ) / 2 * c 1 / 2)
+      hbase s
+  calc
+    (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+        ≤ (R * ((N : ℚ) / 2 * c 1 / 2))^s /
+            (s.factorial : ℚ) :=
+          div_le_div_of_nonneg_right hpow (by positivity)
+    _ = R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) := by
+          rw [mul_pow]
+          ring
+
+/-- Multiplicative rectangle-edge scaling for the factorial-only `Y` inner
+closed-composition sum.  Active inner terms have nonlinear degree at most
+the remaining total degree, so the slack factor is `R^p`. -/
+theorem positiveLargeTailYGcompClosedInnerFactorial_le_scaled_of_natCast_le
+    {N M p : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailYGcompClosedInnerFactorial M p
+      ≤ R^p * positiveLargeTailYGcompClosedInnerFactorial N p := by
+  have hR0 : 0 ≤ R := by linarith
+  unfold positiveLargeTailYGcompClosedInnerFactorial
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun r hr => ?_
+  let C : ℚ :=
+    6^p *
+      (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)
+  have hr_le_p : r ≤ p := by
+    have hpred := (Finset.mem_filter.mp hr).2
+    rcases hpred with hzero | hpos
+    · omega
+    · omega
+  have hbase :
+      (M : ℚ) / 50 ≤ R * ((N : ℚ) / 50) := by
+    nlinarith
+  have hpow_base :
+      ((M : ℚ) / 50)^r ≤ (R * ((N : ℚ) / 50))^r :=
+    pow_le_pow_left₀ (by positivity : 0 ≤ (M : ℚ) / 50)
+      hbase r
+  have hpow_scaled :
+      ((M : ℚ) / 50)^r ≤ R^p * ((N : ℚ) / 50)^r := by
+    have hRpow : R^r ≤ R^p := pow_le_pow_right₀ hR1 hr_le_p
+    have hNpow_nonneg : 0 ≤ ((N : ℚ) / 50)^r := by positivity
+    calc
+      ((M : ℚ) / 50)^r
+          ≤ R^r * ((N : ℚ) / 50)^r := by
+            simpa [mul_pow] using hpow_base
+      _ ≤ R^p * ((N : ℚ) / 50)^r :=
+          mul_le_mul_of_nonneg_right hRpow hNpow_nonneg
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  calc
+    ((M : ℚ) / 50)^r * 6^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)
+        = ((M : ℚ) / 50)^r * C := by
+          dsimp [C]
+          ring
+    _ ≤ (R^p * ((N : ℚ) / 50)^r) * C :=
+          mul_le_mul_of_nonneg_right hpow_scaled hC_nonneg
+    _ = R^p *
+        (((N : ℚ) / 50)^r * 6^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)) := by
+          dsimp [C]
+          ring
+
 /-- The factorial-only `X` closed block sum is monotone in the rectangle
 variable `N`. -/
 theorem positiveLargeTailXGcompClosedFactorialBlockSum_mono_N
@@ -3482,6 +3566,82 @@ theorem positiveLargeTailYGcompClosedFactorialBlockSum_mono_N
     rw [c_one]
     positivity
   exact mul_le_mul hlin hinner hinner_nonneg hlin_nonneg
+
+/-- Multiplicative rectangle-edge scaling for the factorial-only `Y` block
+sum.  Each term has total `N`-degree at most `j`. -/
+theorem positiveLargeTailYGcompClosedFactorialBlockSum_le_scaled_of_natCast_le
+    {N M j : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailYGcompClosedFactorialBlockSum M j
+      ≤ R^j * positiveLargeTailYGcompClosedFactorialBlockSum N j := by
+  have hR0 : 0 ≤ R := by linarith
+  unfold positiveLargeTailYGcompClosedFactorialBlockSum
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun s hs => ?_
+  have hsle : s ≤ j := by
+    have hslt : s < j + 1 := by simpa using hs
+    omega
+  have hlin :
+      (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+        ≤ R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) :=
+    positiveLargeTailYGcompClosedFactorialLinear_le_scaled_of_natCast_le
+      hM
+  have hinner :
+      positiveLargeTailYGcompClosedInnerFactorial M (j - s)
+        ≤ R^(j - s) *
+          positiveLargeTailYGcompClosedInnerFactorial N (j - s) :=
+    positiveLargeTailYGcompClosedInnerFactorial_le_scaled_of_natCast_le
+      hR1 hM
+  have hinner_nonneg :
+      0 ≤ positiveLargeTailYGcompClosedInnerFactorial M (j - s) :=
+    positiveLargeTailYGcompClosedInnerFactorial_nonneg M (j - s)
+  have hlinN_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hlin_scaled_nonneg :
+      0 ≤ R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) :=
+    mul_nonneg (pow_nonneg hR0 s) hlinN_nonneg
+  have hprod :
+      (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailYGcompClosedInnerFactorial M (j - s)
+        ≤
+      (R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ))) *
+        (R^(j - s) *
+          positiveLargeTailYGcompClosedInnerFactorial N (j - s)) :=
+    mul_le_mul hlin hinner hinner_nonneg hlin_scaled_nonneg
+  have hpow : R^s * R^(j - s) = R^j := by
+    rw [← pow_add]
+    congr 1
+    omega
+  calc
+    (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailYGcompClosedInnerFactorial M (j - s)
+        ≤
+      (R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ))) *
+        (R^(j - s) *
+          positiveLargeTailYGcompClosedInnerFactorial N (j - s)) := hprod
+    _ = R^j *
+        ((((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailYGcompClosedInnerFactorial N (j - s)) := by
+          rw [← hpow]
+          ring
+
+/-- Split-final-term form of the multiplicative rectangle-edge scaling for
+the factorial-only `Y` block sum. -/
+theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_le_scaled_of_natCast_le
+    {N M j : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum M j
+      ≤ R^j * positiveLargeTailYGcompClosedFactorialSplitBlockSum N j := by
+  rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum M j,
+    ← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum N j]
+  exact positiveLargeTailYGcompClosedFactorialBlockSum_le_scaled_of_natCast_le
+    hR1 hM
 
 /-- The split-final-term factorial-only `X` closed block sum is monotone in
 the rectangle variable `N`.  This is kept as a rewrite from the canonical
