@@ -725,6 +725,38 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
   positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_soloFastUpperEdge
     product.toUpperEdgeLowerNCertificate soloY.toUpperEdge
 
+/-- Build the preferred concrete hybrid-ratio tail from surrogate product
+and solo bound certificates.
+
+This is the practical endpoint for generated rational upper bounds: the
+expensive split-factorial sums are bounded separately, while the final
+budget checks only involve the supplied rational surrogates. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNProductBound_soloFastUpperEdgeBound
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+        xyBound)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_soloFastUpperEdge
+    product.toUpperEdgeLowerNCertificate soloY.toUpperEdge
+
+/-- Build the preferred concrete hybrid-ratio tail from prefix/large hybrid
+surrogate certificates for the final product and solo budgets. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    {productALen productKLen soloALen : Nat}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate
+        xyBound productALen productKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate
+        soloBound soloALen) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNProductBound_soloFastUpperEdgeBound
+    product.toProductBoundCertificate soloY.toBoundCertificate
+
 /-- Audit-certificate wrapper for the strengthened product target and a
 stronger fast solo shell checked only at `N = posNhi a`. -/
 theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumFastCleared_upperEdge
@@ -749,6 +781,34 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNHyb
       PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate soloALen) :
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNHybrid_soloFastUpperEdgeHybrid
+    product soloY).toLargeTailAuditCertificate
+
+/-- Audit-certificate wrapper for surrogate product and solo bound
+certificates. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBound_soloFastUpperEdgeBound
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+        xyBound)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNProductBound_soloFastUpperEdgeBound
+    product soloY).toLargeTailAuditCertificate
+
+/-- Audit-certificate wrapper for prefix/large hybrid surrogate product and
+solo bound certificates. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    {productALen productKLen soloALen : Nat}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate
+        xyBound productALen productKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate
+        soloBound soloALen) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid
     product soloY).toLargeTailAuditCertificate
 
 /-- Large-tail audit certificate with fast split-final-term product targets

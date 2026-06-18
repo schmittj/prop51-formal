@@ -303,6 +303,18 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNHybrid_soloFastUpperEdgeHybrid`
   assembles those two hybrid certificates into the same preferred concrete
   large-tail audit target.
+  A further proof-production layer avoids putting the expensive split sums
+  themselves inside the final Boolean atoms:
+  `Prop51.PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate`
+  bounds the upper-edge product by a rational surrogate `xyBound`, and
+  `Prop51.PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate`
+  bounds the upper-edge solo split sum by a surrogate `soloBound`.  Their
+  scalar chunks then check only the final budgets against those surrogates,
+  while the separate bound fields record the Lean-side step back to the TeX
+  split-factorial sums.  The wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
+  assembles this surrogate route into the same preferred large-tail audit
+  target.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper

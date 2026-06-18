@@ -14462,6 +14462,37 @@ def positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpp
       positiveTemperedLargeExpFast a k *
         ((posNlo a : ℚ) * c k * c (posJ a k))
 
+/-- Product of the two split-final-term factorial product bounds at the
+upper rectangle edge.  This is the expensive finite sum product that the
+bound-certificate interface below may replace by a smaller rational
+surrogate. -/
+def positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+    (a k : Nat) : ℚ :=
+  positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
+    positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
+
+/-- Small-branch upper-edge/lower-`N` product target after replacing the
+actual split-factorial product by an externally supplied rational bound.
+
+This is a proof-production interface: the TeX scalar inequality is still
+proved via the actual split sums, but generated Lean witnesses may first
+prove that those sums are bounded by a cheaper rational expression. -/
+def positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+    (xyBound : Nat → Nat → ℚ) (a k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) * xyBound a k
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExpFast a k *
+        ((posNlo a : ℚ) * c k * c (posJ a k))
+
+/-- Tempered-branch upper-edge/lower-`N` product target after replacing the
+actual split-factorial product by an externally supplied rational bound. -/
+def positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+    (xyBound : Nat → Nat → ℚ) (a k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) * xyBound a k
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExpFast a k *
+        ((posNlo a : ℚ) * c k * c (posJ a k))
+
 /-- The strengthened upper-edge/lower-`N` small product target implies the
 ordinary fast split-final-term target at every `N` in the rectangle. -/
 theorem positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
@@ -14850,6 +14881,140 @@ structure PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastEx
         positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
           a k
 
+/-- Product-bound proof-production wrapper for the strengthened final
+product target.
+
+The field `productBound` isolates the expensive split-factorial product
+from the final scalar comparisons.  This is the intended Lean translation
+point for generated rational upper bounds: prove the bound once, then check
+the small and tempered budget inequalities against the cheaper `xyBound`.
+-/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+    (xyBound : Nat → Nat → ℚ) : Prop where
+  productBound :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+        ≤ xyBound a k
+  smallScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+          xyBound a k
+  temperedScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+          xyBound a k
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate.toUpperEdgeLowerNCertificate
+    {xyBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+        xyBound) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate where
+  smallScalar := by
+    intro a k ha hk hsmall
+    have hscalar := cert.smallScalar ha hk hsmall
+    unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      at hscalar
+    have hprod := cert.productBound ha hk
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+      at hprod
+    unfold
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+      positivity
+    have hleft :
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            positiveLargeTailProductXClosedFactorialSplitBlockBound
+              a (posNhi a) k *
+              positiveLargeTailProductYClosedFactorialSplitBlockBound
+                a (posNhi a) k
+          ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+              xyBound a k := by
+      simpa [mul_assoc] using
+        mul_le_mul_of_nonneg_left hprod hscale
+    exact hleft.trans hscalar
+  temperedScalar := by
+    intro a k ha hk htempered
+    have hscalar := cert.temperedScalar ha hk htempered
+    unfold
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+      at hscalar
+    have hprod := cert.productBound ha hk
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+      at hprod
+    unfold
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+      positivity
+    have hleft :
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            positiveLargeTailProductXClosedFactorialSplitBlockBound
+              a (posNhi a) k *
+              positiveLargeTailProductYClosedFactorialSplitBlockBound
+                a (posNhi a) k
+          ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+              xyBound a k := by
+      simpa [mul_assoc] using
+        mul_le_mul_of_nonneg_left hprod hscale
+    exact hleft.trans hscalar
+
+/-- Variant of the product-bound wrapper for generators that estimate the
+upper-edge `X` and `Y` factors separately. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+    (xBound yBound : Nat → Nat → ℚ) : Prop where
+  xBound_le :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ xBound a k
+  yBound_le :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ yBound a k
+  smallScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+  temperedScalar :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate.toProductBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+        xBound yBound) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+      (fun a k => xBound a k * yBound a k) where
+  productBound := by
+    intro a k ha hk
+    unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+    have hx := cert.xBound_le ha hk
+    have hy := cert.yBound_le ha hk
+    have hYnonneg :
+        0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k :=
+      positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k
+    have hXBoundNonneg : 0 ≤ xBound a k :=
+      (positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+        a (posNhi a) k).trans hx
+    exact mul_le_mul hx hy hYnonneg hXBoundNonneg
+  smallScalar := cert.smallScalar
+  temperedScalar := cert.temperedScalar
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate.toUpperEdgeLowerNCertificate
+    {xBound yBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+        xBound yBound) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate :=
+  cert.toProductBoundCertificate.toUpperEdgeLowerNCertificate
+
 theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate.toClosedFactorialSplitBlockSumScalarFastExpCertificate
     (cert :
       PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
@@ -14968,6 +15133,16 @@ theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpU
       positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
   cert.toClosedFactorialSplitBlockSumScalarFastExpCertificate
     |>.toProductBoundsCertificate
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate.toProductBoundsCertificate
+    {xyBound : Nat → Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+        xyBound) :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  cert.toUpperEdgeLowerNCertificate.toProductBoundsCertificate
 
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -19434,6 +19609,14 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpperFast (positiveSoloYExponent a) (8 * a)
 
+/-- Fast solo upper-edge target after replacing the actual split-factorial
+solo sum by an externally supplied rational bound. -/
+def positiveLargeTailSoloFastUpperEdgeBoundScalar
+    (soloBound : Nat → ℚ) (a : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * soloBound a
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpperFast (positiveSoloYExponent a) (8 * a)
+
 /-- Denominator-cleared split-final-term solo target with the final
 `(10/7)^a` envelope directly on the right.
 
@@ -19486,6 +19669,43 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upp
     positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N hrect.2
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
+/-- Solo-bound proof-production wrapper for the fast upper-edge target.
+
+The field `soloBound_le` isolates the expensive split-factorial solo sum
+from the final exponential budget.  This is a Lean-side bookkeeping layer
+for generated rational bounds; the conversion below records that it implies
+the canonical fast upper-edge solo target. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate
+    (soloBound : Nat → ℚ) : Prop where
+  soloBound_le :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+        ≤ soloBound a
+  soloScalar :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloFastUpperEdgeBoundScalar soloBound a
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate.toUpperEdge
+    {soloBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound) :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a) := by
+  intro a ha
+  have hscalar := cert.soloScalar ha
+  unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hleft :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            a (posNhi a)
+        ≤ (4 : ℚ) * (2 : ℚ)^a * soloBound a := by
+    simpa [mul_assoc] using
+      mul_le_mul_of_nonneg_left (cert.soloBound_le ha) hscale
+  exact hleft.trans hscalar
 
 /-- Since the direct split-final-term solo target is monotone increasing in
 `N` on the left and its right side is independent of `N`, checking it at the
@@ -19908,6 +20128,15 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedF
     (fun {a N} ha hrect =>
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
         (a := a) (N := N) hrect (hY (a := a) ha))
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate.toSoloYBoundCertificate
+    {soloBound : Nat → ℚ}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared_upperEdge
+    cert.toUpperEdge
 
 /-- Large-tail solo certificate reduced to the split-final-term
 factorial-only active closed-composition target with the final `(10/7)^a`

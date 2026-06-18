@@ -735,6 +735,18 @@ Status:
       `positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNHybrid_soloFastUpperEdgeHybrid`
       assembles those two hybrid certificates into the preferred concrete
       large-tail audit target.
+      Because direct prefix atoms for the final split sums are too expensive
+      to be the expected generated route, Lean now also exposes rational
+      surrogate versions:
+      `PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate`
+      and
+      `PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate`.
+      These keep the proof faithful to the same split-factorial estimates:
+      separate fields prove the actual upper-edge product/solo sums are below
+      `xyBound` and `soloBound`, while the generated prefix chunks check only
+      the final scalar budgets against those cheaper bounds.  The wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
+      assembles the surrogate route into the same large-tail audit target.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
