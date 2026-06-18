@@ -14958,6 +14958,17 @@ theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpC
       positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
   cert.toClosedFactorialSplitBlockSumScalarCertificate.toProductBoundsCertificate
 
+/-- The strengthened upper-edge/lower-`N` product target feeds the standard
+large-tail product-bounds interface after the monotonicity conversion. -/
+theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate.toProductBoundsCertificate
+    (cert :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  cert.toClosedFactorialSplitBlockSumScalarFastExpCertificate
+    |>.toProductBoundsCertificate
+
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
       Nat → Nat → Nat → ℚ}

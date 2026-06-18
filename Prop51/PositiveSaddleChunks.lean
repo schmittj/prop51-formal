@@ -7993,6 +7993,71 @@ theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloEn
     PositiveSaddleLargeTailAuditCertificate :=
   cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
 
+/-- Concrete refined-atomic large-tail route whose product proof is supplied
+by the strengthened upper-edge/lower-`N` split-factorial certificate and
+whose solo proof is supplied only at the upper rectangle edge.
+
+This is a Lean proof-production strengthening of the TeX-facing scalar
+targets, not a new mathematical estimate.  The product field converts through
+`PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate.toProductBoundsCertificate`,
+and the solo field is transported across the rectangle by
+`positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`.
+-/
+structure PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate :
+    Prop where
+  product :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate
+  soloY :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a)
+  temperedLowerRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedLowerRawExpRatioCertificate
+  temperedUpperReverseRawExpRatio :
+    PositiveSaddleLargeTailCandidateTemperedUpperReverseRawExpRatioCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound where
+  productBounds := cert.product.toProductBoundsCertificate
+  soloY := by
+    intro a N ha hrect
+    exact
+      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+        (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+          (a := a) (N := N) hrect (cert.soloY (a := a) ha))
+  temperedLowerRawExpRatio := cert.temperedLowerRawExpRatio
+  temperedUpperReverseRawExpRatio := cert.temperedUpperReverseRawExpRatio
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  cert.toTemperedRawExpRatioTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    |>.toRefinedAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailAtomicBoundsAuditCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toLargeTailAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
 /-- Large-tail bounds certificate with cross-multiplied tempered adjacent-step
 atoms and with the small first-reserve atom filled automatically.
 

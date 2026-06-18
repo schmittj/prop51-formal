@@ -722,7 +722,12 @@ Status:
       it is therefore stronger than the TeX scalar comparison.  The conversion
       is sound by monotonicity of the closed factorial product bound and the
       rectangle lower bound `posNlo a ≤ N`, and the code documents this
-      deliberate Lean-side strengthening.
+      deliberate Lean-side strengthening.  It now feeds both the direct audit
+      wrapper and the canonical refined atomic-bounds route through
+      `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`,
+      whose remaining inputs are exactly the upper-edge split-factorial
+      ten-sevenths solo check and the two quotient-form tempered raw-exp
+      atoms.
       The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -740,7 +745,9 @@ Status:
       `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsUpperEdgeTail`
       only asks for that solo target at `N = posNhi a`.  The strengthened
       product/upper-edge solo route is exposed by
-      `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`.
+      `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`,
+      and the canonical refined-atomic sibling by
+      `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

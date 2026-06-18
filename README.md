@@ -287,7 +287,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   rectangle edge, while deliberately keeping the right-hand `N` factor at
   `posNlo a`.  This is stronger than the TeX scalar comparison and is
   documented in code; the conversion uses monotonicity of the closed
-  factorial product bound and the lower rectangle bound `posNlo a ≤ N`.
+  factorial product bound and the lower rectangle bound `posNlo a ≤ N`.  The
+  structured refined-atomic sibling
+  `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`
+  combines this product witness with the upper-edge split-factorial
+  ten-sevenths solo check and the two quotient-form tempered raw-exp atoms,
+  then converts back to the canonical refined atomic-bounds route.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -300,7 +305,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   the structured direct ten-sevenths solo variant is exposed as
   `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`, with
   `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`
-  exposing the strengthened product/upper-edge solo route.
+  exposing the direct audit route for the strengthened product/upper-edge
+  solo target.  The canonical refined-atomic version is exposed as
+  `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
   For final
   assembly from
   these lower-level product and solo proofs,
