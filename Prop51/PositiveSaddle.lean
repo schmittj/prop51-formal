@@ -21981,6 +21981,36 @@ theorem positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum_scaled_le_factorial
   · rw [if_neg hdeep, if_neg hdeep]
     norm_num
 
+theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_factorialCrude
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
+      ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a +
+        positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a := by
+  have hhead :=
+    positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum_scaled_le_factorialCrude
+      (a := a) ha
+  have hdelta :=
+    positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum_scaled_le_factorialCrude
+      (a := a) ha
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
+        =
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum a +
+          positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum a) := by
+          rw [positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_eq_head_add_delta]
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum a := by
+          ring
+    _ ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a +
+        positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a :=
+          add_le_add hhead hdelta
+
 theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_succ_le
     {a s : Nat}
     (hnext : 4 ≤ a - (s + 1) ∧ 3 * (a - (s + 1)) < a) :
