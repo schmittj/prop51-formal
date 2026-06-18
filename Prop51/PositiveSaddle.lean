@@ -17602,6 +17602,21 @@ theorem partialExpUpper_positiveSoloYExponent_eight_le_tenSevenths_pow
       (partialExpUpper_threeTenths_eight_le_tenSevenths_pow
         (a := a) (by omega : 0 < a))
 
+/-- Linear-exponential/nonlinear-block sum for the large-tail solo `Gcomp`
+majorant.  This is definitionally close to the TeX saddle sum, while
+`QqEplusGcompBound` itself is the recurrence-level evaluator used by Lean. -/
+def positiveLargeTailSoloGcompSaddleSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      EplusGcompBound N (a - s)
+
+/-- Denominator-cleared large-tail solo saddle target in the decomposed
+linear/nonlinear sum form. -/
+def positiveLargeTailSoloGcompSaddleSumCleared (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * positiveLargeTailSoloGcompSaddleSum a N
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpper (positiveSoloYExponent a) (8 * a)
+
 /-- Denominator-cleared large-tail solo `Gcomp` saddle target.
 
 This is the variable-cutoff analogue of
@@ -17611,6 +17626,25 @@ def positiveLargeTailSoloGcompSaddleCleared (a N : Nat) : Prop :=
   (4 : ℚ) * (2 : ℚ)^a * QqEplusGcompBound N a
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpper (positiveSoloYExponent a) (8 * a)
+
+/-- The sum-cleared and recurrence-cleared solo saddle targets are the same
+inequality after expanding `QqEplusGcompBound` into its exact linear
+exponential and nonlinear `EplusGcompBound` majorant. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared
+    (a N : Nat) :
+    positiveLargeTailSoloGcompSaddleCleared a N ↔
+      positiveLargeTailSoloGcompSaddleSumCleared a N := by
+  unfold positiveLargeTailSoloGcompSaddleCleared
+    positiveLargeTailSoloGcompSaddleSumCleared
+    positiveLargeTailSoloGcompSaddleSum
+  rw [QqEplusGcompBound_eq_linear_EplusGcompBound_sum]
+
+/-- Convert the decomposed sum target back to the recurrence-level cleared
+solo saddle estimate. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_of_sumCleared
+    {a N : Nat} (h : positiveLargeTailSoloGcompSaddleSumCleared a N) :
+    positiveLargeTailSoloGcompSaddleCleared a N :=
+  (positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared a N).2 h
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/

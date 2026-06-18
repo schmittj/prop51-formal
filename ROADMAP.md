@@ -789,7 +789,12 @@ Status:
       `positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared`
       converting that cleared saddle input into the preferred `(10/7)^a`
       solo envelope.  This is a Lean-side quotient-clearing refinement of the
-      same TeX solo saddle estimate.
+      same TeX solo saddle estimate.  Lean also exposes the decomposed
+      finite-sum target `positiveLargeTailSoloGcompSaddleSumCleared`; the
+      equivalence `positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared`
+      follows from `QqEplusGcompBound_eq_linear_EplusGcompBound_sum`, so
+      subsequent analytic work can estimate the TeX-shaped linear/nonlinear
+      block sum without changing the audit interface.
       The older staging
       wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`

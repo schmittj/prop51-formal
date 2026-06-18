@@ -738,6 +738,68 @@ theorem Qq_le_EplusGcompBound (N m : Nat) :
             rw [Hcoef_of_ge_two h2] at h
             simpa [h0, h1, mul_assoc] using h) m)
 
+private theorem QqEplusGcompBoundSeries_eq_linear_mul_EplusGcompBoundSeries
+    (N : Nat) :
+    expSeries
+        (fun j =>
+          if j = 0 then 0
+          else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+          else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ))
+      =
+      expSeries (linearExpSeq (((N : ℚ) / 2) * c 1 / 2)) *
+        expSeries
+          (fun j =>
+            if j < 2 then 0
+            else ((N : ℚ) / 50) * 6^j *
+              ((j - 1).factorial : ℚ)) := by
+  rw [expSeries_mul]
+  congr 1
+  funext j
+  cases j with
+  | zero =>
+      simp [linearExpSeq]
+  | succ j =>
+      cases j with
+      | zero =>
+          simp [linearExpSeq]
+      | succ j =>
+          simp [linearExpSeq]
+
+/-- Finite decomposition of the `QqEplusGcompBound` majorant into the exact
+linear exponential and the nonlinear `EplusGcompBound` recurrence.
+
+This is the majorant analogue of `Qq_eq_linear_Eplus_sum`; it is useful for
+large-tail solo estimates because it exposes the same summation variable used
+in the TeX saddle argument instead of leaving one opaque `expCoeff`
+recurrence. -/
+theorem QqEplusGcompBound_eq_linear_EplusGcompBound_sum (N m : Nat) :
+    QqEplusGcompBound N m =
+      ∑ s ∈ Finset.range (m+1),
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          EplusGcompBound N (m-s) := by
+  have hcoeff := congrArg (fun F : ℚ⟦X⟧ => coeff m F)
+    (QqEplusGcompBoundSeries_eq_linear_mul_EplusGcompBoundSeries N)
+  change
+      coeff m
+          (expSeries
+            (fun j =>
+              if j = 0 then 0
+              else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+              else ((N : ℚ) / 50) * 6^j *
+                ((j - 1).factorial : ℚ)))
+        =
+        coeff m
+          (expSeries (linearExpSeq (((N : ℚ) / 2) * c 1 / 2)) *
+            expSeries
+              (fun j =>
+                if j < 2 then 0
+                else ((N : ℚ) / 50) * 6^j *
+                  ((j - 1).factorial : ℚ))) at hcoeff
+  rw [coeff_expSeries, coeff_mul,
+    Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
+  simpa [QqEplusGcompBound, EplusGcompBound, expCoeff_linearExpSeq,
+    mul_assoc] using hcoeff
+
 /-- Positive `B` majorant split into its exact linear exponential and the
 nonlinear coefficients of `exp(NH)`. -/
 private theorem BplusSeries_eq_linear_mul_BplusNonlinearSeries (N : Nat) :

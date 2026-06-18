@@ -316,7 +316,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared`
   converts it back to the displayed `(10/7)^a` envelope, and
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared`
-  exposes this as the current proof-facing large-tail wrapper.  The older
+  exposes this as the current proof-facing large-tail wrapper.  The same
+  target opens into the TeX-shaped linear/nonlinear finite sum
+  `Prop51.positiveLargeTailSoloGcompSaddleSumCleared` via
+  `Prop51.positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared`, using
+  `Prop51.QqEplusGcompBound_eq_linear_EplusGcompBound_sum`.  The older
   staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and
