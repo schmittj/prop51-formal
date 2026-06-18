@@ -238,6 +238,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.PositiveSaddleLargeTailProductClosedBlockSumScalarCertificate`, and
   the corresponding audit wrapper is
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedBlockSumScalars_soloGcompClosedBlockSumCleared`.
+  The aliases `Prop51.positiveLargeTailXGcompClosedActiveBlockSum`,
+  `Prop51.positiveLargeTailYGcompClosedActiveBlockSum`, and
+  `Prop51.positiveLargeTailSoloGcompClosedActiveBlockSum` remove the inactive
+  zero `GcompClosedBound` terms while proving equality to the all-range sums.
   For final
   assembly from
   these lower-level product and solo proofs,

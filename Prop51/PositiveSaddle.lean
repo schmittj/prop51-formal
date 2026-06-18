@@ -2673,6 +2673,76 @@ def positiveLargeTailYGcompClosedBlockSum (N j : Nat) : ℚ :=
             GcompClosedBound r (j - s) /
           (r.factorial : ℚ))
 
+/-- Active closed-composition inner sum for the product-side `X` factor. -/
+def positiveLargeTailXGcompClosedInnerActive (N p : Nat) : ℚ :=
+  ∑ r ∈ GcompClosedActiveRange p,
+    ((N : ℚ) * (4/25))^r * 6^p *
+        GcompClosedBound r p /
+      (r.factorial : ℚ)
+
+/-- Active closed-composition inner sum for the product-side `Y`/solo factor. -/
+def positiveLargeTailYGcompClosedInnerActive (N p : Nat) : ℚ :=
+  ∑ r ∈ GcompClosedActiveRange p,
+    ((N : ℚ) / 50)^r * 6^p *
+        GcompClosedBound r p /
+      (r.factorial : ℚ)
+
+theorem positiveLargeTailXGcompClosedInnerActive_eq_all (N p : Nat) :
+    positiveLargeTailXGcompClosedInnerActive N p =
+      ∑ r ∈ Finset.range (p + 1),
+        ((N : ℚ) * (4/25))^r * 6^p *
+            GcompClosedBound r p /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailXGcompClosedInnerActive
+  exact Finset.sum_subset (GcompClosedActiveRange_subset_range p)
+    (fun r hr hnot => by
+      have hz := GcompClosedBound_eq_zero_of_mem_range_not_active hr hnot
+      simp [hz])
+
+theorem positiveLargeTailYGcompClosedInnerActive_eq_all (N p : Nat) :
+    positiveLargeTailYGcompClosedInnerActive N p =
+      ∑ r ∈ Finset.range (p + 1),
+        ((N : ℚ) / 50)^r * 6^p *
+            GcompClosedBound r p /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailYGcompClosedInnerActive
+  exact Finset.sum_subset (GcompClosedActiveRange_subset_range p)
+    (fun r hr hnot => by
+      have hz := GcompClosedBound_eq_zero_of_mem_range_not_active hr hnot
+      simp [hz])
+
+/-- Product-side `X` closed block sum with the inactive `GcompClosedBound`
+terms removed from the inner range. -/
+def positiveLargeTailXGcompClosedActiveBlockSum (N k : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (k + 1),
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) *
+      positiveLargeTailXGcompClosedInnerActive N (k - s)
+
+/-- Product-side `Y` closed block sum with the inactive `GcompClosedBound`
+terms removed from the inner range. -/
+def positiveLargeTailYGcompClosedActiveBlockSum (N j : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (j + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      positiveLargeTailYGcompClosedInnerActive N (j - s)
+
+theorem positiveLargeTailXGcompClosedActiveBlockSum_eq_closedBlockSum
+    (N k : Nat) :
+    positiveLargeTailXGcompClosedActiveBlockSum N k =
+      positiveLargeTailXGcompClosedBlockSum N k := by
+  unfold positiveLargeTailXGcompClosedActiveBlockSum
+    positiveLargeTailXGcompClosedBlockSum
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [positiveLargeTailXGcompClosedInnerActive_eq_all]
+
+theorem positiveLargeTailYGcompClosedActiveBlockSum_eq_closedBlockSum
+    (N j : Nat) :
+    positiveLargeTailYGcompClosedActiveBlockSum N j =
+      positiveLargeTailYGcompClosedBlockSum N j := by
+  unfold positiveLargeTailYGcompClosedActiveBlockSum
+    positiveLargeTailYGcompClosedBlockSum
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [positiveLargeTailYGcompClosedInnerActive_eq_all]
+
 theorem positiveLargeTailXGcompClosedBlockSum_nonneg (N k : Nat) :
     0 ≤ positiveLargeTailXGcompClosedBlockSum N k := by
   unfold positiveLargeTailXGcompClosedBlockSum
@@ -18052,6 +18122,19 @@ def positiveLargeTailSoloGcompBlockSum (a N : Nat) : ℚ :=
 bound. -/
 def positiveLargeTailSoloGcompClosedBlockSum (a N : Nat) : ℚ :=
   positiveLargeTailYGcompClosedBlockSum N a
+
+/-- Solo closed block sum with the inactive `GcompClosedBound` terms removed
+from the inner range. -/
+def positiveLargeTailSoloGcompClosedActiveBlockSum (a N : Nat) : ℚ :=
+  positiveLargeTailYGcompClosedActiveBlockSum N a
+
+theorem positiveLargeTailSoloGcompClosedActiveBlockSum_eq_closedBlockSum
+    (a N : Nat) :
+    positiveLargeTailSoloGcompClosedActiveBlockSum a N =
+      positiveLargeTailSoloGcompClosedBlockSum a N := by
+  unfold positiveLargeTailSoloGcompClosedActiveBlockSum
+    positiveLargeTailSoloGcompClosedBlockSum
+  exact positiveLargeTailYGcompClosedActiveBlockSum_eq_closedBlockSum N a
 
 theorem positiveLargeTailSoloGcompClosedBlockSum_nonneg (a N : Nat) :
     0 ≤ positiveLargeTailSoloGcompClosedBlockSum a N := by

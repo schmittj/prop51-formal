@@ -269,6 +269,38 @@ theorem GcompClosedBound_eq_factorial_of_pos_le {r p : Nat}
   have hr0 : r ≠ 0 := by omega
   simp [GcompClosedBound, hr0, h]
 
+/-- Active indices for the closed `Gcomp` majorant at total degree `p`.
+
+This removes exactly the all-range zero cases: the constant term
+`r = 0, p = 0`, and the positive indices satisfying `2r ≤ p`. -/
+def GcompClosedActiveRange (p : Nat) : Finset Nat :=
+  (Finset.range (p + 1)).filter fun r =>
+    (r = 0 ∧ p = 0) ∨ (1 ≤ r ∧ 2 * r ≤ p)
+
+theorem GcompClosedActiveRange_subset_range (p : Nat) :
+    GcompClosedActiveRange p ⊆ Finset.range (p + 1) := by
+  intro r hr
+  exact (Finset.mem_filter.mp hr).1
+
+theorem GcompClosedBound_eq_zero_of_mem_range_not_active
+    {r p : Nat} (hr : r ∈ Finset.range (p + 1))
+    (hnot : r ∉ GcompClosedActiveRange p) :
+    GcompClosedBound r p = 0 := by
+  have hpred :
+      ¬ ((r = 0 ∧ p = 0) ∨ (1 ≤ r ∧ 2 * r ≤ p)) := by
+    intro h
+    exact hnot (Finset.mem_filter.mpr ⟨hr, h⟩)
+  by_cases hr0 : r = 0
+  · subst r
+    have hp0 : p ≠ 0 := by
+      intro hp
+      exact hpred (Or.inl ⟨rfl, hp⟩)
+    simp [GcompClosedBound, hp0]
+  · have hr1 : 1 ≤ r := by omega
+    by_cases hle : 2 * r ≤ p
+    · exact False.elim (hpred (Or.inr ⟨hr1, hle⟩))
+    · exact GcompClosedBound_eq_zero_of_lt (by omega)
+
 theorem Gcomp_le_closedBound (r p : Nat) :
     Gcomp r p ≤ GcompClosedBound r p := by
   by_cases hr0 : r = 0

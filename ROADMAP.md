@@ -669,6 +669,12 @@ Status:
       the closed product scalar obligations, and
       `positiveSaddleLargeTailAuditCertificate_of_productClosedBlockSumScalars_soloGcompClosedBlockSumCleared`
       combines them with the closed solo block-sum target.
+      The active aliases
+      `positiveLargeTailXGcompClosedActiveBlockSum`,
+      `positiveLargeTailYGcompClosedActiveBlockSum`, and
+      `positiveLargeTailSoloGcompClosedActiveBlockSum` remove the inactive
+      zero `GcompClosedBound` indices and are proved equal to the all-range
+      closed sums.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
