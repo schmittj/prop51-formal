@@ -23,15 +23,13 @@ of Proposition 5.1 there).
   bridge `b_a(μ) ≤ U_a(N)` (paper eq. 8) together cover every relevant
   genus `g ≤ 1199` and every positive partition.
 * `a ≥ 401` (effective analytic bound): formalized as a family of conditional
-  positive-saddle certificates.  The sign-lock side is closed; the preferred
-  current finite-window interface uses table-backed exact raw-product chunks,
-  tangent-edge cells, displayed-solo chunks, and default unit-cleared edge
-  `k`-chunks.  The most concrete exposed endpoint also chunks the
-  tangent-edge and edge checks and fixes the edge scale to
-  `positiveEdgeUniformScaleMin`; final assembly is exposed below by
-  `coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableSingletonNChunksTangentEdgeChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`.
-  A concrete instance of that audit certificate would upgrade the capstone to
-  full `CoefficientNegativity`.
+  positive-saddle certificates.  The sign-lock side is closed; the canonical
+  proof-facing endpoint is now the row-active fixed-edge finite-window
+  certificate paired with the refined atomic large-tail interface, exposed
+  below as
+  `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`.
+  Older table-backed and non-active capstones remain available as audit and
+  profiling interfaces, but are not the intended final production route.
 -/
 import Prop51.Defs
 import Prop51.Partitions

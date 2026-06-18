@@ -729,7 +729,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   strategy.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
-  `--emit-single-chunk-manifest`.
+  `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the
+  generator command, chunk lengths, git commit, and dirty-status metadata.
   When
   common product-row and tangent-row lengths are enough, the
   `RawProductTableFixedProductTangentRowNChunksFixedScale...` capstone

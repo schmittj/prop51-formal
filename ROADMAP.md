@@ -593,6 +593,8 @@ Status:
       route mirroring the fixed-edge tail interface family, from parts and
       product/solo bounds through atomic/refined bounds, grouped raw-cleared
       reserves, and the quotient/crossmul ten-sevenths tail shapes.
+      Manifest and dry-run JSON now include the generator command, chunk
+      lengths, git commit, and dirty-status metadata for reproducibility.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

@@ -61,7 +61,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from pathlib import Path
 import re
+import shlex
+import subprocess
 import sys
 
 
@@ -70,6 +73,38 @@ LEAN_MODULE_RE = re.compile(
     r"^[A-Za-z_][A-Za-z0-9_']*(\.[A-Za-z_][A-Za-z0-9_']*)*$"
 )
 DRY_RUN_SAMPLE_AS = (401, 1000, 2000)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def git_output(*args: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=PROJECT_ROOT,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return result.stdout.strip()
+
+
+def reproducibility_metadata() -> dict[str, object]:
+    status = git_output("status", "--porcelain")
+    try:
+        script_path = str(Path(sys.argv[0]).resolve().relative_to(PROJECT_ROOT))
+    except ValueError:
+        script_path = sys.argv[0]
+    return {
+        "argv": sys.argv[:],
+        "command": shlex.join(sys.argv),
+        "script": script_path,
+        "git_commit": git_output("rev-parse", "HEAD"),
+        "git_dirty": None if status is None else bool(status),
+        "git_status_porcelain": None if status is None else status.splitlines(),
+    }
 
 
 def positive_nat(text: str) -> int:
@@ -1379,6 +1414,9 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "when the final product factors have separate rational surrogate",
         "bounds `xBound` and `yBound` before multiplying in the scalar",
         "budget chunks.",
+        "Use the `...-hybrid-ratio-chunked-xy-bound-full-solo-bound-full`",
+        "variant when those surrogate bounds and the scalar budgets are both",
+        "supplied through finite-prefix Boolean chunks.",
         "-/",
     ]
 
@@ -2475,7 +2513,9 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "cover_mode": "row-active" if args.active_row_covers else "global",
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
+        "chunk_lengths": dry_run_chunk_lengths(args),
         "extra_imports": args.extra_import,
+        "reproducibility": reproducibility_metadata(),
         "total": len(specs),
         "counts": counts,
         "chunks": chunks,
@@ -2627,6 +2667,7 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
         "chunk_lengths": dry_run_chunk_lengths(args),
+        "reproducibility": reproducibility_metadata(),
         "dimensions": dimensions,
         "counts": counts,
         "total": total,
@@ -3040,6 +3081,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "count_mode": count_mode,
         "note": note,
         "chunk_lengths": dry_run_chunk_lengths(args),
+        "reproducibility": reproducibility_metadata(),
         "dimensions": active_dimensions,
         "counts": active_counts,
         "total": sum(active_counts.values()),
