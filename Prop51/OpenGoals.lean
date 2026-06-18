@@ -297,13 +297,123 @@ theorem Bq_two_pos_of_large_positiveRectangle {a N : Nat} (ha : 3000 ≤ a)
     unfold posNlo at hNlo
     omega)
 
+/-! ### First retained product cell (`k = 2`) -/
+
+/-- Direct scalar budget for the first retained small-branch product cell
+after substituting the closed form
+`Bq N 2 = 5*N*(5*N-72)/72`.
+
+This is the preferred Lean surface for the `k = 2` product cell: prove a
+tight bound on the actual `Qq N (a-2)` coefficient and then discharge this
+single scalar inequality.  It intentionally avoids the coarse
+`(10/7)^(a-2)` solo envelope recorded below, which is useful only as a
+diagnostic route for this shifted index. -/
+def positiveSmallFirstCellQBudget (a N : Nat) (qBound : ℚ) : Prop :=
+  (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+      (5 * (N : ℚ) - 72) * qBound
+    ≤ 9360 * (posJ a 2 : ℚ) *
+      positiveSmallLargeExp a 2 * c (posJ a 2)
+
+/-- The direct first-cell budget using the actual `Qq` coefficient. -/
+def positiveSmallFirstCellRawQBudget (a N : Nat) : Prop :=
+  positiveSmallFirstCellQBudget a N (Qq N (posJ a 2))
+
+/-- A bound on the shifted `Qq` coefficient reduces the first-cell budget to
+the scalar `positiveSmallFirstCellQBudget` inequality. -/
+theorem positiveSmallFirstCellRawQBudget_of_QBound
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {qBound : ℚ}
+    (hQ : Qq N (posJ a 2) ≤ qBound)
+    (hbudget : positiveSmallFirstCellQBudget a N qBound) :
+    positiveSmallFirstCellRawQBudget a N := by
+  have hfactor_nonneg :
+      0 ≤ (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (N : ℚ) - 72) := by
+    have hNlo : posNlo a ≤ N := hrect.1
+    have hN15 : 15 ≤ N := by
+      unfold posNlo at hNlo
+      omega
+    have hNfactor : 0 ≤ (5 : ℚ) * (N : ℚ) - 72 := by
+      have h75 : (75 : ℚ) ≤ 5 * (N : ℚ) := by
+        exact_mod_cast (by nlinarith : 75 ≤ 5 * N)
+      linarith
+    positivity
+  have hscaled :=
+    mul_le_mul_of_nonneg_left hQ hfactor_nonneg
+  unfold positiveSmallFirstCellRawQBudget positiveSmallFirstCellQBudget
+  exact hscaled.trans hbudget
+
+/-- The direct `Qq` first-cell budget implies the live raw-cleared product
+target for `k = 2`.
+
+The proof is just algebra plus the closed form for `Bq N 2`; it is kept as a
+small named bridge so later analytic work can focus on bounding
+`Qq N (a-2)` rather than expanding the full product target. -/
+theorem positiveSmallLargeXYProductRawCleared_two_of_rawQBudget
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    (hbudget : positiveSmallFirstCellRawQBudget a N) :
+    positiveSmallLargeXYProductRawCleared a N 2 := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by
+    exact_mod_cast positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hscale_nonneg : 0 ≤ (5 * (N : ℚ) / 36 : ℚ) := by
+    positivity
+  have hbudget' := hbudget
+  unfold positiveSmallFirstCellRawQBudget positiveSmallFirstCellQBudget
+    at hbudget'
+  have hscaled :
+      (5 * (N : ℚ) / 36) *
+          ((2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+            (5 * (N : ℚ) - 72) * Qq N (posJ a 2))
+        ≤
+      (5 * (N : ℚ) / 36) *
+          (9360 * (posJ a 2 : ℚ) *
+            positiveSmallLargeExp a 2 * c (posJ a 2)) :=
+    mul_le_mul_of_nonneg_left hbudget' hscale_nonneg
+  have hc2 : c 2 = 5 := by
+    rw [c_succ_succ]
+    norm_num [c_one]
+  unfold positiveSmallLargeXYProductRawCleared
+  calc
+    2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+        Bq N 2 * Qq N (posJ a 2)
+        =
+      (5 * (N : ℚ) / 36) *
+        ((2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (N : ℚ) - 72) * Qq N (posJ a 2)) := by
+          rw [Bq_two]
+          ring
+    _ ≤
+      (5 * (N : ℚ) / 36) *
+        (9360 * (posJ a 2 : ℚ) *
+          positiveSmallLargeExp a 2 * c (posJ a 2)) := hscaled
+    _ =
+      130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+        positiveSmallLargeExp a 2 *
+          ((N : ℚ) * c 2 * c (posJ a 2)) := by
+          rw [hc2]
+          ring
+
+/-- Combined first-cell bridge from a direct `Qq` upper bound and its scalar
+budget. -/
+theorem positiveSmallLargeXYProductRawCleared_two_of_QBound
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    {qBound : ℚ}
+    (hQ : Qq N (posJ a 2) ≤ qBound)
+    (hbudget : positiveSmallFirstCellQBudget a N qBound) :
+    positiveSmallLargeXYProductRawCleared a N 2 :=
+  positiveSmallLargeXYProductRawCleared_two_of_rawQBudget ha hrect
+    (positiveSmallFirstCellRawQBudget_of_QBound ha hrect hQ hbudget)
+
 /-- Explicit first retained product-cell budget after replacing
 `Y_{a-2}(N)` by the ten-sevenths solo envelope.
 
 This is intentionally stated before cancelling common positive factors, so it
 matches the denominator-cleared raw product target exactly.  The nontrivial
 remaining analytic point is that the needed `Y` envelope is at index
-`posJ a 2 = a-2`, while `N` remains in the larger `a`-rectangle. -/
+`posJ a 2 = a-2`, while `N` remains in the larger `a`-rectangle.
+
+This coarse route is retained for audit/diagnostic comparison only; the direct
+`Qq` first-cell bridge above is the intended completion-facing surface. -/
 def positiveSmallFirstCellTenSeventhsRawBudget (a N : Nat) : Prop :=
   2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) * Bq N 2 *
       (((N : ℚ) / 2) * c (posJ a 2) / (2 : ℚ)^(posJ a 2) *
@@ -469,6 +579,39 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLo
             exact hNgt)
         omega
       · exact htemperedGeThree ha hrect hk htemperedN hnotLock (by omega) hB)
+
+/-- Product-tail constructor where the first retained cell is supplied by a
+direct bound for `Qq N (a-2)`.
+
+This is the completion-facing refinement of
+`ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement`: the `k = 2`
+small-branch field is reduced to the tight first-cell `Qq` budget above,
+while the true tail still starts at `k ≥ 3` and keeps the same sign-lock and
+positive-`Bq` reductions. -/
+theorem LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
+    {qBound : Nat → Nat → ℚ}
+    (hQTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        Qq N (posJ a 2) ≤ qBound a N)
+    (hbudgetTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallFirstCellQBudget a N (qBound a N))
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha hrect
+      exact positiveSmallLargeXYProductRawCleared_two_of_QBound
+        ha hrect (hQTwo ha hrect) (hbudgetTwo ha hrect))
+    hsmallGeThree htemperedGeThree
 
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
