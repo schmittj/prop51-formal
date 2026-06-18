@@ -2518,6 +2518,7 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "reproducibility": reproducibility_metadata(),
         "total": len(specs),
         "counts": counts,
+        "cell_estimates": dry_run_cell_estimates(args, counts),
         "chunks": chunks,
     }
     if args.manifest_shard_count is not None:
@@ -2650,6 +2651,55 @@ def dry_run_chunk_lengths(args: argparse.Namespace) -> dict[str, int | None]:
     }
 
 
+def dry_run_cell_estimates(
+    args: argparse.Namespace, counts: dict[str, int]
+) -> dict[str, object]:
+    product_cells = (
+        args.product_row_len * args.n_len * active_product_k_len(args)
+    )
+    tangent_cells = (
+        args.tangent_row_len * args.tangent_n_len * args.tangent_k_len
+    )
+    solo_saddle_cells = args.solo_saddle_row_len * args.solo_saddle_n_len
+    solo_budget_cells = args.solo_budget_row_len * args.solo_budget_n_len
+    edge_k_len = (
+        args.edge_k_len
+        if args.strategy == "combined-product-nk-tangent-solo-n-fixed-edge-k-chunked"
+        else 20
+    )
+    edge_cells = args.edge_row_len * edge_k_len
+    max_cells_by_field = {
+        "product-small": product_cells,
+        "product-tempered": product_cells,
+        "product-combined": product_cells,
+        "tangent": args.tangent_row_len * args.tangent_k_len,
+        "tangent-n": tangent_cells,
+        "solo-saddle": args.solo_saddle_row_len,
+        "solo-saddle-n": solo_saddle_cells,
+        "solo-budget": args.solo_budget_row_len,
+        "solo-budget-n": solo_budget_cells,
+        "edge": edge_cells,
+        "edge-fixed": edge_cells,
+    }
+    present_max = {
+        field: max_cells_by_field[field]
+        for field in sorted(counts)
+        if field in max_cells_by_field
+    }
+    total_upper = {
+        field: counts[field] * present_max[field] for field in present_max
+    }
+    return {
+        "note": (
+            "Conservative loop-cell upper bounds for each generated atom; "
+            "actual active cells may be smaller near chunk boundaries."
+        ),
+        "max_cells_per_atom": present_max,
+        "total_cells_upper_bound": total_upper,
+        "total_cells_upper_bound_all": sum(total_upper.values()),
+    }
+
+
 def emit_dry_run_counts(args: argparse.Namespace) -> str:
     if args.active_row_covers:
         counts, dimensions = count_active_single_chunk_atoms(args)
@@ -2670,6 +2720,7 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
         "reproducibility": reproducibility_metadata(),
         "dimensions": dimensions,
         "counts": counts,
+        "cell_estimates": dry_run_cell_estimates(args, counts),
         "total": total,
         "materialized_chunks": False,
     }
@@ -3084,6 +3135,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "reproducibility": reproducibility_metadata(),
         "dimensions": active_dimensions,
         "counts": active_counts,
+        "cell_estimates": dry_run_cell_estimates(args, active_counts),
         "total": sum(active_counts.values()),
         "global_dimensions": global_dimensions,
         "global_counts": global_counts,

@@ -27,9 +27,9 @@ No real analysis; everything is coefficient identities over ℚ.
 
 ## Layer A′ — partition quantifier upgrade
 
-- [ ] `mem_partitions_iff`: completeness of the generator
+- [x] `mem_partitions_iff`: completeness of the generator
       (`μ ∈ partitions n ↔ μ.sum = n ∧ sorted-desc ∧ positive parts`).
-- [ ] permutation-invariance of `bCoeff` (it factors through the multiset of
+- [x] permutation-invariance of `bCoeff` (it factors through the multiset of
       parts); upgrade `bCoeff_neg_g_le_23` to the `IsPartitionOf` form.
 - [ ] optional: align with `Mathlib.Combinatorics.Partition` / `Nat.Partition`.
 
@@ -594,7 +594,8 @@ Status:
       product/solo bounds through atomic/refined bounds, grouped raw-cleared
       reserves, and the quotient/crossmul ten-sevenths tail shapes.
       Manifest and dry-run JSON now include the generator command, chunk
-      lengths, git commit, and dirty-status metadata for reproducibility.
+      lengths, conservative per-atom loop-cell estimates, git commit, and
+      dirty-status metadata for reproducibility.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed
