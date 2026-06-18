@@ -1583,6 +1583,79 @@ theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpU
         mul_assoc,
       ] using h)
 
+/-- Direct adapter from the existing product-bound certificate structure to
+the completion-facing product certificate.
+
+This is still stronger than the preferred first-cell/sign-lock-complement
+route below: the supplied `product` certificate proves the upper-edge/lower-`N`
+scalar inequalities for every live small and tempered cell.  The adapter is
+kept because generated and hybrid large-tail certificates already package
+exactly these fields, and this theorem lets such packages feed
+`Completion.lean` without unpacking their fields by hand. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundCertificate
+    {xyBound : Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+        xyBound) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsNatSignLockComplement
+    (xyBound := xyBound)
+    (by
+      intro a k ha hk
+      exact product.productBound (by omega : 2000 < a) hk)
+    (by
+      intro a k ha hk hsmall
+      exact product.smallScalar (by omega : 2000 < a) hk hsmall)
+    (by
+      intro a k ha hk htempered _hnotLock
+      exact product.temperedScalar (by omega : 2000 < a) hk htempered)
+
+/-- Separate-`X`/`Y` product-bound certificates also feed the live large-tail
+product target directly via their combined product-bound certificate. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+        xBound yBound) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundCertificate
+    product.toProductBoundCertificate
+
+/-- Hybrid prefix/large product-bound certificates can be used as a live
+large-tail product input.  The prefix chunks in the hybrid package are ignored
+by `LargeTailProductCertificate` itself, but are part of the same object used
+elsewhere to cover the `2000 < a < 3000` strip. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundHybridCertificate
+    {xyBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate
+        xyBound aLen kLen) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundCertificate
+    product.toProductBoundCertificate
+
+/-- Hybrid separate-factor product certificates can be used as a live
+large-tail product input. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundHybridCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+        xBound yBound aLen kLen) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundCertificate
+    product.toXYBoundCertificate
+
+/-- Full hybrid separate-factor product certificates can be used as a live
+large-tail product input. -/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundFullHybridCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate
+        xBound yBound aLen kLen) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundCertificate
+    product.toXYBoundCertificate
+
 /-- Separate-`X`/`Y` variant of the first-term/remainder product-bound route.
 
 The two factor majorants only serve to prove the combined `xyBound`
