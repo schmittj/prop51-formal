@@ -2673,6 +2673,58 @@ def positiveLargeTailYGcompClosedBlockSum (N j : Nat) : ℚ :=
             GcompClosedBound r (j - s) /
           (r.factorial : ℚ))
 
+theorem positiveLargeTailXGcompClosedBlockSum_nonneg (N k : Nat) :
+    0 ≤ positiveLargeTailXGcompClosedBlockSum N k := by
+  unfold positiveLargeTailXGcompClosedBlockSum
+  refine Finset.sum_nonneg fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hinner_nonneg :
+      0 ≤ ∑ r ∈ Finset.range (k - s + 1),
+        ((N : ℚ) * (4/25))^r * 6^(k - s) *
+            GcompClosedBound r (k - s) /
+          (r.factorial : ℚ) := by
+    refine Finset.sum_nonneg fun r _ => ?_
+    have hcoef_nonneg :
+        0 ≤ ((N : ℚ) * (4/25))^r * 6^(k - s) := by
+      positivity
+    have hnum_nonneg :
+        0 ≤ ((N : ℚ) * (4/25))^r * 6^(k - s) *
+            GcompClosedBound r (k - s) :=
+      mul_nonneg hcoef_nonneg (GcompClosedBound_nonneg r (k - s))
+    have hdenpos : (0 : ℚ) < (r.factorial : ℚ) := by
+      exact_mod_cast r.factorial_pos
+    exact div_nonneg hnum_nonneg hdenpos.le
+  exact mul_nonneg hlin_nonneg hinner_nonneg
+
+theorem positiveLargeTailYGcompClosedBlockSum_nonneg (N j : Nat) :
+    0 ≤ positiveLargeTailYGcompClosedBlockSum N j := by
+  unfold positiveLargeTailYGcompClosedBlockSum
+  refine Finset.sum_nonneg fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hinner_nonneg :
+      0 ≤ ∑ r ∈ Finset.range (j - s + 1),
+        ((N : ℚ) / 50)^r * 6^(j - s) *
+            GcompClosedBound r (j - s) /
+          (r.factorial : ℚ) := by
+    refine Finset.sum_nonneg fun r _ => ?_
+    have hcoef_nonneg :
+        0 ≤ ((N : ℚ) / 50)^r * 6^(j - s) := by
+      positivity
+    have hnum_nonneg :
+        0 ≤ ((N : ℚ) / 50)^r * 6^(j - s) *
+            GcompClosedBound r (j - s) :=
+      mul_nonneg hcoef_nonneg (GcompClosedBound_nonneg r (j - s))
+    have hdenpos : (0 : ℚ) < (r.factorial : ℚ) := by
+      exact_mod_cast r.factorial_pos
+    exact div_nonneg hnum_nonneg hdenpos.le
+  exact mul_nonneg hlin_nonneg hinner_nonneg
+
 theorem positiveLargeTailXGcompBlockSum_le_closedBlockSum (N k : Nat) :
     positiveLargeTailXGcompBlockSum N k
       ≤ positiveLargeTailXGcompClosedBlockSum N k := by
@@ -13500,6 +13552,16 @@ def positiveLargeTailProductXClosedBlockBound (_a N k : Nat) : ℚ :=
 def positiveLargeTailProductYClosedBlockBound (a N k : Nat) : ℚ :=
   positiveLargeTailYGcompClosedBlockSum N (posJ a k)
 
+theorem positiveLargeTailProductXClosedBlockBound_nonneg (a N k : Nat) :
+    0 ≤ positiveLargeTailProductXClosedBlockBound a N k := by
+  unfold positiveLargeTailProductXClosedBlockBound
+  exact positiveLargeTailXGcompClosedBlockSum_nonneg N k
+
+theorem positiveLargeTailProductYClosedBlockBound_nonneg (a N k : Nat) :
+    0 ≤ positiveLargeTailProductYClosedBlockBound a N k := by
+  unfold positiveLargeTailProductYClosedBlockBound
+  exact positiveLargeTailYGcompClosedBlockSum_nonneg N (posJ a k)
+
 /-- Named scalar product inequality for the small branch after both `Bplus`
 and `Qplus/Y` coefficient majorants have been opened into explicit `Gcomp`
 block sums. -/
@@ -17990,6 +18052,11 @@ def positiveLargeTailSoloGcompBlockSum (a N : Nat) : ℚ :=
 bound. -/
 def positiveLargeTailSoloGcompClosedBlockSum (a N : Nat) : ℚ :=
   positiveLargeTailYGcompClosedBlockSum N a
+
+theorem positiveLargeTailSoloGcompClosedBlockSum_nonneg (a N : Nat) :
+    0 ≤ positiveLargeTailSoloGcompClosedBlockSum a N := by
+  unfold positiveLargeTailSoloGcompClosedBlockSum
+  exact positiveLargeTailYGcompClosedBlockSum_nonneg N a
 
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
