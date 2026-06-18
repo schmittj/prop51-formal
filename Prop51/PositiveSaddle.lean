@@ -20047,6 +20047,24 @@ theorem positiveLargeTailSoloSharpGcompClosedInnerActive_eq_factorial
   simp [positiveLargeTailSoloSharpGcompClosedInnerFactorial,
     GcompClosedActiveRange_one]
 
+@[simp] theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_two
+    (N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N 2 =
+      (18 / 25 : ℚ) * (N : ℚ) := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  rw [GcompClosedActiveRange_eq_positiveRange_of_pos (p := 2) (by omega)]
+  norm_num [GcompClosedPositiveRange_eq_Icc]
+  ring
+
+@[simp] theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_three
+    (N : Nat) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial N 3 =
+      (108 / 25 : ℚ) * (N : ℚ) := by
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  rw [GcompClosedActiveRange_eq_positiveRange_of_pos (p := 3) (by omega)]
+  norm_num [GcompClosedPositiveRange_eq_Icc]
+  ring
+
 theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_eq_positiveRange_of_pos
     {N p : Nat} (hp : 0 < p) :
     positiveLargeTailSoloSharpGcompClosedInnerFactorial N p =
@@ -21482,6 +21500,56 @@ def positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
       (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
         positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
           (posNhi a) (a - s)
+
+/-- The exact exceptional degrees `p = a-s < 4` inside the very-low solo
+remainder. -/
+def positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if a - s < 4 then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+          (posNhi a) (a - s)
+    else
+      0
+
+/-- The genuinely deep low-degree part left after the exact tiny degrees are
+removed.  This is the next analytic tail target: `4 ≤ p` and `3p < a`. -/
+def positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 3 * (a - s) < a then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+          (posNhi a) (a - s)
+    else
+      0
+
+theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+      ≤ positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a +
+        positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a := by
+  unfold positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hp4 : 4 ≤ a - s
+  · have hnotTiny : ¬ a - s < 4 := by omega
+    by_cases hdeep : 3 * (a - s) < a
+    · have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+        omega
+      have hnotPropSecond : ¬ 9 * a ≤ 20 * (a - s) := by
+        omega
+      have hnotMidSecond : ¬ a ≤ 3 * (a - s) := by
+        omega
+      simp [hp4, hnotTiny, hdeep, hnotLargeSecond,
+        hnotPropSecond, hnotMidSecond]
+    · have hmidSecond : a ≤ 3 * (a - s) := Nat.le_of_not_gt hdeep
+      simp [hp4, hnotTiny, hmidSecond, hdeep]
+  · have htiny : a - s < 4 := Nat.lt_of_not_ge hp4
+    simp [hp4, htiny]
 
 theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryLow
     {a : Nat} (ha : 3000 ≤ a) :
