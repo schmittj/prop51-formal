@@ -292,6 +292,17 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`
   proves that it is enough to supply this direct solo check at
   `N = posNhi a`, with monotonicity filling the positive rectangle.
+  For proof production, the final product and fast solo witnesses now also
+  have prefix/large hybrid interfaces:
+  `Prop51.PositiveSaddleLargeTailProductFastUpperEdgeLowerNHybridCertificate`
+  and
+  `Prop51.PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate`.
+  They split the finite prefix strip `2000 < a < 3000` into generated Boolean
+  chunks and leave the `3000 ≤ a` analytic estimates as explicit fields.  The
+  wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNHybrid_soloFastUpperEdgeHybrid`
+  assembles those two hybrid certificates into the same preferred concrete
+  large-tail audit target.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper

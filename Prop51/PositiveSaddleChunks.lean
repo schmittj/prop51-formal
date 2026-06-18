@@ -1146,6 +1146,384 @@ theorem positiveProductFixedKChunksUpTo_cover
       omega, by
       omega⟩
 
+/-! ## Large-tail final product and solo prefix chunks -/
+
+/-- Boolean atom for the small-branch strengthened final product target on
+the finite prefix strip `2000 < a < 3000`.
+
+The target is the upper-edge/lower-`N` fast split-factorial product
+inequality used by the current concrete large-tail route. -/
+def checkPositiveLargeTailSmallProductFastUpperEdgeLowerN
+    (a k : Nat) : Bool :=
+  decide
+    (2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k
+      ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveSmallLargeExpFast a k *
+          ((posNlo a : ℚ) * c k * c (posJ a k)))
+
+/-- Boolean atom for the tempered-branch strengthened final product target on
+the finite prefix strip `2000 < a < 3000`. -/
+def checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN
+    (a k : Nat) : Bool :=
+  decide
+    (2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k
+      ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+        positiveTemperedLargeExpFast a k *
+          ((posNlo a : ℚ) * c k * c (posJ a k)))
+
+/-- Boolean chunk for the small-branch strengthened final product target.
+
+Rows outside `2000 < a < 3000` and `k` outside the live small branch are
+skipped, so generated chunks may safely overrun their row or retained-`k`
+covers. -/
+def checkPositiveLargeTailSmallProductFastUpperEdgeLowerNChunk
+    (aLo aLen kLo kLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' kLo kLen).all fun k =>
+      if 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a ∧
+          k ≤ ceilSqrt (posNhi a) then
+        checkPositiveLargeTailSmallProductFastUpperEdgeLowerN a k
+      else
+        true
+
+/-- Boolean chunk for the tempered-branch strengthened final product target.
+
+Rows outside `2000 < a < 3000` and `k` outside the live tempered branch are
+skipped, so generated chunks may safely overrun their row or retained-`k`
+covers. -/
+def checkPositiveLargeTailTemperedProductFastUpperEdgeLowerNChunk
+    (aLo aLen kLo kLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    (List.range' kLo kLen).all fun k =>
+      if 2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a ∧
+          ceilSqrt (posNlo a) < k then
+        checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN a k
+      else
+        true
+
+theorem checkPositiveLargeTailSmallProductFastUpperEdgeLowerN_of_chunk
+    {aLo aLen kLo kLen a k : Nat}
+    (h :
+      checkPositiveLargeTailSmallProductFastUpperEdgeLowerNChunk
+        aLo aLen kLo kLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (hk_mem : k ∈ List.range' kLo kLen)
+    (ha : 2000 < a) (haPrefix : a < 3000)
+    (hk : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt (posNhi a)) :
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+      a k := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' kLo kLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y ∈ positiveKRange x ∧
+              y ≤ ceilSqrt (posNhi x) then
+            checkPositiveLargeTailSmallProductFastUpperEdgeLowerN x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailSmallProductFastUpperEdgeLowerNChunk]
+        using h)
+  have hkAll :
+      ∀ y ∈ List.range' kLo kLen,
+        (if 2000 < a ∧ a < 3000 ∧ y ∈ positiveKRange a ∧
+              y ≤ ceilSqrt (posNhi a) then
+            checkPositiveLargeTailSmallProductFastUpperEdgeLowerN a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveLargeTailSmallProductFastUpperEdgeLowerN a k = true := by
+    have hcond :
+        2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a ∧
+          k ≤ ceilSqrt (posNhi a) :=
+      ⟨ha, haPrefix, hk, hsmall⟩
+    have hline := hkAll k hk_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  unfold positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailSmallProductFastUpperEdgeLowerN]
+      using hcheck)
+
+theorem checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN_of_chunk
+    {aLo aLen kLo kLen a k : Nat}
+    (h :
+      checkPositiveLargeTailTemperedProductFastUpperEdgeLowerNChunk
+        aLo aLen kLo kLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (hk_mem : k ∈ List.range' kLo kLen)
+    (ha : 2000 < a) (haPrefix : a < 3000)
+    (hk : k ∈ positiveKRange a)
+    (htempered : ceilSqrt (posNlo a) < k) :
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+      a k := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        ((List.range' kLo kLen).all fun y =>
+          if 2000 < x ∧ x < 3000 ∧ y ∈ positiveKRange x ∧
+              ceilSqrt (posNlo x) < y then
+            checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN x y
+          else
+            true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailTemperedProductFastUpperEdgeLowerNChunk]
+        using h)
+  have hkAll :
+      ∀ y ∈ List.range' kLo kLen,
+        (if 2000 < a ∧ a < 3000 ∧ y ∈ positiveKRange a ∧
+              ceilSqrt (posNlo a) < y then
+            checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN a y
+          else
+            true) = true :=
+    List.all_eq_true.mp (haAll a ha_mem)
+  have hcheck :
+      checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN a k = true := by
+    have hcond :
+        2000 < a ∧ a < 3000 ∧ k ∈ positiveKRange a ∧
+          ceilSqrt (posNlo a) < k :=
+      ⟨ha, haPrefix, hk, htempered⟩
+    have hline := hkAll k hk_mem
+    rw [if_pos hcond] at hline
+    exact hline
+  unfold positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN]
+      using hcheck)
+
+/-- Prefix-strip product certificate for the strengthened final product
+target.  This covers only `2000 < a < 3000`; a hybrid certificate below adds
+the separate analytic large-side theorem for `3000 ≤ a`. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixCertificate :
+    Prop where
+  smallScalar :
+    ∀ {a k : Nat}, 2000 < a → a < 3000 →
+      k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+  temperedScalar :
+    ∀ {a k : Nat}, 2000 < a → a < 3000 →
+      k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+
+/-- Chunked prefix-strip certificate for the strengthened final product
+target.
+
+The `a` chunks are the standard lower-prefix chunks `2001..2999`; the
+retained-`k` chunks are row-active and may overrun to the end of the row
+chunk. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixChunksCertificate
+    (aLen kLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  kLenPos : 0 < kLen
+  smallProductChunk :
+    ∀ {aChunk kChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      kChunk ∈
+        positiveProductFixedKChunksUpTo kLen
+          (posKmax (aChunk.1 + aChunk.2)) →
+        checkPositiveLargeTailSmallProductFastUpperEdgeLowerNChunk
+          aChunk.1 aChunk.2 kChunk.1 kChunk.2 = true
+  temperedProductChunk :
+    ∀ {aChunk kChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+      kChunk ∈
+        positiveProductFixedKChunksUpTo kLen
+          (posKmax (aChunk.1 + aChunk.2)) →
+        checkPositiveLargeTailTemperedProductFastUpperEdgeLowerNChunk
+          aChunk.1 aChunk.2 kChunk.1 kChunk.2 = true
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixChunksCertificate.toPrefixCertificate
+    {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixChunksCertificate
+        aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixCertificate where
+  smallScalar := by
+    intro a k ha haPrefix hk hsmall
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    have haBound : a ≤ aChunk.1 + aChunk.2 :=
+      (List.mem_range'_1.mp haMem).2.le
+    have hkMax :
+        k ≤ posKmax (aChunk.1 + aChunk.2) :=
+      (mem_positiveKRange.mp hk).2.trans (posKmax_mono haBound)
+    rcases positiveProductFixedKChunksUpTo_cover
+        cert.kLenPos (mem_positiveKRange.mp hk).1 hkMax with
+      ⟨kChunk, hkChunk, hkMem⟩
+    exact checkPositiveLargeTailSmallProductFastUpperEdgeLowerN_of_chunk
+      (cert.smallProductChunk haChunk hkChunk)
+      haMem hkMem ha haPrefix hk hsmall
+  temperedScalar := by
+    intro a k ha haPrefix hk htempered
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    have haBound : a ≤ aChunk.1 + aChunk.2 :=
+      (List.mem_range'_1.mp haMem).2.le
+    have hkMax :
+        k ≤ posKmax (aChunk.1 + aChunk.2) :=
+      (mem_positiveKRange.mp hk).2.trans (posKmax_mono haBound)
+    rcases positiveProductFixedKChunksUpTo_cover
+        cert.kLenPos (mem_positiveKRange.mp hk).1 hkMax with
+      ⟨kChunk, hkChunk, hkMem⟩
+    exact checkPositiveLargeTailTemperedProductFastUpperEdgeLowerN_of_chunk
+      (cert.temperedProductChunk haChunk hkChunk)
+      haMem hkMem ha haPrefix hk htempered
+
+/-- Hybrid product certificate for the strengthened final product target:
+finite prefix chunks for `2000 < a < 3000`, plus separate analytic large-side
+fields for `3000 ≤ a`. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNHybridCertificate
+    (aLen kLen : Nat) : Prop where
+  prefixChunks :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNPrefixChunksCertificate
+      aLen kLen
+  largeSmall :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+  largeTempered :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+          a k
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNHybridCertificate.toUpperEdgeLowerNCertificate
+    {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNHybridCertificate
+        aLen kLen) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate where
+  smallScalar := by
+    intro a k ha hk hsmall
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeSmall haLarge hk hsmall
+    · exact cert.prefixChunks.toPrefixCertificate.smallScalar
+        ha (Nat.lt_of_not_ge haLarge) hk hsmall
+  temperedScalar := by
+    intro a k ha hk htempered
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeTempered haLarge hk htempered
+    · exact cert.prefixChunks.toPrefixCertificate.temperedScalar
+        ha (Nat.lt_of_not_ge haLarge) hk htempered
+
+/-- Boolean atom for the final fast solo target at the upper rectangle edge
+on the finite prefix strip `2000 < a < 3000`. -/
+def checkPositiveLargeTailSoloFastUpperEdge (a : Nat) : Bool :=
+  decide
+    ((4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)
+      ≤ 29 * (a : ℚ) * c a *
+        partialExpUpperFast (positiveSoloYExponent a) (8 * a))
+
+/-- Boolean chunk for the final fast solo target at the upper rectangle edge.
+
+Rows outside `2000 < a < 3000` are skipped, so generated chunks may safely
+overrun the prefix endpoint. -/
+def checkPositiveLargeTailSoloFastUpperEdgeChunk
+    (aLo aLen : Nat) : Bool :=
+  (List.range' aLo aLen).all fun a =>
+    if 2000 < a ∧ a < 3000 then
+      checkPositiveLargeTailSoloFastUpperEdge a
+    else
+      true
+
+theorem checkPositiveLargeTailSoloFastUpperEdge_of_chunk
+    {aLo aLen a : Nat}
+    (h :
+      checkPositiveLargeTailSoloFastUpperEdgeChunk aLo aLen = true)
+    (ha_mem : a ∈ List.range' aLo aLen)
+    (ha : 2000 < a) (haPrefix : a < 3000) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+      a (posNhi a) := by
+  have haAll :
+      ∀ x ∈ List.range' aLo aLen,
+        (if 2000 < x ∧ x < 3000 then
+          checkPositiveLargeTailSoloFastUpperEdge x
+        else
+          true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveLargeTailSoloFastUpperEdgeChunk] using h)
+  have hcheck :
+      checkPositiveLargeTailSoloFastUpperEdge a = true := by
+    have hline := haAll a ha_mem
+    rw [if_pos ⟨ha, haPrefix⟩] at hline
+    exact hline
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+  exact of_decide_eq_true (by
+    simpa [checkPositiveLargeTailSoloFastUpperEdge] using hcheck)
+
+/-- Prefix-strip certificate for the final fast solo target at the upper
+rectangle edge. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgePrefixCertificate :
+    Prop where
+  soloY :
+    ∀ {a : Nat}, 2000 < a → a < 3000 →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a)
+
+/-- Chunked prefix-strip certificate for the final fast solo target at the
+upper rectangle edge. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgePrefixChunksCertificate
+    (aLen : Nat) : Prop where
+  aLenPos : 0 < aLen
+  soloChunk :
+    ∀ {aChunk : Nat × Nat},
+      aChunk ∈ positiveLargeTailLowerPrefixAChunks aLen →
+        checkPositiveLargeTailSoloFastUpperEdgeChunk
+          aChunk.1 aChunk.2 = true
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgePrefixChunksCertificate.toPrefixCertificate
+    {aLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgePrefixChunksCertificate
+        aLen) :
+    PositiveSaddleLargeTailSoloFastUpperEdgePrefixCertificate where
+  soloY := by
+    intro a ha haPrefix
+    rcases positiveLargeTailLowerPrefixAChunks_cover
+        cert.aLenPos ha haPrefix with
+      ⟨aChunk, haChunk, haMem⟩
+    exact checkPositiveLargeTailSoloFastUpperEdge_of_chunk
+      (cert.soloChunk haChunk) haMem ha haPrefix
+
+/-- Hybrid solo certificate for the final fast upper-edge target: finite
+prefix chunks for `2000 < a < 3000`, plus a separate analytic large-side
+field for `3000 ≤ a`. -/
+structure PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate
+    (aLen : Nat) : Prop where
+  prefixChunks :
+    PositiveSaddleLargeTailSoloFastUpperEdgePrefixChunksCertificate aLen
+  largeSolo :
+    ∀ {a : Nat}, 3000 ≤ a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a)
+
+theorem PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate.toUpperEdge
+    {aLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate aLen) :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a) := by
+  intro a ha
+  by_cases haLarge : 3000 ≤ a
+  · exact cert.largeSolo haLarge
+  · exact cert.prefixChunks.toPrefixCertificate.soloY
+      ha (Nat.lt_of_not_ge haLarge)
+
 /-- Product table check over one fixed `N`-chunk index across a row range and
 one retained-`k` chunk, for the small regime. -/
 def checkPositiveSmallXYProductRawClearedTableFixedNIndexRowRangeKChunk

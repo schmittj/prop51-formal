@@ -725,6 +725,16 @@ Status:
       This records the Lean-side proof-production reduction from a uniform
       solo estimate to the worst rectangle edge `N = posNhi a`; it is not a
       new mathematical estimate beyond monotonicity.
+      The final product and fast solo witnesses also have prefix/large hybrid
+      interfaces:
+      `PositiveSaddleLargeTailProductFastUpperEdgeLowerNHybridCertificate`
+      and `PositiveSaddleLargeTailSoloFastUpperEdgeHybridCertificate`.  Their
+      prefix sides are Boolean chunk certificates for `2000 < a < 3000`, and
+      their large sides are explicit analytic fields for `3000 ≤ a`.  The
+      wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNHybrid_soloFastUpperEdgeHybrid`
+      assembles those two hybrid certificates into the preferred concrete
+      large-tail audit target.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
