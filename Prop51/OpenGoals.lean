@@ -877,6 +877,118 @@ def positiveSmallFirstCellYUpperEdgeBudget (a : Nat) : Prop :=
   positiveSmallFirstCellQBudget a (posNhi a)
     (positiveLargeTailProductYUpperEdgeExactBound a 2)
 
+/-- The product-side `Y` upper-edge bound in the first retained cell is the
+same split-factorial solo `Y` block sum at the shifted index `j = a - 2`.
+This is the bridge that lets first-cell work reuse solo-style estimates
+without unfolding the double sum. -/
+theorem positiveLargeTailProductYUpperEdgeExactBound_two_eq_shiftedSolo
+    (a : Nat) :
+    positiveLargeTailProductYUpperEdgeExactBound a 2 =
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+        (posJ a 2) (posNhi a) := by
+  rfl
+
+/-- Scalar comparison left after proving the shifted first-cell `Y` block by
+the fast solo-style exponential envelope.
+
+The large extra term in `positiveSmallExponentUpper a 2` is intended to pay
+for the polynomial prefactor
+`posNhi a * (5 * posNhi a - 72)`. -/
+def positiveSmallFirstCellShiftedSoloFastExpBudget (a : Nat) : Prop :=
+  (29 / 4 : ℚ) * (posNhi a : ℚ) *
+      ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+        partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+          (8 * posJ a 2)
+    ≤ 9360 * positiveSmallLargeExp a 2
+
+/-- First-cell budget from a shifted solo fast bound plus the remaining
+one-dimensional scalar comparison.
+
+This is the current analytic target for the `k = 2` product cell: prove the
+solo-shaped split sum for `j = a - 2` at the product upper edge, then prove
+that the small-branch exponential has enough slack for the polynomial factor.
+-/
+theorem positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared
+    {a : Nat} (ha : 2000 < a)
+    (hsolo :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        (posJ a 2) (posNhi a))
+    (hbudget : positiveSmallFirstCellShiftedSoloFastExpBudget a) :
+    positiveSmallFirstCellYUpperEdgeBudget a := by
+  unfold positiveSmallFirstCellYUpperEdgeBudget positiveSmallFirstCellQBudget
+  rw [positiveLargeTailProductYUpperEdgeExactBound_two_eq_shiftedSolo]
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    at hsolo
+  have hhi15 : 15 ≤ posNhi a := by
+    unfold posNhi
+    omega
+  have hhi15Q : (15 : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hhi15
+  have hlinear_nonneg :
+      0 ≤ (5 : ℚ) * (posNhi a : ℚ) - 72 := by
+    nlinarith
+  have hscale_nonneg :
+      0 ≤ ((posNhi a : ℚ) *
+        ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) := by
+    positivity
+  have hscaledSolo :
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a))
+        ≤
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) :=
+    mul_le_mul_of_nonneg_left hsolo hscale_nonneg
+  have hjc_nonneg : 0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
+    mul_nonneg (Nat.cast_nonneg _) (c_nonneg (posJ a 2))
+  have hbudgetScaled :
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2))
+        ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) :=
+    mul_le_mul_of_nonneg_left hbudget hjc_nonneg
+  calc
+    (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (posNhi a : ℚ) - 72) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+        =
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)) := by
+        ring
+    _ ≤
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) := hscaledSolo
+    _ =
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2)) := by
+        ring
+    _ ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) := hbudgetScaled
+    _ =
+      9360 * (posJ a 2 : ℚ) *
+        positiveSmallLargeExp a 2 * c (posJ a 2) := by
+        ring
+
 /-- The direct first-cell budget using the actual `Qq` coefficient. -/
 def positiveSmallFirstCellRawQBudget (a N : Nat) : Prop :=
   positiveSmallFirstCellQBudget a N (Qq N (posJ a 2))
