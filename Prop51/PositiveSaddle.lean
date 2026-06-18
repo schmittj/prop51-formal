@@ -2727,6 +2727,16 @@ theorem positiveLargeTailYGcompClosedInnerActive_eq_factorial (N p : Nat) :
     positiveLargeTailYGcompClosedInnerFactorial N 0 = 1 := by
   simp [positiveLargeTailYGcompClosedInnerFactorial]
 
+@[simp] theorem positiveLargeTailXGcompClosedInnerFactorial_one (N : Nat) :
+    positiveLargeTailXGcompClosedInnerFactorial N 1 = 0 := by
+  simp [positiveLargeTailXGcompClosedInnerFactorial,
+    GcompClosedActiveRange_one]
+
+@[simp] theorem positiveLargeTailYGcompClosedInnerFactorial_one (N : Nat) :
+    positiveLargeTailYGcompClosedInnerFactorial N 1 = 0 := by
+  simp [positiveLargeTailYGcompClosedInnerFactorial,
+    GcompClosedActiveRange_one]
+
 theorem positiveLargeTailXGcompClosedInnerFactorial_eq_positiveRange_of_pos
     {N p : Nat} (hp : 0 < p) :
     positiveLargeTailXGcompClosedInnerFactorial N p =
@@ -2796,6 +2806,29 @@ def positiveLargeTailYGcompClosedFactorialBlockSum (N j : Nat) : ℚ :=
   ∑ s ∈ Finset.range (j + 1),
     (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
       positiveLargeTailYGcompClosedInnerFactorial N (j - s)
+
+@[simp] theorem positiveLargeTailXGcompClosedFactorialBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailXGcompClosedFactorialBlockSum N 0 = 1 := by
+  simp [positiveLargeTailXGcompClosedFactorialBlockSum]
+
+@[simp] theorem positiveLargeTailYGcompClosedFactorialBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailYGcompClosedFactorialBlockSum N 0 = 1 := by
+  simp [positiveLargeTailYGcompClosedFactorialBlockSum]
+
+@[simp] theorem positiveLargeTailXGcompClosedFactorialBlockSum_one
+    (N : Nat) :
+    positiveLargeTailXGcompClosedFactorialBlockSum N 1 = (N : ℚ) * c 1 := by
+  norm_num [positiveLargeTailXGcompClosedFactorialBlockSum,
+    Finset.sum_range_succ, c_one]
+
+@[simp] theorem positiveLargeTailYGcompClosedFactorialBlockSum_one
+    (N : Nat) :
+    positiveLargeTailYGcompClosedFactorialBlockSum N 1 =
+      (N : ℚ) / 2 * c 1 / 2 := by
+  norm_num [positiveLargeTailYGcompClosedFactorialBlockSum,
+    Finset.sum_range_succ, c_one]
 
 theorem positiveLargeTailXGcompClosedActiveBlockSum_eq_closedBlockSum
     (N k : Nat) :

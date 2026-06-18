@@ -308,6 +308,12 @@ theorem GcompClosedPositiveRange_subset_range (p : Nat) :
     subst r
     simp [GcompClosedActiveRange]
 
+@[simp] theorem GcompClosedActiveRange_one :
+    GcompClosedActiveRange 1 = ∅ := by
+  ext r
+  simp [GcompClosedActiveRange]
+  omega
+
 theorem GcompClosedActiveRange_eq_positiveRange_of_pos {p : Nat}
     (hp : 0 < p) :
     GcompClosedActiveRange p = GcompClosedPositiveRange p := by
