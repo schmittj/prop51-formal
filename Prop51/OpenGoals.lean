@@ -212,6 +212,16 @@ theorem LargeTailSoloCertificate.ofSharpDeepLowDegreeRemainderBlockSumTenSeventh
         positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deepLowDegreeRemainderBlockSum
           ha (hdeepLow ha))
 
+/-- The large-tail solo certificate is now closed analytically from the
+deep-low remainder bound in `PositiveSaddle`. -/
+theorem largeTailSoloCertificate : LargeTailSoloCertificate :=
+  LargeTailSoloCertificate.ofSharpDeepLowDegreeRemainderBlockSumTenSeventhsCleared
+    (by
+      intro a ha
+      exact
+        positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_sixteenth_target
+          (a := a) ha)
+
 theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)
