@@ -312,6 +312,59 @@ def positiveSmallFirstCellTenSeventhsRawBudget (a N : Nat) : Prop :=
       positiveSmallLargeExp a 2 *
         ((N : ℚ) * c 2 * c (posJ a 2))
 
+/-- Cancelled first-cell budget after the `Y_{a-2}` ten-sevenths
+replacement.  This is equivalent to
+`positiveSmallFirstCellTenSeventhsRawBudget` under the large positive
+rectangle hypotheses, but is the scalar form future estimates should target.
+-/
+def positiveSmallFirstCellTenSeventhsReducedBudget (a N : Nat) : Prop :=
+  (posNhi a : ℚ) * Bq N 2 *
+      positiveLargeTailSoloTenSeventhsBound (posJ a 2) N
+    ≤ 130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+      positiveSmallLargeExp a 2 * c 2
+
+/-- The reduced first-cell scalar budget implies the raw denominator-cleared
+budget used by `positiveSmallLargeXYProductRawCleared_two_of_tenSeventhsY`.
+-/
+theorem positiveSmallFirstCellTenSeventhsRawBudget_of_reduced
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    (hred : positiveSmallFirstCellTenSeventhsReducedBudget a N) :
+    positiveSmallFirstCellTenSeventhsRawBudget a N := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by
+    exact_mod_cast positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hj : 1 ≤ posJ a 2 := by
+    unfold posJ
+    omega
+  have hcjpos : 0 < c (posJ a 2) :=
+    c_pos (posJ a 2) hj
+  have hfactor_nonneg :
+      0 ≤ (N : ℚ) * c (posJ a 2) := by
+    positivity
+  have hscaled :=
+    mul_le_mul_of_nonneg_right hred hfactor_nonneg
+  unfold positiveSmallFirstCellTenSeventhsReducedBudget at hscaled
+  unfold positiveSmallFirstCellTenSeventhsRawBudget
+  calc
+    2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) * Bq N 2 *
+        (((N : ℚ) / 2) * c (posJ a 2) /
+          (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloTenSeventhsBound (posJ a 2) N)
+        =
+      ((posNhi a : ℚ) * Bq N 2 *
+          positiveLargeTailSoloTenSeventhsBound (posJ a 2) N) *
+        ((N : ℚ) * c (posJ a 2)) := by
+          have hpow : (2 : ℚ)^(posJ a 2) ≠ 0 := by positivity
+          field_simp [hpow]
+    _ ≤
+      (130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+          positiveSmallLargeExp a 2 * c 2) *
+        ((N : ℚ) * c (posJ a 2)) := hscaled
+    _ =
+      130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+        positiveSmallLargeExp a 2 *
+          ((N : ℚ) * c 2 * c (posJ a 2)) := by
+          ring
+
 /-- Close the first retained small-branch product cell from a ten-sevenths
 `Y_{a-2}` envelope and the corresponding raw scalar budget.
 
