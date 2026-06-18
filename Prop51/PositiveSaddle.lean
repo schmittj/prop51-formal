@@ -13422,6 +13422,27 @@ product certificate. -/
 def positiveLargeTailProductYBlockBound (a N k : Nat) : ℚ :=
   positiveLargeTailYGcompBlockSum N (posJ a k)
 
+/-- Named scalar product inequality for the small branch after both `Bplus`
+and `Qplus/Y` coefficient majorants have been opened into explicit `Gcomp`
+block sums. -/
+def positiveLargeTailSmallProductBlockSumScalar (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      positiveLargeTailProductXBlockBound a N k *
+        positiveLargeTailProductYBlockBound a N k
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+/-- Named scalar product inequality for the tempered branch after both
+coefficient majorants have been opened into explicit `Gcomp` block sums. -/
+def positiveLargeTailTemperedProductBlockSumScalar (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      positiveLargeTailProductXBlockBound a N k *
+        positiveLargeTailProductYBlockBound a N k
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
 /-- Reduced product certificate with both coefficient majorants opened into
 explicit `Gcomp` block sums.
 
@@ -13433,21 +13454,29 @@ structure PositiveSaddleLargeTailProductBlockSumCertificate : Prop where
   smallProduct :
     ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
       k ∈ positiveKRange a → k ≤ ceilSqrt N →
-        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
-            positiveLargeTailProductXBlockBound a N k *
-              positiveLargeTailProductYBlockBound a N k
-          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
-            positiveSmallLargeExp a k *
-              ((N : ℚ) * c k * c (posJ a k))
+        positiveLargeTailSmallProductBlockSumScalar a N k
   temperedProduct :
     ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
       k ∈ positiveKRange a → ceilSqrt N < k →
-        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
-            positiveLargeTailProductXBlockBound a N k *
-              positiveLargeTailProductYBlockBound a N k
-          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
-            positiveTemperedLargeExp a k *
-              ((N : ℚ) * c k * c (posJ a k))
+        positiveLargeTailTemperedProductBlockSumScalar a N k
+
+/-- Proof-production wrapper whose fields are exactly the named scalar
+block-sum inequalities. -/
+structure PositiveSaddleLargeTailProductBlockSumScalarCertificate : Prop where
+  smallScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveLargeTailSmallProductBlockSumScalar a N k
+  temperedScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveLargeTailTemperedProductBlockSumScalar a N k
+
+theorem PositiveSaddleLargeTailProductBlockSumScalarCertificate.toBlockSumCertificate
+    (cert : PositiveSaddleLargeTailProductBlockSumScalarCertificate) :
+    PositiveSaddleLargeTailProductBlockSumCertificate where
+  smallProduct := cert.smallScalar
+  temperedProduct := cert.temperedScalar
 
 theorem PositiveSaddleLargeTailProductBlockSumCertificate.toProductBoundsCertificate
     (cert : PositiveSaddleLargeTailProductBlockSumCertificate) :

@@ -222,7 +222,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum`, and
   `Prop51.PositiveSaddleLargeTailProductBlockSumCertificate` reduces the
   product certificate to the two explicit block-sum scalar product
-  comparisons.  The wrapper
+  comparisons.  These scalar obligations are named
+  `Prop51.positiveLargeTailSmallProductBlockSumScalar` and
+  `Prop51.positiveLargeTailTemperedProductBlockSumScalar`, with
+  `Prop51.PositiveSaddleLargeTailProductBlockSumScalarCertificate` packaging
+  exactly those two families.  The wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
   combines this reduced product route with the reduced solo block-sum target.
   For final

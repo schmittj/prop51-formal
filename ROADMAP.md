@@ -654,6 +654,9 @@ Status:
       `QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum` helper.
       `PositiveSaddleLargeTailProductBlockSumCertificate` reduces the product
       certificate to two explicit block-sum scalar comparisons, and
+      `PositiveSaddleLargeTailProductBlockSumScalarCertificate` names those
+      fields as `positiveLargeTailSmallProductBlockSumScalar` and
+      `positiveLargeTailTemperedProductBlockSumScalar`.
       `positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
       combines that product route with the reduced solo block-sum target.
       The solo field can
