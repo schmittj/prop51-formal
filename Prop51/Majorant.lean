@@ -425,6 +425,53 @@ theorem two_le_of_Bq_pos {N k : Nat} (hk : 1 ≤ k) (hB : 0 < Bq N k) :
     subst k
     exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB)
 
+/-- Closed form for the second `B`-coefficient. -/
+theorem Bq_two (N : Nat) :
+    Bq N 2 = 5 * (N : ℚ) * (5 * (N : ℚ) - 72) / 72 := by
+  unfold Bq
+  let L : Nat → ℚ := fun r => -(N : ℚ) * c r
+  have h1 : expCoeff L 1 = -((N : ℚ) * c 1) := by
+    have h := expCoeff_succ_mul L 0
+    simpa [L, mul_assoc] using h
+  have h1fun :
+      expCoeff (fun r => -(N : ℚ) * c r) 1 = -((N : ℚ) * c 1) := by
+    simpa [L] using h1
+  have h1neg :
+      expCoeff (fun r => -((N : ℚ) * c r)) 1 = -((N : ℚ) * c 1) := by
+    simpa [L, mul_assoc] using h1
+  have hc2 : c 2 = 5 := by
+    rw [c_succ_succ]
+    norm_num [c_one]
+  have h := expCoeff_succ_mul L 1
+  have h' :
+      2 * expCoeff L 2 =
+        ∑ t ∈ Finset.range 2,
+          ((t+1 : Nat) : ℚ) * L (t+1) * expCoeff L (1-t) := by
+    simpa using h
+  change expCoeff L 2 = 5 * (N : ℚ) * (5 * (N : ℚ) - 72) / 72
+  have htwo : (2 : ℚ) ≠ 0 := by norm_num
+  rw [← mul_right_inj' htwo]
+  calc
+    2 * expCoeff L 2 =
+        5 * (N : ℚ) * (5 * (N : ℚ) - 72) / 72 * 2 := by
+      rw [h']
+      norm_num [Finset.sum_range_succ, h1fun, L, hc2, c_one]
+      rw [h1neg]
+      norm_num [c_one]
+      ring_nf
+    _ = 2 * (5 * (N : ℚ) * (5 * (N : ℚ) - 72) / 72) := by ring
+
+theorem Bq_two_pos_of_le {N : Nat} (hN : 15 ≤ N) : 0 < Bq N 2 := by
+  rw [Bq_two]
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast (by omega : 0 < N)
+  have hfactor : (0 : ℚ) < 5 * (N : ℚ) - 72 := by
+    have h75 : (75 : ℚ) ≤ 5 * (N : ℚ) := by
+      exact_mod_cast (by nlinarith : 75 ≤ 5 * N)
+    linarith
+  exact
+    div_pos (mul_pos (mul_pos (by norm_num) hNpos) hfactor)
+      (by norm_num)
+
 /-- `\overline B_k(N) = [X^k] C(X)^N`, the positive exponential majorant for
 `B_k(N)` used in the positive-saddle estimates. -/
 def Bplusq (N k : Nat) : ℚ := expCoeff (fun r => (N : ℚ) * c r) k
