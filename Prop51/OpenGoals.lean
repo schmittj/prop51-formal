@@ -13,6 +13,57 @@ generated interfaces for the old `401 ≤ a ≤ 2000` finite window and the
 side so the product and solo inputs are the genuine large-`a` analytic fields.
 -/
 
+/-- The actual theorem-facing solo prefix obligation on `2000 < a < 3000`.
+
+This replaces the earlier exact upper-edge split-sum scalar chunks as the
+canonical bounded field.  Those exact chunks are still available below as a
+compatibility proof producer, but benchmarking showed that they are too heavy
+to be the main completion route. -/
+def PositiveSaddleLargeTailSoloPrefixNormUnit : Prop :=
+  ∀ {a N : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+    (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1
+
+/-- Compatibility bridge from the older exact fast-upper-edge solo prefix
+chunks to the actual solo norm prefix target.
+
+The canonical bounded certificate now asks for
+`PositiveSaddleLargeTailSoloPrefixNormUnit` directly; this theorem records the
+Lean-side deviation from the older generated exact-split route without
+discarding that route. -/
+theorem positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
+    {aLen : Nat}
+    (hprefix :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
+        positiveLargeTailSoloUpperEdgeExactBound aLen) :
+    PositiveSaddleLargeTailSoloPrefixNormUnit := by
+  intro a N ha haPrefix hrect
+  have hscalar :
+      positiveLargeTailSoloFastUpperEdgeBoundScalar
+        positiveLargeTailSoloUpperEdgeExactBound a :=
+    hprefix.toPrefixCertificate.soloScalar ha haPrefix
+  have hfast :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a) := by
+    unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
+    unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    simpa [positiveLargeTailSoloUpperEdgeExactBound] using hscalar
+  have hY :
+      positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N :=
+    positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
+      (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+      (positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumFastCleared
+        (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+          (a := a) (N := N) hrect hfast))
+  have hYUnit :
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+        ≤ 1 :=
+    positiveLargeTailSoloYUnit_of_Y_bound hY
+      (positiveLargeTailSoloTenSeventhsScalarBudget ha hrect)
+  exact positiveLargeTailSoloNormUnit_of_Y_unit
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+    (by omega : 1 ≤ a) hYUnit
+
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
@@ -21,8 +72,9 @@ from the live large-tail pointwise and candidate/reserve inputs.  This lets the
 bounded route consume either the older fixed-`k` edge chunks or the newer
 semantic edge-budget checker without changing `Completion.lean`.
 
-The `2001 ≤ a < 3000` strip is still carried by the product and solo prefix
-chunks below. -/
+The `2001 ≤ a < 3000` strip is carried by product prefix chunks and by the
+direct solo prefix norm target above, rather than by the older exact
+upper-edge solo scalar chunks. -/
 structure BoundedPositiveCertificate where
   toTangentProductBudget :
     PositiveSaddleEntropyShadowLargeExpPointwiseCertificate →
@@ -36,11 +88,7 @@ structure BoundedPositiveCertificate where
         positiveLargeTailProductXUpperEdgeExactBound a k *
           positiveLargeTailProductYUpperEdgeExactBound a k)
       productPrefixALen productPrefixKLen
-  soloPrefixALen : Nat
-  soloPrefix :
-    PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
-      positiveLargeTailSoloUpperEdgeExactBound
-      soloPrefixALen
+  soloPrefixNormUnit : PositiveSaddleLargeTailSoloPrefixNormUnit
 
 /-- Compatibility constructor for the previous bounded route, which supplies
 the edge budget through fixed row/`k` chunks. -/
@@ -68,8 +116,9 @@ def BoundedPositiveCertificate.ofActiveAnalyticFixedEdge
   productPrefixALen := productPrefixALen
   productPrefixKLen := productPrefixKLen
   productPrefix := productPrefix
-  soloPrefixALen := soloPrefixALen
-  soloPrefix := soloPrefix
+  soloPrefixNormUnit :=
+    positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
+      soloPrefix
 
 /-- Constructor for the bounded route that uses the compact semantic edge
 budget.  This is the Lean-side implementation note for the finite-edge
@@ -149,8 +198,9 @@ def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge
   productPrefixALen := productPrefixALen
   productPrefixKLen := productPrefixKLen
   productPrefix := productPrefix
-  soloPrefixALen := soloPrefixALen
-  soloPrefix := soloPrefix
+  soloPrefixNormUnit :=
+    positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
+      soloPrefix
 
 /-- The large-tail product obligation for the current canonical route.
 
@@ -1623,45 +1673,26 @@ theorem largeTailSoloCertificate : LargeTailSoloCertificate :=
         positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_sixteenth_target
           (a := a) ha)
 
+theorem LargeTailSoloCertificate.toNormUnitOfPrefixNorm
+    (hsolo : LargeTailSoloCertificate)
+    (hprefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    PositiveSaddleLargeTailSoloNormUnitCertificate where
+  soloNormUnit := by
+    intro a N ha hrect
+    by_cases haLarge : 3000 ≤ a
+    · exact hsolo.largeSolo haLarge hrect
+    · exact hprefix ha (Nat.lt_of_not_ge haLarge) hrect
+
 theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)
     (hprefix :
       PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
         positiveLargeTailSoloUpperEdgeExactBound aLen) :
-    PositiveSaddleLargeTailSoloNormUnitCertificate where
-  soloNormUnit := by
-    intro a N ha hrect
-    by_cases haLarge : 3000 ≤ a
-    · exact hsolo.largeSolo haLarge hrect
-    · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
-      have hscalar :
-          positiveLargeTailSoloFastUpperEdgeBoundScalar
-            positiveLargeTailSoloUpperEdgeExactBound a :=
-        hprefix.toPrefixCertificate.soloScalar ha haPrefix
-      have hfast :
-          positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
-            a (posNhi a) := by
-        unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
-        unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
-        simpa [positiveLargeTailSoloUpperEdgeExactBound] using hscalar
-      have hY :
-          positiveYgcompBound N a ≤
-            positiveLargeTailSoloTenSeventhsBound a N :=
-        positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
-          (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
-          (positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumFastCleared
-            (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
-              (a := a) (N := N) hrect hfast))
-      have hYUnit :
-          (200000000 : ℚ) *
-              (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
-            ≤ 1 :=
-        positiveLargeTailSoloYUnit_of_Y_bound hY
-          (positiveLargeTailSoloTenSeventhsScalarBudget ha hrect)
-      exact positiveLargeTailSoloNormUnit_of_Y_unit
-        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
-        (by omega : 1 ≤ a) hYUnit
+    PositiveSaddleLargeTailSoloNormUnitCertificate :=
+  hsolo.toNormUnitOfPrefixNorm
+    (positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
+      hprefix)
 
 /-- Final assembly from the three live obligations.
 
@@ -1673,7 +1704,7 @@ theorem completion_of_three_inputs
     (hsolo : LargeTailSoloCertificate) :
     CoefficientNegativity := by
   let soloNorm : PositiveSaddleLargeTailSoloNormUnitCertificate :=
-    hsolo.toNormUnit hbounded.soloPrefix
+    hsolo.toNormUnitOfPrefixNorm hbounded.soloPrefixNormUnit
   let pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate :=
     hproduct.toPointwise hbounded.productPrefix soloNorm
   exact
