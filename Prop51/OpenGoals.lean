@@ -1028,6 +1028,43 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoA
           (hproductBound ha hk)
           (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
 
+/-- Canonical combined-product constructor for the remaining large-tail
+product route.
+
+The first retained cell is discharged by the direct upper-edge `Y` budget for
+`Qq N (a-2)`.  The genuine tail starts at `k ≥ 3` and uses the endpoint
+product-bound scalar route on a combined `xyBound`; this avoids returning to
+the older independent `Gcomp` product route. -/
+theorem LargeTailProductCertificate.ofYUpperEdgeTwoAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hbudgetTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallFirstCellQBudget a N
+          (positiveLargeTailProductYUpperEdgeExactBound a 2))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoAndGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a N ha hrect
+      exact positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
+        ha hrect (hbudgetTwo ha hrect))
+    hsmallGeThree htemperedGeThree
+
 /-- Separate-`X`/`Y` variant of the first-term/remainder product-bound route.
 
 The two factor majorants only serve to prove the combined `xyBound`
