@@ -21612,6 +21612,24 @@ def positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
       (((a - s - 1).factorial : Nat) : ℚ)) *
     (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))
 
+/-- First active outer index for the deep-low residual, corresponding to
+`p = floor((a-1)/3)`. -/
+def positiveLargeTailSoloSharpDeepLowStart (a : Nat) : Nat :=
+  a - ((a - 1) / 3)
+
+theorem positiveLargeTailSoloSharpDeepLowStart_le_of_deep
+    {a s : Nat} (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
+    positiveLargeTailSoloSharpDeepLowStart a ≤ s := by
+  unfold positiveLargeTailSoloSharpDeepLowStart
+  omega
+
+theorem positiveLargeTailSoloSharpDeepLowStart_deep
+    {a : Nat} (ha : 3000 ≤ a) :
+    4 ≤ a - positiveLargeTailSoloSharpDeepLowStart a ∧
+      3 * (a - positiveLargeTailSoloSharpDeepLowStart a) < a := by
+  unfold positiveLargeTailSoloSharpDeepLowStart
+  omega
+
 theorem positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
     {a s : Nat} (ha : 3000 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
@@ -21837,6 +21855,93 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_succ_le
           exact mul_le_mul_of_nonneg_left hratio_le hterm_nonneg
     _ = positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
           ring
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_le_start
+    {a s : Nat} (ha : 3000 ≤ a)
+    (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s
+      ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+          (positiveLargeTailSoloSharpDeepLowStart a) := by
+  let start := positiveLargeTailSoloSharpDeepLowStart a
+  have hstart_le : start ≤ s := by
+    dsimp [start]
+    exact positiveLargeTailSoloSharpDeepLowStart_le_of_deep hdeep
+  obtain ⟨d, rfl⟩ : ∃ d : Nat, s = start + d := by
+    exact ⟨s - start, by omega⟩
+  have hstart_deep :
+      4 ≤ a - start ∧ 3 * (a - start) < a := by
+    dsimp [start]
+    exact positiveLargeTailSoloSharpDeepLowStart_deep ha
+  have haux :
+      ∀ d : Nat,
+        4 ≤ a - (start + d) ∧ 3 * (a - (start + d)) < a →
+        positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a (start + d)
+          ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a start := by
+    intro d hd
+    induction d with
+    | zero =>
+        simp
+    | succ d ih =>
+        have hnext :
+            4 ≤ a - ((start + d) + 1) ∧
+              3 * (a - ((start + d) + 1)) < a := by
+          simpa [Nat.add_assoc] using hd
+        have hprev :
+            4 ≤ a - (start + d) ∧
+              3 * (a - (start + d)) < a := by
+          constructor
+          · omega
+          · have hle : a - (start + d) ≤ a - start := by omega
+            omega
+        calc
+          positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+              a (start + Nat.succ d)
+              =
+            positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+              a ((start + d) + 1) := by
+              rw [Nat.succ_eq_add_one, Nat.add_assoc]
+          _ ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+              a (start + d) :=
+              positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_succ_le
+                (a := a) (s := start + d) hnext
+          _ ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+              a start := ih hprev
+  exact haux d (by simpa [start] using hdeep)
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_start
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a
+      ≤ ((a + 1 : Nat) : ℚ) *
+        positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+          (positiveLargeTailSoloSharpDeepLowStart a) := by
+  unfold positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum
+  have htop_nonneg :
+      0 ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+        (positiveLargeTailSoloSharpDeepLowStart a) := by
+    unfold positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    positivity
+  calc
+    (∑ s ∈ Finset.range (a + 1),
+      if 4 ≤ a - s ∧ 3 * (a - s) < a then
+        positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s
+      else
+        0)
+        ≤ ∑ _s ∈ Finset.range (a + 1),
+          positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+            (positiveLargeTailSoloSharpDeepLowStart a) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a
+          · rw [if_pos hdeep]
+            exact
+              positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_le_start
+                (a := a) (s := s) ha hdeep
+          · rw [if_neg hdeep]
+            exact htop_nonneg
+    _ =
+      ((a + 1 : Nat) : ℚ) *
+        positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+          (positiveLargeTailSoloSharpDeepLowStart a) := by
+        simp [nsmul_eq_mul]
 
 theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
     {a : Nat} (ha : 3000 ≤ a) :
