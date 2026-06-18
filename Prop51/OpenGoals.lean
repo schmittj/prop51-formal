@@ -343,6 +343,51 @@ theorem positiveSmallFirstCellRawQBudget_of_QBound
   unfold positiveSmallFirstCellRawQBudget positiveSmallFirstCellQBudget
   exact hscaled.trans hbudget
 
+/-- The actual shifted `Qq` coefficient is bounded by the split-factorial
+`Y` block majorant at the same rectangle point. -/
+theorem Qq_le_positiveLargeTailProductYClosedFactorialSplitBlockBound
+    {a N k : Nat} :
+    Qq N (posJ a k) ≤
+      positiveLargeTailProductYClosedFactorialSplitBlockBound a N k := by
+  have hclosed :
+      positiveLargeTailYGcompClosedBlockSum N (posJ a k) =
+        positiveLargeTailYGcompClosedFactorialSplitBlockSum N (posJ a k) := by
+    rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_closedBlockSum
+        N (posJ a k),
+      positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum
+        N (posJ a k)]
+  unfold positiveLargeTailProductYClosedFactorialSplitBlockBound
+  calc
+    Qq N (posJ a k)
+        ≤ QqEplusGcompBound N (posJ a k) :=
+          Qq_le_EplusGcompBound N (posJ a k)
+    _ ≤ positiveLargeTailYGcompBlockSum N (posJ a k) :=
+          QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum
+            N (posJ a k)
+    _ ≤ positiveLargeTailYGcompClosedBlockSum N (posJ a k) :=
+          positiveLargeTailYGcompBlockSum_le_closedBlockSum N (posJ a k)
+    _ = positiveLargeTailYGcompClosedFactorialSplitBlockSum N (posJ a k) :=
+          hclosed
+
+/-- Upper-edge version of the shifted `Qq` bound used by the completion
+route.  This keeps the first-cell proof on the actual combined
+`Bq * Qq` product rather than the older independent product majorant. -/
+theorem Qq_le_positiveLargeTailProductYUpperEdgeExactBound
+    {a N k : Nat} (hrect : positiveRectangle a N) :
+    Qq N (posJ a k) ≤ positiveLargeTailProductYUpperEdgeExactBound a k := by
+  have hsameN :
+      Qq N (posJ a k) ≤
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k :=
+    Qq_le_positiveLargeTailProductYClosedFactorialSplitBlockBound
+  have hmono :
+      positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+        ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k :=
+    positiveLargeTailProductYClosedFactorialSplitBlockBound_mono_N
+      (a := a) (k := k) hrect.2
+  unfold positiveLargeTailProductYUpperEdgeExactBound
+  exact hsameN.trans hmono
+
 /-- The direct `Qq` first-cell budget implies the live raw-cleared product
 target for `k = 2`.
 
@@ -403,6 +448,19 @@ theorem positiveSmallLargeXYProductRawCleared_two_of_QBound
     positiveSmallLargeXYProductRawCleared a N 2 :=
   positiveSmallLargeXYProductRawCleared_two_of_rawQBudget ha hrect
     (positiveSmallFirstCellRawQBudget_of_QBound ha hrect hQ hbudget)
+
+/-- First-cell bridge using the upper-edge split-factorial `Y` majorant as
+the direct `Qq` budget. -/
+theorem positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    (hbudget :
+      positiveSmallFirstCellQBudget a N
+        (positiveLargeTailProductYUpperEdgeExactBound a 2)) :
+    positiveSmallLargeXYProductRawCleared a N 2 :=
+  positiveSmallLargeXYProductRawCleared_two_of_QBound ha hrect
+    (Qq_le_positiveLargeTailProductYUpperEdgeExactBound
+      (a := a) (N := N) (k := 2) hrect)
+    hbudget
 
 /-- Explicit first retained product-cell budget after replacing
 `Y_{a-2}(N)` by the ten-sevenths solo envelope.
@@ -612,6 +670,36 @@ theorem LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
       exact positiveSmallLargeXYProductRawCleared_two_of_QBound
         ha hrect (hQTwo ha hrect) (hbudgetTwo ha hrect))
     hsmallGeThree htemperedGeThree
+
+/-- Canonical first-cell specialization of the product-tail constructor:
+`Qq N (a-2)` is bounded by the exact upper-edge split-factorial `Y` block
+sum, and the remaining first-cell work is the single scalar budget
+`positiveSmallFirstCellQBudget`.
+
+This is the route-facing replacement for the failed coarse
+ten-sevenths-envelope attempt below. -/
+theorem LargeTailProductCertificate.ofYUpperEdgeTwoAndGeThreeNatSignLockComplement
+    (hbudgetTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallFirstCellQBudget a N
+          (positiveLargeTailProductYUpperEdgeExactBound a 2))
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
+    (qBound := fun a _ => positiveLargeTailProductYUpperEdgeExactBound a 2)
+    (by
+      intro a N ha hrect
+      exact Qq_le_positiveLargeTailProductYUpperEdgeExactBound
+        (a := a) (N := N) (k := 2) hrect)
+    hbudgetTwo hsmallGeThree htemperedGeThree
 
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
