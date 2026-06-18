@@ -1429,6 +1429,15 @@ def exact_case_tree_lines(
 
 
 def emit_header(args: argparse.Namespace | None = None) -> list[str]:
+    if args is not None and args.emit_single_chunk_shard:
+        return [
+            "import Prop51.PositiveSaddleChunks",
+            "",
+            "namespace Prop51",
+            "",
+            "/- Generated finite-window positive-saddle atom shard. -/",
+        ]
+
     imports = ["Prop51.Main"]
     if args is not None:
         if (
