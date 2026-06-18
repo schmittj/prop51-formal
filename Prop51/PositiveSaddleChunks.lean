@@ -12818,6 +12818,38 @@ theorem positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallTangentEdg
     (checkPositiveSmallTangentExpEdgeCell_of_NRangeKChunk
       hNRange hNmem' hKmem hrect hk hsmall)
 
+theorem positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallMajorant
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k := by
+  intro a N k ha h2000 hrect hk hsmall
+  exact normalizedPositiveIfTerm_le_smallMajorant_of_XYProductTangent
+    ha h2000 hrect hk
+    (fun hB => cert.smallXYTangent ha h2000 hrect hk hsmall hB)
+    (positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_smallTangentEdge
+      cert ha h2000 hrect hk hsmall)
+
+theorem positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_temperedMajorant
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen) :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k := by
+  intro a N k ha h2000 hrect hk htempered
+  exact normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
+    ha h2000 hrect hk htempered
+    (fun hB => cert.temperedXY ha h2000 hrect hk htempered hB)
+
 theorem positiveSaddleActiveAnalyticProductTangentSoloNFixedEdge_soloY
     {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
       tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
