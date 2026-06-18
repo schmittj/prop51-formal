@@ -21709,7 +21709,7 @@ def positiveLargeTailSoloSharpDeepLowHeadTargetLower (a : Nat) : ℚ :=
 
 theorem positiveLargeTailSoloSharpDeepLowHeadTargetLower_step
     {a : Nat} (ha : 3000 ≤ a) :
-    (1000000 : ℚ) * (a : ℚ) *
+    (2000000 : ℚ) * (a : ℚ) *
         positiveLargeTailSoloSharpDeepLowHeadTargetLower a
       ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower (a + 3) := by
   have ha_pos_nat : 0 < a := by omega
@@ -21762,7 +21762,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadTargetLower_step
     dsimp [R]
     rw [hfac, hpow6, hpow10]
     field_simp [ha_pos.ne']
-  have hR_lower : (1000000 : ℚ) * (a : ℚ) ≤ R := by
+  have hR_lower : (2000000 : ℚ) * (a : ℚ) ≤ R := by
     dsimp [R]
     field_simp [ha_pos.ne']
     have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
@@ -21787,18 +21787,311 @@ theorem positiveLargeTailSoloSharpDeepLowHeadTargetLower_step
     have ha_sq : (9000000 : ℚ) ≤ (a : ℚ)^2 := by
       nlinarith [haQ, ha_pos]
     have hcube_big :
-        (1000000 : ℚ) * (a : ℚ) * 343
+        (2000000 : ℚ) * (a : ℚ) * 343
           ≤ 216 * 1000 * (a : ℚ)^3 := by
       nlinarith [ha_sq, ha_pos]
     norm_num
     nlinarith [hprod, hcube_big]
   calc
-    (1000000 : ℚ) * (a : ℚ) *
+    (2000000 : ℚ) * (a : ℚ) *
         positiveLargeTailSoloSharpDeepLowHeadTargetLower a
         ≤ R * positiveLargeTailSoloSharpDeepLowHeadTargetLower a := by
           exact mul_le_mul_of_nonneg_right hR_lower htarget_nonneg
     _ = positiveLargeTailSoloSharpDeepLowHeadTargetLower (a + 3) := by
           rw [htarget_step]
+
+def positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (a : Nat) : ℚ :=
+  ((a + 1 : Nat) : ℚ) *
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
+      (positiveLargeTailSoloSharpDeepLowStart a)
+
+theorem positiveLargeTailSoloSharpDeepLowStart_add_three
+    {a : Nat} (ha : 1 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowStart (a + 3) =
+      positiveLargeTailSoloSharpDeepLowStart a + 2 := by
+  unfold positiveLargeTailSoloSharpDeepLowStart
+  rw [show a + 3 - 1 = (a - 1) + 3 by omega]
+  rw [Nat.add_div_right (a - 1) (by decide : 0 < 3)]
+  omega
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (a + 3)
+      ≤ (2000000 : ℚ) * (a : ℚ) *
+        positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a := by
+  let s : Nat := positiveLargeTailSoloSharpDeepLowStart a
+  let p : Nat := a - s
+  have hstart_eq : positiveLargeTailSoloSharpDeepLowStart a = s := rfl
+  have hsle : s ≤ a := by
+    dsimp [s]
+    unfold positiveLargeTailSoloSharpDeepLowStart
+    omega
+  have hp_pos_nat : 0 < p := by
+    dsimp [p, s]
+    unfold positiveLargeTailSoloSharpDeepLowStart
+    omega
+  have ha_pos_nat : 0 < a := by omega
+  have hp_pos : (0 : ℚ) < (p : ℚ) := by exact_mod_cast hp_pos_nat
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha_pos_nat
+  have hs1_pos : (0 : ℚ) < ((s + 1 : Nat) : ℚ) := by positivity
+  have hs2_pos : (0 : ℚ) < ((s + 2 : Nat) : ℚ) := by positivity
+  have hs_fac :
+      (((s + 2).factorial : Nat) : ℚ) =
+        ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) *
+          (s.factorial : ℚ) := by
+    rw [show s + 2 = (s + 1) + 1 by omega,
+      Nat.factorial_succ, Nat.factorial_succ]
+    push_cast
+    ring
+  have hp_fac :
+      (p.factorial : ℚ) =
+        (p : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by
+    exact_mod_cast (Nat.mul_factorial_pred (by omega : p ≠ 0)).symm
+  have hsub_a : a - s = p := rfl
+  have hsub_a_minus : a - s - 1 = p - 1 := by
+    rfl
+  have hsub_step : a + 3 - (s + 2) = p + 1 := by
+    dsimp [p]
+    omega
+  have hsub_step_minus : a + 3 - (s + 2) - 1 = p := by
+    dsimp [p]
+    omega
+  have hpow6 : (6 : ℚ)^(p + 1) = (6 : ℚ)^p * 6 := by
+    rw [pow_succ]
+  have hbase5 :
+      (5 : ℚ) * ((a + 3 : Nat) : ℚ) =
+        ((5 : ℚ) * (a : ℚ)) *
+          (1 + (3 : ℚ) / (a : ℚ)) := by
+    rw [show ((a + 3 : Nat) : ℚ) = (a : ℚ) + 3 by norm_num]
+    field_simp [ha_pos.ne']
+  have hpow5 :
+      ((5 : ℚ) * ((a + 3 : Nat) : ℚ))^(s + 2) =
+        (((5 : ℚ) * (a : ℚ))^s *
+          (1 + (3 : ℚ) / (a : ℚ))^s) *
+          (25 * ((a + 3 : Nat) : ℚ)^2) := by
+    rw [pow_add, hbase5, mul_pow]
+    field_simp [ha_pos.ne']
+    norm_num [Nat.cast_add]
+  let R : ℚ :=
+    ((((a + 3 + 1 : Nat) : ℚ) / ((a + 1 : Nat) : ℚ)) *
+      (((a + 3 : Nat) : ℚ) / (a : ℚ)) *
+      (6 : ℚ) * (p : ℚ) *
+      (25 * (((a + 3 : Nat) : ℚ)^2 /
+        (((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ)))) *
+      (1 + (3 : ℚ) / (a : ℚ))^s)
+  have hblock_step :
+      positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (a + 3) =
+        positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a * R := by
+    unfold positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    dsimp [R]
+    rw [positiveLargeTailSoloSharpDeepLowStart_add_three (a := a) (by omega : 1 ≤ a),
+      hstart_eq]
+    rw [hsub_step, hsub_a, hsub_a_minus]
+    rw [show p + 1 - 1 = p by omega]
+    rw [hpow6, hp_fac, hpow5, hs_fac]
+    field_simp [ha_pos.ne', hp_pos.ne', hs1_pos.ne', hs2_pos.ne',
+      (by positivity : (s.factorial : ℚ) ≠ 0)]
+  have hpow_bound :
+      (1 + (3 : ℚ) / (a : ℚ))^s ≤ 200 :=
+    one_add_three_div_pow_le_twohundred ha hsle
+  have hratio1 :
+      (((a + 3 + 1 : Nat) : ℚ) / ((a + 1 : Nat) : ℚ)) ≤ 2 := by
+    have hden : (0 : ℚ) < ((a + 1 : Nat) : ℚ) := by positivity
+    rw [div_le_iff₀ hden]
+    norm_num
+    have haQ : (2 : ℚ) ≤ (a : ℚ) := by exact_mod_cast (by omega : 2 ≤ a)
+    nlinarith
+  have hratio2 :
+      (((a + 3 : Nat) : ℚ) / (a : ℚ)) ≤ 2 := by
+    rw [div_le_iff₀ ha_pos]
+    norm_num
+    have haQ : (3 : ℚ) ≤ (a : ℚ) := by exact_mod_cast (by omega : 3 ≤ a)
+    nlinarith
+  have hp_le : (p : ℚ) ≤ (a : ℚ) := by
+    dsimp [p]
+    exact_mod_cast Nat.sub_le a s
+  have hs1_half :
+      (a : ℚ) / 2 ≤ ((s + 1 : Nat) : ℚ) := by
+    have hnat : a ≤ 2 * (s + 1) := by
+      dsimp [s]
+      unfold positiveLargeTailSoloSharpDeepLowStart
+      omega
+    have hq : (a : ℚ) ≤ 2 * ((s + 1 : Nat) : ℚ) := by
+      exact_mod_cast hnat
+    linarith
+  have hs2_half :
+      (a : ℚ) / 2 ≤ ((s + 2 : Nat) : ℚ) := by
+    have hnat : a ≤ 2 * (s + 2) := by
+      dsimp [s]
+      unfold positiveLargeTailSoloSharpDeepLowStart
+      omega
+    have hq : (a : ℚ) ≤ 2 * ((s + 2 : Nat) : ℚ) := by
+      exact_mod_cast hnat
+    linarith
+  have hden_lower :
+      (a : ℚ)^2 / 4 ≤
+        ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) := by
+    have ha_half_nonneg : 0 ≤ (a : ℚ) / 2 := by positivity
+    have hs2_nonneg : 0 ≤ ((s + 2 : Nat) : ℚ) := by positivity
+    have hmul :=
+      mul_le_mul hs2_half hs1_half ha_half_nonneg hs2_nonneg
+    calc
+      (a : ℚ)^2 / 4 = ((a : ℚ) / 2) * ((a : ℚ) / 2) := by ring
+      _ ≤ ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) := hmul
+  have hnum_upper :
+      ((a + 3 : Nat) : ℚ)^2 ≤ 4 * (a : ℚ)^2 := by
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    rw [show ((a + 3 : Nat) : ℚ) = (a : ℚ) + 3 by norm_num]
+    nlinarith
+  have hden_pos :
+      0 < ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) := by
+    positivity
+  have hquad :
+      ((a + 3 : Nat) : ℚ)^2 /
+          (((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ))
+        ≤ 16 := by
+    have hden_scaled :
+        4 * (a : ℚ)^2 ≤
+          16 * (((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ)) := by
+      have hscaled :=
+        mul_le_mul_of_nonneg_left hden_lower
+          (by norm_num : 0 ≤ (16 : ℚ))
+      calc
+        4 * (a : ℚ)^2 = 16 * ((a : ℚ)^2 / 4) := by ring
+        _ ≤ 16 * (((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ)) :=
+          hscaled
+    rw [div_le_iff₀ hden_pos]
+    exact hnum_upper.trans hden_scaled
+  have hR_bound : R ≤ (2000000 : ℚ) * (a : ℚ) := by
+    let r1 : ℚ := (((a + 3 + 1 : Nat) : ℚ) / ((a + 1 : Nat) : ℚ))
+    let r2 : ℚ := (((a + 3 : Nat) : ℚ) / (a : ℚ))
+    let q : ℚ :=
+      ((a + 3 : Nat) : ℚ)^2 /
+        (((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ))
+    let w : ℚ := (1 + (3 : ℚ) / (a : ℚ))^s
+    have hr1_le : r1 ≤ 2 := by
+      dsimp [r1]
+      exact hratio1
+    have hr2_le : r2 ≤ 2 := by
+      dsimp [r2]
+      exact hratio2
+    have hq_le : q ≤ 16 := by
+      dsimp [q]
+      exact hquad
+    have hw_le : w ≤ 200 := by
+      dsimp [w]
+      exact hpow_bound
+    have hr1_nonneg : 0 ≤ r1 := by
+      dsimp [r1]
+      positivity
+    have hr2_nonneg : 0 ≤ r2 := by
+      dsimp [r2]
+      positivity
+    have hp_nonneg : 0 ≤ (p : ℚ) := by positivity
+    have hq_nonneg : 0 ≤ q := by
+      dsimp [q]
+      positivity
+    have hw_nonneg : 0 ≤ w := by
+      dsimp [w]
+      positivity
+    have h12 : r1 * r2 ≤ 2 * 2 := by
+      exact mul_le_mul hr1_le hr2_le hr2_nonneg (by norm_num)
+    have h12_6 : r1 * r2 * 6 ≤ 2 * 2 * 6 := by
+      exact mul_le_mul_of_nonneg_right h12 (by norm_num)
+    have h12_6p :
+        r1 * r2 * 6 * (p : ℚ) ≤ 2 * 2 * 6 * (a : ℚ) := by
+      exact mul_le_mul h12_6 hp_le hp_nonneg (by norm_num)
+    have hq25 : 25 * q ≤ 25 * 16 := by
+      exact mul_le_mul_of_nonneg_left hq_le (by norm_num)
+    have hq25_nonneg : 0 ≤ 25 * q := by positivity
+    have hprod :
+        (r1 * r2 * 6 * (p : ℚ)) * (25 * q)
+          ≤ (2 * 2 * 6 * (a : ℚ)) * (25 * 16) := by
+      exact mul_le_mul h12_6p hq25 hq25_nonneg (by positivity)
+    have hprodw :
+        ((r1 * r2 * 6 * (p : ℚ)) * (25 * q)) * w
+          ≤ ((2 * 2 * 6 * (a : ℚ)) * (25 * 16)) * 200 := by
+      exact mul_le_mul hprod hw_le hw_nonneg (by positivity)
+    calc
+      R = ((r1 * r2 * 6 * (p : ℚ)) * (25 * q)) * w := by
+        dsimp [R, r1, r2, q, w]
+      _ ≤ ((2 * 2 * 6 * (a : ℚ)) * (25 * 16)) * 200 := hprodw
+      _ = 2 * 2 * 6 * (a : ℚ) * (25 * 16) * 200 := by ring
+      _ = (1920000 : ℚ) * (a : ℚ) := by ring
+      _ ≤ (2000000 : ℚ) * (a : ℚ) := by
+            exact mul_le_mul_of_nonneg_right
+              (by norm_num : (1920000 : ℚ) ≤ 2000000) ha_pos.le
+  have hblock_nonneg :
+      0 ≤ positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a := by
+    unfold positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    positivity
+  calc
+    positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (a + 3)
+        = positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a * R :=
+          hblock_step
+    _ ≤ positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a *
+        ((2000000 : ℚ) * (a : ℚ)) := by
+          exact mul_le_mul_of_nonneg_left hR_bound hblock_nonneg
+    _ = (2000000 : ℚ) * (a : ℚ) *
+        positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a := by
+          ring
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_targetLower
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a
+      ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower a := by
+  let P : Nat → Prop := fun m =>
+    positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock m
+      ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower m
+  have hbase0 : P 3000 := by
+    native_decide
+  have hbase1 : P 3001 := by
+    native_decide
+  have hbase2 : P 3002 := by
+    native_decide
+  have hall : ∀ m : Nat, 3000 ≤ m → P m := by
+    intro m
+    refine Nat.strong_induction_on m ?_
+    intro m ih hm
+    by_cases hm0 : m = 3000
+    · subst m
+      exact hbase0
+    by_cases hm1 : m = 3001
+    · subst m
+      exact hbase1
+    by_cases hm2 : m = 3002
+    · subst m
+      exact hbase2
+    have hm_gt : 3002 < m := by omega
+    have hm3 : 3000 ≤ m - 3 := by omega
+    have hprev : P (m - 3) := ih (m - 3) (by omega) hm3
+    have hblock :=
+      positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
+        (a := m - 3) hm3
+    have htarget :=
+      positiveLargeTailSoloSharpDeepLowHeadTargetLower_step
+        (a := m - 3) hm3
+    have hm_rewrite : m - 3 + 3 = m := by omega
+    have hcoef_nonneg : 0 ≤ (2000000 : ℚ) * ((m - 3 : Nat) : ℚ) := by
+      positivity
+    calc
+      positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock m
+          =
+        positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock ((m - 3) + 3) := by
+          rw [hm_rewrite]
+      _ ≤ (2000000 : ℚ) * ((m - 3 : Nat) : ℚ) *
+          positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (m - 3) :=
+          hblock
+      _ ≤ (2000000 : ℚ) * ((m - 3 : Nat) : ℚ) *
+          positiveLargeTailSoloSharpDeepLowHeadTargetLower (m - 3) := by
+          exact mul_le_mul_of_nonneg_left hprev hcoef_nonneg
+      _ ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower ((m - 3) + 3) :=
+          htarget
+      _ = positiveLargeTailSoloSharpDeepLowHeadTargetLower m := by
+          rw [hm_rewrite]
+  exact hall a ha
 
 theorem positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
     {a s : Nat} (ha : 3000 ≤ a)
@@ -22363,6 +22656,56 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_start
         positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
           (positiveLargeTailSoloSharpDeepLowStart a) := by
         simp [nsmul_eq_mul]
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_targetLower
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a
+      ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower a := by
+  have hstart :=
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_start
+      (a := a) ha
+  have hfirst :=
+    positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_targetLower
+      (a := a) ha
+  exact hstart.trans
+    (by
+      simpa [positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock]
+        using hfirst)
+
+theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_sixtyfourth_target
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a
+      ≤ (29 / 64 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hhead :=
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_targetLower
+      (a := a) ha
+  have hc_lower := c_lb a (by omega : 1 ≤ a)
+  have htarget_lower :
+      positiveLargeTailSoloSharpDeepLowHeadTargetLower a
+        ≤ (29 / 64 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+    have hmul :=
+      mul_le_mul_of_nonneg_left hc_lower
+        (by positivity : 0 ≤ (29 / 64 : ℚ) * (a : ℚ))
+    have hscaled :=
+      mul_le_mul_of_nonneg_right hmul
+        (by positivity : 0 ≤ (10 / 7 : ℚ)^a)
+    unfold positiveLargeTailSoloSharpDeepLowHeadTargetLower
+    calc
+      (29 / 64 : ℚ) * (a : ℚ) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a
+          =
+        ((29 / 64 : ℚ) * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a - 1).factorial : Nat) : ℚ))) *
+          (10 / 7 : ℚ)^a := by
+            ring
+      _ ≤ ((29 / 64 : ℚ) * (a : ℚ)) * c a *
+          (10 / 7 : ℚ)^a := hscaled
+      _ = (29 / 64 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+          ring
+  exact hhead.trans htarget_lower
 
 theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
     {a : Nat} (ha : 3000 ≤ a) :
