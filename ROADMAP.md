@@ -663,6 +663,12 @@ Status:
       product/solo block-sum route.
       `positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
       combines that product route with the reduced solo block-sum target.
+      Recursive `Gcomp` has also been eliminated from this proof-production
+      interface by the all-range closed majorant `GcompClosedBound`:
+      `PositiveSaddleLargeTailProductClosedBlockSumScalarCertificate` packages
+      the closed product scalar obligations, and
+      `positiveSaddleLargeTailAuditCertificate_of_productClosedBlockSumScalars_soloGcompClosedBlockSumCleared`
+      combines them with the closed solo block-sum target.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -819,6 +825,10 @@ Status:
       `EplusGcompBound_le_Gcomp_sum`, giving the double-sum target
       `positiveLargeTailSoloGcompBlockSumCleared` and the audit wrapper
       `positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared`.
+      The closed-composition solo target
+      `positiveLargeTailSoloGcompClosedBlockSumCleared` now feeds the same
+      `(10/7)^a` envelope through
+      `positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedBlockSumCleared`.
       The older staging
       wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`

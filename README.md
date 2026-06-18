@@ -231,7 +231,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   is the most reduced current large-tail assembly interface for the explicit
   product and solo block-sum route; the sibling
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productBlockSum_soloGcompBlockSumCleared`
-  accepts the already-assembled block-sum product certificate.
+  accepts the already-assembled block-sum product certificate.  The recursive
+  `Gcomp` factors in these block sums can now be replaced by the closed
+  Lemma 3.1 all-range majorant `Prop51.GcompClosedBound`: product-side
+  scalar fields are packaged by
+  `Prop51.PositiveSaddleLargeTailProductClosedBlockSumScalarCertificate`, and
+  the corresponding audit wrapper is
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedBlockSumScalars_soloGcompClosedBlockSumCleared`.
   For final
   assembly from
   these lower-level product and solo proofs,
@@ -347,6 +353,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   target `Prop51.positiveLargeTailSoloGcompBlockSumCleared` and the audit
   wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared`.
+  The solo double sum also has a closed-composition target
+  `Prop51.positiveLargeTailSoloGcompClosedBlockSumCleared`, with
+  `Prop51.positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedBlockSumCleared`
+  converting it to the same `(10/7)^a` solo envelope.
   The older
   staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`

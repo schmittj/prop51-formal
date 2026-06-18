@@ -240,4 +240,39 @@ theorem Gcomp_le (r : Nat) (hr : 1 ≤ r) : ∀ p : Nat, 2*r ≤ p →
                 show p - 2*(r+1) + 1 = p - 2*r - 1 by omega, ← hpow]
             ring
 
+/-- Closed all-range majorant for `Gcomp`.
+
+For `r = 0` it is exact.  For `r ≥ 1` and `p ≥ 2r` it is Lemma 3.1, and for
+`p < 2r` both sides are zero. -/
+def GcompClosedBound (r p : Nat) : ℚ :=
+  if r = 0 then
+    if p = 0 then 1 else 0
+  else if 2 * r ≤ p then
+    4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)
+  else
+    0
+
+theorem Gcomp_le_closedBound (r p : Nat) :
+    Gcomp r p ≤ GcompClosedBound r p := by
+  by_cases hr0 : r = 0
+  · subst r
+    by_cases hp0 : p = 0
+    · simp [GcompClosedBound, Gcomp, hp0]
+    · simp [GcompClosedBound, Gcomp, hp0]
+  · have hr1 : 1 ≤ r := by omega
+    by_cases hrp : 2 * r ≤ p
+    · simpa [GcompClosedBound, hr0, hrp] using Gcomp_le r hr1 p hrp
+    · have hzero : Gcomp r p = 0 :=
+        Gcomp_eq_zero r p hr1 (by omega)
+      simp [GcompClosedBound, hr0, hrp, hzero]
+
+theorem GcompClosedBound_nonneg (r p : Nat) :
+    0 ≤ GcompClosedBound r p := by
+  unfold GcompClosedBound
+  split
+  · split <;> norm_num
+  · split
+    · positivity
+    · norm_num
+
 end Prop51
