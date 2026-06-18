@@ -2968,6 +2968,20 @@ def atom_index_for_cell_target(
     return weight_ranges[-1][2] if weight_ranges else 0
 
 
+def nonempty_shard_boundaries(
+    total: int, shard_count: int, targets: list[int]
+) -> list[int]:
+    if total < shard_count:
+        return targets
+    boundaries = [0]
+    for shard_index in range(1, shard_count):
+        lower = boundaries[-1] + 1
+        upper = total - (shard_count - shard_index)
+        boundaries.append(min(max(targets[shard_index], lower), upper))
+    boundaries.append(total)
+    return boundaries
+
+
 def single_chunk_shard_bounds(
     args: argparse.Namespace, shard_index: int, shard_count: int
 ) -> tuple[int, int]:
@@ -2978,12 +2992,12 @@ def single_chunk_shard_bounds(
     if not weight_ranges:
         return 0, 0
     total_weight = weight_ranges[-1][5]
-    start_target = total_weight * shard_index // shard_count
-    stop_target = total_weight * (shard_index + 1) // shard_count
-    return (
-        atom_index_for_cell_target(weight_ranges, start_target),
-        atom_index_for_cell_target(weight_ranges, stop_target),
-    )
+    raw_boundaries = [
+        atom_index_for_cell_target(weight_ranges, total_weight * i // shard_count)
+        for i in range(shard_count + 1)
+    ]
+    boundaries = nonempty_shard_boundaries(total, shard_count, raw_boundaries)
+    return boundaries[shard_index], boundaries[shard_index + 1]
 
 
 def dry_run_shard_summaries(
