@@ -125,6 +125,30 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
         (soloY (a := a) (N := N) ha hrect))
     upperMiddle
 
+/-- Same hybrid wrapper, but the split-final-term factorial solo target only
+has to be supplied at the upper rectangle edge `N = posNhi a`; monotonicity of
+the solo block sum fills in the rest of the rectangle. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a))
+    (upperMiddle :
+      PositiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10 smallXBound smallYBound temperedXBound temperedYBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+        (a := a) (N := N) hrect (soloY (a := a) ha))
+    upperMiddle
+
 /-- Large-tail wrapper with both adjacent-step sides filled in.
 
 After the upper-middle reverse target is now concrete, this route asks only for
@@ -194,6 +218,24 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMidd
     PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
       999 10 smallXBound smallYBound temperedXBound temperedYBound :=
   positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product soloY
+    positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+
+/-- Large-tail wrapper with both adjacent-step sides filled in and the solo
+side supplied only at the upper rectangle edge. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10 smallXBound smallYBound temperedXBound temperedYBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_upperMiddle_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
     product soloY
     positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
 
@@ -297,6 +339,22 @@ theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompClosedFactor
           a N) :
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product soloY).toLargeTailAuditCertificate
+
+/-- Large-tail audit certificate with a direct split-final-term solo
+obligation only at `N = posNhi a`. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
     product soloY).toLargeTailAuditCertificate
 
 /-- Large-tail audit certificate after both adjacent-step sides are filled and
@@ -515,6 +573,26 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertifica
         (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
         (soloY (a := a) (N := N) ha hrect))
 
+/-- Preferred hybrid-ratio large-tail certificate with fast split-final-term
+product targets and the direct solo target checked only at the upper
+rectangle edge. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+        (a := a) (N := N) hrect (soloY (a := a) ha))
+
 /-- Large-tail audit certificate with fast split-final-term product targets
 and the split-final-term factorial solo target estimated directly against
 the final `(10/7)^a` envelope. -/
@@ -527,6 +605,19 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
           a N) :
     PositiveSaddleLargeTailAuditCertificate :=
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product soloY).toLargeTailAuditCertificate
+
+/-- Large-tail audit certificate with fast split-final-term product targets
+and the direct split-final-term solo target checked only at `N = posNhi a`. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
     product soloY).toLargeTailAuditCertificate
 
 end Prop51

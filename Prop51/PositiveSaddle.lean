@@ -3065,6 +3065,92 @@ theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_nonneg
   rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum]
   exact positiveLargeTailYGcompClosedFactorialBlockSum_nonneg N j
 
+/-- The factorial-only `Y` inner closed-composition sum is nonnegative. -/
+theorem positiveLargeTailYGcompClosedInnerFactorial_nonneg
+    (N p : Nat) :
+    0 ≤ positiveLargeTailYGcompClosedInnerFactorial N p := by
+  unfold positiveLargeTailYGcompClosedInnerFactorial
+  refine Finset.sum_nonneg fun r _ => ?_
+  positivity
+
+/-- The factorial-only `Y` inner closed-composition sum is monotone in the
+rectangle variable `N`. -/
+theorem positiveLargeTailYGcompClosedInnerFactorial_mono_N
+    {N M p : Nat} (hNM : N ≤ M) :
+    positiveLargeTailYGcompClosedInnerFactorial N p
+      ≤ positiveLargeTailYGcompClosedInnerFactorial M p := by
+  unfold positiveLargeTailYGcompClosedInnerFactorial
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hbase :
+      (N : ℚ) / 50 ≤ (M : ℚ) / 50 :=
+    div_le_div_of_nonneg_right (by exact_mod_cast hNM)
+      (by norm_num : (0 : ℚ) ≤ 50)
+  have hpow :
+      ((N : ℚ) / 50)^r ≤ ((M : ℚ) / 50)^r :=
+    pow_le_pow_left₀ (by positivity : 0 ≤ (N : ℚ) / 50) hbase r
+  have hcoef :
+      0 ≤ 6^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ) := by
+    positivity
+  simpa [mul_assoc, div_eq_mul_inv] using
+    mul_le_mul_of_nonneg_right hpow hcoef
+
+/-- The outer linear-exponential factor in the factorial-only `Y` block sum
+is monotone in `N`. -/
+theorem positiveLargeTailYGcompClosedFactorialLinear_mono_N
+    {N M s : Nat} (hNM : N ≤ M) :
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+      ≤ (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+  have hbase :
+      (N : ℚ) / 2 * c 1 / 2 ≤ (M : ℚ) / 2 * c 1 / 2 := by
+    rw [c_one]
+    have hNMq : (N : ℚ) ≤ (M : ℚ) := by exact_mod_cast hNM
+    nlinarith
+  have hpow :
+      ((N : ℚ) / 2 * c 1 / 2)^s
+        ≤ ((M : ℚ) / 2 * c 1 / 2)^s :=
+    pow_le_pow_left₀
+      (by rw [c_one]; positivity : 0 ≤ (N : ℚ) / 2 * c 1 / 2)
+      hbase s
+  exact div_le_div_of_nonneg_right hpow (by positivity)
+
+/-- The factorial-only `Y` closed block sum is monotone in the rectangle
+variable `N`. -/
+theorem positiveLargeTailYGcompClosedFactorialBlockSum_mono_N
+    {N M j : Nat} (hNM : N ≤ M) :
+    positiveLargeTailYGcompClosedFactorialBlockSum N j
+      ≤ positiveLargeTailYGcompClosedFactorialBlockSum M j := by
+  unfold positiveLargeTailYGcompClosedFactorialBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin :
+      (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+        ≤ (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) :=
+    positiveLargeTailYGcompClosedFactorialLinear_mono_N hNM
+  have hinner :
+      positiveLargeTailYGcompClosedInnerFactorial N (j - s)
+        ≤ positiveLargeTailYGcompClosedInnerFactorial M (j - s) :=
+    positiveLargeTailYGcompClosedInnerFactorial_mono_N hNM
+  have hinner_nonneg :
+      0 ≤ positiveLargeTailYGcompClosedInnerFactorial N (j - s) :=
+    positiveLargeTailYGcompClosedInnerFactorial_nonneg N (j - s)
+  have hlin_nonneg :
+      0 ≤ (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul hlin hinner hinner_nonneg hlin_nonneg
+
+/-- The split-final-term factorial-only `Y` closed block sum is monotone in
+the rectangle variable `N`.  This is kept as a rewrite from the canonical
+factorial block sum, avoiding a separate algebra proof for the split form. -/
+theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_mono_N
+    {N M j : Nat} (hNM : N ≤ M) :
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum N j
+      ≤ positiveLargeTailYGcompClosedFactorialSplitBlockSum M j := by
+  rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum N j,
+    ← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum M j]
+  exact positiveLargeTailYGcompClosedFactorialBlockSum_mono_N hNM
+
 theorem positiveLargeTailXGcompBlockSum_le_closedBlockSum (N k : Nat) :
     positiveLargeTailXGcompBlockSum N k
       ≤ positiveLargeTailXGcompClosedBlockSum N k := by
@@ -18907,6 +18993,16 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_nonneg
   rw [positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
   exact positiveLargeTailSoloGcompClosedFactorialBlockSum_nonneg a N
 
+/-- The split-final-term factorial-only solo closed block sum is monotone in
+the rectangle variable `N`. -/
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N
+    {a N M : Nat} (hNM : N ≤ M) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+      ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a M := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+  exact positiveLargeTailYGcompClosedFactorialSplitBlockSum_mono_N
+    (j := a) hNM
+
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
 theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
@@ -19001,6 +19097,27 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
   (4 : ℚ) * (2 : ℚ)^a *
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
     ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
+
+/-- Since the direct split-final-term solo target is monotone increasing in
+`N` on the left and its right side is independent of `N`, checking it at the
+upper rectangle edge `posNhi a` implies the same target throughout the
+positive rectangle. -/
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a)) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a N := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    at hEdge ⊢
+  have hsum :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+        ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            a (posNhi a) :=
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
 
 /-- Denominator-cleared large-tail solo `Gcomp` saddle target.
 
@@ -19401,6 +19518,26 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedF
       positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
         (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
         (hY (a := a) (N := N) ha hrect))
+
+/-- Large-tail solo certificate reduced to checking the direct
+split-final-term factorial-only active closed-composition target at the
+upper rectangle edge `N = posNhi a`.
+
+This is a Lean-side reduction step for proof production: the TeX argument
+states the direct solo majorant uniformly on the rectangle, while the formal
+certificate can now supply only the worst `N` edge and use monotonicity for
+the interior. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    (hY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+        (a := a) (N := N) hrect (hY (a := a) ha))
 
 /-- At the first retained tempered index, the large-tail tempered exponent is
 at most `0.3a`.

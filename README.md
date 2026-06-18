@@ -277,7 +277,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared`;
   this is another Lean proof-production target, weaker than the
   `partialExpUpperFast` solo shell and converted internally to the same solo
-  envelope.
+  envelope.  Its upper-edge reduction
+  `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`
+  proves that it is enough to supply this direct solo check at
+  `N = posNhi a`, with monotonicity filling the positive rectangle.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
