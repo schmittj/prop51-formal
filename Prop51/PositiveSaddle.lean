@@ -17610,10 +17610,41 @@ def positiveLargeTailSoloGcompSaddleSum (a N : Nat) : ℚ :=
     (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
       EplusGcompBound N (a - s)
 
+/-- The same solo `Gcomp` saddle sum with the nonlinear recurrence opened
+into the explicit `Gcomp` block majorant. -/
+def positiveLargeTailSoloGcompBlockSum (a N : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+      (∑ r ∈ Finset.range (a - s + 1),
+        ((N : ℚ) / 50)^r * 6^(a - s) * Gcomp r (a - s) /
+          (r.factorial : ℚ))
+
+/-- The decomposed recurrence sum is bounded by the explicit double block
+sum. -/
+theorem positiveLargeTailSoloGcompSaddleSum_le_blockSum (a N : Nat) :
+    positiveLargeTailSoloGcompSaddleSum a N
+      ≤ positiveLargeTailSoloGcompBlockSum a N := by
+  unfold positiveLargeTailSoloGcompSaddleSum
+    positiveLargeTailSoloGcompBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul_of_nonneg_left
+    (EplusGcompBound_le_Gcomp_sum N (a - s)) hlin_nonneg
+
 /-- Denominator-cleared large-tail solo saddle target in the decomposed
 linear/nonlinear sum form. -/
 def positiveLargeTailSoloGcompSaddleSumCleared (a N : Nat) : Prop :=
   (4 : ℚ) * (2 : ℚ)^a * positiveLargeTailSoloGcompSaddleSum a N
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpper (positiveSoloYExponent a) (8 * a)
+
+/-- Denominator-cleared large-tail solo saddle target with all nonlinear
+blocks opened into the explicit `Gcomp` double sum. -/
+def positiveLargeTailSoloGcompBlockSumCleared (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * positiveLargeTailSoloGcompBlockSum a N
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpper (positiveSoloYExponent a) (8 * a)
 
@@ -17645,6 +17676,25 @@ theorem positiveLargeTailSoloGcompSaddleCleared_of_sumCleared
     {a N : Nat} (h : positiveLargeTailSoloGcompSaddleSumCleared a N) :
     positiveLargeTailSoloGcompSaddleCleared a N :=
   (positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared a N).2 h
+
+/-- A cleared explicit `Gcomp` double-sum bound implies the decomposed
+recurrence-sum solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleSumCleared_of_blockSumCleared
+    {a N : Nat} (h : positiveLargeTailSoloGcompBlockSumCleared a N) :
+    positiveLargeTailSoloGcompSaddleSumCleared a N := by
+  unfold positiveLargeTailSoloGcompSaddleSumCleared
+    positiveLargeTailSoloGcompBlockSumCleared at *
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left
+    (positiveLargeTailSoloGcompSaddleSum_le_blockSum a N) hscale).trans h
+
+/-- A cleared explicit `Gcomp` double-sum bound implies the recurrence-level
+cleared solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
+    {a N : Nat} (h : positiveLargeTailSoloGcompBlockSumCleared a N) :
+    positiveLargeTailSoloGcompSaddleCleared a N :=
+  positiveLargeTailSoloGcompSaddleCleared_of_sumCleared
+    (positiveLargeTailSoloGcompSaddleSumCleared_of_blockSumCleared h)
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/
@@ -17700,6 +17750,19 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompSaddleC
       positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
         (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
         (hY ha hrect))
+
+/-- Large-tail solo certificate reduced to the explicit `Gcomp` double-sum
+target. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompBlockSumCleared
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompBlockSumCleared a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompSaddleCleared
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
+        (hY (a := a) (N := N) ha hrect))
 
 /-- At the first retained tempered index, the large-tail tempered exponent is
 at most `0.3a`.

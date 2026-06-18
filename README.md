@@ -320,7 +320,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   target opens into the TeX-shaped linear/nonlinear finite sum
   `Prop51.positiveLargeTailSoloGcompSaddleSumCleared` via
   `Prop51.positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared`, using
-  `Prop51.QqEplusGcompBound_eq_linear_EplusGcompBound_sum`.  The older
+  `Prop51.QqEplusGcompBound_eq_linear_EplusGcompBound_sum`.  The nonlinear
+  recurrence can be opened once more by
+  `Prop51.EplusGcompBound_le_Gcomp_sum`, yielding the explicit double-sum
+  target `Prop51.positiveLargeTailSoloGcompBlockSumCleared` and the audit
+  wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared`.
+  The older
   staging wrappers
   `Prop51.PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
   and

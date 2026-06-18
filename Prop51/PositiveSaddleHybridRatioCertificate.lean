@@ -182,4 +182,22 @@ theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleare
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompSaddleCleared
     product soloY).toLargeTailAuditCertificate
 
+/-- Large-tail audit certificate after both adjacent-step sides are filled and
+the solo side is reduced to the explicit `Gcomp` double-sum target. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        smallXBound smallYBound temperedXBound temperedYBound)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompBlockSumCleared a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  positiveSaddleLargeTailAuditCertificate_of_product_soloGcompSaddleCleared
+    product
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
+        (soloY (a := a) (N := N) ha hrect))
+
 end Prop51

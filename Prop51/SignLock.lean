@@ -209,6 +209,47 @@ theorem Eplus_nat_le_GcompBound (N p : Nat) :
             (abs_EplusLogCoeff_le (N := (N : ℚ)) (Nat.cast_nonneg N)
               (j := j) h2)) p)
 
+/-- The recurrence-level nonlinear positive majorant is itself bounded by
+the explicit `Gcomp` block sum.
+
+This opens the executable `EplusGcompBound` recurrence into the same block
+majorant used by the paper and by the residual-envelope arguments. -/
+theorem EplusGcompBound_le_Gcomp_sum (N p : Nat) :
+    EplusGcompBound N p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ) := by
+  let L : Nat → ℚ :=
+    fun j =>
+      if j < 2 then 0
+      else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ)
+  have hL0 : L 0 = 0 := by
+    simp [L]
+  have hLzero : ∀ j, j < 2 → L j = 0 := by
+    intro j hj
+    simp [L, hj]
+  have hLb :
+      ∀ j, 2 ≤ j →
+        |L j| ≤ ((N : ℚ) / 50) *
+          (6^j * ((j - 1).factorial : ℚ)) := by
+    intro j hj
+    have hnot : ¬ j < 2 := by omega
+    simp [L, hnot]
+    rw [abs_of_nonneg (by positivity : 0 ≤ (N : ℚ) / 50)]
+    simp [mul_assoc]
+  change expCoeff L p ≤
+    ∑ r ∈ Finset.range (p+1),
+      ((N : ℚ) / 50)^r * 6^p * Gcomp r p / (r.factorial : ℚ)
+  rw [expCoeff_eq_sum_pow L hL0 p]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hcoeff := abs_coeff_pow_le L ((N : ℚ) / 50) hLzero hLb r p
+  have hleabs :
+      coeff p ((mk L : ℚ⟦X⟧) ^ r)
+        ≤ |coeff p ((mk L : ℚ⟦X⟧) ^ r)| :=
+    le_abs_self _
+  have hfpos : (0 : ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  exact div_le_div_of_nonneg_right (hleabs.trans hcoeff) hfpos.le
+
 /-- Nonlinear part of the positive `B` majorant:
 `[X^p] exp(N H(X))`, where `H(X)=log C(X)-c_1X`. -/
 def BplusNonlinear (N : ℚ) (p : Nat) : ℚ :=

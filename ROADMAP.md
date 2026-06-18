@@ -794,7 +794,11 @@ Status:
       equivalence `positiveLargeTailSoloGcompSaddleCleared_iff_sumCleared`
       follows from `QqEplusGcompBound_eq_linear_EplusGcompBound_sum`, so
       subsequent analytic work can estimate the TeX-shaped linear/nonlinear
-      block sum without changing the audit interface.
+      block sum without changing the audit interface.  The nonlinear
+      recurrence also has the explicit block bound
+      `EplusGcompBound_le_Gcomp_sum`, giving the double-sum target
+      `positiveLargeTailSoloGcompBlockSumCleared` and the audit wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_product_soloGcompBlockSumCleared`.
       The older staging
       wrappers
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsReserveEnvelopeBoundsAuditCertificate`
