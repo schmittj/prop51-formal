@@ -13787,6 +13787,17 @@ bound on active indices. -/
 def positiveLargeTailProductYClosedFactorialBlockBound (a N k : Nat) : ℚ :=
   positiveLargeTailYGcompClosedFactorialBlockSum N (posJ a k)
 
+@[simp] theorem positiveLargeTailProductXClosedFactorialBlockBound_zero
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialBlockBound a N 0 = 1 := by
+  simp [positiveLargeTailProductXClosedFactorialBlockBound]
+
+@[simp] theorem positiveLargeTailProductXClosedFactorialBlockBound_one
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialBlockBound a N 1 =
+      (N : ℚ) * c 1 := by
+  simp [positiveLargeTailProductXClosedFactorialBlockBound]
+
 theorem positiveLargeTailProductXClosedBlockBound_nonneg (a N k : Nat) :
     0 ≤ positiveLargeTailProductXClosedBlockBound a N k := by
   unfold positiveLargeTailProductXClosedBlockBound
@@ -18473,6 +18484,17 @@ def positiveLargeTailSoloGcompClosedActiveBlockSum (a N : Nat) : ℚ :=
 /-- Solo closed block sum in factorial-only active form. -/
 def positiveLargeTailSoloGcompClosedFactorialBlockSum (a N : Nat) : ℚ :=
   positiveLargeTailYGcompClosedFactorialBlockSum N a
+
+@[simp] theorem positiveLargeTailSoloGcompClosedFactorialBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailSoloGcompClosedFactorialBlockSum 0 N = 1 := by
+  simp [positiveLargeTailSoloGcompClosedFactorialBlockSum]
+
+@[simp] theorem positiveLargeTailSoloGcompClosedFactorialBlockSum_one
+    (N : Nat) :
+    positiveLargeTailSoloGcompClosedFactorialBlockSum 1 N =
+      (N : ℚ) / 2 * c 1 / 2 := by
+  simp [positiveLargeTailSoloGcompClosedFactorialBlockSum]
 
 theorem positiveLargeTailSoloGcompClosedActiveBlockSum_eq_closedBlockSum
     (a N : Nat) :
