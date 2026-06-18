@@ -252,6 +252,23 @@ def GcompClosedBound (r p : Nat) : ℚ :=
   else
     0
 
+@[simp] theorem GcompClosedBound_zero_left (p : Nat) :
+    GcompClosedBound 0 p = if p = 0 then 1 else 0 := by
+  simp [GcompClosedBound]
+
+theorem GcompClosedBound_eq_zero_of_lt {r p : Nat} (h : p < 2 * r) :
+    GcompClosedBound r p = 0 := by
+  have hr0 : r ≠ 0 := by omega
+  have hnot : ¬ 2 * r ≤ p := by omega
+  simp [GcompClosedBound, hr0, hnot]
+
+theorem GcompClosedBound_eq_factorial_of_pos_le {r p : Nat}
+    (hr : 1 ≤ r) (h : 2 * r ≤ p) :
+    GcompClosedBound r p =
+      4^(r - 1) * ((p - 2*r + 1).factorial : ℚ) := by
+  have hr0 : r ≠ 0 := by omega
+  simp [GcompClosedBound, hr0, h]
+
 theorem Gcomp_le_closedBound (r p : Nat) :
     Gcomp r p ≤ GcompClosedBound r p := by
   by_cases hr0 : r = 0
