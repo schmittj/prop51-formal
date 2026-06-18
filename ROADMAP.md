@@ -598,7 +598,9 @@ Status:
       dirty-status metadata for reproducibility.  Dry runs also accept
       `--dry-run-shard-count n`, which reports balanced shard field counts
       and conservative per-shard loop-cell upper bounds without materializing
-      atom entries.
+      atom entries; `--shard-balance cells` applies the same conservative
+      loop-cell weighting to both dry-run shard summaries and emitted shard
+      ranges.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

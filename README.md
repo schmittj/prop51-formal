@@ -728,7 +728,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   and first-class active manifest/shard emission for the fixed-edge combined
   strategy.  Add `--dry-run-shard-count n` to either dry-run mode to include
   balanced shard summaries with per-field atom counts and conservative
-  per-shard loop-cell upper bounds, still without materializing atom entries.
+  per-shard loop-cell upper bounds, still without materializing atom entries;
+  use `--shard-balance cells` when those shard ranges should be balanced by
+  the conservative loop-cell estimate instead of by raw atom count.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the

@@ -40,6 +40,8 @@ Strategies include:
   * --dry-run-shard-count N: with a dry run, add balanced shard summaries
     with per-field counts and conservative loop-cell upper bounds, still
     without materializing atom entries.
+  * --shard-balance cells: split shard ranges by conservative loop-cell
+    weight instead of raw atom count.
   * --active-row-covers: target the row-active Lean finite-window wrapper,
     using row-local `N` and retained-`k` covers for emitted atoms/manifests.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
@@ -691,6 +693,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "with --dry-run-counts or --dry-run-active-counts, include "
             "balanced shard summaries with per-field counts and conservative "
             "loop-cell upper bounds"
+        ),
+    )
+    parser.add_argument(
+        "--shard-balance",
+        choices=("atoms", "cells"),
+        default="atoms",
+        help=(
+            "balance --emit-single-chunk-shard, --manifest-shard-count, and "
+            "--dry-run-shard-count by atom count or conservative loop-cell "
+            "upper bound"
         ),
     )
     parser.add_argument(
@@ -2514,7 +2526,7 @@ def single_chunk_emit_args(
 def single_chunk_shard_emit_args(
     args: argparse.Namespace, shard_index: int, shard_count: int
 ) -> list[str]:
-    return [
+    emit_args = [
         *common_finite_emit_args(args),
         "--single-chunk-prefix",
         args.single_chunk_prefix,
@@ -2524,6 +2536,9 @@ def single_chunk_shard_emit_args(
         "--shard-count",
         str(shard_count),
     ]
+    if args.shard_balance != "atoms":
+        emit_args.extend(["--shard-balance", args.shard_balance])
+    return emit_args
 
 
 def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
@@ -2567,12 +2582,15 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
                 "start": start,
                 "stop": stop,
                 "count": stop - start,
+                "shard_balance": args.shard_balance,
                 "emit_args": single_chunk_shard_emit_args(
                     args, shard_index, shard_count
                 ),
             }
             for shard_index in range(shard_count)
-            for start, stop in [shard_bounds(len(specs), shard_index, shard_count)]
+            for start, stop in [
+                single_chunk_shard_bounds(args, shard_index, shard_count)
+            ]
         ]
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
 
@@ -2691,6 +2709,27 @@ def dry_run_chunk_lengths(args: argparse.Namespace) -> dict[str, int | None]:
 def dry_run_cell_estimates(
     args: argparse.Namespace, counts: dict[str, int]
 ) -> dict[str, object]:
+    max_cells_by_field = dry_run_max_cells_by_field(args)
+    present_max = {
+        field: max_cells_by_field[field]
+        for field in sorted(counts)
+        if field in max_cells_by_field
+    }
+    total_upper = {
+        field: counts[field] * present_max[field] for field in present_max
+    }
+    return {
+        "note": (
+            "Conservative loop-cell upper bounds for each generated atom; "
+            "actual active cells may be smaller near chunk boundaries."
+        ),
+        "max_cells_per_atom": present_max,
+        "total_cells_upper_bound": total_upper,
+        "total_cells_upper_bound_all": sum(total_upper.values()),
+    }
+
+
+def dry_run_max_cells_by_field(args: argparse.Namespace) -> dict[str, int]:
     product_cells = (
         args.product_row_len * args.n_len * active_product_k_len(args)
     )
@@ -2718,33 +2757,63 @@ def dry_run_cell_estimates(
         "edge": edge_cells,
         "edge-fixed": edge_cells,
     }
-    present_max = {
-        field: max_cells_by_field[field]
-        for field in sorted(counts)
-        if field in max_cells_by_field
-    }
-    total_upper = {
-        field: counts[field] * present_max[field] for field in present_max
-    }
-    return {
-        "note": (
-            "Conservative loop-cell upper bounds for each generated atom; "
-            "actual active cells may be smaller near chunk boundaries."
-        ),
-        "max_cells_per_atom": present_max,
-        "total_cells_upper_bound": total_upper,
-        "total_cells_upper_bound_all": sum(total_upper.values()),
-    }
+    return max_cells_by_field
+
+
+def single_chunk_cell_weight_ranges(
+    args: argparse.Namespace,
+) -> list[tuple[str, int, int, int, int, int]]:
+    weights = dry_run_max_cells_by_field(args)
+    ranges = []
+    cell_offset = 0
+    for field, start, stop in single_chunk_shape_ranges(args):
+        atom_count = stop - start
+        weight = weights.get(field, 1)
+        cell_stop = cell_offset + atom_count * weight
+        ranges.append((field, start, stop, weight, cell_offset, cell_stop))
+        cell_offset = cell_stop
+    return ranges
+
+
+def atom_index_for_cell_target(
+    weight_ranges: list[tuple[str, int, int, int, int, int]], target: int
+) -> int:
+    if target <= 0:
+        return 0
+    for _field, start, stop, weight, cell_start, cell_stop in weight_ranges:
+        if target <= cell_start:
+            return start
+        if target <= cell_stop:
+            local_weight = target - cell_start
+            return min(stop, start + (local_weight + weight - 1) // weight)
+    return weight_ranges[-1][2] if weight_ranges else 0
+
+
+def single_chunk_shard_bounds(
+    args: argparse.Namespace, shard_index: int, shard_count: int
+) -> tuple[int, int]:
+    total = single_chunk_total_count(args)
+    if args.shard_balance == "atoms":
+        return shard_bounds(total, shard_index, shard_count)
+    weight_ranges = single_chunk_cell_weight_ranges(args)
+    if not weight_ranges:
+        return 0, 0
+    total_weight = weight_ranges[-1][5]
+    start_target = total_weight * shard_index // shard_count
+    stop_target = total_weight * (shard_index + 1) // shard_count
+    return (
+        atom_index_for_cell_target(weight_ranges, start_target),
+        atom_index_for_cell_target(weight_ranges, stop_target),
+    )
 
 
 def dry_run_shard_summaries(
     args: argparse.Namespace, shard_count: int
 ) -> list[dict[str, object]]:
     shape_ranges = single_chunk_shape_ranges(args)
-    total = shape_ranges[-1][2] if shape_ranges else 0
     summaries = []
     for shard_index in range(shard_count):
-        start, stop = shard_bounds(total, shard_index, shard_count)
+        start, stop = single_chunk_shard_bounds(args, shard_index, shard_count)
         counts: dict[str, int] = {}
         for field, shape_start, shape_stop in shape_ranges:
             overlap = min(stop, shape_stop) - max(start, shape_start)
@@ -2757,6 +2826,7 @@ def dry_run_shard_summaries(
                 "start": start,
                 "stop": stop,
                 "count": stop - start,
+                "shard_balance": args.shard_balance,
                 "counts": counts,
                 "cell_estimates": dry_run_cell_estimates(args, counts),
                 "emit_args": single_chunk_shard_emit_args(
@@ -3226,7 +3296,9 @@ def shard_bounds(total: int, shard_index: int, shard_count: int) -> tuple[int, i
 
 def emit_single_chunk_shard(args: argparse.Namespace) -> str:
     total = single_chunk_total_count(args)
-    start, stop = shard_bounds(total, args.shard_index, args.shard_count)
+    start, stop = single_chunk_shard_bounds(
+        args, args.shard_index, args.shard_count
+    )
     lines = emit_header(args)
     lines.extend(
         [
@@ -3234,7 +3306,8 @@ def emit_single_chunk_shard(args: argparse.Namespace) -> str:
             "/-",
             "Individual finite-window atom shard.",
             f"Shard {args.shard_index + 1} of {args.shard_count}; "
-            f"atoms {start} <= i < {stop} out of {total}.",
+            f"balanced by {args.shard_balance}; atoms {start} <= i < {stop} "
+            f"out of {total}.",
             "-/",
             "",
         ]
