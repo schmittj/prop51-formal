@@ -515,7 +515,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   for the fast product target with a direct solo envelope, or
   `--final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths`
   for the fast product target with the split-final-term solo sum cleared
-  directly against `(10/7)^a`,
+  directly against `(10/7)^a`; use
+  `--final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths-upper-edge`
+  for the same target when the solo proof is supplied only at `N = posNhi a`,
   `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for

@@ -726,7 +726,10 @@ Status:
       exposed through
       `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`, and the
       structured direct ten-sevenths solo variant through
-      `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`.
+      `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`; its
+      upper-edge sibling
+      `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsUpperEdgeTail`
+      only asks for that solo target at `N = posNhi a`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -762,6 +765,8 @@ Status:
       `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-envelope`.
       The fast-product/split-solo direct ten-sevenths form is available as
       `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths`.
+      The upper-edge solo version is available as
+      `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths-upper-edge`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
