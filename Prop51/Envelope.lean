@@ -515,6 +515,132 @@ private theorem DeltaRatTerm_far_coeff (r : Nat) (hr : 1 ≤ r) :
   obtain ⟨k, rfl⟩ : ∃ k, r = k + 1 := ⟨r-1, by omega⟩
   norm_num
 
+/-- Very coarse all-range Δ-block estimate.
+
+This is intentionally much weaker than the paper's near/far envelope.  It is
+useful in the final deep-low solo tail, where the surrounding factorial and
+power decay leaves enormous slack and a one-line `N^p` majorant is preferable
+to another thresholded Δ split. -/
+theorem DeltaRatTerm_le_two_pow (p r : Nat) {N : ℚ}
+    (hN1 : 1 ≤ N) (hr : 2 ≤ r) (hrp : 2*r ≤ p) :
+    DeltaRatTerm p N r ≤ 2 * N^p := by
+  have hN0 : 0 ≤ N := le_trans zero_le_one hN1
+  have hpow_le : N^(r-1) ≤ N^p :=
+    pow_le_pow_right₀ hN1 (by omega : r - 1 ≤ p)
+  have hcoef_eq :
+      (36/5 : ℚ) * (4/25)^r * 4^(r-1) = (9/5) * (16/25)^r :=
+    by
+      obtain ⟨k, rfl⟩ : ∃ k, r = k + 1 := ⟨r-1, by omega⟩
+      norm_num
+      ring_nf
+      rw [← mul_pow]
+      norm_num
+  have hcoef_pow_le_one : (16 / 25 : ℚ)^r ≤ 1 :=
+    pow_le_one₀ (by norm_num : (0 : ℚ) ≤ 16 / 25)
+      (by norm_num : (16 / 25 : ℚ) ≤ 1)
+  have hcoef_le : (9 / 5 : ℚ) * (16 / 25 : ℚ)^r ≤ 2 := by
+    nlinarith
+  have hfacNat :
+      (p - 2*r + 1).factorial ≤ (p - 1).factorial :=
+    Nat.factorial_le (by omega : p - 2*r + 1 ≤ p - 1)
+  have hfac :
+      (((p - 2*r + 1).factorial : Nat) : ℚ)
+        ≤ (((p - 1).factorial : Nat) : ℚ) := by
+    exact_mod_cast hfacNat
+  have hrfac_ge_one : (1 : ℚ) ≤ (r.factorial : ℚ) := by
+    exact_mod_cast (Nat.succ_le_of_lt (Nat.factorial_pos r))
+  have hpfac_nonneg : 0 ≤ (((p - 1).factorial : Nat) : ℚ) := by
+    positivity
+  have hden_ge :
+      (((p - 1).factorial : Nat) : ℚ)
+        ≤ (r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by
+    calc
+      (((p - 1).factorial : Nat) : ℚ)
+          = (1 : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by ring
+      _ ≤ (r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ) :=
+          mul_le_mul_of_nonneg_right hrfac_ge_one hpfac_nonneg
+  have hden_pos :
+      0 < (r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by
+    positivity
+  have hratio_le :
+      (((p - 2*r + 1).factorial : Nat) : ℚ) /
+          ((r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ))
+        ≤ 1 := by
+    rw [div_le_one₀ hden_pos]
+    exact hfac.trans hden_ge
+  have hratio_nonneg :
+      0 ≤ (((p - 2*r + 1).factorial : Nat) : ℚ) /
+          ((r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ)) := by
+    positivity
+  have hbase_le :
+      (9 / 5 : ℚ) * (16 / 25 : ℚ)^r * N^(r-1) ≤ 2 * N^p := by
+    have hpow_nonneg : 0 ≤ N^(r-1) := pow_nonneg hN0 (r-1)
+    have hcoef_scaled :
+        (9 / 5 : ℚ) * (16 / 25 : ℚ)^r * N^(r-1)
+          ≤ 2 * N^(r-1) :=
+      mul_le_mul_of_nonneg_right hcoef_le hpow_nonneg
+    have hpow_scaled : 2 * N^(r-1) ≤ 2 * N^p :=
+      mul_le_mul_of_nonneg_left hpow_le (by norm_num)
+    exact hcoef_scaled.trans hpow_scaled
+  have hbound_nonneg : 0 ≤ 2 * N^p := by
+    exact mul_nonneg (by norm_num) (pow_nonneg hN0 p)
+  have hterm_rewrite :
+      DeltaRatTerm p N r =
+        ((9 / 5 : ℚ) * (16 / 25 : ℚ)^r * N^(r-1)) *
+          ((((p - 2*r + 1).factorial : Nat) : ℚ) /
+            ((r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ))) := by
+    unfold DeltaRatTerm
+    rw [hcoef_eq]
+    ring
+  rw [hterm_rewrite]
+  calc
+    ((9 / 5 : ℚ) * (16 / 25 : ℚ)^r * N^(r-1)) *
+        ((((p - 2*r + 1).factorial : Nat) : ℚ) /
+          ((r.factorial : ℚ) * (((p - 1).factorial : Nat) : ℚ)))
+        ≤ (2 * N^p) * 1 :=
+          mul_le_mul hbase_le hratio_le hratio_nonneg hbound_nonneg
+    _ = 2 * N^p := by ring
+
+/-- Coarse all-range Δ estimate used by the final deep-low solo tail. -/
+theorem DeltaRat_le_two_count_mul_pow (p : Nat) {N : ℚ} (hN1 : 1 ≤ N) :
+    DeltaRat p N ≤ 2 * (((p + 1 : Nat) : ℚ) * N^p) := by
+  have hN0 : 0 ≤ N := le_trans zero_le_one hN1
+  have hterm :
+      ∀ r ∈ Finset.Icc 2 (p/2), DeltaRatTerm p N r ≤ 2 * N^p := by
+    intro r hrmem
+    obtain ⟨hr2, hrhi⟩ := Finset.mem_Icc.mp hrmem
+    have hrp : 2*r ≤ p := by
+      have hInt : (r : ℤ) * 2 ≤ (p : ℤ) :=
+        Nat.le_div_two_iff_mul_two_le.mp hrhi
+      omega
+    exact DeltaRatTerm_le_two_pow p r hN1 hr2 hrp
+  have hsubset : Finset.Icc 2 (p/2) ⊆ Finset.range (p + 1) := by
+    intro r hrmem
+    obtain ⟨_hr2, hrhi⟩ := Finset.mem_Icc.mp hrmem
+    have hrp : 2*r ≤ p := by
+      have hInt : (r : ℤ) * 2 ≤ (p : ℤ) :=
+        Nat.le_div_two_iff_mul_two_le.mp hrhi
+      omega
+    simp only [Finset.mem_range]
+    omega
+  have hcardNat : (Finset.Icc 2 (p/2)).card ≤ p + 1 := by
+    simpa using Finset.card_le_card hsubset
+  have hcard : (((Finset.Icc 2 (p/2)).card : Nat) : ℚ)
+      ≤ ((p + 1 : Nat) : ℚ) := by
+    exact_mod_cast hcardNat
+  have hconst_nonneg : 0 ≤ 2 * N^p := by
+    exact mul_nonneg (by norm_num) (pow_nonneg hN0 p)
+  unfold DeltaRat
+  calc
+    (∑ r ∈ Finset.Icc 2 (p/2), DeltaRatTerm p N r)
+        ≤ ∑ _r ∈ Finset.Icc 2 (p/2), 2 * N^p :=
+          Finset.sum_le_sum hterm
+    _ = (((Finset.Icc 2 (p/2)).card : Nat) : ℚ) * (2 * N^p) := by
+          simp [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ ((p + 1 : Nat) : ℚ) * (2 * N^p) :=
+          mul_le_mul_of_nonneg_right hcard hconst_nonneg
+    _ = 2 * (((p + 1 : Nat) : ℚ) * N^p) := by ring
+
 theorem DeltaRatTerm_le_farTermBound (p r : Nat) {N : ℚ}
     (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ))
     (hrfar : p/4 < r) (hrp : 2*r ≤ p) :
