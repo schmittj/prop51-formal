@@ -287,6 +287,60 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveGeTwoNatSignLockComple
       exact htempered ha hrect hk htemperedN hnotLock
         (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
 
+/-- In the large positive rectangle, the first retained `Bq` coefficient is
+strictly positive. -/
+theorem Bq_two_pos_of_large_positiveRectangle {a N : Nat} (ha : 3000 ≤ a)
+    (hrect : positiveRectangle a N) :
+    0 < Bq N 2 :=
+  Bq_two_pos_of_le (by
+    have hNlo : posNlo a ≤ N := hrect.1
+    unfold posNlo at hNlo
+    omega)
+
+/-- Product-tail constructor that splits off the first retained product cell.
+
+After the uniform `Bq N 1 ≤ 0` reduction, the first live cell is `k = 2`.
+This Lean-side split is a proof-production surface reduction for the product
+tail: a later proof may handle the `k = 2` term directly and send the true
+tail to a `k ≥ 3` first-term/remainder argument.  The underlying estimate is
+still the combined raw product `Bq * Qq`, not the older independent `Gcomp`
+product route. -/
+theorem LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (hsmallTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallLargeXYProductRawCleared a N 2)
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveGeTwoNatSignLockComplement
+    (by
+      intro a N k ha hrect hk hsmallN hk2 hB
+      by_cases hk_eq : k = 2
+      · subst k
+        exact hsmallTwo ha hrect
+      · exact hsmallGeThree ha hrect hk hsmallN (by omega) hB)
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk2 hB
+      by_cases hk_eq : k = 2
+      · subst k
+        have hNgt : 4 < N := by
+          have hNlo : posNlo a ≤ N := hrect.1
+          unfold posNlo at hNlo
+          omega
+        have hceil : 2 < ceilSqrt N :=
+          lt_ceilSqrt_of_sq_lt (n := N) (k := 2) (by
+            norm_num
+            exact hNgt)
+        omega
+      · exact htemperedGeThree ha hrect hk htemperedN hnotLock (by omega) hB)
+
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
 
