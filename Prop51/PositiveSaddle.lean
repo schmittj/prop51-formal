@@ -11416,6 +11416,74 @@ instance decidablePositiveTemperedLargeXYProductRawCleared (a N k : Nat) :
   unfold positiveTemperedLargeXYProductRawCleared
   infer_instance
 
+/-- If the actual `B_k(N)` coefficient is nonpositive, the large-tail
+small-branch raw product target is automatic.
+
+This is a direct combined-product shortcut, not an independent `Gcomp`
+majorant estimate: it keeps the actual `Bq * Qq` product and uses
+`Qq_nonneg`. -/
+theorem positiveSmallLargeXYProductRawCleared_of_Bq_nonpos
+    {a N k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a)
+    (hB : Bq N k ≤ 0) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  have hQnonneg : 0 ≤ Qq N (posJ a k) :=
+    Qq_nonneg N (posJ a k)
+  have hBQ : Bq N k * Qq N (posJ a k) ≤ 0 :=
+    mul_nonpos_of_nonpos_of_nonneg hB hQnonneg
+  have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k) ≤ 0 := by
+    simpa [mul_assoc] using
+      mul_nonpos_of_nonneg_of_nonpos hscale hBQ
+  have hExp : 0 ≤ positiveSmallLargeExp a k :=
+    positiveSmallLargeExp_nonneg_of_large ha hkRange
+  have hright :
+      0 ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) := by
+    have hkj : 0 ≤ (k : ℚ) * (posJ a k : ℚ) :=
+      mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg (posJ a k))
+    have hNc : 0 ≤ (N : ℚ) * c k * c (posJ a k) :=
+      mul_nonneg
+        (mul_nonneg (Nat.cast_nonneg N) (c_nonneg k))
+        (c_nonneg (posJ a k))
+    exact mul_nonneg (mul_nonneg (mul_nonneg (by norm_num) hkj) hExp) hNc
+  exact hleft.trans hright
+
+/-- If the actual `B_k(N)` coefficient is nonpositive, the large-tail
+tempered-branch raw product target is automatic. -/
+theorem positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
+    {a N k : Nat} (ha : 2000 < a) (hkRange : k ∈ positiveKRange a)
+    (hB : Bq N k ≤ 0) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  have hQnonneg : 0 ≤ Qq N (posJ a k) :=
+    Qq_nonneg N (posJ a k)
+  have hBQ : Bq N k * Qq N (posJ a k) ≤ 0 :=
+    mul_nonpos_of_nonpos_of_nonneg hB hQnonneg
+  have hscale : 0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          Bq N k * Qq N (posJ a k) ≤ 0 := by
+    simpa [mul_assoc] using
+      mul_nonpos_of_nonneg_of_nonpos hscale hBQ
+  have hExp : 0 ≤ positiveTemperedLargeExp a k :=
+    positiveTemperedLargeExp_nonneg_of_large ha hkRange
+  have hright :
+      0 ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) := by
+    have hkj : 0 ≤ (k : ℚ) * (posJ a k : ℚ) :=
+      mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg (posJ a k))
+    have hNc : 0 ≤ (N : ℚ) * c k * c (posJ a k) :=
+      mul_nonneg
+        (mul_nonneg (Nat.cast_nonneg N) (c_nonneg k))
+        (c_nonneg (posJ a k))
+    exact mul_nonneg (mul_nonneg (mul_nonneg (by norm_num) hkj) hExp) hNc
+  exact hleft.trans hright
+
 theorem positiveSmallLargeGcompProductTarget_nonneg
     {a N k : Nat} (ha : 2000 < a) (hN : 1 ≤ N)
     (hkRange : k ∈ positiveKRange a) :

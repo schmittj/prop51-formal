@@ -194,6 +194,71 @@ theorem LargeTailProductCertificate.ofRawClearedNatSignLockComplement
       exact htempered ha hrect hk htemperedN
         (signLock_natAlternative_of_not hnotLock))
 
+/-- Constructor from actual-product raw bounds only on cells where the
+coefficient `B_k(N)` is positive.
+
+This follows the combined-product route in the TeX argument: cells with
+`Bq N k ≤ 0` contribute a nonpositive actual product because `Qq` is
+nonnegative, so they should not be sent to any independent `Gcomp` product
+majorant. -/
+theorem LargeTailProductCertificate.ofRawClearedBqPositive
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawCleared
+    (by
+      intro a N k ha hrect hk hsmallN
+      by_cases hB : 0 < Bq N k
+      · exact hsmall ha hrect hk hsmallN hB
+      · exact
+          positiveSmallLargeXYProductRawCleared_of_Bq_nonpos
+            (by omega : 2000 < a) hk (le_of_not_gt hB))
+    (by
+      intro a N k ha hrect hk htemperedN
+      by_cases hB : 0 < Bq N k
+      · exact htempered ha hrect hk htemperedN hB
+      · exact
+          positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
+            (by omega : 2000 < a) hk (le_of_not_gt hB))
+
+/-- Product-tail constructor combining the two free reductions now available
+for the actual raw product: nonpositive `Bq` cells are automatic, and the
+§5 sign-lock zone is automatic in the tempered branch.  The remaining
+tempered work is exactly the denominator-cleared complement
+`k < 361 ∨ 40*k < 3*N` with `0 < Bq N k`. -/
+theorem LargeTailProductCertificate.ofRawClearedBqPositiveNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedNatSignLockComplement
+    (by
+      intro a N k ha hrect hk hsmallN
+      by_cases hB : 0 < Bq N k
+      · exact hsmall ha hrect hk hsmallN hB
+      · exact
+          positiveSmallLargeXYProductRawCleared_of_Bq_nonpos
+            (by omega : 2000 < a) hk (le_of_not_gt hB))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock
+      by_cases hB : 0 < Bq N k
+      · exact htempered ha hrect hk htemperedN hnotLock hB
+      · exact
+          positiveTemperedLargeXYProductRawCleared_of_Bq_nonpos
+            (by omega : 2000 < a) hk (le_of_not_gt hB))
+
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
 
