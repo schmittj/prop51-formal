@@ -89,6 +89,73 @@ theorem LargeTailProductCertificate.toFullHybrid
   largeSmall := hproduct.largeSmall
   largeTempered := hproduct.largeTempered
 
+/-- Convert the live product certificate and its lower-prefix scalar chunks
+directly into the large-tail pointwise estimate used by the candidate/reserve
+machinery.
+
+This is the route-facing product bridge: for `3000 ≤ a` it uses
+`LargeTailProductCertificate`, and for `2000 < a < 3000` it uses the bounded
+prefix chunks packaged in `BoundedPositiveCertificate`. -/
+theorem LargeTailProductCertificate.toPointwise
+    {aLen kLen : Nat}
+    (hproduct : LargeTailProductCertificate)
+    (hprefix :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k)
+        aLen kLen)
+    (hsolo : PositiveSaddleLargeTailSoloNormUnitCertificate) :
+    PositiveSaddleEntropyShadowLargeExpPointwiseCertificate where
+  small := by
+    intro a N k ha hrect hk hsmall
+    have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+      hsmall.trans (ceilSqrt_mono hrect.2)
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k := by
+      by_cases haLarge : 3000 ≤ a
+      · exact
+          positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
+            ha hrect hk (hproduct.largeSmall haLarge hk hsmallEdge)
+      · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
+        exact
+          positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
+            ha hrect hk
+            (hprefix.toPrefixCertificate.smallScalar
+              ha haPrefix hk hsmallEdge)
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
+          ha hrect hk hprod)
+  tempered := by
+    intro a N k ha hrect hk htempered
+    have htemperedEdge : ceilSqrt (posNlo a) < k :=
+      lt_of_le_of_lt (ceilSqrt_mono hrect.1) htempered
+    have hprod :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k := by
+      by_cases haLarge : 3000 ≤ a
+      · exact
+          positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
+            ha hrect hk (hproduct.largeTempered haLarge hk htemperedEdge)
+      · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
+        exact
+          positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
+            ha hrect hk
+            (hprefix.toPrefixCertificate.temperedScalar
+              ha haPrefix hk htemperedEdge)
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (positiveXplusYProductGcompFactoredTerm_le_temperedEntropyShadowExp_of_product
+          ha hrect hk hprod)
+  soloBudget := by
+    intro a N ha hrect
+    exact le_positiveSoloBudget_of_mul_200000000_le_one
+      (hsolo.soloNormUnit ha hrect)
+
 /-- The large-tail solo obligation for the current canonical route.
 
 The final assembly only needs a unit budget for the normalized solo term
@@ -271,18 +338,10 @@ theorem completion_of_three_inputs
     (hproduct : LargeTailProductCertificate)
     (hsolo : LargeTailSoloCertificate) :
     CoefficientNegativity := by
-  let productBounds :
-      PositiveSaddleLargeTailProductBoundsCertificate
-        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
-        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
-    ((hproduct.toFullHybrid hbounded.productPrefix).toHybridCertificate
-      |>.toProductBoundCertificate
-      |>.toProductBoundsCertificate)
   let soloNorm : PositiveSaddleLargeTailSoloNormUnitCertificate :=
     hsolo.toNormUnit hbounded.soloPrefix
   let pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate :=
-    positiveSaddleEntropyShadowLargeExpPointwiseCertificate_of_productBounds_soloNormUnit
-      productBounds soloNorm
+    hproduct.toPointwise hbounded.productPrefix soloNorm
   exact
     coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
       (hbounded.cert.toTangentProductBudgetCertificate_of_pointwise
