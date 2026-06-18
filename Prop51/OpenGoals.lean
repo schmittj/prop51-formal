@@ -184,6 +184,20 @@ theorem LargeTailSoloCertificate.ofSharpLowDegreeRemainderBlockSumTenSeventhsCle
         positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_lowDegreeRemainderBlockSum
           ha (hlow ha))
 
+theorem LargeTailSoloCertificate.ofSharpVeryLowDegreeRemainderBlockSumTenSeventhsCleared
+    (hveryLow :
+      ∀ {a : Nat}, 3000 ≤ a →
+        (4 : ℚ) * (2 : ℚ)^a *
+            positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+          ≤ (29 / 8 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    LargeTailSoloCertificate :=
+  LargeTailSoloCertificate.ofSharpGcompClosedFactorialSplitBlockSumTenSeventhsClearedUpperEdge
+    (by
+      intro a ha
+      exact
+        positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_veryLowDegreeRemainderBlockSum
+          ha (hveryLow ha))
+
 theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)
