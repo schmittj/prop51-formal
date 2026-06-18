@@ -493,6 +493,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   factorial-only product/solo block-sum tail target,
   `--final-tail-closed-factorial-split-block-sum` for the split-final-term
   factorial-only product/solo block-sum target,
+  `--final-tail-closed-factorial-split-block-sum-fast` for the fast-evaluator
+  version of that split target,
   `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for

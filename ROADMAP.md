@@ -742,7 +742,9 @@ Status:
       product/solo block-sum tail interface with
       `--emit-final --final-tail-closed-factorial-block-sum`, or its
       split-final-term version with
-      `--emit-final --final-tail-closed-factorial-split-block-sum`.
+      `--emit-final --final-tail-closed-factorial-split-block-sum`.  The
+      fast-evaluator split form is available as
+      `--emit-final --final-tail-closed-factorial-split-block-sum-fast`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so
