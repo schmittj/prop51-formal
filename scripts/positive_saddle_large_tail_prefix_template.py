@@ -1025,6 +1025,66 @@ def emit_solo_scalar_prefix(args: argparse.Namespace) -> list[str]:
     return lines
 
 
+def product_full_hybrid_theorem_name(args: argparse.Namespace) -> str:
+    return f"{args.name}_productFullHybrid"
+
+
+def solo_full_hybrid_theorem_name(args: argparse.Namespace) -> str:
+    return f"{args.name}_soloFullHybrid"
+
+
+def emit_product_full_hybrid_wrapper(args: argparse.Namespace) -> list[str]:
+    xy = xy_bound_expr(args)
+    return [
+        f"theorem {product_full_hybrid_theorem_name(args)}",
+        "    (largeXBound :",
+        "      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →",
+        "        positiveLargeTailProductXClosedFactorialSplitBlockBound",
+        f"            a (posNhi a) k ≤ {args.x_bound} a k)",
+        "    (largeYBound :",
+        "      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →",
+        "        positiveLargeTailProductYClosedFactorialSplitBlockBound",
+        f"            a (posNhi a) k ≤ {args.y_bound} a k)",
+        "    (largeSmall :",
+        "      ∀ {a k : Nat}, 3000 ≤ a →",
+        "        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →",
+        "          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar",
+        f"            {xy} a k)",
+        "    (largeTempered :",
+        "      ∀ {a k : Nat}, 3000 ≤ a →",
+        "        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →",
+        "          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar",
+        f"            {xy} a k) :",
+        "    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundFullHybridCertificate",
+        f"      {args.x_bound} {args.y_bound} {args.a_len} {args.k_len} where",
+        f"  boundPrefixChunks := {product_bound_theorem_name(args)}",
+        f"  scalarPrefixChunks := {product_scalar_theorem_name(args)}",
+        "  largeXBound := largeXBound",
+        "  largeYBound := largeYBound",
+        "  largeSmall := largeSmall",
+        "  largeTempered := largeTempered",
+    ]
+
+
+def emit_solo_full_hybrid_wrapper(args: argparse.Namespace) -> list[str]:
+    return [
+        f"theorem {solo_full_hybrid_theorem_name(args)}",
+        "    (largeBound :",
+        "      ∀ {a : Nat}, 3000 ≤ a →",
+        "        positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a (posNhi a)",
+        f"          ≤ {args.solo_bound} a)",
+        "    (largeSolo :",
+        "      ∀ {a : Nat}, 3000 ≤ a →",
+        f"        positiveLargeTailSoloFastUpperEdgeBoundScalar {args.solo_bound} a) :",
+        "    PositiveSaddleLargeTailSoloFastUpperEdgeBoundFullHybridCertificate",
+        f"      {args.solo_bound} {args.a_len} where",
+        f"  boundPrefixChunks := {solo_bound_theorem_name(args)}",
+        f"  scalarPrefixChunks := {solo_scalar_theorem_name(args)}",
+        "  largeBound := largeBound",
+        "  largeSolo := largeSolo",
+    ]
+
+
 def emit_prefix_certificates(args: argparse.Namespace) -> str:
     lines = emit_header(args)
     blocks: list[list[str]] = []
@@ -1036,6 +1096,9 @@ def emit_prefix_certificates(args: argparse.Namespace) -> str:
         blocks.append(emit_solo_bound_prefix(args))
     if args.certificate in ("all-prefixes", "solo-scalar-prefix"):
         blocks.append(emit_solo_scalar_prefix(args))
+    if args.certificate == "all-prefixes":
+        blocks.append(emit_product_full_hybrid_wrapper(args))
+        blocks.append(emit_solo_full_hybrid_wrapper(args))
     for index, block in enumerate(blocks):
         if index:
             lines.append("")

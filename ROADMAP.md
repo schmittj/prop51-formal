@@ -789,7 +789,9 @@ Status:
       product `xBound`/`yBound` bound chunks, product scalar chunks for
       `xBound a k * yBound a k`, solo `soloBound` bound chunks, and solo
       scalar chunks.  It deliberately covers only `2000 < a < 3000`; the
-      `3000 ≤ a` estimates remain separate Lean fields.
+      `3000 ≤ a` estimates remain separate Lean fields.  Its default
+      `all-prefixes` output also emits full-hybrid wrapper theorems that take
+      those large-side fields as arguments.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.

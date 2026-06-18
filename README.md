@@ -349,7 +349,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   solo `soloBound` prefix bound chunks, and solo scalar chunks.  It covers
   only `2000 < a < 3000`; the `3000 ≤ a` analytic fields remain explicit
   Lean inputs, matching the TeX/Lean separation of finite prefix computation
-  from the large-side estimates.
+  from the large-side estimates.  The default `all-prefixes` output also
+  emits short full-hybrid wrapper theorems that take those large-side fields
+  as arguments.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -750,7 +752,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   solo-bound, and solo-scalar atoms separately.  The emitted prefix
   certificate theorem should be assembled with `--use-single-chunk-theorems`
   after importing all generated shard modules; it still supplies only the
-  prefix fields, not the analytic `3000 ≤ a` obligations.
+  prefix fields, while its full-hybrid wrapper theorems take the analytic
+  `3000 ≤ a` obligations as explicit arguments.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the
