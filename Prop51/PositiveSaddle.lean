@@ -10184,10 +10184,39 @@ theorem positiveEdgeMajorantSumFast_eq (a : Nat) :
   unfold positiveEdgeMajorantSumFast positiveEdgeMajorantSum
   exact Finset.sum_congr rfl fun k _ => positiveEdgeMajorantTermFast_eq a k
 
+/-- Fast-evaluator version of `positiveEdgeMajorantKChunkPaddedTerm`. -/
+def positiveEdgeMajorantKChunkPaddedTermFast (a k : Nat) : ℚ :=
+  if k ∈ positiveKRange a then positiveEdgeMajorantTermFast a k else 0
+
+theorem positiveEdgeMajorantKChunkPaddedTermFast_eq (a k : Nat) :
+    positiveEdgeMajorantKChunkPaddedTermFast a k =
+      positiveEdgeMajorantKChunkPaddedTerm a k := by
+  unfold positiveEdgeMajorantKChunkPaddedTermFast
+    positiveEdgeMajorantKChunkPaddedTerm
+  rw [positiveEdgeMajorantTermFast_eq]
+
+/-- Fast-evaluator version of `positiveEdgeMajorantKChunkSum`. -/
+def positiveEdgeMajorantKChunkSumFast (a lo len : Nat) : ℚ :=
+  ∑ k ∈ Finset.Ico lo (lo + len),
+    positiveEdgeMajorantKChunkPaddedTermFast a k
+
+theorem positiveEdgeMajorantKChunkSumFast_eq (a lo len : Nat) :
+    positiveEdgeMajorantKChunkSumFast a lo len =
+      positiveEdgeMajorantKChunkSum a lo len := by
+  unfold positiveEdgeMajorantKChunkSumFast positiveEdgeMajorantKChunkSum
+  exact Finset.sum_congr rfl fun k _ =>
+    positiveEdgeMajorantKChunkPaddedTermFast_eq a k
+
 /-- Unit-scaled finite edge-budget row check using the fast exponential
 evaluator. -/
 def checkPositiveEdgeBudgetUnitRowFast (a : Nat) : Bool :=
   decide ((200000000 : ℚ) * positiveEdgeMajorantSumFast a ≤ 1)
+
+/-- Unit-scaled finite edge `k`-chunk check using the fast exponential
+evaluator. -/
+def checkPositiveEdgeMajorantKChunkUnitFast
+    (a lo len scale : Nat) : Bool :=
+  decide ((scale : ℚ) * positiveEdgeMajorantKChunkSumFast a lo len ≤ 1)
 
 /-- Fast range check for the corrected two-edge finite budget over
 `a ∈ [lo, lo+len)`. -/
@@ -10239,6 +10268,18 @@ theorem checkPositiveEdgeBudgetUnitRange_of_checkPositiveEdgeBudgetUnitRangeFast
     intro x hx
     exact checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRowFast
       (hall x hx))
+
+/-- Convert a fast edge `k`-chunk check back to the existing canonical chunk
+predicate. -/
+theorem checkPositiveEdgeMajorantKChunkUnit_of_checkPositiveEdgeMajorantKChunkUnitFast
+    {a lo len scale : Nat}
+    (h : checkPositiveEdgeMajorantKChunkUnitFast a lo len scale = true) :
+    checkPositiveEdgeMajorantKChunkUnit a lo len scale = true := by
+  have hfast :
+      (scale : ℚ) * positiveEdgeMajorantKChunkSumFast a lo len ≤ 1 :=
+    of_decide_eq_true h
+  rw [positiveEdgeMajorantKChunkSumFast_eq] at hfast
+  exact decide_eq_true hfast
 
 /-- Fast evaluator for the finite prefix `∑ t<n, y^t/t!`. -/
 def partialExpPrefixFast (y : ℚ) (n : Nat) : ℚ :=

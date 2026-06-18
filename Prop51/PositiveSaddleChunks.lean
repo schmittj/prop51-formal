@@ -3454,6 +3454,13 @@ def checkPositiveEdgeMajorantKChunkUnitRowRange
   (List.range' lo len).all fun a =>
     checkPositiveEdgeMajorantKChunkUnit a kLo kLen (edgeScale a)
 
+/-- Fast row-range check for one edge `k`-chunk using a row-dependent unit
+scale. -/
+def checkPositiveEdgeMajorantKChunkUnitRowRangeFast
+    (lo len kLo kLen : Nat) (edgeScale : Nat → Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveEdgeMajorantKChunkUnitFast a kLo kLen (edgeScale a)
+
 theorem checkPositiveEdgeMajorantKChunkUnit_of_rowRange
     {lo len a kLo kLen : Nat} {edgeScale : Nat → Nat}
     (h :
@@ -3467,6 +3474,24 @@ theorem checkPositiveEdgeMajorantKChunkUnit_of_rowRange
     exact List.all_eq_true.mp (by
       simpa [checkPositiveEdgeMajorantKChunkUnitRowRange] using h)
   exact hall a ((List.mem_range'_1).mpr ⟨ha_lo, ha_hi⟩)
+
+theorem checkPositiveEdgeMajorantKChunkUnitRowRange_of_checkPositiveEdgeMajorantKChunkUnitRowRangeFast
+    {lo len kLo kLen : Nat} {edgeScale : Nat → Nat}
+    (h :
+      checkPositiveEdgeMajorantKChunkUnitRowRangeFast
+        lo len kLo kLen edgeScale = true) :
+    checkPositiveEdgeMajorantKChunkUnitRowRange
+      lo len kLo kLen edgeScale = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len,
+        checkPositiveEdgeMajorantKChunkUnitFast
+          x kLo kLen (edgeScale x) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeMajorantKChunkUnitRowRangeFast] using h)
+  exact List.all_eq_true.mpr (by
+    intro x hx
+    exact checkPositiveEdgeMajorantKChunkUnit_of_checkPositiveEdgeMajorantKChunkUnitFast
+      (hall x hx))
 
 theorem positiveEdgeUniformScale_pos_of_scale_ge
     {scale : Nat} (hscale : positiveEdgeUniformScaleMin ≤ scale) :

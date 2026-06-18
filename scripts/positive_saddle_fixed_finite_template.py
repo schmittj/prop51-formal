@@ -2120,7 +2120,9 @@ def single_chunk_theorem_lines(
             "    checkPositiveEdgeMajorantKChunkUnitRowRange",
             f"      {row_lo} {args.edge_row_len} {k_lo} 20",
             "      (fun _ => positiveEdgeUniformScaleMin) = true := by",
-            "  native_decide",
+            "  exact",
+            "    checkPositiveEdgeMajorantKChunkUnitRowRange_of_checkPositiveEdgeMajorantKChunkUnitRowRangeFast",
+            "      (by native_decide)",
         ]
     if field == "edge-fixed":
         row_lo = 401 + args.edge_row_len * row_index
@@ -2138,7 +2140,9 @@ def single_chunk_theorem_lines(
             "    checkPositiveEdgeMajorantKChunkUnitRowRange",
             f"      {row_lo} {args.edge_row_len} {k_lo} {args.edge_k_len}",
             f"      (fun _ => {scale}) = true := by",
-            "  native_decide",
+            "  exact",
+            "    checkPositiveEdgeMajorantKChunkUnitRowRange_of_checkPositiveEdgeMajorantKChunkUnitRowRangeFast",
+            "      (by native_decide)",
         ]
     raise AssertionError(f"unhandled single chunk field {field!r}")
 
