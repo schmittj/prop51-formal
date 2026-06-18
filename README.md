@@ -280,7 +280,15 @@ All Lean proofs are sorry-free.  Headline theorems:
   envelope.  The bridge
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared`
   now also lets a proof of the stronger fast solo shell feed this direct
-  `(10/7)^a` target.  Its upper-edge reduction
+  `(10/7)^a` target.  The fast solo shell itself has the upper-edge
+  reduction
+  `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge`,
+  and the standalone solo-certificate wrapper
+  `Prop51.positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared_upperEdge`.
+  These are Lean-side proof-production reductions of the same uniform solo
+  estimate: the generated witness may certify the worst rectangle edge
+  `N = posNhi a`, and monotonicity fills in the rest.  The direct-budget
+  upper-edge reduction
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge`
   proves that it is enough to supply this direct solo check at
   `N = posNhi a`, with monotonicity filling the positive rectangle.

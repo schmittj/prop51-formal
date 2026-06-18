@@ -19466,6 +19466,27 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
       (partialExpUpper_positiveSoloYExponent_eight_le_tenSevenths_pow ha)
       hcoef)
 
+/-- Since the fast split-final-term solo target is monotone increasing in
+`N` on the left and its right side is independent of `N`, checking it at the
+upper rectangle edge `posNhi a` implies the same fast target throughout the
+positive rectangle. -/
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a)) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+      a N := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    at hEdge ⊢
+  have hsum :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+        ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            a (posNhi a) :=
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_mono_N hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
 /-- Since the direct split-final-term solo target is monotone increasing in
 `N` on the left and its right side is independent of `N`, checking it at the
 upper rectangle edge `posNhi a` implies the same target throughout the
@@ -19868,6 +19889,25 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedF
     (fun {a N} ha hrect =>
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast
         (hY (a := a) (N := N) ha hrect))
+
+/-- Large-tail solo certificate reduced to checking the fast split-final-term
+factorial-only active closed-composition target only at the upper rectangle
+edge `N = posNhi a`.
+
+This is a Lean proof-production strengthening of the TeX-style uniform solo
+estimate: the generated witness may certify the worst rectangle edge, and
+monotonicity fills in the rest of the rectangle. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared_upperEdge
+    (hY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+        (a := a) (N := N) hrect (hY (a := a) ha))
 
 /-- Large-tail solo certificate reduced to the split-final-term
 factorial-only active closed-composition target with the final `(10/7)^a`

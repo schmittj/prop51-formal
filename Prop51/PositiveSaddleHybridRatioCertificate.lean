@@ -515,6 +515,39 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
     product soloY).toLargeTailAuditCertificate
 
+/-- Preferred hybrid-ratio large-tail certificate with fast split-final-term
+product targets and a fast split-final-term solo target checked only at the
+upper rectangle edge. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
+    product
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+        (a := a) (N := N) hrect (soloY (a := a) ha))
+
+/-- Large-tail audit certificate with fast split-final-term product targets
+and a fast split-final-term solo target checked only at `N = posNhi a`. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared_upperEdge
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a : Nat}, 2000 < a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a)) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared_upperEdge
+    product soloY).toLargeTailAuditCertificate
+
 /-- Preferred hybrid-ratio large-tail certificate with the product side
 supplied through fast split-final-term factorial targets and the solo side
 supplied directly as the `(10/7)^a` envelope.

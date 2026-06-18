@@ -718,6 +718,13 @@ Status:
       `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_fastCleared`
       now lets a proof of the stronger fast solo shell feed this direct
       `(10/7)^a` target as well.
+      The fast solo shell itself has the matching upper-edge reduction
+      `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge`,
+      and the standalone solo-certificate constructor
+      `positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared_upperEdge`.
+      This records the Lean-side proof-production reduction from a uniform
+      solo estimate to the worst rectangle edge `N = posNhi a`; it is not a
+      new mathematical estimate beyond monotonicity.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
