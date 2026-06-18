@@ -277,10 +277,43 @@ def GcompClosedActiveRange (p : Nat) : Finset Nat :=
   (Finset.range (p + 1)).filter fun r =>
     (r = 0 ∧ p = 0) ∨ (1 ≤ r ∧ 2 * r ≤ p)
 
+/-- Positive active indices for the closed `Gcomp` majorant at total degree
+`p`, excluding the exceptional constant term `r = p = 0`. -/
+def GcompClosedPositiveRange (p : Nat) : Finset Nat :=
+  (Finset.range (p + 1)).filter fun r => 1 ≤ r ∧ 2 * r ≤ p
+
 theorem GcompClosedActiveRange_subset_range (p : Nat) :
     GcompClosedActiveRange p ⊆ Finset.range (p + 1) := by
   intro r hr
   exact (Finset.mem_filter.mp hr).1
+
+theorem GcompClosedPositiveRange_subset_range (p : Nat) :
+    GcompClosedPositiveRange p ⊆ Finset.range (p + 1) := by
+  intro r hr
+  exact (Finset.mem_filter.mp hr).1
+
+@[simp] theorem GcompClosedActiveRange_zero :
+    GcompClosedActiveRange 0 = {0} := by
+  ext r
+  constructor
+  · intro hr
+    have hrange : r ∈ Finset.range (0 + 1) :=
+      (Finset.mem_filter.mp hr).1
+    have hr0 : r = 0 := by
+      have hrlt : r < 1 := by simpa using hrange
+      omega
+    simp [hr0]
+  · intro hr
+    have hr0 : r = 0 := by simpa using hr
+    subst r
+    simp [GcompClosedActiveRange]
+
+theorem GcompClosedActiveRange_eq_positiveRange_of_pos {p : Nat}
+    (hp : 0 < p) :
+    GcompClosedActiveRange p = GcompClosedPositiveRange p := by
+  ext r
+  have hp0 : p ≠ 0 := by omega
+  simp [GcompClosedActiveRange, GcompClosedPositiveRange, hp0]
 
 theorem GcompClosedBound_eq_zero_of_mem_range_not_active
     {r p : Nat} (hr : r ∈ Finset.range (p + 1))

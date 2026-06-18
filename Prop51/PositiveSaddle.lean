@@ -2719,6 +2719,34 @@ theorem positiveLargeTailYGcompClosedInnerActive_eq_factorial (N p : Nat) :
   refine Finset.sum_congr rfl fun r hr => ?_
   rw [GcompClosedBound_eq_factorial_of_mem_active hr]
 
+@[simp] theorem positiveLargeTailXGcompClosedInnerFactorial_zero (N : Nat) :
+    positiveLargeTailXGcompClosedInnerFactorial N 0 = 1 := by
+  simp [positiveLargeTailXGcompClosedInnerFactorial]
+
+@[simp] theorem positiveLargeTailYGcompClosedInnerFactorial_zero (N : Nat) :
+    positiveLargeTailYGcompClosedInnerFactorial N 0 = 1 := by
+  simp [positiveLargeTailYGcompClosedInnerFactorial]
+
+theorem positiveLargeTailXGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    {N p : Nat} (hp : 0 < p) :
+    positiveLargeTailXGcompClosedInnerFactorial N p =
+      ∑ r ∈ GcompClosedPositiveRange p,
+        ((N : ℚ) * (4/25))^r * 6^p *
+            (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailXGcompClosedInnerFactorial
+  rw [GcompClosedActiveRange_eq_positiveRange_of_pos hp]
+
+theorem positiveLargeTailYGcompClosedInnerFactorial_eq_positiveRange_of_pos
+    {N p : Nat} (hp : 0 < p) :
+    positiveLargeTailYGcompClosedInnerFactorial N p =
+      ∑ r ∈ GcompClosedPositiveRange p,
+        ((N : ℚ) / 50)^r * 6^p *
+            (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+          (r.factorial : ℚ) := by
+  unfold positiveLargeTailYGcompClosedInnerFactorial
+  rw [GcompClosedActiveRange_eq_positiveRange_of_pos hp]
+
 theorem positiveLargeTailXGcompClosedInnerActive_eq_all (N p : Nat) :
     positiveLargeTailXGcompClosedInnerActive N p =
       ∑ r ∈ Finset.range (p + 1),
