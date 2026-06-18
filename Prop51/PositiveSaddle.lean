@@ -2055,6 +2055,15 @@ positive-side `Eplus`/`Gcomp` majorant. -/
 def positiveSoloGcompBound (a N : Nat) : ℚ :=
   QqEplusGcompBound N a / ((N : ℚ) * c a)
 
+/-- Sharper normalized upper bound for the solo `Q_a` term.
+
+This uses `QqSharpGcompBound`, whose nonlinear log coefficients preserve the
+dyadic decay from `C(X/2)`.  It is the intended large-tail solo majorant for
+the canonical completion route; the product estimates continue to use the
+older `QqEplusGcompBound` block-sum infrastructure. -/
+def positiveSoloSharpGcompBound (a N : Nat) : ℚ :=
+  QqSharpGcompBound N a / ((N : ℚ) * c a)
+
 /-- Boolean check that the explicit `Eplus`/`Gcomp` solo upper bound stays
 within its half-target budget at one point of the positive rectangle. -/
 def checkPositiveSoloGcompCell (a N : Nat) : Bool :=
@@ -2162,6 +2171,30 @@ theorem normalizedSoloTerm_le_positiveSoloGcompBound
     have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
     exact mul_nonneg hNQ.le (c_pos a ha).le
   exact div_le_div_of_nonneg_right (Qq_le_EplusGcompBound N a) hden
+
+theorem positiveSoloSharpGcompBound_nonneg (a N : Nat) :
+    0 ≤ positiveSoloSharpGcompBound a N := by
+  unfold positiveSoloSharpGcompBound
+  exact div_nonneg (QqSharpGcompBound_nonneg N a)
+    (mul_nonneg (Nat.cast_nonneg N) (c_nonneg a))
+
+theorem normalizedSoloTerm_le_positiveSoloSharpGcompBound
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :
+    normalizedSoloTerm a N ≤ positiveSoloSharpGcompBound a N := by
+  unfold normalizedSoloTerm positiveSoloSharpGcompBound
+  have hden : 0 ≤ (N : ℚ) * c a := by
+    have hNQ : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    exact mul_nonneg hNQ.le (c_pos a ha).le
+  exact div_le_div_of_nonneg_right (Qq_le_SharpGcompBound N a) hden
+
+theorem positiveLargeTailSoloNormUnit_of_sharp_unit
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hsharp :
+      (200000000 : ℚ) * positiveSoloSharpGcompBound a N ≤ 1) :
+    (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 :=
+  (mul_le_mul_of_nonneg_left
+    (normalizedSoloTerm_le_positiveSoloSharpGcompBound hN ha)
+    (by norm_num : (0 : ℚ) ≤ 200000000)).trans hsharp
 
 theorem dyadic_Ynorm_le_positiveSoloGcompBound
     {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a) :

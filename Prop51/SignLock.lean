@@ -139,6 +139,44 @@ private theorem abs_EplusLogCoeff_le {N : ℚ} (hN : 0 ≤ N)
           (mul_nonneg hN2 hFnonneg')
     _ = (N / 50) * F := by ring
 
+private theorem abs_EplusLogCoeff_le_sharp {N : ℚ} (hN : 0 ≤ N)
+    {j : Nat} (hj : 2 ≤ j) :
+    |N / 2 * Hcoef j / (2 : ℚ)^j|
+      ≤ (2 * N / 25) * (3^j * ((j-1).factorial : ℚ)) := by
+  rw [Hcoef_of_ge_two hj]
+  have hN2 : 0 ≤ N / 2 := by positivity
+  have hpowpos : (0 : ℚ) < (2 : ℚ)^j := by positivity
+  have habs :
+      |N / 2 * c j / (2 : ℚ)^j| =
+        N / 2 * c j / (2 : ℚ)^j := by
+    rw [abs_of_nonneg]
+    exact div_nonneg (mul_nonneg hN2 (c_nonneg j)) hpowpos.le
+  rw [habs]
+  have hcub : c j ≤ (4/25) * (6^j * ((j-1).factorial : ℚ)) := by
+    simpa using c_ub j (by omega : 1 ≤ j)
+  have hcoef :
+      N / 2 * c j / (2 : ℚ)^j
+        ≤ N / 2 *
+            ((4/25) * (6^j * ((j-1).factorial : ℚ))) /
+              (2 : ℚ)^j := by
+    exact div_le_div_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hcub hN2) hpowpos.le
+  calc
+    N / 2 * c j / (2 : ℚ)^j
+        ≤ N / 2 *
+            ((4/25) * (6^j * ((j-1).factorial : ℚ))) /
+              (2 : ℚ)^j := hcoef
+    _ = (2 * N / 25) *
+          ((6 : ℚ)^j / (2 : ℚ)^j) *
+            ((j-1).factorial : ℚ) := by
+          field_simp [hpowpos.ne']
+          ring_nf
+    _ = (2 * N / 25) *
+          (3^j * ((j-1).factorial : ℚ)) := by
+          rw [← div_pow]
+          norm_num
+          ring_nf
+
 theorem abs_coeff_pow_Eplus_le {N : ℚ} (hN : 0 ≤ N) (r p : Nat) :
     |coeff p ((mk (fun j => N / 2 * Hcoef j / (2 : ℚ)^j) : ℚ⟦X⟧) ^ r)|
       ≤ (N / 50)^r * 6^p * Gcomp r p := by
@@ -791,6 +829,19 @@ def QqEplusGcompBound (N m : Nat) : ℚ :=
       else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
       else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ)) m
 
+/-- Sharper solo-oriented upper bound for `Qq`.
+
+Unlike `QqEplusGcompBound`, this keeps the `2^{-j}` decay in the nonlinear
+log coefficients and replaces `6^j / 2^j` by `3^j`.  It is intended for the
+large normalized solo term only; the product route keeps using the older
+block-sum majorant interface. -/
+def QqSharpGcompBound (N m : Nat) : ℚ :=
+  expCoeff
+    (fun j =>
+      if j = 0 then 0
+      else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+      else ((2 * (N : ℚ)) / 25) * 3^j * ((j - 1).factorial : ℚ)) m
+
 theorem Qq_le_EplusGcompBound (N m : Nat) :
     Qq N m ≤ QqEplusGcompBound N m := by
   unfold Qq QqEplusGcompBound
@@ -819,6 +870,49 @@ theorem Qq_le_EplusGcompBound (N m : Nat) :
               (N := (N : ℚ)) (Nat.cast_nonneg N) (j := j) h2
             rw [Hcoef_of_ge_two h2] at h
             simpa [h0, h1, mul_assoc] using h) m)
+
+theorem Qq_le_SharpGcompBound (N m : Nat) :
+    Qq N m ≤ QqSharpGcompBound N m := by
+  unfold Qq QqSharpGcompBound
+  exact (le_abs_self _).trans
+    (abs_expCoeff_le_of_abs_le
+      (fun j => by
+        by_cases h0 : j = 0
+        · simp [h0]
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+            positivity
+          · simp [h0, h1]
+            positivity)
+      (fun j => by
+        by_cases h0 : j = 0
+        · subst j
+          simp
+        · by_cases h1 : j = 1
+          · subst j
+            norm_num [c_one]
+            rw [abs_of_nonneg]
+            positivity
+          · have h2 : 2 ≤ j := by omega
+            have h := abs_EplusLogCoeff_le_sharp
+              (N := (N : ℚ)) (Nat.cast_nonneg N) (j := j) h2
+            rw [Hcoef_of_ge_two h2] at h
+            simpa [h0, h1, mul_assoc] using h) m)
+
+theorem QqSharpGcompBound_nonneg (N m : Nat) :
+    0 ≤ QqSharpGcompBound N m := by
+  unfold QqSharpGcompBound
+  refine expCoeff_nonneg ?_ m
+  intro j
+  by_cases h0 : j = 0
+  · simp [h0]
+  · by_cases h1 : j = 1
+    · subst j
+      norm_num [c_one]
+      positivity
+    · simp [h0, h1]
+      positivity
 
 private theorem QqEplusGcompBoundSeries_eq_linear_mul_EplusGcompBoundSeries
     (N : Nat) :
