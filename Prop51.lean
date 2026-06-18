@@ -20,3 +20,5 @@ import Prop51.Dyadic
 import Prop51.IntervalCert
 import Prop51.CertificateInterval
 import Prop51.Main
+import Prop51.OpenGoals
+import Prop51.Completion
