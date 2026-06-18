@@ -14738,6 +14738,103 @@ theorem positiveTemperedLargeProductRaw_of_BQ_bounds
       mul_le_mul_of_nonneg_left hBQ hcommon
   exact hleft.trans hprod
 
+/-!
+The following two lemmas are the same bookkeeping step for the current
+combined-product route.  They conclude the actual `Bq * Qq` raw-cleared target
+instead of the older positive-majorant `BplusqGcompBound * QqEplusGcompBound`
+target.  This is a Lean-side bridge; the mathematical estimate remains the
+TeX combined product inequality, with optional computable upper bounds used
+only to discharge it.
+-/
+
+theorem positiveSmallLargeXYProductRawCleared_of_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : Bq N k ≤ XBound)
+    (hQ : Qq N (posJ a k) ≤ YBound)
+    (hXnonneg : 0 ≤ XBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) * XBound * YBound
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  have hQnonneg : 0 ≤ Qq N (posJ a k) :=
+    Qq_nonneg N (posJ a k)
+  have hBQ :
+      Bq N k * Qq N (posJ a k) ≤ XBound * YBound :=
+    mul_le_mul hB hQ hQnonneg hXnonneg
+  have hcommon :
+      0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤ 2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          XBound * YBound := by
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      mul_le_mul_of_nonneg_left hBQ hcommon
+  exact hleft.trans hprod
+
+theorem positiveTemperedLargeXYProductRawCleared_of_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : Bq N k ≤ XBound)
+    (hQ : Qq N (posJ a k) ≤ YBound)
+    (hXnonneg : 0 ≤ XBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) * XBound * YBound
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  have hQnonneg : 0 ≤ Qq N (posJ a k) :=
+    Qq_nonneg N (posJ a k)
+  have hBQ :
+      Bq N k * Qq N (posJ a k) ≤ XBound * YBound :=
+    mul_le_mul hB hQ hQnonneg hXnonneg
+  have hcommon :
+      0 ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤ 2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          XBound * YBound := by
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      mul_le_mul_of_nonneg_left hBQ hcommon
+  exact hleft.trans hprod
+
+theorem positiveSmallLargeXYProductRawCleared_of_BQ_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : BplusqGcompBound N k ≤ XBound)
+    (hQ : QqEplusGcompBound N (posJ a k) ≤ YBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) * XBound * YBound
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    positiveSmallLargeXYProductRawCleared a N k := by
+  exact positiveSmallLargeXYProductRawCleared_of_bounds
+    ((Bq_le_Bplusq N k).trans ((Bplusq_le_GcompBound N k).trans hB))
+    ((Qq_le_EplusGcompBound N (posJ a k)).trans hQ)
+    ((BplusqGcompBound_nonneg N k).trans hB)
+    hprod
+
+theorem positiveTemperedLargeXYProductRawCleared_of_BQ_bounds
+    {a N k : Nat} {XBound YBound : ℚ}
+    (hB : BplusqGcompBound N k ≤ XBound)
+    (hQ : QqEplusGcompBound N (posJ a k) ≤ YBound)
+    (hprod :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) * XBound * YBound
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    positiveTemperedLargeXYProductRawCleared a N k := by
+  exact positiveTemperedLargeXYProductRawCleared_of_bounds
+    ((Bq_le_Bplusq N k).trans ((Bplusq_le_GcompBound N k).trans hB))
+    ((Qq_le_EplusGcompBound N (posJ a k)).trans hQ)
+    ((BplusqGcompBound_nonneg N k).trans hB)
+    hprod
+
 /-- Large-tail product pointwise target with the `B` and `Q` saddle estimates
 split before the final scalar comparison.  This is a TeX-shaped staging
 interface for the remaining analytic product proof; it reassembles to the
@@ -15907,6 +16004,34 @@ theorem PositiveSaddleLargeTailProductBoundsCertificate.toTemperedProductRawCert
       (cert.temperedX ha hrect hk htempered)
       (cert.temperedY ha hrect hk htempered)
       (cert.temperedProduct ha hrect hk htempered)
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.smallXYProductRawCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveSmallLargeXYProductRawCleared a N k := by
+  intro a N k ha hrect hk hsmall
+  exact positiveSmallLargeXYProductRawCleared_of_BQ_bounds
+    (cert.smallX ha hrect hk hsmall)
+    (cert.smallY ha hrect hk hsmall)
+    (cert.smallProduct ha hrect hk hsmall)
+
+theorem PositiveSaddleLargeTailProductBoundsCertificate.temperedXYProductRawCleared
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveTemperedLargeXYProductRawCleared a N k := by
+  intro a N k ha hrect hk htempered
+  exact positiveTemperedLargeXYProductRawCleared_of_BQ_bounds
+    (cert.temperedX ha hrect hk htempered)
+    (cert.temperedY ha hrect hk htempered)
+    (cert.temperedProduct ha hrect hk htempered)
 
 /-- Direct normalized-product bridge from the live upper-edge/lower-`N`
 small scalar target.

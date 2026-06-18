@@ -96,6 +96,30 @@ theorem LargeTailProductCertificate.ofRawCleared
         (by omega : 2 ≤ a) hk
         (htempered ha hrect hk htemperedN)
 
+/-- Constructor from the existing large-tail product-bounds certificate,
+routed through the actual combined raw product.
+
+This intentionally avoids using the older normalized independent-`Gcomp`
+product as the route-facing conclusion.  The split `B`/`Q` product-bound
+certificate is only a way to prove the denominator-cleared actual
+`Bq * Qq` inequality, after which `LargeTailProductCertificate.ofRawCleared`
+performs the final normalization. -/
+theorem LargeTailProductCertificate.ofProductBounds
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (cert : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawCleared
+    (by
+      intro a N k ha hrect hk hsmallN
+      exact cert.smallXYProductRawCleared
+        (by omega : 2000 < a) hrect hk hsmallN)
+    (by
+      intro a N k ha hrect hk htemperedN
+      exact cert.temperedXYProductRawCleared
+        (by omega : 2000 < a) hrect hk htemperedN)
+
 /-- Constructor from raw actual-product bounds away from the sign-lock zone.
 
 Cells satisfying `361 ≤ k` and `N ≤ (40/3) k` need no product estimate:
