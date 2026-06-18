@@ -21877,6 +21877,136 @@ theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_crude
         (((5 : ℚ) * (a : ℚ))^a /
           (((a - 3).factorial : Nat) : ℚ)) := hmain
 
+theorem positiveLargeTailSoloSharpTinyCrude_factorial_core
+    {a : Nat} (ha : 3000 ≤ a) :
+    (663552 / 145 : ℚ) * ((7 / 12 : ℚ) * (a : ℚ))^a
+      ≤ (((a - 3).factorial : Nat) : ℚ) *
+        (((a - 1).factorial : Nat) : ℚ) := by
+  let P : Nat → Prop := fun m =>
+    (663552 / 145 : ℚ) * ((7 / 12 : ℚ) * (m : ℚ))^m
+      ≤ (((m - 3).factorial : Nat) : ℚ) *
+        (((m - 1).factorial : Nat) : ℚ)
+  have hbase : P 3000 := by
+    native_decide
+  have hstep : ∀ m : Nat, 3000 ≤ m → P m → P (m + 1) := by
+    intro m hm hP
+    have hm_pos_nat : 0 < m := by omega
+    have hm_pos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast hm_pos_nat
+    have hbase_nonneg : 0 ≤ (7 / 12 : ℚ) * (m : ℚ) := by
+      positivity
+    have hratio_pow :
+        ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))^(m + 1)
+          =
+        ((7 / 12 : ℚ) * (m : ℚ))^m *
+          ((1 + 1 / (m : ℚ))^m *
+            ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))) := by
+      have hsplit :
+          ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ)) =
+            ((7 / 12 : ℚ) * (m : ℚ)) *
+              (1 + 1 / (m : ℚ)) := by
+        rw [show (((m + 1 : Nat) : ℚ)) = (m : ℚ) + 1 by norm_num]
+        field_simp [hm_pos.ne']
+      rw [hsplit]
+      rw [pow_succ, mul_pow]
+      ring
+    have he :
+        (1 + 1 / (m : ℚ))^m ≤ 68 / 25 :=
+      one_add_inv_pow_le m (by omega : 1 ≤ m)
+    have hscalar :
+        (68 / 25 : ℚ) *
+            ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))
+          ≤ ((m - 2 : Nat) : ℚ) * (m : ℚ) := by
+      have hmQ : (3000 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+      have hcast_sub : (((m - 2 : Nat) : ℚ)) = (m : ℚ) - 2 := by
+        rw [Nat.cast_sub (by omega : 2 ≤ m)]
+        norm_num
+      rw [hcast_sub]
+      norm_num
+      nlinarith
+    have hfactor :
+        ((1 + 1 / (m : ℚ))^m *
+            ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ)))
+          ≤ ((m - 2 : Nat) : ℚ) * (m : ℚ) := by
+      calc
+        ((1 + 1 / (m : ℚ))^m *
+            ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ)))
+            ≤ (68 / 25 : ℚ) *
+              ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ)) := by
+              exact mul_le_mul_of_nonneg_right he (by positivity)
+        _ ≤ ((m - 2 : Nat) : ℚ) * (m : ℚ) := hscalar
+    have hleft_step :
+        (663552 / 145 : ℚ) *
+            ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))^(m + 1)
+          ≤
+        ((663552 / 145 : ℚ) *
+            ((7 / 12 : ℚ) * (m : ℚ))^m) *
+          (((m - 2 : Nat) : ℚ) * (m : ℚ)) := by
+      rw [hratio_pow]
+      calc
+        (663552 / 145 : ℚ) *
+            (((7 / 12 : ℚ) * (m : ℚ))^m *
+              ((1 + 1 / (m : ℚ))^m *
+                ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))))
+            =
+          ((663552 / 145 : ℚ) *
+            ((7 / 12 : ℚ) * (m : ℚ))^m) *
+            ((1 + 1 / (m : ℚ))^m *
+              ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))) := by
+              ring
+        _ ≤
+          ((663552 / 145 : ℚ) *
+            ((7 / 12 : ℚ) * (m : ℚ))^m) *
+            (((m - 2 : Nat) : ℚ) * (m : ℚ)) := by
+              exact mul_le_mul_of_nonneg_left hfactor
+                (mul_nonneg (by norm_num) (pow_nonneg hbase_nonneg m))
+    have hright_step :
+        ((((m + 1 - 3).factorial : Nat) : ℚ) *
+            (((m + 1 - 1).factorial : Nat) : ℚ))
+          =
+        ((((m - 3).factorial : Nat) : ℚ) *
+            (((m - 1).factorial : Nat) : ℚ)) *
+          (((m - 2 : Nat) : ℚ) * (m : ℚ)) := by
+      have hm3 : m + 1 - 3 = (m - 3) + 1 := by omega
+      have hm1 : m + 1 - 1 = (m - 1) + 1 := by omega
+      rw [hm3, hm1, Nat.factorial_succ, Nat.factorial_succ]
+      push_cast
+      have hcast_m2 : (((m - 3 : Nat) : ℚ) + 1) =
+          ((m - 2 : Nat) : ℚ) := by
+        exact_mod_cast (by omega :
+          (m - 3 : Nat) + 1 = m - 2)
+      have hcast_m : (((m - 1 : Nat) : ℚ) + 1) = (m : ℚ) := by
+        exact_mod_cast (by omega :
+          (m - 1 : Nat) + 1 = m)
+      rw [hcast_m2, hcast_m]
+      ring
+    calc
+      (663552 / 145 : ℚ) *
+          ((7 / 12 : ℚ) * ((m + 1 : Nat) : ℚ))^(m + 1)
+          ≤
+        ((663552 / 145 : ℚ) *
+          ((7 / 12 : ℚ) * (m : ℚ))^m) *
+          (((m - 2 : Nat) : ℚ) * (m : ℚ)) := hleft_step
+      _ ≤
+        ((((m - 3).factorial : Nat) : ℚ) *
+            (((m - 1).factorial : Nat) : ℚ)) *
+          (((m - 2 : Nat) : ℚ) * (m : ℚ)) := by
+          exact mul_le_mul_of_nonneg_right hP
+            (mul_nonneg (Nat.cast_nonneg _) (Nat.cast_nonneg _))
+      _ =
+        (((m + 1 - 3).factorial : Nat) : ℚ) *
+          (((m + 1 - 1).factorial : Nat) : ℚ) := hright_step.symm
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, a = 3000 + n := by
+    exact ⟨a - 3000, by omega⟩
+  have htail : ∀ n : Nat, P (3000 + n) := by
+    intro n
+    induction n with
+    | zero =>
+        simpa using hbase
+    | succ n ih =>
+        have hm : 3000 ≤ 3000 + n := by omega
+        exact hstep (3000 + n) hm ih
+  exact htail n
+
 theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryLow
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
