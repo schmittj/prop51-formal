@@ -756,6 +756,9 @@ Status:
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
       and the row-active sibling
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
+      The separate-factor sibling capstones are
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundSoloBoundTail`
+      and its row-active analogue.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
@@ -1096,6 +1099,9 @@ Status:
       If the product and solo witnesses are supplied through rational
       surrogate hybrid certificates, use
       `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound`.
+      If the product factors are bounded separately by `xBound` and
+      `yBound`, use
+      `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-solo-bound`.
       Since the upper-middle target is now supplied by Lean, the helper
       `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
       the product bounds and solo `Y` envelope as large-tail inputs on this

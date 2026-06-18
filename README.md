@@ -324,6 +324,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
   and its row-active sibling
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
+  The separate-factor sibling capstones are
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundSoloBoundTail`
+  and the corresponding row-active theorem.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -696,6 +699,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   If the final product/solo witnesses are supplied through the rational
   surrogate hybrid certificates, use
   `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound`.
+  If the product factors are bounded separately by `xBound` and `yBound`,
+  use
+  `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-solo-bound`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before
