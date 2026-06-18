@@ -667,6 +667,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="assemble product-n-chunked-tangent from single-chunk theorem names",
     )
     parser.add_argument(
+        "--tangent-hybrid-scale",
+        type=positive_nat,
+        help=(
+            "for tangent/tangent-n single chunk emission, prove the canonical "
+            "exact checker through the hybrid fixed-point/exact fallback "
+            "checker at this scale"
+        ),
+    )
+    parser.add_argument(
         "--emit-single-chunk-suite",
         action="store_true",
         help=(
@@ -2086,6 +2095,18 @@ def single_chunk_theorem_lines(
     if field == "tangent-n":
         row_lo = 401 + args.tangent_row_len * row_index
         k_lo = 1 + args.tangent_k_len * k_index
+        if args.tangent_hybrid_scale is not None:
+            return [
+                f"theorem {name} :",
+                "    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk",
+                f"      {args.tangent_n_len} {row_lo} {args.tangent_row_len}",
+                f"      {n_index} {k_lo} {args.tangent_k_len} = true := by",
+                "  exact",
+                "    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_scaledExpFallback",
+                f"      (S := {args.tangent_hybrid_scale})",
+                "      (by norm_num) (by norm_num) (by norm_num)",
+                "      (by native_decide)",
+            ]
         return [
             f"theorem {name} :",
             "    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk",
