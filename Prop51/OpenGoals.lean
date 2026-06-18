@@ -141,6 +141,35 @@ theorem LargeTailProductCertificate.ofRawClearedAwayFromSignLock
           (by omega : 2 ≤ a) hk
           (htempered ha hrect hk htemperedN hlock)
 
+/-- Constructor from raw actual-product bounds on the denominator-cleared
+complement of the sign-lock zone.
+
+This is the preferred remaining proof surface for the product tail.  It keeps
+the TeX sign-lock split, but states the non-sign-lock branch as
+`k < 361 ∨ 40*k < 3*N`, avoiding rational negated conjunctions in the
+eventual checker/analytic proof.  In the small branch the sign-lock case is
+impossible from `k ≤ ceilSqrt N`, so no extra complement hypothesis is asked
+there. -/
+theorem LargeTailProductCertificate.ofRawClearedNatSignLockComplement
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedAwayFromSignLock
+    (by
+      intro a N k ha hrect hk hsmallN hnotLock
+      exact hsmall ha hrect hk hsmallN)
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock
+      exact htempered ha hrect hk htemperedN
+        (signLock_natAlternative_of_not hnotLock))
+
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
 

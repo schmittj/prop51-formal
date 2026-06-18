@@ -415,6 +415,81 @@ theorem rectangle_N_le_signLock_range_self {a N : Nat}
     exact_mod_cast h3N_a
   nlinarith
 
+/-- Natural-number form of the rational sign-lock range. -/
+theorem signLock_range_iff_nat {N k : Nat} :
+    (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ) ↔ 3 * N ≤ 40 * k := by
+  constructor
+  · intro h
+    have hQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (k : ℚ) := by
+      nlinarith
+    exact_mod_cast hQ
+  · intro h
+    have hQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (k : ℚ) := by
+      exact_mod_cast h
+    nlinarith
+
+/-- Cross-multiplied complement of the sign-lock zone.
+
+The TeX proof states the sign-lock alternative as
+`N ≤ (40/3) k`.  Lean product-tail estimates are easier to state and check in
+the denominator-cleared form below. -/
+theorem signLock_natAlternative_of_not
+    {N k : Nat}
+    (h : ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ))) :
+    k < 361 ∨ 40 * k < 3 * N := by
+  by_cases hk : k < 361
+  · exact Or.inl hk
+  · refine Or.inr ?_
+    by_contra hnot
+    have hk361 : 361 ≤ k := by omega
+    have h3N : 3 * N ≤ 40 * k := by omega
+    exact h ⟨hk361, (signLock_range_iff_nat).2 h3N⟩
+
+/-- A small-regime cell cannot lie in the sign-lock zone once `k ≥ 361`.
+
+This records a useful sanity check for the large-tail split: the sign-lock
+shortcut is a tempered/top-range phenomenon, not part of the small
+`k ≤ ceilSqrt N` proof. -/
+theorem not_signLock_of_small_branch
+    {N k : Nat} (hsmall : k ≤ ceilSqrt N) :
+    ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) := by
+  intro h
+  have hk361 : 361 ≤ k := h.1
+  have hkpos : 0 < k := by omega
+  have hkpred_lt : k - 1 < ceilSqrt N := by omega
+  have hsq_lt : (k - 1) * (k - 1) < N := by
+    by_contra hnot
+    have hNle : N ≤ (k - 1) * (k - 1) := by omega
+    have hceil_le : ceilSqrt N ≤ k - 1 :=
+      (ceilSqrt_le_iff_le_sq).2 hNle
+    omega
+  have h3N : 3 * N ≤ 40 * k := (signLock_range_iff_nat).1 h.2
+  have hsqQ :
+      (3 : ℚ) * (((k - 1) * (k - 1) : Nat) : ℚ) <
+        (3 : ℚ) * (N : ℚ) := by
+    have hsqQ0 :
+        (((k - 1) * (k - 1) : Nat) : ℚ) < (N : ℚ) := by
+      exact_mod_cast hsq_lt
+    nlinarith
+  have h3NQ : (3 : ℚ) * (N : ℚ) ≤ (40 : ℚ) * (k : ℚ) := by
+    exact_mod_cast h3N
+  have ht : (360 : ℚ) ≤ ((k - 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 360 ≤ k - 1)
+  have hk_cast : (k : ℚ) = ((k - 1 : Nat) : ℚ) + 1 := by
+    have hkadd : k - 1 + 1 = k :=
+      Nat.sub_add_cancel (by omega : 1 ≤ k)
+    exact_mod_cast hkadd.symm
+  have hpolyQ :
+      (40 : ℚ) * (k : ℚ) <
+        (3 : ℚ) * (((k - 1) * (k - 1) : Nat) : ℚ) := by
+    have hpolyQ' :
+        (40 : ℚ) * (k : ℚ) <
+          (3 : ℚ) * (((k - 1 : Nat) : ℚ) *
+            ((k - 1 : Nat) : ℚ)) := by
+      nlinarith
+    simpa [Nat.cast_mul, mul_assoc] using hpolyQ'
+  nlinarith
+
 theorem div_natCast_le_div_posNlo_of_rectangle {a N : Nat} {C : ℚ}
     (hC : 0 ≤ C) (ha : 2 ≤ a) (hrect : positiveRectangle a N) :
     C / (N : ℚ) ≤ C / (posNlo a : ℚ) := by
