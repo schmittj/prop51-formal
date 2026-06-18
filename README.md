@@ -261,13 +261,21 @@ All Lean proofs are sorry-free.  Headline theorems:
   normalization of the same large-tail estimate.  This split route now also
   constructs the preferred concrete
   `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
-  before converting to the audit certificate.  The matching top-level
+  before converting to the audit certificate.  The fast-evaluator sibling
+  `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate`
+  uses `partialExpUpperFast` for the small/tempered exponential factors, and
+  the solo target
+  `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared`
+  does the same for the solo `8a` exponential shell; both rewrite back to the
+  canonical split-final-term target before entering the audit certificate.
+  The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
   and its row-active sibling
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`,
   plus the corresponding `...ClosedFactorialSplitBlockSumTail` pair for the
-  split-final-term certificate shape.
+  split-final-term certificate shape, and `...ClosedFactorialSplitBlockSumFastTail`
+  for the fast-evaluator certificate shape.
   For final
   assembly from
   these lower-level product and solo proofs,

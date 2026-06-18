@@ -697,12 +697,23 @@ Status:
       route now constructs the preferred concrete
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`
       before converting to the audit certificate.  The
+      fast-evaluator sibling
+      `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate`
+      replaces the small/tempered exponential factors by
+      `positiveSmallLargeExpFast` and `positiveTemperedLargeExpFast`; the solo
+      target
+      `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared`
+      similarly uses `partialExpUpperFast` for the solo shell.  These are
+      Lean-only evaluator substitutions and rewrite back to the canonical
+      split-final-term targets before the audit interface.  The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
       and
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`,
       with matching `...ClosedFactorialSplitBlockSumTail` wrappers for the
-      split-final-term certificate shape.
+      split-final-term certificate shape and
+      `...ClosedFactorialSplitBlockSumFastTail` wrappers for the fast
+      evaluator certificate shape.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

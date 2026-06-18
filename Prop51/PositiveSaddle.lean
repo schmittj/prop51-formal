@@ -10084,6 +10084,16 @@ constant `positiveExpCutoff = 800`. -/
 def positiveSmallLargeExp (a k : Nat) : ℚ :=
   partialExpUpper (positiveSmallExponentUpper a k) a
 
+/-- Fast evaluator for `positiveSmallLargeExp`, definitionally suitable for
+generated Boolean checks. -/
+def positiveSmallLargeExpFast (a k : Nat) : ℚ :=
+  partialExpUpperFast (positiveSmallExponentUpper a k) a
+
+theorem positiveSmallLargeExpFast_eq (a k : Nat) :
+    positiveSmallLargeExpFast a k = positiveSmallLargeExp a k := by
+  simp [positiveSmallLargeExpFast, positiveSmallLargeExp,
+    partialExpUpperFast_eq]
+
 /-- A concrete variable-cutoff rational exponential factor for the
 large-`a` tempered branch.  The factor `8a` is deliberately loose; it is used
 only to put the displayed exponent below the cutoff uniformly on the retained
@@ -14137,6 +14147,49 @@ def positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar
       positiveTemperedLargeExp a k *
         ((N : ℚ) * c k * c (posJ a k))
 
+/-- Small-branch split-final-term scalar target using the fast evaluator for
+the large exponential factor.  This is a proof-production variant only;
+`positiveSmallLargeExpFast_eq` rewrites it to the canonical target. -/
+def positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+    (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExpFast a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+/-- Tempered-branch split-final-term scalar target using the fast evaluator
+for the large exponential factor. -/
+def positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+    (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExpFast a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+theorem positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar_of_fastExp
+    {a N k : Nat}
+    (h :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+        a N k) :
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar a N k := by
+  unfold positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar at *
+  rwa [positiveSmallLargeExpFast_eq] at h
+
+theorem positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar_of_fastExp
+    {a N k : Nat}
+    (h :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+        a N k) :
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar a N k := by
+  unfold positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar at *
+  rwa [positiveTemperedLargeExpFast_eq] at h
+
 theorem positiveLargeTailSmallProductClosedBlockSumScalar_of_active
     {a N k : Nat}
     (h : positiveLargeTailSmallProductClosedActiveBlockSumScalar a N k) :
@@ -14379,6 +14432,34 @@ structure PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertif
       k ∈ positiveKRange a → ceilSqrt N < k →
         positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar a N k
 
+/-- Proof-production wrapper whose split-final-term factorial fields use the
+fast rational exponential evaluators. -/
+structure PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate :
+    Prop where
+  smallScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+          a N k
+  temperedScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+          a N k
+
+theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate.toClosedFactorialSplitBlockSumScalarCertificate
+    (cert :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate where
+  smallScalar := by
+    intro a N k ha hrect hk hsmall
+    exact positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar_of_fastExp
+      (cert.smallScalar ha hrect hk hsmall)
+  temperedScalar := by
+    intro a N k ha hrect hk htempered
+    exact positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar_of_fastExp
+      (cert.temperedScalar ha hrect hk htempered)
+
 theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate.toClosedFactorialBlockSumScalarCertificate
     (cert :
       PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate) :
@@ -14446,6 +14527,14 @@ theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertific
     |>.toBlockSumScalarCertificate
     |>.toBlockSumCertificate
     |>.toProductBoundsCertificate
+
+theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate.toProductBoundsCertificate
+    (cert :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate) :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  cert.toClosedFactorialSplitBlockSumScalarCertificate.toProductBoundsCertificate
 
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -18889,6 +18978,19 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpper (positiveSoloYExponent a) (8 * a)
 
+/-- Fast-evaluator version of
+`positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared`.
+
+This is a proof-production target for generated witnesses; the theorem
+`positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast`
+rewrites it back to the canonical `partialExpUpper` statement. -/
+def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a *
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpperFast (positiveSoloYExponent a) (8 * a)
+
 /-- Denominator-cleared large-tail solo `Gcomp` saddle target.
 
 This is the variable-cutoff analogue of
@@ -18970,6 +19072,15 @@ theorem positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split
     positiveLargeTailSoloGcompClosedFactorialBlockSumCleared at *
   rwa [positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum] at h
 
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast
+    {a N : Nat}
+    (h :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared a N) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared at *
+  rwa [partialExpUpperFast_eq] at h
+
 /-- An active closed-composition solo bound implies the explicit `Gcomp`
 double-sum solo target. -/
 theorem positiveLargeTailSoloGcompBlockSumCleared_of_closedActiveBlockSumCleared
@@ -19039,6 +19150,16 @@ theorem positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumC
     positiveLargeTailSoloGcompSaddleCleared a N :=
   positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialBlockSumCleared
     (positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split h)
+
+/-- A fast-evaluator split-final-term solo bound implies the recurrence-level
+cleared solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumFastCleared
+    {a N : Nat}
+    (h :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared a N) :
+    positiveLargeTailSoloGcompSaddleCleared a N :=
+  positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumCleared
+    (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast h)
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/
@@ -19158,6 +19279,20 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedF
   positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialBlockSumCleared
     (fun {a N} ha hrect =>
       positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split
+        (hY (a := a) (N := N) ha hrect))
+
+/-- Large-tail solo certificate reduced to the fast-evaluator
+split-final-term factorial-only active closed-composition block-sum target. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumFastCleared
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumCleared
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast
         (hY (a := a) (N := N) ha hrect))
 
 /-- At the first retained tempered index, the large-tail tempered exponent is

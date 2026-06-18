@@ -1171,6 +1171,29 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
       product soloY)
 
+/-- Final assembly from the fixed-edge finite route and the fast
+split-final-term closed-factorial large-tail target. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a N) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
+      product soloY)
+
 /-- Final assembly from the row-active combined-product finite route.
 
 This is the same mathematical finite-window proof as the fixed-edge route
@@ -1240,6 +1263,29 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
+      product soloY)
+
+/-- Final assembly from the row-active finite route and the fast
+split-final-term closed-factorial large-tail target. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialSplitBlockSumFastTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a N) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
       product soloY)
 
 /-- Final assembly from the row-active finite route and the fully split

@@ -308,4 +308,36 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
     product soloY).toLargeTailAuditCertificate
 
+/-- Preferred hybrid-ratio large-tail certificate with both split-final-term
+factorial inputs supplied through fast rational exponential evaluators. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
+    product.toClosedFactorialSplitBlockSumScalarCertificate
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast
+        (soloY (a := a) (N := N) ha hrect))
+
+/-- Large-tail audit certificate whose remaining product and solo fields use
+the fast split-final-term factorial targets. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
+    product soloY).toLargeTailAuditCertificate
+
 end Prop51
