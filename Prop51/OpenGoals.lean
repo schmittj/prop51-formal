@@ -216,33 +216,24 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNScalars
             (fun a k =>
               positiveLargeTailProductXUpperEdgeExactBound a k *
                 positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
-    LargeTailProductCertificate where
-  largeSmall := by
-    intro a N k ha hrect hk hsmallN
-    have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
-      hsmallN.trans (ceilSqrt_mono hrect.2)
-    have hprod :
-        positiveXplusYProductGcompBound a N k
-          ≤ positiveSmallLargeGcompProductTarget a N k :=
-      positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
-        (by omega : 2000 < a) hrect hk
-        (hsmall ha hk hsmallEdge)
-    exact
-      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
-        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
-  largeTempered := by
-    intro a N k ha hrect hk htemperedN
-    have htemperedEdge : ceilSqrt (posNlo a) < k :=
-      lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
-    have hprod :
-        positiveXplusYProductGcompBound a N k
-          ≤ positiveTemperedLargeGcompProductTarget a N k :=
-      positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
-        (by omega : 2000 < a) hrect hk
-        (htempered ha hk htemperedEdge)
-    exact
-      (Xnorm_mul_Ynorm_le_of_Xplus_mul_Ynorm
-        (XplusYnorm_le_positiveXplusYProductGcompBound a N k)).trans hprod
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawCleared
+    (by
+      intro a N k ha hrect hk hsmallN
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+          (by omega : 2000 < a) hrect hk
+          (hsmall ha hk hsmallEdge))
+    (by
+      intro a N k ha hrect hk htemperedN
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerN
+          (by omega : 2000 < a) hrect hk
+          (htempered ha hk htemperedEdge))
 
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
