@@ -595,7 +595,10 @@ Status:
       reserves, and the quotient/crossmul ten-sevenths tail shapes.
       Manifest and dry-run JSON now include the generator command, chunk
       lengths, conservative per-atom loop-cell estimates, git commit, and
-      dirty-status metadata for reproducibility.
+      dirty-status metadata for reproducibility.  Dry runs also accept
+      `--dry-run-shard-count n`, which reports balanced shard field counts
+      and conservative per-shard loop-cell upper bounds without materializing
+      atom entries.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

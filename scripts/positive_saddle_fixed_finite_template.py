@@ -37,6 +37,9 @@ Strategies include:
     materializing the full atom manifest.
   * --dry-run-active-counts: emit row-local active-geometry count estimates,
     again without materializing the full atom manifest.
+  * --dry-run-shard-count N: with a dry run, add balanced shard summaries
+    with per-field counts and conservative loop-cell upper bounds, still
+    without materializing atom entries.
   * --active-row-covers: target the row-active Lean finite-window wrapper,
     using row-local `N` and retained-`k` covers for emitted atoms/manifests.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
@@ -682,6 +685,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--dry-run-shard-count",
+        type=positive_nat,
+        help=(
+            "with --dry-run-counts or --dry-run-active-counts, include "
+            "balanced shard summaries with per-field counts and conservative "
+            "loop-cell upper bounds"
+        ),
+    )
+    parser.add_argument(
         "--active-row-covers",
         action="store_true",
         help=(
@@ -779,6 +791,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         )
     if args.dry_run_counts and args.dry_run_active_counts:
         parser.error("--dry-run-counts cannot be combined with --dry-run-active-counts")
+    if args.dry_run_shard_count is not None and not (
+        args.dry_run_counts or args.dry_run_active_counts
+    ):
+        parser.error(
+            "--dry-run-shard-count requires --dry-run-counts or "
+            "--dry-run-active-counts"
+        )
     if (
         args.active_row_covers
         and args.strategy
@@ -2165,6 +2184,24 @@ def single_chunk_total_count(args: argparse.Namespace) -> int:
     return sum(single_chunk_shape_count(shape) for shape in single_chunk_shapes(args))
 
 
+def single_chunk_shape_ranges(args: argparse.Namespace) -> list[tuple[str, int, int]]:
+    offset = 0
+    ranges = []
+    if args.active_row_covers:
+        shapes = active_single_chunk_shapes(args)
+        count_fn = active_single_chunk_shape_count
+    else:
+        shapes = single_chunk_shapes(args)
+        count_fn = single_chunk_shape_count
+    for shape in shapes:
+        field = shape[0]
+        count = count_fn(shape)
+        if count:
+            ranges.append((field, offset, offset + count))
+        offset += count
+    return ranges
+
+
 def single_chunk_spec_from_local_index(
     args: argparse.Namespace,
     shape: tuple[str, int, int | None, int | None],
@@ -2700,6 +2737,36 @@ def dry_run_cell_estimates(
     }
 
 
+def dry_run_shard_summaries(
+    args: argparse.Namespace, shard_count: int
+) -> list[dict[str, object]]:
+    shape_ranges = single_chunk_shape_ranges(args)
+    total = shape_ranges[-1][2] if shape_ranges else 0
+    summaries = []
+    for shard_index in range(shard_count):
+        start, stop = shard_bounds(total, shard_index, shard_count)
+        counts: dict[str, int] = {}
+        for field, shape_start, shape_stop in shape_ranges:
+            overlap = min(stop, shape_stop) - max(start, shape_start)
+            if overlap > 0:
+                counts[field] = counts.get(field, 0) + overlap
+        summaries.append(
+            {
+                "shard_index": shard_index,
+                "shard_count": shard_count,
+                "start": start,
+                "stop": stop,
+                "count": stop - start,
+                "counts": counts,
+                "cell_estimates": dry_run_cell_estimates(args, counts),
+                "emit_args": single_chunk_shard_emit_args(
+                    args, shard_index, shard_count
+                ),
+            }
+        )
+    return summaries
+
+
 def emit_dry_run_counts(args: argparse.Namespace) -> str:
     if args.active_row_covers:
         counts, dimensions = count_active_single_chunk_atoms(args)
@@ -2724,6 +2791,8 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
         "total": total,
         "materialized_chunks": False,
     }
+    if args.dry_run_shard_count is not None:
+        payload["shards"] = dry_run_shard_summaries(args, args.dry_run_shard_count)
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
@@ -3144,6 +3213,8 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "row_samples": dry_run_active_row_samples(args),
         "materialized_chunks": False,
     }
+    if args.dry_run_shard_count is not None:
+        payload["shards"] = dry_run_shard_summaries(args, args.dry_run_shard_count)
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
