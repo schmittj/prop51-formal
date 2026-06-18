@@ -12044,6 +12044,115 @@ theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpCell
     (of_decide_eq_true (by
       simpa [checkPositiveTemperedLargeXYProductRawClearedFastExpCell] using h))
 
+/-- Table-backed fast-exp version of the large-tail small raw product cell.
+
+For a fixed `(a,N)` checker this shares `cList`, `BListQ`, and `QListQ`
+across all retained `k`, avoiding the main avoidable recomputation in the
+cell-level fast predicate. -/
+def positiveSmallLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      B.getD k 0 * Q.getD (posJ a k) 0
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExpFast a k *
+        ((N : ℚ) * cl.getD k 0 * cl.getD (posJ a k) 0)
+
+/-- Table-backed fast-exp version of the large-tail tempered raw product
+cell. -/
+def positiveTemperedLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      B.getD k 0 * Q.getD (posJ a k) 0
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExpFast a k *
+        ((N : ℚ) * cl.getD k 0 * cl.getD (posJ a k) 0)
+
+instance decidablePositiveSmallLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) :
+    Decidable
+      (positiveSmallLargeXYProductRawClearedFastExpTableCell cl B Q a N k) := by
+  unfold positiveSmallLargeXYProductRawClearedFastExpTableCell
+  infer_instance
+
+instance decidablePositiveTemperedLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) :
+    Decidable
+      (positiveTemperedLargeXYProductRawClearedFastExpTableCell cl B Q a N k) := by
+  unfold positiveTemperedLargeXYProductRawClearedFastExpTableCell
+  infer_instance
+
+/-- Boolean table-backed cell checker for the large-tail small raw product
+with the fast exponential evaluator. -/
+def checkPositiveSmallLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Bool :=
+  decide (positiveSmallLargeXYProductRawClearedFastExpTableCell cl B Q a N k)
+
+/-- Boolean table-backed cell checker for the large-tail tempered raw product
+with the fast exponential evaluator. -/
+def checkPositiveTemperedLargeXYProductRawClearedFastExpTableCell
+    (cl B Q : List ℚ) (a N k : Nat) : Bool :=
+  decide (positiveTemperedLargeXYProductRawClearedFastExpTableCell cl B Q a N k)
+
+theorem positiveSmallLargeXYProductRawClearedFastExp_of_tableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      positiveSmallLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k) :
+    positiveSmallLargeXYProductRawClearedFastExp a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a :=
+    le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hj_le_a : posJ a k ≤ a := by
+    unfold posJ
+    omega
+  unfold positiveSmallLargeXYProductRawClearedFastExpTableCell at h
+  rw [BListQ_getD_eq N a k hk_le_a,
+    QListQ_getD_eq N a (posJ a k) hj_le_a,
+    cList_getD_eq k a hk_le_a,
+    cList_getD_eq (posJ a k) a hj_le_a] at h
+  exact h
+
+theorem positiveTemperedLargeXYProductRawClearedFastExp_of_tableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      positiveTemperedLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k) :
+    positiveTemperedLargeXYProductRawClearedFastExp a N k := by
+  rcases mem_positiveKRange.mp hkRange with ⟨_hk1, hkmax⟩
+  have hk_le_a : k ≤ a :=
+    le_of_lt (lt_self_of_le_posKmax ha hkmax)
+  have hj_le_a : posJ a k ≤ a := by
+    unfold posJ
+    omega
+  unfold positiveTemperedLargeXYProductRawClearedFastExpTableCell at h
+  rw [BListQ_getD_eq N a k hk_le_a,
+    QListQ_getD_eq N a (posJ a k) hj_le_a,
+    cList_getD_eq k a hk_le_a,
+    cList_getD_eq (posJ a k) a hj_le_a] at h
+  exact h
+
+theorem positiveSmallLargeXYProductRawCleared_of_checkFastExpTableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      checkPositiveSmallLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k =
+          true) :
+    positiveSmallLargeXYProductRawCleared a N k :=
+  positiveSmallLargeXYProductRawCleared_of_fastExp
+    (positiveSmallLargeXYProductRawClearedFastExp_of_tableCell
+      ha hkRange (of_decide_eq_true h))
+
+theorem positiveTemperedLargeXYProductRawCleared_of_checkFastExpTableCell
+    {a N k : Nat} (ha : 1 ≤ a) (hkRange : k ∈ positiveKRange a)
+    (h :
+      checkPositiveTemperedLargeXYProductRawClearedFastExpTableCell
+        (cList a) (BListQ (cList a) N a) (QListQ (cList a) N a) a N k =
+          true) :
+    positiveTemperedLargeXYProductRawCleared a N k :=
+  positiveTemperedLargeXYProductRawCleared_of_fastExp
+    (positiveTemperedLargeXYProductRawClearedFastExp_of_tableCell
+      ha hkRange (of_decide_eq_true h))
+
 /-- If the actual `B_k(N)` coefficient is nonpositive, the large-tail
 small-branch raw product target is automatic.
 
