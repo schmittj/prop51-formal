@@ -10216,6 +10216,30 @@ theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRangeFast
       simpa [checkPositiveEdgeBudgetUnitRangeFast] using h)
   exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
 
+/-- Convert a fast unit-scaled row check back to the existing canonical row
+predicate.  This lets generated certificates keep their current interface
+while evaluating the expensive exponential shell by recurrence. -/
+theorem checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRowFast
+    {a : Nat} (h : checkPositiveEdgeBudgetUnitRowFast a = true) :
+    checkPositiveEdgeBudgetUnitRow a = true := by
+  have hfast :
+      (200000000 : ℚ) * positiveEdgeMajorantSumFast a ≤ 1 :=
+    of_decide_eq_true h
+  rw [positiveEdgeMajorantSumFast_eq] at hfast
+  exact decide_eq_true hfast
+
+theorem checkPositiveEdgeBudgetUnitRange_of_checkPositiveEdgeBudgetUnitRangeFast
+    {lo len : Nat} (h : checkPositiveEdgeBudgetUnitRangeFast lo len = true) :
+    checkPositiveEdgeBudgetUnitRange lo len = true := by
+  have hall :
+      ∀ x ∈ List.range' lo len, checkPositiveEdgeBudgetUnitRowFast x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetUnitRangeFast] using h)
+  exact List.all_eq_true.mpr (by
+    intro x hx
+    exact checkPositiveEdgeBudgetUnitRow_of_checkPositiveEdgeBudgetUnitRowFast
+      (hall x hx))
+
 /-- Fast evaluator for the finite prefix `∑ t<n, y^t/t!`. -/
 def partialExpPrefixFast (y : ℚ) (n : Nat) : ℚ :=
   (partialExpUpperState y n).1
