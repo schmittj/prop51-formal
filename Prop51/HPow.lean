@@ -164,6 +164,89 @@ theorem expCoeff_eq_sum_pow (L : Nat → ℚ) (hL0 : L 0 = 0) (p : Nat) :
 
 /-! ## The power bound through `Gcomp` -/
 
+/-- Base-parameterized composition bound for powers.
+
+If `L` vanishes below degree 2 and
+`|L_j| ≤ M * B^j * (j-1)!` for a positive base `B`, then the coefficient of
+`(Σ L_j t^j)^r` is bounded by `M^r * B^p * Gcomp r p`.  The public
+`abs_coeff_pow_le` below is the specialization `B = 6`; the sharp solo route
+uses this version with `B = 3`. -/
+theorem abs_coeff_pow_le_base (L : Nat → ℚ) (M B : ℚ) (hB : 0 < B)
+    (hL0 : ∀ j, j < 2 → L j = 0)
+    (hLb : ∀ j, 2 ≤ j → |L j| ≤ M * (B^j * ((j-1).factorial : ℚ))) :
+    ∀ r p : Nat, |coeff p ((mk L : ℚ⟦X⟧) ^ r)| ≤ M^r * B^p * Gcomp r p := by
+  have hM : 0 ≤ M := by
+    have h2 := hLb 2 le_rfl
+    rw [show (2:ℕ)-1 = 1 from rfl, show Nat.factorial 1 = 1 from rfl] at h2
+    norm_num at h2
+    have habs : (0:ℚ) ≤ |L 2| := abs_nonneg _
+    have hB2 : 0 < B^2 := by positivity
+    nlinarith [h2, habs, hB2]
+  intro r
+  induction r with
+  | zero =>
+      intro p
+      simp only [pow_zero, one_mul]
+      match p with
+      | 0 => simp [Gcomp]
+      | (q+1) =>
+          rw [coeff_one]
+          simp only [Gcomp]
+          norm_num
+  | succ r ih =>
+      intro p
+      rw [pow_succ', coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+      have habs : |∑ k ∈ Finset.range (p+1),
+            coeff k (mk L : ℚ⟦X⟧) * coeff (p-k) ((mk L : ℚ⟦X⟧) ^ r)|
+          ≤ ∑ k ∈ Finset.range (p+1),
+              |L k| * |coeff (p-k) ((mk L : ℚ⟦X⟧) ^ r)| := by
+        refine (Finset.abs_sum_le_sum_abs _ _).trans (le_of_eq ?_)
+        refine Finset.sum_congr rfl fun k _ => ?_
+        rw [coeff_mk, abs_mul]
+      refine habs.trans ?_
+      have hdrop : ∑ k ∈ Finset.range (p+1),
+            |L k| * |coeff (p-k) ((mk L : ℚ⟦X⟧) ^ r)|
+          = ∑ k ∈ Finset.Icc 2 p,
+              |L k| * |coeff (p-k) ((mk L : ℚ⟦X⟧) ^ r)| := by
+        symm
+        apply Finset.sum_subset
+        · intro x hx
+          rw [Finset.mem_Icc] at hx
+          rw [Finset.mem_range]
+          omega
+        · intro k hk hnot
+          rw [Finset.mem_Icc] at hnot
+          rw [Finset.mem_range] at hk
+          have : L k = 0 := hL0 k (by omega)
+          rw [this, abs_zero, zero_mul]
+      rw [hdrop]
+      have hterm : ∀ k ∈ Finset.Icc 2 p,
+          |L k| * |coeff (p-k) ((mk L : ℚ⟦X⟧) ^ r)|
+            ≤ (M * (B^k * ((k-1).factorial : ℚ)))
+              * (M^r * B^(p-k) * Gcomp r (p-k)) := by
+        intro k hk
+        obtain ⟨h2, _hkp⟩ := Finset.mem_Icc.mp hk
+        exact mul_le_mul (hLb k h2) (ih (p-k)) (abs_nonneg _)
+          (by positivity)
+      refine (Finset.sum_le_sum hterm).trans (le_of_eq ?_)
+      have hsplit : ∀ k ∈ Finset.Icc 2 p,
+          (M * (B^k * ((k-1).factorial : ℚ)))
+              * (M^r * B^(p-k) * Gcomp r (p-k))
+            = M^(r+1) * B^p * (((k-1).factorial : ℚ) * Gcomp r (p-k)) := by
+        intro k hk
+        obtain ⟨_h2, hkp⟩ := Finset.mem_Icc.mp hk
+        have hpow : B^k * B^(p-k) = B^p := by
+          rw [← pow_add]
+          congr 1
+          omega
+        rw [← hpow]
+        ring
+      rw [Finset.sum_congr rfl hsplit, ← Finset.mul_sum]
+      have : Gcomp (r+1) p = ∑ k ∈ Finset.Icc 2 p,
+          ((k-1).factorial : ℚ) * Gcomp r (p-k) := by
+        simp only [Gcomp]
+      rw [this]
+
 /-- **The composition bound for powers**: if `L` vanishes below degree 2
 and `|L_j| ≤ M·6^j (j-1)!`, then `|[t^p]G^r| ≤ M^r·6^p·G_r(p)`. -/
 theorem abs_coeff_pow_le (L : Nat → ℚ) (M : ℚ)

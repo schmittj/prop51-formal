@@ -227,6 +227,16 @@ def EplusGcompBound (N p : Nat) : ℚ :=
     (fun j => if j < 2 then 0
       else ((N : ℚ) / 50) * 6^j * ((j - 1).factorial : ℚ)) p
 
+/-- Sharp nonlinear positive majorant for the solo `Qq` route.
+
+This is the same nonlinear recurrence as `EplusGcompBound`, but with the
+dyadic decay retained in the log-coefficient bound: the scale is
+`2N/25` and the power base is `3` instead of `6`. -/
+def EplusSharpGcompBound (N p : Nat) : ℚ :=
+  expCoeff
+    (fun j => if j < 2 then 0
+      else ((2 * (N : ℚ)) / 25) * 3^j * ((j - 1).factorial : ℚ)) p
+
 theorem Eplus_nat_le_GcompBound (N p : Nat) :
     Eplus (N : ℚ) p ≤ EplusGcompBound N p := by
   unfold Eplus EplusGcompBound
@@ -280,6 +290,59 @@ theorem EplusGcompBound_le_Gcomp_sum (N p : Nat) :
   rw [expCoeff_eq_sum_pow L hL0 p]
   refine Finset.sum_le_sum fun r _ => ?_
   have hcoeff := abs_coeff_pow_le L ((N : ℚ) / 50) hLzero hLb r p
+  have hleabs :
+      coeff p ((mk L : ℚ⟦X⟧) ^ r)
+        ≤ |coeff p ((mk L : ℚ⟦X⟧) ^ r)| :=
+    le_abs_self _
+  have hfpos : (0 : ℚ) < (r.factorial : ℚ) := by
+    exact_mod_cast r.factorial_pos
+  exact div_le_div_of_nonneg_right (hleabs.trans hcoeff) hfpos.le
+
+theorem EplusSharpGcompBound_nonneg (N p : Nat) :
+    0 ≤ EplusSharpGcompBound N p := by
+  unfold EplusSharpGcompBound
+  refine expCoeff_nonneg ?_ p
+  intro j
+  by_cases hj : j < 2
+  · simp [hj]
+  · simp [hj]
+    positivity
+
+/-- Sharp nonlinear recurrence opened into its explicit `Gcomp` block sum. -/
+theorem EplusSharpGcompBound_le_Gcomp_sum (N p : Nat) :
+    EplusSharpGcompBound N p
+      ≤ ∑ r ∈ Finset.range (p+1),
+          ((2 * (N : ℚ)) / 25)^r * 3^p * Gcomp r p /
+            (r.factorial : ℚ) := by
+  let L : Nat → ℚ :=
+    fun j =>
+      if j < 2 then 0
+      else ((2 * (N : ℚ)) / 25) * 3^j * ((j - 1).factorial : ℚ)
+  have hL0 : L 0 = 0 := by
+    simp [L]
+  have hLzero : ∀ j, j < 2 → L j = 0 := by
+    intro j hj
+    simp [L, hj]
+  have hLb :
+      ∀ j, 2 ≤ j →
+        |L j| ≤ ((2 * (N : ℚ)) / 25) *
+          (3^j * ((j - 1).factorial : ℚ)) := by
+    intro j hj
+    have hnot : ¬ j < 2 := by omega
+    simp [L, hnot]
+    rw [abs_of_nonneg
+      (by positivity : 0 ≤ (2 * (N : ℚ)) / 25)]
+    ring_nf
+    exact le_rfl
+  change expCoeff L p ≤
+    ∑ r ∈ Finset.range (p+1),
+      ((2 * (N : ℚ)) / 25)^r * 3^p * Gcomp r p /
+        (r.factorial : ℚ)
+  rw [expCoeff_eq_sum_pow L hL0 p]
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hcoeff :=
+    abs_coeff_pow_le_base L ((2 * (N : ℚ)) / 25) 3
+      (by norm_num : (0 : ℚ) < 3) hLzero hLb r p
   have hleabs :
       coeff p ((mk L : ℚ⟦X⟧) ^ r)
         ≤ |coeff p ((mk L : ℚ⟦X⟧) ^ r)| :=
@@ -974,6 +1037,64 @@ theorem QqEplusGcompBound_eq_linear_EplusGcompBound_sum (N m : Nat) :
   rw [coeff_expSeries, coeff_mul,
     Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
   simpa [QqEplusGcompBound, EplusGcompBound, expCoeff_linearExpSeq,
+    mul_assoc] using hcoeff
+
+private theorem QqSharpGcompBoundSeries_eq_linear_mul_EplusSharpGcompBoundSeries
+    (N : Nat) :
+    expSeries
+        (fun j =>
+          if j = 0 then 0
+          else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+          else ((2 * (N : ℚ)) / 25) * 3^j *
+            ((j - 1).factorial : ℚ))
+      =
+      expSeries (linearExpSeq (((N : ℚ) / 2) * c 1 / 2)) *
+        expSeries
+          (fun j =>
+            if j < 2 then 0
+            else ((2 * (N : ℚ)) / 25) * 3^j *
+              ((j - 1).factorial : ℚ)) := by
+  rw [expSeries_mul]
+  congr 1
+  funext j
+  cases j with
+  | zero =>
+      simp [linearExpSeq]
+  | succ j =>
+      cases j with
+      | zero =>
+          simp [linearExpSeq]
+      | succ j =>
+          simp [linearExpSeq]
+
+/-- Finite decomposition of the sharp `Qq` majorant into the exact linear
+exponential and the sharp nonlinear recurrence. -/
+theorem QqSharpGcompBound_eq_linear_EplusSharpGcompBound_sum (N m : Nat) :
+    QqSharpGcompBound N m =
+      ∑ s ∈ Finset.range (m+1),
+        (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          EplusSharpGcompBound N (m-s) := by
+  have hcoeff := congrArg (fun F : ℚ⟦X⟧ => coeff m F)
+    (QqSharpGcompBoundSeries_eq_linear_mul_EplusSharpGcompBoundSeries N)
+  change
+      coeff m
+          (expSeries
+            (fun j =>
+              if j = 0 then 0
+              else if j = 1 then ((N : ℚ) / 2) * c 1 / 2
+              else ((2 * (N : ℚ)) / 25) * 3^j *
+                ((j - 1).factorial : ℚ)))
+        =
+        coeff m
+          (expSeries (linearExpSeq (((N : ℚ) / 2) * c 1 / 2)) *
+            expSeries
+              (fun j =>
+                if j < 2 then 0
+                else ((2 * (N : ℚ)) / 25) * 3^j *
+                  ((j - 1).factorial : ℚ))) at hcoeff
+  rw [coeff_expSeries, coeff_mul,
+    Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk] at hcoeff
+  simpa [QqSharpGcompBound, EplusSharpGcompBound, expCoeff_linearExpSeq,
     mul_assoc] using hcoeff
 
 /-- Positive `B` majorant split into its exact linear exponential and the
