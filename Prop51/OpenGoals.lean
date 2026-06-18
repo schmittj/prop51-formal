@@ -340,6 +340,56 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsNatS
           (hproductBound ha hk)
           (htempered ha hk htemperedEdge hrowAlt))
 
+/-- Large-tail product constructor for separate rational upper-edge `X` and
+`Y` factor surrogates, after applying the sign-lock split to the tempered
+branch.
+
+This is the product-tail proof surface to target next.  It is weaker than the
+full-hybrid `PositiveSaddle` surface because the tempered scalar is only
+required on the row-level complement of the §5 sign-lock zone, and it avoids
+the expensive exact split-product expression in the final scalar comparison.
+-/
+theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsNatSignLockComplement
+    {xBound yBound : Nat → Nat → ℚ}
+    (hxBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductXClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ xBound a k)
+    (hyBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k ≤ yBound a k)
+    (hsmall :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k)
+    (htempered :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k => xBound a k * yBound a k) a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsNatSignLockComplement
+    (xyBound := fun a k => xBound a k * yBound a k)
+    (by
+      intro a k ha hk
+      unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+      have hx := hxBound ha hk
+      have hy := hyBound ha hk
+      have hYnonneg :
+          0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound
+            a (posNhi a) k :=
+        positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+          a (posNhi a) k
+      have hxBoundNonneg : 0 ≤ xBound a k :=
+        (positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+          a (posNhi a) k).trans hx
+      exact mul_le_mul hx hy hYnonneg hxBoundNonneg)
+    hsmall
+    htempered
+
 /-- Convert the live product certificate and its lower-prefix scalar chunks
 directly into the large-tail pointwise estimate used by the candidate/reserve
 machinery.
