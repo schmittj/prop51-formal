@@ -705,7 +705,11 @@ Status:
       `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared`
       similarly uses `partialExpUpperFast` for the solo shell.  These are
       Lean-only evaluator substitutions and rewrite back to the canonical
-      split-final-term targets before the audit interface.  The
+      split-final-term targets before the audit interface.  A sibling route
+      keeps the fast split product fields but takes the solo side directly as
+      `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`,
+      matching the actual solo field of the hybrid-ratio audit certificate.
+      The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
       and
@@ -713,7 +717,9 @@ Status:
       with matching `...ClosedFactorialSplitBlockSumTail` wrappers for the
       split-final-term certificate shape and
       `...ClosedFactorialSplitBlockSumFastTail` wrappers for the fast
-      evaluator certificate shape.
+      evaluator certificate shape.  The direct solo-envelope fast variant is
+      exposed through
+      `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -744,7 +750,9 @@ Status:
       split-final-term version with
       `--emit-final --final-tail-closed-factorial-split-block-sum`.  The
       fast-evaluator split form is available as
-      `--emit-final --final-tail-closed-factorial-split-block-sum-fast`.
+      `--emit-final --final-tail-closed-factorial-split-block-sum-fast`, and
+      the fast-product/direct-solo-envelope form is available as
+      `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-envelope`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so

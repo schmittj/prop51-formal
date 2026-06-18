@@ -340,4 +340,38 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumFastCleared
     product soloY).toLargeTailAuditCertificate
 
+/-- Preferred hybrid-ratio large-tail certificate with the product side
+supplied through fast split-final-term factorial targets and the solo side
+supplied directly as the `(10/7)^a` envelope.
+
+This is a weaker solo obligation than the cleared `partialExpUpperFast`
+target above; the underlying hybrid-ratio audit certificate only needs the
+`positiveYgcompBound` envelope. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloTenSeventhsBound
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveYgcompBound N a ≤
+          positiveLargeTailSoloTenSeventhsBound a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    product.toProductBoundsCertificate soloY
+
+/-- Large-tail audit certificate with fast split-final-term product targets
+and the direct `(10/7)^a` solo envelope as the remaining inputs. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloTenSeventhsBound
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveYgcompBound N a ≤
+          positiveLargeTailSoloTenSeventhsBound a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloTenSeventhsBound
+    product soloY).toLargeTailAuditCertificate
+
 end Prop51

@@ -268,6 +268,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared`
   does the same for the solo `8a` exponential shell; both rewrite back to the
   canonical split-final-term target before entering the audit certificate.
+  The sibling fast-product/solo-envelope route keeps the fast split product
+  fields but asks directly for the solo envelope
+  `Prop51.positiveYgcompBound N a ≤ Prop51.positiveLargeTailSoloTenSeventhsBound a N`,
+  matching the actual solo field of the hybrid-ratio audit certificate.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -275,7 +279,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`,
   plus the corresponding `...ClosedFactorialSplitBlockSumTail` pair for the
   split-final-term certificate shape, and `...ClosedFactorialSplitBlockSumFastTail`
-  for the fast-evaluator certificate shape.
+  for the fast-evaluator certificate shape.  The direct solo-envelope variant
+  is exposed as `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`.
   For final
   assembly from
   these lower-level product and solo proofs,
@@ -495,6 +500,8 @@ All Lean proofs are sorry-free.  Headline theorems:
   factorial-only product/solo block-sum target,
   `--final-tail-closed-factorial-split-block-sum-fast` for the fast-evaluator
   version of that split target,
+  `--final-tail-closed-factorial-split-block-sum-fast-product-solo-envelope`
+  for the fast product target with a direct solo envelope,
   `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for
