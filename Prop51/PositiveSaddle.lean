@@ -14014,6 +14014,19 @@ structure PositiveSaddleLargeTailSoloYUnitCertificate : Prop where
           (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
         ≤ 1
 
+/-- Direct normalized large-tail solo unit-budget target.
+
+This is the final theorem-facing solo obligation.  The older
+`positiveYgcompBound` quotient remains useful as a proof-production surrogate,
+but for the large analytic tail that surrogate is intentionally not part of
+the canonical completion route: its `Eplus`/`Gcomp` coefficient bound is too
+coarse for the `(10/7)^a` scalar envelope, while the final assembly only needs
+the actual normalized solo term. -/
+structure PositiveSaddleLargeTailSoloNormUnitCertificate : Prop where
+  soloNormUnit :
+    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+      (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1
+
 theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate.toSmallProductRawCertificate
     (cert :
       PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
@@ -14031,6 +14044,35 @@ theorem PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertifica
       PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate) :
     PositiveSaddleLargeTailSoloYUnitCertificate where
   soloYUnit := cert.soloYUnit
+
+theorem positiveLargeTailSoloNormUnit_of_Y_unit
+    {a N : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hYUnit :
+      (200000000 : ℚ) *
+          (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+        ≤ 1) :
+    (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 := by
+  have hcoef : 0 ≤ positiveDyadicDecay a / 2 :=
+    div_nonneg (positiveDyadicDecay_nonneg a) (by norm_num)
+  have hnorm :
+      normalizedSoloTerm a N ≤
+        positiveDyadicDecay a / 2 * positiveYgcompBound N a := by
+    rw [normalizedSoloTerm_eq_dyadic_Ynorm hN ha]
+    exact mul_le_mul_of_nonneg_left
+      (Ynorm_le_positiveYgcompBound N a) hcoef
+  exact
+    (mul_le_mul_of_nonneg_left hnorm
+      (by norm_num : (0 : ℚ) ≤ 200000000)).trans hYUnit
+
+theorem PositiveSaddleLargeTailSoloYUnitCertificate.toSoloNormUnitCertificate
+    (cert : PositiveSaddleLargeTailSoloYUnitCertificate) :
+    PositiveSaddleLargeTailSoloNormUnitCertificate where
+  soloNormUnit := by
+    intro a N ha hrect
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    exact positiveLargeTailSoloNormUnit_of_Y_unit hN
+      (by omega : 1 ≤ a) (cert.soloYUnit ha hrect)
 
 /-- Reassemble the unit-scaled large-tail solo target from a separate
 `Y_a(N)` majorant and the scalar dyadic budget for that majorant. -/
@@ -15471,6 +15513,80 @@ theorem PositiveSaddleLargeTailProductBoundsCertificate.toProductPointwiseYRawUn
     PositiveSaddleEntropyShadowLargeExpProductPointwiseYRawUnitSoloCertificate :=
   cert.toProductPointwiseYRawUnitSoloCertificate
     solo.toSoloYUnitCertificate
+
+/-- Build the large-tail pointwise certificate from product bounds and a
+direct normalized-solo unit budget.
+
+This is the convergence-oriented route used by the canonical capstone.  It
+keeps the product side on the existing raw `B*Q` majorant path, but does not
+force the solo term through the coarse `positiveYgcompBound` quotient. -/
+theorem positiveSaddleEntropyShadowLargeExpPointwiseCertificate_of_productBounds_soloNormUnit
+    {smallXBound smallYBound temperedXBound temperedYBound :
+      Nat → Nat → Nat → ℚ}
+    (product : PositiveSaddleLargeTailProductBoundsCertificate
+      smallXBound smallYBound temperedXBound temperedYBound)
+    (solo : PositiveSaddleLargeTailSoloNormUnitCertificate) :
+    PositiveSaddleEntropyShadowLargeExpPointwiseCertificate where
+  small := by
+    intro a N k ha hrect hk hsmall
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    have hraw :
+        2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k)) :=
+      product.toSmallProductRawCertificate.smallProductRaw ha hrect hk hsmall
+    have hlinear :
+        ((N : ℚ) * (posNhi a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveSmallLargeExp a k :=
+      positiveSmallLargeProductLinear_of_rawGcompProduct ha hrect hk hraw
+    have hproduct :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveSmallLargeGcompProductTarget a N k :=
+      positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
+        ha hN hlinear
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (positiveXplusYProductGcompFactoredTerm_le_smallEntropyShadowExp_of_product
+          ha hrect hk hproduct)
+  tempered := by
+    intro a N k ha hrect hk htempered
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    have hraw :
+        2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+            BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k *
+              ((N : ℚ) * c k * c (posJ a k)) :=
+      product.toTemperedProductRawCertificate.temperedProductRaw
+        ha hrect hk htempered
+    have hlinear :
+        ((N : ℚ) * (posNlo a : ℚ)) *
+            positiveXplusYProductGcompBound a N k
+          ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+            positiveTemperedLargeExp a k :=
+      positiveTemperedLargeProductLinear_of_rawGcompProduct
+        ha hrect hk hraw
+    have hproduct :
+        positiveXplusYProductGcompBound a N k
+          ≤ positiveTemperedLargeGcompProductTarget a N k :=
+      positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_mul_le
+        ha hN hlinear
+    exact
+      (normalizedPositiveIfTerm_le_XplusYProductGcompFactoredTerm
+        (by omega : 2 ≤ a) hrect hk).trans
+        (positiveXplusYProductGcompFactoredTerm_le_temperedEntropyShadowExp_of_product
+          ha hrect hk hproduct)
+  soloBudget := by
+    intro a N ha hrect
+    exact le_positiveSoloBudget_of_mul_200000000_le_one
+      (solo.soloNormUnit ha hrect)
 
 /-- Reassembles the split large-tail product/solo targets into the existing
 unit-solo pointwise certificate.  This is only a proof-production

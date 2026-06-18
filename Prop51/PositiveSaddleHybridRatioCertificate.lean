@@ -24,6 +24,28 @@ theorem positiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioCh
     |>.toSharpTopOffsetHybridRatioChunkedCertificate
       positiveSaddleLargeTailCandidateTemperedLowerPrefixTopOffsetExpRatioCertificate
 
+/-- The closed large-tail candidate step/reserve certificate used by the
+current hybrid-ratio route, factored away from the product and solo wrappers.
+
+This is the same candidate proof hidden by
+`positiveSaddleLargeTailAuditCertificate_of_product_solo`; exposing it here
+lets the canonical completion route feed in a direct normalized-solo pointwise
+bound instead of the older `positiveYgcompBound` solo envelope. -/
+theorem positiveSaddleLargeTailCandidateRefinedAtomicCertificate_hybridClosed :
+    PositiveSaddleLargeTailCandidateRefinedAtomicCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_of_temperedLowerSharpTopOffsetHybridRawExp_upperMiddleExpTarget_temperedReserves
+    positiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate.toHybridRawExpCertificate
+    positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate
+    (positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed
+      |>.toTemperedLowerFirstReserveCertificate)
+    (positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed
+      |>.toTemperedUpperLastReserveCertificate)
+
+theorem positiveSaddleLargeTailCandidateRawClearedUnitReserveBoundsCertificate_hybridClosed :
+    PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate :=
+  positiveSaddleLargeTailCandidateRefinedAtomicCertificate_hybridClosed
+    |>.toRawClearedUnitReserveBoundsCertificate
+
 /-- Large-tail wrapper with the lower hybrid ratio certificate filled in.
 
 After this packaging step, the large-tail audit route still asks for the

@@ -91,45 +91,57 @@ theorem LargeTailProductCertificate.toFullHybrid
 
 /-- The large-tail solo obligation for the current canonical route.
 
-The TeX-side target is the direct normalized `(10/7)^a` solo envelope.  Earlier
-Lean proof-production layers also expose stronger closed-factorial and
-`partialExpUpperFast` scalar targets; the dashboard keeps those stronger
-targets only on the bounded prefix side, where they are already part of the
-generated certificate, and asks the analytic large-`a` input for the direct
-solo estimate. -/
+The final assembly only needs a unit budget for the normalized solo term
+`normalizedSoloTerm`.  This intentionally diverges from older Lean
+proof-production wrappers which asked for
+`positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`: that
+quotient uses a coarse `Eplus`/`Gcomp` majorant and is too lossy as a large
+tail target.  The prefix strip still reuses the generated stronger surrogate,
+but the analytic `a ≥ 3000` input is the direct final solo budget. -/
 structure LargeTailSoloCertificate where
   largeSolo :
     ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
-      positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N
+      (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1
 
-theorem LargeTailSoloCertificate.toTenSevenths
+theorem LargeTailSoloCertificate.toNormUnit
     {aLen : Nat}
     (hsolo : LargeTailSoloCertificate)
     (hprefix :
       PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
         positiveLargeTailSoloUpperEdgeExactBound aLen) :
-    ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
-      positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N := by
-  intro a N ha hrect
-  by_cases haLarge : 3000 ≤ a
-  · exact hsolo.largeSolo haLarge hrect
-  · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
-    have hscalar :
-        positiveLargeTailSoloFastUpperEdgeBoundScalar
-          positiveLargeTailSoloUpperEdgeExactBound a :=
-      hprefix.toPrefixCertificate.soloScalar ha haPrefix
-    have hfast :
-        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
-          a (posNhi a) := by
-      unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
-      unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
-      simpa [positiveLargeTailSoloUpperEdgeExactBound] using hscalar
-    exact
-      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
-        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
-        (positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumFastCleared
-          (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
-            (a := a) (N := N) hrect hfast))
+    PositiveSaddleLargeTailSoloNormUnitCertificate where
+  soloNormUnit := by
+    intro a N ha hrect
+    by_cases haLarge : 3000 ≤ a
+    · exact hsolo.largeSolo haLarge hrect
+    · have haPrefix : a < 3000 := Nat.lt_of_not_ge haLarge
+      have hscalar :
+          positiveLargeTailSoloFastUpperEdgeBoundScalar
+            positiveLargeTailSoloUpperEdgeExactBound a :=
+        hprefix.toPrefixCertificate.soloScalar ha haPrefix
+      have hfast :
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+            a (posNhi a) := by
+        unfold positiveLargeTailSoloFastUpperEdgeBoundScalar at hscalar
+        unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        simpa [positiveLargeTailSoloUpperEdgeExactBound] using hscalar
+      have hY :
+          positiveYgcompBound N a ≤
+            positiveLargeTailSoloTenSeventhsBound a N :=
+        positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
+          (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+          (positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumFastCleared
+            (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+              (a := a) (N := N) hrect hfast))
+      have hYUnit :
+          (200000000 : ℚ) *
+              (positiveDyadicDecay a / 2 * positiveYgcompBound N a)
+            ≤ 1 :=
+        positiveLargeTailSoloYUnit_of_Y_bound hY
+          (positiveLargeTailSoloTenSeventhsScalarBudget ha hrect)
+      exact positiveLargeTailSoloNormUnit_of_Y_unit
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+        (by omega : 1 ≤ a) hYUnit
 
 /-- Final assembly from the three live obligations.
 
@@ -147,11 +159,15 @@ theorem completion_of_three_inputs
     ((hproduct.toFullHybrid hbounded.productPrefix).toHybridCertificate
       |>.toProductBoundCertificate
       |>.toProductBoundsCertificate)
+  let soloNorm : PositiveSaddleLargeTailSoloNormUnitCertificate :=
+    hsolo.toNormUnit hbounded.soloPrefix
+  let pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate :=
+    positiveSaddleEntropyShadowLargeExpPointwiseCertificate_of_productBounds_soloNormUnit
+      productBounds soloNorm
   exact
-  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
-    hbounded.cert
-    (positiveSaddleLargeTailAuditCertificate_of_product_solo
-      productBounds
-      (hsolo.toTenSevenths hbounded.soloPrefix))
+    coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
+      (hbounded.cert.toTangentProductBudgetCertificate_of_pointwise
+        pointwise
+        positiveSaddleLargeTailCandidateRawClearedUnitReserveBoundsCertificate_hybridClosed)
 
 end Prop51

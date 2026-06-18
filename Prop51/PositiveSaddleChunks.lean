@@ -13074,6 +13074,26 @@ theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdg
       |>.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
         tail.candidateSplitTemperedRawClearedUnitReserve.toRawClearedBoundsCertificate).entropyTail
 
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.toTangentProductBudgetCertificate_of_pointwise
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (cert :
+      PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+        tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen)
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (candidate :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleTangentProductBudgetCertificate where
+  smallXYTangent := cert.smallXYTangent
+  smallTangentEdge := cert.smallTangentEdge
+  temperedXY := cert.temperedXY
+  soloY := cert.soloY
+  edgeBudget := cert.edgeBudget
+  entropyTail :=
+    (pointwise.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+      candidate.toRawClearedBoundsCertificate).entropyTail
+
 theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.toMajorantBudgetCertificate
     {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
       tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
