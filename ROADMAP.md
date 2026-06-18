@@ -709,6 +709,11 @@ Status:
       keeps the fast split product fields but takes the solo side directly as
       `positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N`,
       matching the actual solo field of the hybrid-ratio audit certificate.
+      A more structured direct-budget sibling asks instead for
+      `positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared`,
+      i.e. the split-final-term factorial solo sum cleared directly against
+      `(10/7)^a`; this is weaker than the `partialExpUpperFast` solo shell and
+      is converted internally to the same hybrid-ratio solo envelope.
       The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -719,7 +724,9 @@ Status:
       `...ClosedFactorialSplitBlockSumFastTail` wrappers for the fast
       evaluator certificate shape.  The direct solo-envelope fast variant is
       exposed through
-      `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`.
+      `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`, and the
+      structured direct ten-sevenths solo variant through
+      `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -753,6 +760,8 @@ Status:
       `--emit-final --final-tail-closed-factorial-split-block-sum-fast`, and
       the fast-product/direct-solo-envelope form is available as
       `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-envelope`.
+      The fast-product/split-solo direct ten-sevenths form is available as
+      `--emit-final --final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so

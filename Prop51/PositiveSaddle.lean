@@ -18991,6 +18991,17 @@ def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpperFast (positiveSoloYExponent a) (8 * a)
 
+/-- Denominator-cleared split-final-term solo target with the final
+`(10/7)^a` envelope directly on the right.
+
+This is weaker than the `partialExpUpper`/`partialExpUpperFast` cleared solo
+targets and matches the solo envelope field of the hybrid-ratio audit route. -/
+def positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a *
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N
+    ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
+
 /-- Denominator-cleared large-tail solo `Gcomp` saddle target.
 
 This is the variable-cutoff analogue of
@@ -19000,6 +19011,13 @@ def positiveLargeTailSoloGcompSaddleCleared (a N : Nat) : Prop :=
   (4 : ℚ) * (2 : ℚ)^a * QqEplusGcompBound N a
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpper (positiveSoloYExponent a) (8 * a)
+
+/-- Denominator-cleared large-tail solo `Gcomp` saddle target with the final
+`(10/7)^a` envelope directly on the right. -/
+def positiveLargeTailSoloGcompSaddleTenSeventhsCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a * QqEplusGcompBound N a
+    ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
 
 /-- The sum-cleared and recurrence-cleared solo saddle targets are the same
 inequality after expanding `QqEplusGcompBound` into its exact linear
@@ -19161,6 +19179,38 @@ theorem positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumF
   positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumCleared
     (positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast h)
 
+/-- A split-final-term factorial-only active closed-composition solo bound
+with the final `(10/7)^a` envelope implies the recurrence-level
+ten-sevenths cleared solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+    {a N : Nat}
+    (h :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a N) :
+    positiveLargeTailSoloGcompSaddleTenSeventhsCleared a N := by
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    positiveLargeTailSoloGcompSaddleTenSeventhsCleared at *
+  have hQ_le_split :
+      QqEplusGcompBound N a
+        ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N := by
+    calc
+      QqEplusGcompBound N a
+          = positiveLargeTailSoloGcompSaddleSum a N := by
+              unfold positiveLargeTailSoloGcompSaddleSum
+              rw [QqEplusGcompBound_eq_linear_EplusGcompBound_sum]
+      _ ≤ positiveLargeTailSoloGcompBlockSum a N :=
+              positiveLargeTailSoloGcompSaddleSum_le_blockSum a N
+      _ ≤ positiveLargeTailSoloGcompClosedBlockSum a N :=
+              positiveLargeTailSoloGcompBlockSum_le_closedBlockSum a N
+      _ = positiveLargeTailSoloGcompClosedFactorialBlockSum a N :=
+              (positiveLargeTailSoloGcompClosedFactorialBlockSum_eq_closedBlockSum
+                a N).symm
+      _ = positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N :=
+              (positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum
+                a N).symm
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  exact (mul_le_mul_of_nonneg_left hQ_le_split hscale).trans h
+
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/
 theorem positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleCleared
@@ -19201,6 +19251,45 @@ theorem positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSad
   · unfold positiveLargeTailSoloTenSeventhsBound
     field_simp [hNpos.ne', hpowpos.ne']
     ring
+
+/-- Convert the recurrence-level ten-sevenths cleared solo saddle target into
+the direct `positiveYgcompBound` solo envelope. -/
+theorem positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleTenSeventhsCleared
+    {a N : Nat} (hN : 1 ≤ N) (ha : 2000 < a)
+    (h : positiveLargeTailSoloGcompSaddleTenSeventhsCleared a N) :
+    positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N := by
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hcapos : 0 < c a := c_pos a (by omega : 1 ≤ a)
+  have hpowpos : 0 < (2 : ℚ)^a := by positivity
+  have hscale : 0 < (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hdenpos : 0 < ((N : ℚ) / 2) * c a / (2 : ℚ)^a := by
+    positivity
+  have hQ_pow :
+      QqEplusGcompBound N a
+        ≤ (29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a) /
+          ((4 : ℚ) * (2 : ℚ)^a) := by
+    rw [le_div_iff₀ hscale]
+    simpa [positiveLargeTailSoloGcompSaddleTenSeventhsCleared, mul_assoc,
+      mul_left_comm, mul_comm] using h
+  unfold positiveYgcompBound
+  rw [div_le_iff₀ hdenpos]
+  convert hQ_pow using 1
+  · unfold positiveLargeTailSoloTenSeventhsBound
+    field_simp [hNpos.ne', hpowpos.ne']
+    ring
+
+/-- Convert the split-final-term ten-sevenths cleared solo target directly
+into the `positiveYgcompBound` solo envelope. -/
+theorem positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    {a N : Nat} (hN : 1 ≤ N) (ha : 2000 < a)
+    (h :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a N) :
+    positiveYgcompBound N a ≤ positiveLargeTailSoloTenSeventhsBound a N :=
+  positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompSaddleTenSeventhsCleared
+    hN ha
+    (positiveLargeTailSoloGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+      h)
 
 /-- Large-tail solo certificate reduced to the denominator-cleared `Gcomp`
 saddle estimate above. -/
@@ -19293,6 +19382,24 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedF
   positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumCleared
     (fun {a N} ha hrect =>
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared_of_fast
+        (hY (a := a) (N := N) ha hrect))
+
+/-- Large-tail solo certificate reduced to the split-final-term
+factorial-only active closed-composition target with the final `(10/7)^a`
+envelope on the right.  This is weaker than the fast `partialExpUpper`
+target and is intended for generated witnesses that estimate the solo term
+directly against the final audit budget. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths
+    (fun {a N} ha hrect =>
+      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
         (hY (a := a) (N := N) ha hrect))
 
 /-- At the first retained tempered index, the large-tail tempered exponent is

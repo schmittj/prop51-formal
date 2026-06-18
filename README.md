@@ -272,6 +272,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   fields but asks directly for the solo envelope
   `Prop51.positiveYgcompBound N a ≤ Prop51.positiveLargeTailSoloTenSeventhsBound a N`,
   matching the actual solo field of the hybrid-ratio audit certificate.
+  A more structured sibling keeps the same final `(10/7)^a` solo budget but
+  asks for the split-final-term factorial solo sum in the cleared form
+  `Prop51.positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared`;
+  this is another Lean proof-production target, weaker than the
+  `partialExpUpperFast` solo shell and converted internally to the same solo
+  envelope.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -280,7 +286,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   plus the corresponding `...ClosedFactorialSplitBlockSumTail` pair for the
   split-final-term certificate shape, and `...ClosedFactorialSplitBlockSumFastTail`
   for the fast-evaluator certificate shape.  The direct solo-envelope variant
-  is exposed as `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`.
+  is exposed as `...ClosedFactorialSplitBlockSumFastProductSoloEnvelopeTail`;
+  the structured direct ten-sevenths solo variant is exposed as
+  `...ClosedFactorialSplitBlockSumFastProductSoloTenSeventhsTail`.
   For final
   assembly from
   these lower-level product and solo proofs,
@@ -501,7 +509,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-closed-factorial-split-block-sum-fast` for the fast-evaluator
   version of that split target,
   `--final-tail-closed-factorial-split-block-sum-fast-product-solo-envelope`
-  for the fast product target with a direct solo envelope,
+  for the fast product target with a direct solo envelope, or
+  `--final-tail-closed-factorial-split-block-sum-fast-product-solo-ten-sevenths`
+  for the fast product target with the split-final-term solo sum cleared
+  directly against `(10/7)^a`,
   `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for

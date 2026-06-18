@@ -374,4 +374,42 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
   (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloTenSeventhsBound
     product soloY).toLargeTailAuditCertificate
 
+/-- Preferred hybrid-ratio large-tail certificate with fast split-final-term
+product targets and a split-final-term factorial solo target estimated
+directly against the final `(10/7)^a` envelope.
+
+This route avoids the stronger `partialExpUpperFast` solo obligation while
+still records the factorial split used by generated solo witnesses. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloTenSeventhsBound
+    product
+    (fun {a N} ha hrect =>
+      positiveYgcompBound_le_positiveLargeTailSoloTenSeventhsBound_of_gcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) ha
+        (soloY (a := a) (N := N) ha hrect))
+
+/-- Large-tail audit certificate with fast split-final-term product targets
+and the split-final-term factorial solo target estimated directly against
+the final `(10/7)^a` envelope. -/
+theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+          a N) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    product soloY).toLargeTailAuditCertificate
+
 end Prop51
