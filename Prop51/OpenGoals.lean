@@ -983,6 +983,7 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoA
     {xyBound : Nat → Nat → ℚ}
     (hproductBound :
       ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
         positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
           ≤ xyBound a k)
     (hsmallTwo :
@@ -1009,7 +1010,7 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoA
       exact
         positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
           (by omega : 2000 < a) hrect hk
-          (hproductBound ha hk)
+          (hproductBound ha hk hk3)
           (hsmallGeThree ha hk hsmallEdge hk3))
     (by
       intro a N k ha hrect hk htemperedN hnotLock hk3 _hB
@@ -1025,7 +1026,7 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoA
       exact
         positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
           (by omega : 2000 < a) hrect hk
-          (hproductBound ha hk)
+          (hproductBound ha hk hk3)
           (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
 
 /-- Canonical combined-product constructor for the remaining large-tail
@@ -1039,6 +1040,7 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoAndFastUpperEdgeLowerNProduct
     {xyBound : Nat → Nat → ℚ}
     (hproductBound :
       ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
         positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
           ≤ xyBound a k)
     (hbudgetTwo :
@@ -1097,9 +1099,10 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNXYBoundScalarsTwoAndGeT
     LargeTailProductCertificate := by
   have hproductBound :
       ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
         positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
           ≤ xBound a k * yBound a k := by
-    intro a k ha hk
+    intro a k ha hk _hk3
     unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
     have hx := hxBound ha hk
     have hy := hyBound ha hk
