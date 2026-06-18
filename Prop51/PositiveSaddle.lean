@@ -10135,6 +10135,87 @@ theorem partialExpUpperFast_eq (y : ℚ) (T₀ : Nat) :
   rw [partialExpUpperFast, partialExpUpperState_eq]
   simp [partialExpUpper]
 
+/-- Fast-evaluator version of `positiveSmallMajorantTerm`.
+
+This has the same value as the canonical definition, but `native_decide`
+evaluates the exponential shell by recurrence instead of rebuilding the
+800-term finite sum. -/
+def positiveSmallMajorantTermFast (a k : Nat) : ℚ :=
+  positivePrefactor 65 a (posNhi a) k
+    * partialExpUpperFast (positiveSmallExponentUpper a k) positiveExpCutoff
+
+theorem positiveSmallMajorantTermFast_eq (a k : Nat) :
+    positiveSmallMajorantTermFast a k = positiveSmallMajorantTerm a k := by
+  unfold positiveSmallMajorantTermFast positiveSmallMajorantTerm
+  rw [partialExpUpperFast_eq]
+
+/-- Fast-evaluator version of `positiveTemperedMajorantTerm`. -/
+def positiveTemperedMajorantTermFast (a k : Nat) : ℚ :=
+  positivePrefactor 96 a (posNlo a) k
+    * partialExpUpperFast (positiveTemperedExponentUpper a k) positiveExpCutoff
+
+theorem positiveTemperedMajorantTermFast_eq (a k : Nat) :
+    positiveTemperedMajorantTermFast a k =
+      positiveTemperedMajorantTerm a k := by
+  unfold positiveTemperedMajorantTermFast positiveTemperedMajorantTerm
+  rw [partialExpUpperFast_eq]
+
+/-- Fast-evaluator version of `positiveEdgeMajorantTerm`. -/
+def positiveEdgeMajorantTermFast (a k : Nat) : ℚ :=
+  max
+    (if k ≤ posSmallCutoff a then positiveSmallMajorantTermFast a k else 0)
+    (if posTemperedCutoff a < k then
+      positiveTemperedMajorantTermFast a k
+    else
+      0)
+
+theorem positiveEdgeMajorantTermFast_eq (a k : Nat) :
+    positiveEdgeMajorantTermFast a k = positiveEdgeMajorantTerm a k := by
+  unfold positiveEdgeMajorantTermFast positiveEdgeMajorantTerm
+  rw [positiveSmallMajorantTermFast_eq,
+    positiveTemperedMajorantTermFast_eq]
+
+/-- Fast-evaluator version of `positiveEdgeMajorantSum`. -/
+def positiveEdgeMajorantSumFast (a : Nat) : ℚ :=
+  ∑ k ∈ positiveKRange a, positiveEdgeMajorantTermFast a k
+
+theorem positiveEdgeMajorantSumFast_eq (a : Nat) :
+    positiveEdgeMajorantSumFast a = positiveEdgeMajorantSum a := by
+  unfold positiveEdgeMajorantSumFast positiveEdgeMajorantSum
+  exact Finset.sum_congr rfl fun k _ => positiveEdgeMajorantTermFast_eq a k
+
+/-- Unit-scaled finite edge-budget row check using the fast exponential
+evaluator. -/
+def checkPositiveEdgeBudgetUnitRowFast (a : Nat) : Bool :=
+  decide ((200000000 : ℚ) * positiveEdgeMajorantSumFast a ≤ 1)
+
+/-- Fast range check for the corrected two-edge finite budget over
+`a ∈ [lo, lo+len)`. -/
+def checkPositiveEdgeBudgetUnitRangeFast (lo len : Nat) : Bool :=
+  (List.range' lo len).all checkPositiveEdgeBudgetUnitRowFast
+
+/-- Soundness of one fast unit-scaled row check for the corrected two-edge
+budget. -/
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRowFast {a : Nat}
+    (h : checkPositiveEdgeBudgetUnitRowFast a = true) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  have hfast :
+      (200000000 : ℚ) * positiveEdgeMajorantSumFast a ≤ 1 :=
+    of_decide_eq_true h
+  rw [positiveEdgeMajorantSumFast_eq] at hfast
+  exact le_positiveEdgeBudget_of_mul_200000000_le_one hfast
+
+theorem positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRangeFast
+    {lo len a : Nat} (h : checkPositiveEdgeBudgetUnitRangeFast lo len = true)
+    (hlo : lo ≤ a) (hhi : a < lo + len) :
+    positiveEdgeMajorantSum a ≤ positiveEdgeBudget := by
+  apply positiveEdgeBudget_of_checkPositiveEdgeBudgetUnitRowFast
+  have hall :
+      ∀ x ∈ List.range' lo len, checkPositiveEdgeBudgetUnitRowFast x = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveEdgeBudgetUnitRangeFast] using h)
+  exact hall a ((List.mem_range'_1).mpr ⟨hlo, hhi⟩)
+
 /-- Fast evaluator for the finite prefix `∑ t<n, y^t/t!`. -/
 def partialExpPrefixFast (y : ℚ) (n : Nat) : ℚ :=
   (partialExpUpperState y n).1
