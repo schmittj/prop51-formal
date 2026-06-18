@@ -579,7 +579,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.positiveSaddleLargeTailCandidateTemperedUpperReverseMiddleExpTargetCrossmulCertificate`;
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_product_solo` is the
   corresponding large-tail audit constructor whose remaining arguments are
-  the product bounds and the solo `Y` envelope.
+  the product bounds and the solo `Y` envelope.  The finite generator targets
+  this preferred ratio/raw-budget chunked final route with
+  `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

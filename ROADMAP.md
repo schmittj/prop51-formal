@@ -978,6 +978,8 @@ Status:
       `PositiveSaddleLargeTailCandidateTemperedLowerSharpTopOffsetHybridRatioChunkedCertificate`
       and
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
+      The finite generator exposes this final theorem shape with
+      `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
       Since the upper-middle target is now supplied by Lean, the helper
       `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
       the product bounds and solo `Y` envelope as large-tail inputs on this
