@@ -10292,6 +10292,47 @@ theorem scaledMulDivCeil_sound
     _ ≤ ((scaledMulDivCeil u num den : Nat) : ℚ) / (S : ℚ) :=
         div_le_div_of_nonneg_right hceil hSℚ.le
 
+/-- Upward-rounded successor update for one exponential-series term.
+
+When `y = yn / yd`, the exact recurrence is
+`T_{n+1} = T_n * yn / (yd * (n+1))`.  This integer update is the rounded
+version of that recurrence at a fixed denominator scale. -/
+def scaledExpSucc (u yn yd n : Nat) : Nat :=
+  scaledMulDivCeil u yn (yd * (n + 1))
+
+theorem scaledExpSucc_sound
+    {S u yn yd n : Nat} {t : ℚ}
+    (hS : 0 < S) (hyd : 0 < yd)
+    (ht : t ≤ (u : ℚ) / (S : ℚ)) :
+    t * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ)
+      ≤ ((scaledExpSucc u yn yd n : Nat) : ℚ) / (S : ℚ) := by
+  have hden : 0 < yd * (n + 1) := by
+    exact Nat.mul_pos hyd (Nat.succ_pos n)
+  have hfactor_nonneg :
+      0 ≤ (yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ) := by
+    positivity
+  have hmul :
+      t * ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ))
+        ≤ ((u : ℚ) / (S : ℚ)) *
+            ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) :=
+    mul_le_mul_of_nonneg_right ht hfactor_nonneg
+  have hceil :=
+    scaledMulDivCeil_sound (S := S) (u := u) (num := yn)
+      (den := yd * (n + 1)) hS hden
+  calc
+    t * ((yn : ℚ) / (yd : ℚ)) / ((n + 1 : Nat) : ℚ)
+        = t * ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) := by
+            have hydℚ : (yd : ℚ) ≠ 0 := by
+              exact_mod_cast hyd.ne'
+            have hnℚ : (((n + 1 : Nat) : ℚ)) ≠ 0 := by positivity
+            rw [show ((yd * (n + 1) : Nat) : ℚ) =
+                (yd : ℚ) * ((n + 1 : Nat) : ℚ) by norm_num]
+            field_simp [hydℚ, hnℚ]
+    _ ≤ ((u : ℚ) / (S : ℚ)) *
+            ((yn : ℚ) / ((yd * (n + 1) : Nat) : ℚ)) := hmul
+    _ ≤ ((scaledExpSucc u yn yd n : Nat) : ℚ) / (S : ℚ) := by
+        simpa [scaledExpSucc] using hceil
+
 /-- Fast-evaluator version of `positiveSmallMajorantTerm`.
 
 This has the same value as the canonical definition, but `native_decide`
