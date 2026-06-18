@@ -989,6 +989,194 @@ theorem positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared
         positiveSmallLargeExp a 2 * c (posJ a 2) := by
         ring
 
+/-- The small-branch exponential at `k = 2` has enough endpoint slack to pay
+for the polynomial factor left by the shifted solo first-cell estimate.
+
+This is intentionally a coarse inequality.  The proof uses only
+`posNhi a ≤ posSmallCutoff a ^ 2` and a four-step `partialExpUpper` shift;
+it does not expand the variable-cutoff exponential. -/
+theorem positiveSmallFirstCellShiftedSoloFastExpBudget_of_large
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveSmallFirstCellShiftedSoloFastExpBudget a := by
+  unfold positiveSmallFirstCellShiftedSoloFastExpBudget positiveSmallLargeExp
+  rw [partialExpUpperFast_eq]
+  let y : ℚ := positiveSoloYExponent (posJ a 2)
+  let z : ℚ := positiveSmallExponentUpper a 2
+  let d : ℚ := (1139 / 1000 : ℚ) * (posSmallCutoff a : ℚ)
+  let C : ℚ :=
+    (29 / 4 : ℚ) * (posNhi a : ℚ) *
+      ((5 : ℚ) * (posNhi a : ℚ) - 72)
+  let target : ℚ := 9360 / C
+  have hNge15 : 15 ≤ posNhi a := by
+    unfold posNhi
+    omega
+  have hNge15Q : (15 : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hNge15
+  have hlinear_pos :
+      0 < (5 : ℚ) * (posNhi a : ℚ) - 72 := by
+    nlinarith
+  have hCpos : 0 < C := by
+    dsimp [C]
+    positivity
+  have hCnonneg : 0 ≤ C := hCpos.le
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    unfold positiveSoloYExponent
+    positivity
+  have hy_lt_a : y < (a : ℚ) := by
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast ha
+    have hj_le : (posJ a 2 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 2
+    dsimp [y]
+    unfold positiveSoloYExponent
+    nlinarith
+  have hcutoff_a_le : a ≤ 8 * posJ a 2 := by
+    unfold posJ
+    omega
+  have hcutoff :
+      partialExpUpper y (8 * posJ a 2) ≤ partialExpUpper y a :=
+    partialExpUpper_cutoff_le_of_le hcutoff_a_le hy0 hy_lt_a
+  have hk : 2 ∈ positiveKRange a := by
+    refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+    unfold posKmax
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+    omega
+  have hz_lt_a : z < (a : ℚ) := by
+    dsimp [z]
+    exact positiveSmallExponentUpper_lt_largeExpCutoff
+      (by omega : 2000 < a) hk
+  have hd0 : 0 ≤ d := by
+    dsimp [d]
+    positivity
+  have hdrop : y + d ≤ z := by
+    have hjposNat : 0 < posJ a 2 := by
+      unfold posJ
+      omega
+    have hjposQ : (0 : ℚ) < (posJ a 2 : ℚ) := by
+      exact_mod_cast hjposNat
+    have hj_le : (posJ a 2 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 2
+    have hratio : 1 ≤ (a : ℚ) / (posJ a 2 : ℚ) := by
+      rw [le_div_iff₀ hjposQ]
+      simpa using hj_le
+    dsimp [y, z, d]
+    unfold positiveSoloYExponent positiveSmallExponentUpper
+    nlinarith
+  have hN_le_s_sq :
+      (posNhi a : ℚ) ≤ (posSmallCutoff a : ℚ)^2 := by
+    have hnat : posNhi a ≤ posSmallCutoff a * posSmallCutoff a := by
+      unfold posSmallCutoff
+      exact le_ceilSqrt_sq (posNhi a)
+    simpa [pow_two] using (show (posNhi a : ℚ) ≤
+      (posSmallCutoff a : ℚ) * (posSmallCutoff a : ℚ) by
+        exact_mod_cast hnat)
+  have hN_sq_le_s_four :
+      (posNhi a : ℚ)^2 ≤ (posSmallCutoff a : ℚ)^4 := by
+    have hNnonneg : 0 ≤ (posNhi a : ℚ) := by positivity
+    have hsSqNonneg : 0 ≤ (posSmallCutoff a : ℚ)^2 := sq_nonneg _
+    calc
+      (posNhi a : ℚ)^2
+          ≤ (posSmallCutoff a : ℚ)^2 * (posNhi a : ℚ) :=
+            by
+              simpa [pow_two, mul_comm, mul_left_comm, mul_assoc] using
+                mul_le_mul_of_nonneg_right hN_le_s_sq hNnonneg
+      _ ≤ (posSmallCutoff a : ℚ)^2 * (posSmallCutoff a : ℚ)^2 :=
+            mul_le_mul_of_nonneg_left hN_le_s_sq hsSqNonneg
+      _ = (posSmallCutoff a : ℚ)^4 := by ring
+  have hC_le_quad :
+      C ≤ (145 / 4 : ℚ) * (posNhi a : ℚ)^2 := by
+    have hlinear :
+        (5 : ℚ) * (posNhi a : ℚ) - 72
+          ≤ (5 : ℚ) * (posNhi a : ℚ) := by
+      linarith
+    have hscale : 0 ≤ (29 / 4 : ℚ) * (posNhi a : ℚ) := by
+      positivity
+    dsimp [C]
+    calc
+      (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72)
+          ≤ (29 / 4 : ℚ) * (posNhi a : ℚ) *
+              ((5 : ℚ) * (posNhi a : ℚ)) :=
+            mul_le_mul_of_nonneg_left hlinear hscale
+      _ = (145 / 4 : ℚ) * (posNhi a : ℚ)^2 := by ring
+  have hquad_le_gap :
+      (145 / 4 : ℚ) * (posNhi a : ℚ)^2
+        ≤ 9360 * (d / 4)^4 := by
+    have hcoeff :
+        (145 / 4 : ℚ) ≤ 9360 * (1139 / 4000 : ℚ)^4 := by
+      norm_num
+    have hN2nonneg : 0 ≤ (posNhi a : ℚ)^2 := sq_nonneg _
+    have hcoeffStep :
+        (145 / 4 : ℚ) * (posNhi a : ℚ)^2
+          ≤ (9360 * (1139 / 4000 : ℚ)^4) *
+              (posNhi a : ℚ)^2 :=
+      mul_le_mul_of_nonneg_right hcoeff hN2nonneg
+    have hscale : 0 ≤ 9360 * (1139 / 4000 : ℚ)^4 := by
+      norm_num
+    calc
+      (145 / 4 : ℚ) * (posNhi a : ℚ)^2
+          ≤ (9360 * (1139 / 4000 : ℚ)^4) *
+              (posNhi a : ℚ)^2 := hcoeffStep
+      _ ≤ (9360 * (1139 / 4000 : ℚ)^4) *
+              (posSmallCutoff a : ℚ)^4 :=
+            mul_le_mul_of_nonneg_left hN_sq_le_s_four hscale
+      _ = 9360 * (d / 4)^4 := by
+            dsimp [d]
+            ring
+  have hgap_le_shift :
+      9360 * (d / 4)^4 ≤ 9360 * (1 + d / 4)^4 := by
+    have hbase0 : 0 ≤ d / 4 := by positivity
+    have hbase : d / 4 ≤ 1 + d / 4 := by linarith
+    exact mul_le_mul_of_nonneg_left
+      (pow_le_pow_left₀ hbase0 hbase 4) (by norm_num)
+  have hpoly : C ≤ 9360 * (1 + d / 4)^4 :=
+    hC_le_quad.trans (hquad_le_gap.trans hgap_le_shift)
+  have hbudget :
+      1 ≤ target * (1 + d / 4)^4 := by
+    have hrewrite :
+        target * (1 + d / 4)^4 =
+          (9360 * (1 + d / 4)^4) / C := by
+      dsimp [target]
+      ring
+    rw [hrewrite]
+    rw [le_div_iff₀ hCpos]
+    nlinarith
+  have hshift :
+      partialExpUpper y a ≤ target * partialExpUpper z a :=
+    partialExpUpper_le_mul_of_four_step_shift
+      (y := y) (z := z) (d₀ := d) (target := target) (T := a)
+      hy0 hd0 (by omega : 1 ≤ a) hz_lt_a hdrop hbudget
+  have hexp :
+      partialExpUpper y (8 * posJ a 2)
+        ≤ target * partialExpUpper z a :=
+    hcutoff.trans hshift
+  calc
+    (29 / 4 : ℚ) * (posNhi a : ℚ) *
+        ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+        partialExpUpper y (8 * posJ a 2)
+        = C * partialExpUpper y (8 * posJ a 2) := by
+          dsimp [C]
+    _ ≤ C * (target * partialExpUpper z a) :=
+          mul_le_mul_of_nonneg_left hexp hCnonneg
+    _ = 9360 * partialExpUpper z a := by
+          dsimp [target]
+          field_simp [hCpos.ne']
+
+/-- Large-`a` first-cell budget after the scalar comparison has been closed.
+
+The only remaining first-cell analytic input is now the shifted solo-style
+split-sum bound at `j = a - 2`, `N = posNhi a`. -/
+theorem positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared_large
+    {a : Nat} (ha : 3000 ≤ a)
+    (hsolo :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        (posJ a 2) (posNhi a)) :
+    positiveSmallFirstCellYUpperEdgeBudget a :=
+  positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared
+    (by omega : 2000 < a) hsolo
+    (positiveSmallFirstCellShiftedSoloFastExpBudget_of_large ha)
+
 /-- The direct first-cell budget using the actual `Qq` coefficient. -/
 def positiveSmallFirstCellRawQBudget (a N : Nat) : Prop :=
   positiveSmallFirstCellQBudget a N (Qq N (posJ a 2))
@@ -2174,6 +2362,38 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSpl
         positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
         mul_assoc,
       ] using h)
+
+/-- Split-final-term scalar specialization with the first-cell scalar budget
+closed.
+
+For the live large-tail product route, the retained `k = 2` cell now asks
+only for the shifted solo fast-cleared bound.  The scalar comparison between
+that bound and the small-branch product exponential is supplied by
+`positiveSmallFirstCellShiftedSoloFastExpBudget_of_large`. -/
+theorem LargeTailProductCertificate.ofShiftedSoloFirstCellAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (hshiftedSoloTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          (posJ a 2) (posNhi a))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared_large
+          ha (hshiftedSoloTwoUpper ha))
+    hsmallGeThree htemperedGeThree
 
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
 fast split-final-term scalar package.

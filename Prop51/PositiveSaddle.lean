@@ -9420,6 +9420,79 @@ theorem partialExpUpper_mul_one_add_third_pow_three_le_of_add
           dsimp [e]
           ring
 
+/-- Four equal first-order shifts give the quartic growth estimate needed
+for the first retained product cell: its polynomial prefactor is quadratic
+in the top edge, while the available exponent gap is proportional to
+`ceilSqrt (posNhi a)`. -/
+theorem partialExpUpper_mul_one_add_quarter_pow_four_le_of_add
+    {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d / 4)^4 * partialExpUpper y T ≤ partialExpUpper (y+d) T := by
+  let e : ℚ := d / 4
+  have he0 : 0 ≤ e := by
+    dsimp [e]
+    positivity
+  have hbase1 : y + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase2 : y + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase3 : y + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase4 : y + e + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hy1 : 0 ≤ y + e := add_nonneg hy he0
+  have hy2 : 0 ≤ y + e + e := add_nonneg hy1 he0
+  have hy3 : 0 ≤ y + e + e + e := add_nonneg hy2 he0
+  have hstep0 :
+      (1 + e) * partialExpUpper y T ≤ partialExpUpper (y + e) T :=
+    partialExpUpper_mul_one_add_le_of_add
+      (y := y) (d := e) (T := T) hy he0 hT hbase1
+  have hstep1 :
+      (1 + e) * partialExpUpper (y + e) T
+        ≤ partialExpUpper (y + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e) (d := e) (T := T) hy1 he0 hT hbase2
+  have hstep2 :
+      (1 + e) * partialExpUpper (y + e + e) T
+        ≤ partialExpUpper (y + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e) (d := e) (T := T) hy2 he0 hT hbase3
+  have hstep3 :
+      (1 + e) * partialExpUpper (y + e + e + e) T
+        ≤ partialExpUpper (y + e + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e + e) (d := e) (T := T) hy3 he0 hT hbase4
+  have hfactor0 : 0 ≤ 1 + e := by linarith
+  have hfactorSq0 : 0 ≤ (1 + e)^2 := sq_nonneg (1 + e)
+  have hfactorCube0 : 0 ≤ (1 + e)^3 := by positivity
+  calc
+    (1 + d / 4)^4 * partialExpUpper y T
+        = (1 + e)^3 * ((1 + e) * partialExpUpper y T) := by
+            dsimp [e]
+            ring
+    _ ≤ (1 + e)^3 * partialExpUpper (y + e) T :=
+          mul_le_mul_of_nonneg_left hstep0 hfactorCube0
+    _ = (1 + e)^2 * ((1 + e) * partialExpUpper (y + e) T) := by
+          ring
+    _ ≤ (1 + e)^2 * partialExpUpper (y + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep1 hfactorSq0
+    _ = (1 + e) * ((1 + e) * partialExpUpper (y + e + e) T) := by
+          ring
+    _ ≤ (1 + e) * partialExpUpper (y + e + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep2 hfactor0
+    _ ≤ partialExpUpper (y + e + e + e + e) T := hstep3
+    _ = partialExpUpper (y+d) T := by
+          congr 1
+          dsimp [e]
+          ring
+
 /-- Convert a certified exponent-drop lower bound and a scalar budget into a
 cross-multiplied `partialExpUpper` quotient estimate. -/
 theorem partialExpUpper_le_mul_of_three_step_shift
@@ -9453,6 +9526,43 @@ theorem partialExpUpper_le_mul_of_three_step_shift
     _ ≤ (target * (1 + d₀ / 3)^3) * partialExpUpper y T :=
           mul_le_mul_of_nonneg_right hbudget hupper0
     _ = target * ((1 + d₀ / 3)^3 * partialExpUpper y T) := by ring
+    _ ≤ target * partialExpUpper z T :=
+          mul_le_mul_of_nonneg_left hfactor_le htarget0
+
+/-- Quartic variant of `partialExpUpper_le_mul_of_three_step_shift`, used
+when the exponent gap is only square-root sized but the scalar prefactor is
+quadratic. -/
+theorem partialExpUpper_le_mul_of_four_step_shift
+    {y z d₀ target : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd₀ : 0 ≤ d₀) (hT : 1 ≤ T) (hzT : z < (T : ℚ))
+    (hdrop : y + d₀ ≤ z)
+    (hbudget : 1 ≤ target * (1 + d₀ / 4)^4) :
+    partialExpUpper y T ≤ target * partialExpUpper z T := by
+  have hy_le_shift : y ≤ y + d₀ := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt (hy_le_shift.trans hdrop) hzT
+  have hshift0 : 0 ≤ y + d₀ := add_nonneg hy hd₀
+  have hshiftT : y + d₀ < (T : ℚ) := lt_of_le_of_lt hdrop hzT
+  have hgrowth :
+      (1 + d₀ / 4)^4 * partialExpUpper y T
+        ≤ partialExpUpper (y+d₀) T :=
+    partialExpUpper_mul_one_add_quarter_pow_four_le_of_add
+      (y := y) (d := d₀) (T := T) hy hd₀ hT hshiftT
+  have hmono :
+      partialExpUpper (y+d₀) T ≤ partialExpUpper z T :=
+    partialExpUpper_mono_of_nonneg_le_lt hshift0 hdrop hzT
+  have hfactor_le :
+      (1 + d₀ / 4)^4 * partialExpUpper y T ≤ partialExpUpper z T :=
+    hgrowth.trans hmono
+  have hfactor_pos : 0 < (1 + d₀ / 4)^4 := by positivity
+  have htarget0 : 0 ≤ target := by nlinarith
+  have hupper0 : 0 ≤ partialExpUpper y T :=
+    partialExpUpper_nonneg_of_nonneg_lt hy hyT
+  calc
+    partialExpUpper y T
+        = 1 * partialExpUpper y T := by ring
+    _ ≤ (target * (1 + d₀ / 4)^4) * partialExpUpper y T :=
+          mul_le_mul_of_nonneg_right hbudget hupper0
+    _ = target * ((1 + d₀ / 4)^4 * partialExpUpper y T) := by ring
     _ ≤ target * partialExpUpper z T :=
           mul_le_mul_of_nonneg_left hfactor_le htarget0
 
