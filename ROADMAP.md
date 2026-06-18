@@ -595,7 +595,12 @@ Status:
       tangent-edge, solo, and edge-budget obligations are still supplied by
       the same active finite chunks.  This is the preferred insertion point
       if the finite saddle majorant proof is completed instead of producing
-      all raw-product atoms.
+      all raw-product atoms.  It now has direct pointwise small/tempered
+      retained-summand majorant wrappers, `.toCertificate` adapters, and
+      `Prop51/Main.lean` capstones for the preferred hybrid-ratio large-tail
+      proof-production shapes, including the full surrogate
+      `...ActiveAnalyticProduct...HybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
+      endpoint.
       `Prop51/Main.lean` exposes final assembly adapters for this active
       route mirroring the fixed-edge tail interface family, from parts and
       product/solo bounds through atomic/refined bounds, grouped raw-cleared

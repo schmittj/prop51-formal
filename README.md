@@ -75,7 +75,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   the active finite chunks for tangent-edge, solo, and edge-budget checks.
   This records the intended scalable alternative to exhaustive finite
   raw-product atoms, but does not replace the generated raw-product endpoint
-  until those analytic product estimates are proved.
+  until those analytic product estimates are proved.  The corresponding
+  top-level hybrid-tail capstone family is now exposed in `Prop51.Main`,
+  ending with
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
+  for the full surrogate large-tail proof-production shape.
   Older long-named capstones below are retained as audit and profiling
   alternatives, not as competing final routes.
 * `Prop51.coefficientNegativity_of_positiveSaddleDefaultCellEdgeDisplayedSoloRawProductTableFixedNChunksIndependentRowChunksFixedScaleKChunkBudgetEntropyLargeExpCandidateSplitTemperedRawClearedUnitBudgetAuditCertificate`
