@@ -287,11 +287,7 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertifica
       PositiveSaddleLargeTailProductBoundsCertificate
         positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
         positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
-    product.toClosedFactorialBlockSumScalarCertificate
-      |>.toClosedBlockSumScalarCertificate
-      |>.toBlockSumScalarCertificate
-      |>.toBlockSumCertificate
-      |>.toProductBoundsCertificate
+    product.toProductBoundsCertificate
   exact
     positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompSaddleCleared
       productBounds

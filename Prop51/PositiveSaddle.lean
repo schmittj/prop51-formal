@@ -3027,6 +3027,44 @@ theorem positiveLargeTailYGcompClosedFactorialBlockSum_nonneg (N j : Nat) :
   rw [positiveLargeTailYGcompClosedFactorialBlockSum_eq_closedBlockSum]
   exact positiveLargeTailYGcompClosedBlockSum_nonneg N j
 
+@[simp] theorem positiveLargeTailXGcompClosedFactorialSplitBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailXGcompClosedFactorialSplitBlockSum N 0 = 1 := by
+  rw [← positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  simp
+
+@[simp] theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum N 0 = 1 := by
+  rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  simp
+
+@[simp] theorem positiveLargeTailXGcompClosedFactorialSplitBlockSum_one
+    (N : Nat) :
+    positiveLargeTailXGcompClosedFactorialSplitBlockSum N 1 =
+      (N : ℚ) * c 1 := by
+  rw [← positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  simp
+
+@[simp] theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_one
+    (N : Nat) :
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum N 1 =
+      (N : ℚ) / 2 * c 1 / 2 := by
+  rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  simp
+
+theorem positiveLargeTailXGcompClosedFactorialSplitBlockSum_nonneg
+    (N k : Nat) :
+    0 ≤ positiveLargeTailXGcompClosedFactorialSplitBlockSum N k := by
+  rw [← positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  exact positiveLargeTailXGcompClosedFactorialBlockSum_nonneg N k
+
+theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_nonneg
+    (N j : Nat) :
+    0 ≤ positiveLargeTailYGcompClosedFactorialSplitBlockSum N j := by
+  rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum]
+  exact positiveLargeTailYGcompClosedFactorialBlockSum_nonneg N j
+
 theorem positiveLargeTailXGcompBlockSum_le_closedBlockSum (N k : Nat) :
     positiveLargeTailXGcompBlockSum N k
       ≤ positiveLargeTailXGcompClosedBlockSum N k := by
@@ -13933,6 +13971,31 @@ theorem positiveLargeTailProductYClosedFactorialSplitBlockBound_eq_factorialBloc
   exact (positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum
     N (posJ a k)).symm
 
+@[simp] theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_zero
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N 0 = 1 := by
+  rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_eq_factorialBlockBound]
+  simp
+
+@[simp] theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_one
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N 1 =
+      (N : ℚ) * c 1 := by
+  rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_eq_factorialBlockBound]
+  simp
+
+theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+    (a N k : Nat) :
+    0 ≤ positiveLargeTailProductXClosedFactorialSplitBlockBound a N k := by
+  rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_eq_factorialBlockBound]
+  exact positiveLargeTailProductXClosedFactorialBlockBound_nonneg a N k
+
+theorem positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+    (a N k : Nat) :
+    0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound a N k := by
+  rw [positiveLargeTailProductYClosedFactorialSplitBlockBound_eq_factorialBlockBound]
+  exact positiveLargeTailProductYClosedFactorialBlockBound_nonneg a N k
+
 theorem positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound
     (a N k : Nat) :
     positiveLargeTailProductXClosedActiveBlockBound a N k =
@@ -14364,6 +14427,25 @@ theorem PositiveSaddleLargeTailProductBlockSumCertificate.toProductBoundsCertifi
     exact QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum
       N (posJ a k)
   temperedProduct := cert.temperedProduct
+
+/-- Convert split-final-term factorial scalar product estimates directly to
+the product-bound interface used by the large-tail audit certificates.
+
+This is a Lean proof-production normalization of the same TeX-side
+large-tail product estimate: the split form only exposes the final
+linear-exponential term separately before converting back through the closed
+factorial and block-sum surfaces. -/
+theorem PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate.toProductBoundsCertificate
+    (cert :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate) :
+    PositiveSaddleLargeTailProductBoundsCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  cert.toClosedFactorialBlockSumScalarCertificate
+    |>.toClosedBlockSumScalarCertificate
+    |>.toBlockSumScalarCertificate
+    |>.toBlockSumCertificate
+    |>.toProductBoundsCertificate
 
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toSmallProductRawCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
@@ -18690,6 +18772,19 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlock
   exact (positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum
     N a).symm
 
+@[simp] theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_zero
+    (N : Nat) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum 0 N = 1 := by
+  rw [positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  simp
+
+@[simp] theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_one
+    (N : Nat) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum 1 N =
+      (N : ℚ) / 2 * c 1 / 2 := by
+  rw [positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  simp
+
 theorem positiveLargeTailSoloGcompClosedActiveBlockSum_eq_closedBlockSum
     (a N : Nat) :
     positiveLargeTailSoloGcompClosedActiveBlockSum a N =
@@ -18716,6 +18811,12 @@ theorem positiveLargeTailSoloGcompClosedFactorialBlockSum_nonneg
     0 ≤ positiveLargeTailSoloGcompClosedFactorialBlockSum a N := by
   rw [positiveLargeTailSoloGcompClosedFactorialBlockSum_eq_closedBlockSum]
   exact positiveLargeTailSoloGcompClosedBlockSum_nonneg a N
+
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_nonneg
+    (a N : Nat) :
+    0 ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum a N := by
+  rw [positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  exact positiveLargeTailSoloGcompClosedFactorialBlockSum_nonneg a N
 
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
