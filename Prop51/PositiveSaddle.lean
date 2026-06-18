@@ -21742,6 +21742,102 @@ theorem positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum_scaled_le_factorialC
   · rw [if_neg hdeep, if_neg hdeep]
     norm_num
 
+theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_succ_le
+    {a s : Nat}
+    (hnext : 4 ≤ a - (s + 1) ∧ 3 * (a - (s + 1)) < a) :
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a (s + 1)
+      ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
+  let p : Nat := a - (s + 1)
+  have hs1le : s + 1 ≤ a := by omega
+  have hp_pos_nat : 0 < p := by
+    dsimp [p]
+    omega
+  have hp_pos : (0 : ℚ) < (p : ℚ) := by
+    exact_mod_cast hp_pos_nat
+  have hs1_pos : (0 : ℚ) < ((s + 1 : Nat) : ℚ) := by
+    positivity
+  have hden_pos : (0 : ℚ) < (6 : ℚ) * (p : ℚ) * ((s + 1 : Nat) : ℚ) := by
+    positivity
+  have hprod :
+      (5 : ℚ) * (a : ℚ) ≤
+        (6 : ℚ) * (p : ℚ) * ((s + 1 : Nat) : ℚ) := by
+    have hp_ge : (4 : ℚ) ≤ (p : ℚ) := by
+      dsimp [p]
+      exact_mod_cast hnext.1
+    have hsplit : (p : ℚ) = (a : ℚ) - ((s + 1 : Nat) : ℚ) := by
+      dsimp [p]
+      rw [Nat.cast_sub hs1le]
+    have hdeepQ : (3 : ℚ) * (p : ℚ) < (a : ℚ) := by
+      dsimp [p]
+      exact_mod_cast hnext.2
+    rw [hsplit] at hdeepQ
+    nlinarith
+  have hratio_le :
+      ((5 : ℚ) * (a : ℚ)) /
+          ((6 : ℚ) * (p : ℚ) * ((s + 1 : Nat) : ℚ))
+        ≤ 1 := by
+    rw [div_le_one₀ hden_pos]
+    exact hprod
+  have hs_fac :
+      (((s + 1).factorial : Nat) : ℚ) =
+        ((s + 1 : Nat) : ℚ) * (s.factorial : ℚ) := by
+    rw [Nat.factorial_succ, Nat.cast_mul]
+  have hp_fac :
+      (((a - s - 1).factorial : Nat) : ℚ) =
+        (p : ℚ) * (((a - (s + 1) - 1).factorial : Nat) : ℚ) := by
+    have hsub : a - s - 1 = p := by
+      dsimp [p]
+      omega
+    have hp_succ : p = (a - (s + 1) - 1) + 1 := by
+      dsimp [p]
+      omega
+    rw [hsub, hp_succ, Nat.factorial_succ, Nat.cast_mul]
+  have hterm_eq :
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a (s + 1)
+        =
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s *
+        (((5 : ℚ) * (a : ℚ)) /
+          ((6 : ℚ) * (p : ℚ) * ((s + 1 : Nat) : ℚ))) := by
+    unfold positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    have hsub_pow : a - s = p + 1 := by
+      dsimp [p]
+      omega
+    have hsub_succ : a - (s + 1) = p := by
+      rfl
+    rw [hsub_pow, hsub_succ]
+    have hp_fac_p :
+        (((p + 1 - 1).factorial : Nat) : ℚ) =
+          (p : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by
+      exact_mod_cast (by
+        have hp_eq : p + 1 - 1 = p := by omega
+        have hp_succ' : p = (p - 1) + 1 := by omega
+        rw [hp_eq, hp_succ', Nat.factorial_succ]
+        rw [show p - 1 + 1 - 1 = p - 1 by omega])
+    have hpow6 :
+        (6 : ℚ)^(p + 1) = (6 : ℚ)^p * 6 := by
+      rw [pow_succ]
+    have hpow5 :
+        ((5 : ℚ) * (a : ℚ))^(s + 1) =
+          ((5 : ℚ) * (a : ℚ))^s * ((5 : ℚ) * (a : ℚ)) := by
+      rw [pow_succ]
+    rw [hpow6, hpow5, hp_fac_p, hs_fac]
+    field_simp [hp_pos.ne', hs1_pos.ne',
+      (by positivity : (s.factorial : ℚ) ≠ 0)]
+  have hterm_nonneg :
+      0 ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
+    unfold positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    positivity
+  calc
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a (s + 1)
+        =
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s *
+        (((5 : ℚ) * (a : ℚ)) /
+          ((6 : ℚ) * (p : ℚ) * ((s + 1 : Nat) : ℚ))) := hterm_eq
+    _ ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s * 1 := by
+          exact mul_le_mul_of_nonneg_left hratio_le hterm_nonneg
+    _ = positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
+          ring
+
 theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
