@@ -15523,6 +15523,150 @@ theorem PositiveSaddleLargeTailProductBoundsCertificate.toTemperedProductRawCert
       (cert.temperedY ha hrect hk htempered)
       (cert.temperedProduct ha hrect hk htempered)
 
+/-- Direct normalized-product bridge from the live upper-edge/lower-`N`
+small scalar target.
+
+This is a Lean-side normalization of the product route: the hypothesis is the
+same scalar field used by `LargeTailProductCertificate`, while the conclusion
+is the pointwise normalized product target consumed by the large-tail
+candidate/reserve machinery. -/
+theorem positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    positiveXplusYProductGcompBound a N k
+      ≤ positiveSmallLargeGcompProductTarget a N k := by
+  have hUpper :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      at h
+    unfold
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    simpa [positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
+  have hFast :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp
+        a N k :=
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+      ha hrect hk hUpper
+  have hSplit :
+      positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar
+        a N k :=
+    positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalar_of_fastExp
+      hFast
+  have hFact :
+      positiveLargeTailSmallProductClosedFactorialBlockSumScalar a N k :=
+    positiveLargeTailSmallProductClosedFactorialBlockSumScalar_of_split hSplit
+  have hClosed :
+      positiveLargeTailSmallProductClosedBlockSumScalar a N k :=
+    positiveLargeTailSmallProductClosedBlockSumScalar_of_factorial hFact
+  have hBlock :
+      positiveLargeTailSmallProductBlockSumScalar a N k :=
+    positiveLargeTailSmallProductBlockSumScalar_of_closed hClosed
+  have hB :
+      BplusqGcompBound N k ≤
+        positiveLargeTailProductXBlockBound a N k := by
+    simpa [positiveLargeTailProductXBlockBound] using
+      BplusqGcompBound_le_positiveLargeTailXGcompBlockSum N k
+  have hQ :
+      QqEplusGcompBound N (posJ a k) ≤
+        positiveLargeTailProductYBlockBound a N k := by
+    simpa [positiveLargeTailProductYBlockBound] using
+      QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum N (posJ a k)
+  have hraw :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) :=
+    positiveSmallLargeProductRaw_of_BQ_bounds hB hQ hBlock
+  have hlinear :
+      ((N : ℚ) * (posNhi a : ℚ)) *
+          positiveXplusYProductGcompBound a N k
+        ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveSmallLargeExp a k :=
+    positiveSmallLargeProductLinear_of_rawGcompProduct
+      ha hrect hk hraw
+  exact
+    positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) hlinear
+
+/-- Direct normalized-product bridge from the live upper-edge/lower-`N`
+tempered scalar target.  This is the tempered analogue of
+`positiveXplusYProductGcompBound_le_smallLargeGcompProductTarget_of_fastUpperEdgeLowerN`.
+-/
+theorem positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_fastUpperEdgeLowerN
+    {a N k : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (hk : k ∈ positiveKRange a)
+    (h :
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    positiveXplusYProductGcompBound a N k
+      ≤ positiveTemperedLargeGcompProductTarget a N k := by
+  have hUpper :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+        a k := by
+    unfold
+      positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+      at h
+    unfold
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+    simpa [positiveLargeTailProductXUpperEdgeExactBound,
+      positiveLargeTailProductYUpperEdgeExactBound, mul_assoc] using h
+  have hFast :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp
+        a N k :=
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExp_of_upperEdgeLowerN
+      ha hrect hk hUpper
+  have hSplit :
+      positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar
+        a N k :=
+    positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalar_of_fastExp
+      hFast
+  have hFact :
+      positiveLargeTailTemperedProductClosedFactorialBlockSumScalar a N k :=
+    positiveLargeTailTemperedProductClosedFactorialBlockSumScalar_of_split hSplit
+  have hClosed :
+      positiveLargeTailTemperedProductClosedBlockSumScalar a N k :=
+    positiveLargeTailTemperedProductClosedBlockSumScalar_of_factorial hFact
+  have hBlock :
+      positiveLargeTailTemperedProductBlockSumScalar a N k :=
+    positiveLargeTailTemperedProductBlockSumScalar_of_closed hClosed
+  have hB :
+      BplusqGcompBound N k ≤
+        positiveLargeTailProductXBlockBound a N k := by
+    simpa [positiveLargeTailProductXBlockBound] using
+      BplusqGcompBound_le_positiveLargeTailXGcompBlockSum N k
+  have hQ :
+      QqEplusGcompBound N (posJ a k) ≤
+        positiveLargeTailProductYBlockBound a N k := by
+    simpa [positiveLargeTailProductYBlockBound] using
+      QqEplusGcompBound_le_positiveLargeTailYGcompBlockSum N (posJ a k)
+  have hraw :
+      2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+          BplusqGcompBound N k * QqEplusGcompBound N (posJ a k)
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k *
+            ((N : ℚ) * c k * c (posJ a k)) :=
+    positiveTemperedLargeProductRaw_of_BQ_bounds hB hQ hBlock
+  have hlinear :
+      ((N : ℚ) * (posNlo a : ℚ)) *
+          positiveXplusYProductGcompBound a N k
+        ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+          positiveTemperedLargeExp a k :=
+    positiveTemperedLargeProductLinear_of_rawGcompProduct
+      ha hrect hk hraw
+  exact
+    positiveXplusYProductGcompBound_le_temperedLargeGcompProductTarget_of_mul_le
+      ha (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect) hlinear
+
 theorem PositiveSaddleLargeTailProductBoundsCertificate.toProductPointwiseYRawUnitSoloCertificate
     {smallXBound smallYBound temperedXBound temperedYBound :
       Nat → Nat → Nat → ℚ}
