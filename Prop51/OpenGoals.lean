@@ -308,6 +308,58 @@ theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveGeTw
       exact htempered ha haPrefix hrect hk htemperedN hnotLock
         (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
 
+/-- In the post-`2000` positive rectangle, the first retained `Bq`
+coefficient is already strictly positive. -/
+theorem Bq_two_pos_of_gt_2000_positiveRectangle {a N : Nat} (ha : 2000 < a)
+    (hrect : positiveRectangle a N) :
+    0 < Bq N 2 :=
+  Bq_two_pos_of_le (by
+    have hNlo : posNlo a ≤ N := hrect.1
+    unfold posNlo at hNlo
+    omega)
+
+/-- Prefix-strip constructor that splits off the first retained product cell.
+
+After the `Bq N 1 ≤ 0` reduction, the bounded checker can treat `k = 2`
+separately and send the genuine tail to a `k ≥ 3` checker, matching the
+large-tail product split. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (hsmallTwo :
+      ∀ {a N : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        positiveSmallLargeXYProductRawCleared a N 2)
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 2000 < a → a < 3000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveGeTwoNatSignLockComplement
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN hk2 hB
+      by_cases hk_eq : k = 2
+      · subst k
+        exact hsmallTwo ha haPrefix hrect
+      · exact hsmallGeThree ha haPrefix hrect hk hsmallN (by omega) hB)
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock hk2 hB
+      by_cases hk_eq : k = 2
+      · subst k
+        have hNgt : 4 < N := by
+          have hNlo : posNlo a ≤ N := hrect.1
+          unfold posNlo at hNlo
+          omega
+        have hceil : 2 < ceilSqrt N :=
+          lt_ceilSqrt_of_sq_lt (n := N) (k := 2) (by
+            norm_num
+            exact hNgt)
+        omega
+      · exact htemperedGeThree ha haPrefix hrect hk htemperedN hnotLock
+          (by omega) hB)
+
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
