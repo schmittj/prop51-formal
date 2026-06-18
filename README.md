@@ -360,7 +360,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   `positiveLargeTailSoloUpperEdgeExactBound`.  Lean closes the corresponding
   prefix-bound fields by reflexivity, so this profile generates only the
   product scalar and solo scalar prefix atoms and then wraps the existing
-  large-side product/solo analytic fields.
+  large-side product/solo analytic fields.  The remaining scalar atoms still
+  expand the exact split sums; treat this as a faithful fallback/diagnostic
+  route and inspect `native_work_estimates` with
+  `--shard-balance native-work` before committing generated shards.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -766,7 +769,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   For the exact-bound fallback profile, pass
   `--certificate exact-bound-full-hybrid`; its manifests omit the
   product-bound and solo-bound atom families because those exact prefix-bound
-  fields are closed directly in Lean.
+  fields are closed directly in Lean.  Because its scalar atoms expand exact
+  split sums, the JSON also reports `native_work_estimates`; use
+  `--shard-balance native-work` for any exact-bound shard planning, and prefer
+  a cheaper rational surrogate when those estimates remain large.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the

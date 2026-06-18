@@ -797,7 +797,11 @@ Status:
       sums as the `xBound`, `yBound`, and `soloBound` surrogates.  The
       product/solo prefix-bound fields are then Lean tautologies, so the
       generated workload is only the product scalar and solo scalar prefix
-      atoms plus the existing `3000 ≤ a` analytic fields.
+      atoms plus the existing `3000 ≤ a` analytic fields.  Those scalar atoms
+      still expand the exact split sums, so this is a faithful
+      fallback/diagnostic route rather than the preferred production route
+      when `native_work_estimates` are large; use
+      `--shard-balance native-work` for exact-bound shard planning.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.

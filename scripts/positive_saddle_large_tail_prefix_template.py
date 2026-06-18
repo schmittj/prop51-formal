@@ -21,7 +21,9 @@ Those remain ordinary Lean theorem arguments in the final full-hybrid
 certificate.  The `exact-bound-full-hybrid` certificate profile uses the
 exact upper-edge split sums for xBound/yBound/soloBound, so Lean closes the
 prefix-bound fields and generated proof production only needs scalar prefix
-atoms.
+atoms.  Those scalar atoms still expand the exact split sums, so use
+`--shard-balance native-work` and inspect `native_work_estimates` before
+attempting large exact-bound shards.
 """
 
 from __future__ import annotations
@@ -115,6 +117,10 @@ def ceil_div(num: int, den: int) -> int:
 
 def pos_kmax(a: int) -> int:
     return 9 * a // 10
+
+
+def pos_nhi(a: int) -> int:
+    return 12 * a - 8
 
 
 def a_chunk_count(a_len: int) -> int:
@@ -330,9 +336,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--shard-balance",
-        choices=("atoms", "cells"),
+        choices=("atoms", "cells", "native-work"),
         default="atoms",
-        help="balance shards by atom count or conservative loop-cell estimate",
+        help=(
+            "balance shards by atom count, flat loop-cell estimate, or "
+            "native-work estimate including exact-bound split sums"
+        ),
     )
     parser.add_argument(
         "--single-chunk-field",
@@ -575,8 +584,32 @@ def single_chunk_specs_slice(
         local_start = max(0, start - shape_start)
         local_stop = min(shape_stop - shape_start, stop - shape_start)
         if local_start < local_stop:
-            for local_index in range(local_start, local_stop):
-                yield spec_for_field_local_index(args, field, local_index)
+            if field in PRODUCT_FIELDS:
+                local_offset = 0
+                for a_index in range(a_chunk_count(args.a_len)):
+                    count = k_chunk_count(args, a_index)
+                    k_start = max(0, local_start - local_offset)
+                    k_stop = min(count, local_stop - local_offset)
+                    for k_index in range(k_start, k_stop):
+                        yield ChunkSpec(
+                            field,
+                            a_index,
+                            k_index,
+                            single_chunk_name(
+                                args.single_chunk_prefix, field, a_index, k_index
+                            ),
+                        )
+                    local_offset += count
+            else:
+                for local_index in range(local_start, local_stop):
+                    yield ChunkSpec(
+                        field,
+                        local_index,
+                        None,
+                        single_chunk_name(
+                            args.single_chunk_prefix, field, local_index
+                        ),
+                    )
         offset = shape_stop
     assert offset == single_chunk_total_count(args)
 
@@ -589,6 +622,105 @@ def field_cell_weight(args: argparse.Namespace, field: str) -> int:
     if field in PRODUCT_FIELDS:
         return args.a_len * args.k_len
     return args.a_len
+
+
+def split_factorial_sum_work(degree: int) -> int:
+    """Conservative term count for one split-final-term closed block sum."""
+    if degree <= 0:
+        return 1
+    inner_terms = (degree // 2) * ((degree + 1) // 2)
+    return 1 + degree + inner_terms
+
+
+def spec_flat_cell_weight(args: argparse.Namespace, spec: ChunkSpec) -> int:
+    return field_cell_weight(args, spec.field)
+
+
+def product_chunk_active_bounds(
+    args: argparse.Namespace, a_index: int, k_index: int
+) -> tuple[int, int, int, int] | None:
+    alo = a_lo(args, a_index)
+    ahi = min(PREFIX_START + PREFIX_ROWS - 1, alo + args.a_len - 1)
+    if ahi < alo:
+        return None
+    klo = k_lo(args, k_index)
+    khi = min(klo + args.k_len - 1, pos_kmax(ahi))
+    if khi < klo:
+        return None
+    return alo, ahi, klo, khi
+
+
+def spec_native_work_weight(args: argparse.Namespace, spec: ChunkSpec) -> int:
+    """Conservative native_decide work units for one generated atom.
+
+    The ordinary flat cell count is accurate for cheap rational surrogate
+    atoms.  In the exact-bound profile, scalar atoms expand the upper-edge
+    split-final-term block sums inside each Boolean cell, so we account for
+    that hidden quadratic work separately.
+    """
+    flat = spec_flat_cell_weight(args, spec)
+    if args.certificate != "exact-bound-full-hybrid":
+        return flat
+    if spec.field in ("product-x-bound", "product-y-bound", "solo-bound"):
+        return flat
+    if spec.field == "solo-scalar":
+        alo = a_lo(args, spec.a_index)
+        ahi = min(PREFIX_START + PREFIX_ROWS - 1, alo + args.a_len - 1)
+        if ahi < alo:
+            return 0
+        row_count = ahi - alo + 1
+        return row_count * split_factorial_sum_work(pos_nhi(ahi))
+    if spec.field in ("product-small-scalar", "product-tempered-scalar"):
+        assert spec.k_index is not None
+        bounds = product_chunk_active_bounds(args, spec.a_index, spec.k_index)
+        if bounds is None:
+            return 0
+        alo, ahi, klo, khi = bounds
+        row_count = ahi - alo + 1
+        k_count = khi - klo + 1
+        # `X` depends on `k`, while `Y` depends on `j = a-k`.  The same cell
+        # cannot maximize both simultaneously, but using both maxima keeps the
+        # estimate safely conservative for shard planning.
+        max_j = max(0, ahi - klo)
+        return row_count * k_count * (
+            split_factorial_sum_work(khi) + split_factorial_sum_work(max_j)
+        )
+    return flat
+
+
+def single_chunk_specs_iter(args: argparse.Namespace) -> Iterable[ChunkSpec]:
+    return single_chunk_specs_slice(args, 0, single_chunk_total_count(args))
+
+
+def single_chunk_weight_ranges(
+    args: argparse.Namespace,
+    weight_of: Callable[[argparse.Namespace, ChunkSpec], int],
+) -> list[tuple[int, int, int, int, int]]:
+    ranges = []
+    offset = 0
+    weight_offset = 0
+    current_weight: int | None = None
+    run_start = 0
+    run_weight_start = 0
+    for spec in single_chunk_specs_iter(args):
+        weight = weight_of(args, spec)
+        if current_weight is None:
+            current_weight = weight
+            run_start = offset
+            run_weight_start = weight_offset
+        elif weight != current_weight:
+            ranges.append((run_start, offset, current_weight, run_weight_start))
+            run_start = offset
+            run_weight_start = weight_offset
+            current_weight = weight
+        offset += 1
+        weight_offset += weight
+    if current_weight is not None:
+        ranges.append((run_start, offset, current_weight, run_weight_start))
+    return [
+        (start, stop, weight, weight_start, weight_start + (stop - start) * weight)
+        for start, stop, weight, weight_start in ranges
+    ]
 
 
 def cell_weight_ranges(args: argparse.Namespace) -> list[tuple[str, int, int, int, int, int]]:
@@ -616,21 +748,46 @@ def atom_index_for_cell_target(
     return ranges[-1][2] if ranges else 0
 
 
+def atom_index_for_weight_target(
+    ranges: list[tuple[int, int, int, int, int]], target: int
+) -> int:
+    if target <= 0:
+        return 0
+    for start, stop, weight, weight_start, weight_stop in ranges:
+        if target <= weight_start:
+            return start
+        if target <= weight_stop:
+            local = target - weight_start
+            return min(stop, start + ceil_div(local, weight))
+    return ranges[-1][1] if ranges else 0
+
+
 def shard_bounds(
     args: argparse.Namespace, shard_index: int, shard_count: int
 ) -> tuple[int, int]:
     total = single_chunk_total_count(args)
     if args.shard_balance == "atoms":
         return total * shard_index // shard_count, total * (shard_index + 1) // shard_count
-    ranges = cell_weight_ranges(args)
+    if args.shard_balance == "cells":
+        ranges = cell_weight_ranges(args)
+        if not ranges:
+            return 0, 0
+        total_weight = ranges[-1][5]
+        start_target = total_weight * shard_index // shard_count
+        stop_target = total_weight * (shard_index + 1) // shard_count
+        return (
+            atom_index_for_cell_target(ranges, start_target),
+            atom_index_for_cell_target(ranges, stop_target),
+        )
+    ranges = single_chunk_weight_ranges(args, spec_native_work_weight)
     if not ranges:
         return 0, 0
-    total_weight = ranges[-1][5]
+    total_weight = ranges[-1][4]
     start_target = total_weight * shard_index // shard_count
     stop_target = total_weight * (shard_index + 1) // shard_count
     return (
-        atom_index_for_cell_target(ranges, start_target),
-        atom_index_for_cell_target(ranges, stop_target),
+        atom_index_for_weight_target(ranges, start_target),
+        atom_index_for_weight_target(ranges, stop_target),
     )
 
 
@@ -658,6 +815,31 @@ def cell_estimates(args: argparse.Namespace, counts: dict[str, int]) -> dict[str
     }
 
 
+def native_work_estimates(
+    args: argparse.Namespace,
+    start: int = 0,
+    stop: int | None = None,
+) -> dict[str, object]:
+    if stop is None:
+        stop = single_chunk_total_count(args)
+    by_field: dict[str, dict[str, int]] = {}
+    for spec in single_chunk_specs_slice(args, start, stop):
+        payload = by_field.setdefault(
+            spec.field,
+            {"atoms": 0, "max_work_per_atom": 0, "max_total_work": 0},
+        )
+        weight = spec_native_work_weight(args, spec)
+        payload["atoms"] += 1
+        payload["max_work_per_atom"] = max(payload["max_work_per_atom"], weight)
+        payload["max_total_work"] += weight
+    return {
+        "by_field": by_field,
+        "max_total_work": sum(
+            field_payload["max_total_work"] for field_payload in by_field.values()
+        ),
+    }
+
+
 def shard_summaries(
     args: argparse.Namespace, shard_count: int
 ) -> list[dict[str, object]]:
@@ -680,6 +862,7 @@ def shard_summaries(
                 "shard_balance": args.shard_balance,
                 "counts": counts,
                 "cell_estimates": cell_estimates(args, counts),
+                "native_work_estimates": native_work_estimates(args, start, stop),
                 "emit_args": shard_emit_args(args, shard_index, shard_count),
             }
         )
@@ -720,6 +903,7 @@ def manifest_payload(args: argparse.Namespace) -> dict[str, object]:
             "theorem": spec.name,
             "emit_args": single_chunk_emit_args(args, spec),
             "max_cells": field_cell_weight(args, spec.field),
+            "native_work": spec_native_work_weight(args, spec),
         }
         if spec.k_index is not None:
             chunk.update(
@@ -748,6 +932,7 @@ def manifest_payload(args: argparse.Namespace) -> dict[str, object]:
         "total": len(specs),
         "counts": counts,
         "cell_estimates": cell_estimates(args, counts),
+        "native_work_estimates": native_work_estimates(args),
         "chunks": chunks,
     }
     if args.manifest_shard_count is not None:
@@ -772,6 +957,7 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
         "reproducibility": reproducibility_metadata(),
         "counts": counts,
         "cell_estimates": cell_estimates(args, counts),
+        "native_work_estimates": native_work_estimates(args),
         "total": sum(counts.values()),
         "materialized_chunks": False,
     }
@@ -785,7 +971,7 @@ def xy_bound_expr(args: argparse.Namespace) -> str:
 
 
 def emit_header(args: argparse.Namespace) -> list[str]:
-    imports = ["Prop51.Main"]
+    imports = ["Prop51.PositiveSaddleChunks"]
     for module in args.extra_import:
         if module not in imports:
             imports.append(module)
