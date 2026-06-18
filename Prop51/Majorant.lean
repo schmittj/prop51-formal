@@ -417,6 +417,14 @@ theorem Bq_one_nonpos (N : Nat) : Bq N 1 ≤ 0 := by
   rw [Bq_one]
   exact neg_nonpos.mpr (mul_nonneg (Nat.cast_nonneg N) (c_nonneg 1))
 
+theorem two_le_of_Bq_pos {N k : Nat} (hk : 1 ≤ k) (hB : 0 < Bq N k) :
+    2 ≤ k := by
+  by_cases hk2 : 2 ≤ k
+  · exact hk2
+  · have hk_eq : k = 1 := by omega
+    subst k
+    exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB)
+
 /-- `\overline B_k(N) = [X^k] C(X)^N`, the positive exponential majorant for
 `B_k(N)` used in the positive-saddle estimates. -/
 def Bplusq (N k : Nat) : ℚ := expCoeff (fun r => (N : ℚ) * c r) k

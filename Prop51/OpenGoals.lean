@@ -280,20 +280,12 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveGeTwoNatSignLockComple
   LargeTailProductCertificate.ofRawClearedBqPositiveNatSignLockComplement
     (by
       intro a N k ha hrect hk hsmallN hB
-      by_cases hk2 : 2 ≤ k
-      · exact hsmall ha hrect hk hsmallN hk2 hB
-      · have hk1 : 1 ≤ k := (mem_positiveKRange.mp hk).1
-        have hk_eq : k = 1 := by omega
-        subst k
-        exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB))
+      exact hsmall ha hrect hk hsmallN
+        (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
     (by
       intro a N k ha hrect hk htemperedN hnotLock hB
-      by_cases hk2 : 2 ≤ k
-      · exact htempered ha hrect hk htemperedN hnotLock hk2 hB
-      · have hk1 : 1 ≤ k := (mem_positiveKRange.mp hk).1
-        have hk_eq : k = 1 := by omega
-        subst k
-        exact False.elim ((not_lt_of_ge (Bq_one_nonpos N)) hB))
+      exact htempered ha hrect hk htemperedN hnotLock
+        (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB)
 
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
