@@ -8102,6 +8102,142 @@ theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdg
   soloYBudgetRowRangeNIndexChunks := soloYBudgetRowRangeNIndexChunks
   edgeKChunkUnitRowRanges := edgeKChunkUnitRowRanges
 
+/-- Finite-window tempered product closure in the sign-lock zone.
+
+This is the finite analogue of
+`positiveTemperedLargeXYProductTarget_of_signLock`: once the §5 sign-lock
+estimate gives `Xnorm N k ≤ 0`, the product is nonpositive, while the
+finite tempered majorant is nonnegative.  The Lean proof packages that
+black-box sign-lock step so the bounded checker only has to certify the
+complementary cells. -/
+theorem positiveTemperedXYProductBound_of_signLock
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hk : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k) (hk361 : 361 ≤ k)
+    (hN40 : (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hX : Xnorm N k ≤ 0 :=
+    Xnorm_nonpos_of_signLockMargin_bound hk361
+      (Xnorm_le_neg_signLockMargin (N := N) (m := k) hN hN40 hk361)
+  have hprod : Xnorm N k * Ynorm N (posJ a k) ≤ 0 :=
+    mul_nonpos_of_nonpos_of_nonneg hX (Ynorm_nonneg N (posJ a k))
+  exact hprod.trans
+    (positiveTemperedXYProductBound_nonneg hN ha401 ha2000 hk
+      (temperedRegime_of_rectangle hrect htempered))
+
+/-- Constructor that removes the finite sign-lock zone from the tempered
+product checker.
+
+For cells with `361 ≤ k` and `(N : ℚ) ≤ (40/3) * k`, §5 makes `Xnorm` already
+nonpositive, so no product majorant computation is needed.  The remaining
+tempered product obligation is exactly the complement
+`k < 361 ∨ 40*k < 3*N`, stated in integer form for row checkers. -/
+theorem PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate.ofProductGeTwoNatSignLockComplement
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen : Nat}
+    (tangentRowLenPos : 0 < tangentRowLen)
+    (soloSaddleRowLenPos : 0 < soloSaddleRowLen)
+    (soloBudgetRowLenPos : 0 < soloBudgetRowLen)
+    (edgeRowLenPos : 0 < edgeRowLen)
+    (tangentNLenPos : 0 < tangentNLen)
+    (soloSaddleNLenPos : 0 < soloSaddleNLen)
+    (soloBudgetNLenPos : 0 < soloBudgetNLen)
+    (tangentKLenPos : 0 < tangentKLen)
+    (edgeKLenPos : 0 < edgeKLen)
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 2 ≤ k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (smallTangentExpEdgeRowRangeNIndexKChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              tangentNLen rowChunk.1 rowChunk.2 →
+        ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+          checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+            tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true)
+    (soloYSaddleClearedRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloSaddleNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+            soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (soloYBudgetRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloBudgetNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+            soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (edgeKChunkUnitRowRanges :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks edgeRowLen →
+        ∀ {edgeChunk : Nat × Nat},
+          edgeChunk ∈
+            positiveEdgeFixedKChunksUpTo
+              edgeKLen (posKmax (rowChunk.1 + rowChunk.2)) →
+          checkPositiveEdgeMajorantKChunkUnitRowRange
+            rowChunk.1 rowChunk.2 edgeChunk.1 edgeChunk.2
+              (fun _ =>
+                positiveEdgeFixedKScaleUpTo
+                  edgeKLen (posKmax (rowChunk.1 + rowChunk.2))) = true) :
+    PositiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedAuditCertificate
+      tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen edgeKLen where
+  tangentRowLenPos := tangentRowLenPos
+  soloSaddleRowLenPos := soloSaddleRowLenPos
+  soloBudgetRowLenPos := soloBudgetRowLenPos
+  edgeRowLenPos := edgeRowLenPos
+  tangentNLenPos := tangentNLenPos
+  soloSaddleNLenPos := soloSaddleNLenPos
+  soloBudgetNLenPos := soloBudgetNLenPos
+  tangentKLenPos := tangentKLenPos
+  edgeKLenPos := edgeKLenPos
+  smallXYTangent := by
+    intro a N k ha h2000 hrect hk hsmall hB
+    exact smallXYTangent ha h2000 hrect hk hsmall
+      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB
+  temperedXY := by
+    intro a N k ha h2000 hrect hk htempered hB
+    have hk2 : 2 ≤ k :=
+      two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB
+    by_cases hsmallK : k < 361
+    · exact temperedXY ha h2000 hrect hk htempered
+        (Or.inl hsmallK) hk2 hB
+    · have hk361 : 361 ≤ k := Nat.le_of_not_gt hsmallK
+      by_cases hNk : 40 * k < 3 * N
+      · exact temperedXY ha h2000 hrect hk htempered
+          (Or.inr hNk) hk2 hB
+      · have h3N_le_40k : 3 * N ≤ 40 * k := by omega
+        have h3N_le_40kQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (k : ℚ) := by
+          exact_mod_cast h3N_le_40k
+        have hN40 : (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ) := by
+          nlinarith
+        exact positiveTemperedXYProductBound_of_signLock
+          ha h2000 hrect hk htempered hk361 hN40
+  smallTangentExpEdgeRowRangeNIndexKChunks :=
+    smallTangentExpEdgeRowRangeNIndexKChunks
+  soloYSaddleClearedRowRangeNIndexChunks :=
+    soloYSaddleClearedRowRangeNIndexChunks
+  soloYBudgetRowRangeNIndexChunks := soloYBudgetRowRangeNIndexChunks
+  edgeKChunkUnitRowRanges := edgeKChunkUnitRowRanges
+
 /-- Large-`a` part shared by the generated fixed finite-window targets. -/
 structure PositiveSaddleLargeTailAuditCertificate : Prop where
   productPointwiseYRawUnitSolo :
