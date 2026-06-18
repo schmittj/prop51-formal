@@ -96,6 +96,51 @@ theorem LargeTailProductCertificate.ofRawCleared
         (by omega : 2 ≤ a) hk
         (htempered ha hrect hk htemperedN)
 
+/-- Constructor from raw actual-product bounds away from the sign-lock zone.
+
+Cells satisfying `361 ≤ k` and `N ≤ (40/3) k` need no product estimate:
+`Xnorm N k` is nonpositive by §5, while `Ynorm` and the large-tail targets are
+nonnegative.  The remaining raw obligations are the only cells where the
+combined-product estimate still has to do work. -/
+theorem LargeTailProductCertificate.ofRawClearedAwayFromSignLock
+    (hsmall :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htempered :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          ¬ (361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)) →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate where
+  largeSmall := by
+    intro a N k ha hrect hk hsmallN
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    by_cases hlock :
+        361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)
+    · exact
+        positiveSmallLargeXYProductTarget_of_signLock
+          (by omega : 2000 < a) hN hk hlock.1 hlock.2
+    · exact
+        positiveSmallLargeXYProductTarget_of_rawCleared hN
+          (by omega : 1 ≤ a) hk
+          (hsmall ha hrect hk hsmallN hlock)
+  largeTempered := by
+    intro a N k ha hrect hk htemperedN
+    have hN : 1 ≤ N :=
+      positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+    by_cases hlock :
+        361 ≤ k ∧ (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ)
+    · exact
+        positiveTemperedLargeXYProductTarget_of_signLock
+          (by omega : 2000 < a) hN hk hlock.1 hlock.2
+    · exact
+        positiveTemperedLargeXYProductTarget_of_rawCleared hN
+          (by omega : 2 ≤ a) hk
+          (htempered ha hrect hk htemperedN hlock)
+
 /-- Compatibility constructor from the older upper-edge/lower-`N` split-sum
 `Gcomp` scalar route.
 
