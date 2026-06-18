@@ -293,6 +293,12 @@ All Lean proofs are sorry-free.  Headline theorems:
   combines this product witness with the upper-edge split-factorial
   ten-sevenths solo check and the two quotient-form tempered raw-exp atoms,
   then converts back to the canonical refined atomic-bounds route.
+  The preferred concrete hybrid-ratio sibling
+  `Prop51.PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`
+  has only the strengthened product and upper-edge split-factorial
+  ten-sevenths solo fields; the candidate side is filled by the generated
+  prefix raw-budget/exp-ratio certificates and the proved upper-middle
+  reverse target.
   The matching top-level
   coefficient capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -307,7 +313,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`
   exposing the direct audit route for the strengthened product/upper-edge
   solo target.  The canonical refined-atomic version is exposed as
-  `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
+  `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`,
+  while the preferred concrete hybrid-ratio version is exposed as
+  `...TemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
   For final
   assembly from
   these lower-level product and solo proofs,
@@ -634,6 +642,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   the product bounds and the solo `Y` envelope.  The finite generator targets
   this preferred ratio/raw-budget chunked final route with
   `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+  For the concrete strengthened product plus upper-edge solo tail whose
+  candidate side is already closed by those certificates, use
+  `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-ten-sevenths-closed-reserve-solo-upper-edge-product-upper-edge-lower-n-bounds`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

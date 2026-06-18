@@ -727,7 +727,12 @@ Status:
       `PositiveSaddleLargeTailTemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`,
       whose remaining inputs are exactly the upper-edge split-factorial
       ten-sevenths solo check and the two quotient-form tempered raw-exp
-      atoms.
+      atoms.  The preferred concrete hybrid-ratio sibling
+      `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`
+      has only the strengthened product and upper-edge split-factorial
+      ten-sevenths solo fields; the generated prefix raw-budget/exp-ratio
+      certificates and the proved upper-middle reverse target fill the
+      candidate side.
       The
       coefficient-level wrappers are
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
@@ -748,6 +753,8 @@ Status:
       `...ClosedFactorialSplitBlockSumFastProductUpperEdgeLowerNSoloTenSeventhsUpperEdgeTail`,
       and the canonical refined-atomic sibling by
       `...TemperedRawExpRatioTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
+      The preferred concrete hybrid-ratio sibling is
+      `...TemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.
@@ -1036,6 +1043,9 @@ Status:
       `PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate`.
       The finite generator exposes this final theorem shape with
       `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-upper-middle-exp-target-ten-sevenths-closed-reserve-solo-envelope-bounds`.
+      For the concrete strengthened product plus upper-edge solo tail whose
+      candidate side is already closed by those certificates, use
+      `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-ten-sevenths-closed-reserve-solo-upper-edge-product-upper-edge-lower-n-bounds`.
       Since the upper-middle target is now supplied by Lean, the helper
       `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
       the product bounds and solo `Y` envelope as large-tail inputs on this

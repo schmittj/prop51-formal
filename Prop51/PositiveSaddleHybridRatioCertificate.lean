@@ -613,6 +613,51 @@ theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertifica
   positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExp_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
     product.toClosedFactorialSplitBlockSumScalarFastExpCertificate soloY
 
+/-- Concrete preferred large-tail tail shape after the candidate side has
+been filled by the hybrid-ratio prefix certificates and the upper-middle
+reverse certificate.
+
+The remaining fields are exactly the strengthened upper-edge/lower-`N`
+split-factorial product target and the upper-edge split-factorial
+ten-sevenths solo target.  This records a Lean proof-production
+specialization of the TeX-facing scalar estimates, not a new mathematical
+estimate.
+-/
+structure PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate :
+    Prop where
+  product :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate
+  soloY :
+    ∀ {a : Nat}, 2000 < a →
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a)
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+  positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
+    cert.product cert.soloY
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toRefinedAtomicBoundsAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailSoloTenSeventhsBound :=
+  cert.toTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+    |>.toRefinedAtomicBoundsAuditCertificate
+
+theorem PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate.toLargeTailAuditCertificate
+    (cert :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    PositiveSaddleLargeTailAuditCertificate :=
+  cert.toRefinedAtomicBoundsAuditCertificate.toLargeTailAuditCertificate
+
 /-- Large-tail audit certificate with fast split-final-term product targets
 and the split-final-term factorial solo target estimated directly against
 the final `(10/7)^a` envelope. -/

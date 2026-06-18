@@ -1290,6 +1290,26 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
       product soloY)
 
+/-- Final assembly from the fixed-edge finite route and the preferred
+large-tail proof-production shape whose only remaining tail fields are the
+strengthened upper-edge/lower-`N` product target and the upper-edge
+split-factorial ten-sevenths solo target.  The candidate side is filled by
+the concrete hybrid-ratio prefix certificates. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
+
 /-- Final assembly from the row-active combined-product finite route.
 
 This is the same mathematical finite-window proof as the fixed-edge route
@@ -1480,6 +1500,26 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
     finite
     (positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumTenSeventhsCleared_upperEdge
       product soloY)
+
+/-- Final assembly from the row-active finite route and the preferred
+large-tail proof-production shape whose only remaining tail fields are the
+strengthened upper-edge/lower-`N` product target and the upper-edge
+split-factorial ten-sevenths solo target.  The candidate side is filled by
+the concrete hybrid-ratio prefix certificates. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen : Nat}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (tail :
+      PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite tail.toLargeTailAuditCertificate
 
 /-- Final assembly from the row-active finite route and the fully split
 large-tail bounds interface. -/
