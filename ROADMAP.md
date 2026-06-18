@@ -684,7 +684,12 @@ Status:
       and wrapper
       `positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
       rewrite the active `GcompClosedBound` factors to the explicit Lemma
-      3.1 factorial expression.
+      3.1 factorial expression.  This is recorded as a Lean
+      proof-production refinement of the TeX block-sum estimate; the
+      coefficient-level wrappers are
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
+      and
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

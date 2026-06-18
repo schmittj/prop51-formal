@@ -251,7 +251,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   and wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared`
   replace the active `GcompClosedBound` terms by the explicit Lemma 3.1
-  factorial expression.
+  factorial expression.  This is a Lean proof-production refinement of the
+  TeX block-sum estimate; the matching top-level coefficient capstones are
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`
+  and its row-active sibling
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedClosedFactorialBlockSumTail`.
   For final
   assembly from
   these lower-level product and solo proofs,
