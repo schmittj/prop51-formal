@@ -11808,6 +11808,67 @@ theorem positiveEdgeMajorantTerm_nonneg {a k : Nat}
     · norm_num
   exact hs.trans (le_max_left _ _)
 
+theorem normalizedPositiveIfTerm_le_smallMajorant_of_XYProduct
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (hXY :
+      0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤ positiveSmallXYProductBound a N k) :
+    normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hnonneg : 0 ≤ positiveSmallMajorantTerm a k :=
+    positiveSmallMajorantTerm_nonneg ha401 ha2000 hkRange
+  refine normalizedPositiveIfTerm_le_of_raw_le hnonneg ?_
+  intro _hk1 _hB
+  exact normalizedPositiveRawTerm_le_smallMajorant_of_factorized_bound
+    ha401 ha2000 hrect hkRange
+    (fun hB' =>
+      (positiveFactorizedRawTerm_le_smallScalar_of_XYProduct
+        hN (by omega : 2 ≤ a) hkRange hB' (hXY hB')).trans
+        (positiveSmallScalarProductBound_le_majorant
+          ha401 ha2000 hkRange))
+
+theorem normalizedPositiveIfTerm_le_smallMajorant_of_XYProductTangent
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (hXY :
+      0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤
+          positiveSmallXYProductTangentBound a N k)
+    (hgap : positiveSmallTangentExpEdgeGap a N k) :
+    normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  exact normalizedPositiveIfTerm_le_smallMajorant_of_XYProduct
+    ha401 ha2000 hrect hkRange
+    (fun hB =>
+      (hXY hB).trans
+        (positiveSmallXYProductTangentBound_le_bound_of_expGap
+          hN (by omega : 1 ≤ a) hgap))
+
+theorem normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k)
+    (hXY :
+      0 < Bq N k →
+        Xnorm N k * Ynorm N (posJ a k) ≤
+          positiveTemperedXYProductBound a N k) :
+    normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k := by
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hcut : posTemperedCutoff a < k :=
+    temperedRegime_of_rectangle hrect htempered
+  have hnonneg : 0 ≤ positiveTemperedMajorantTerm a k :=
+    positiveTemperedMajorantTerm_nonneg ha401 ha2000 hkRange hcut
+  refine normalizedPositiveIfTerm_le_of_raw_le hnonneg ?_
+  intro _hk1 _hB
+  exact normalizedPositiveRawTerm_le_temperedMajorant_of_factorized_bound
+    ha401 ha2000 hrect hkRange htempered
+    (fun hB' =>
+      (positiveFactorizedRawTerm_le_temperedScalar_of_XYProduct
+        hN (by omega : 2 ≤ a) hkRange hB' (hXY hB')).trans
+        (positiveTemperedScalarProductBound_le_majorant
+          ha401 ha2000 hrect hkRange hcut))
+
 theorem positiveEdgeMajorantSum_nonneg {a : Nat}
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000) :
     0 ≤ positiveEdgeMajorantSum a := by
@@ -24251,6 +24312,27 @@ theorem PositiveSaddleTangentProductBudgetCertificate.toCombinedProductBudgetCer
   soloY := cert.soloY
   edgeBudget := cert.edgeBudget
   entropyTail := cert.entropyTail
+
+theorem PositiveSaddleTangentProductBudgetCertificate.smallMajorant
+    (cert : PositiveSaddleTangentProductBudgetCertificate)
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) :
+    normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k :=
+  normalizedPositiveIfTerm_le_smallMajorant_of_XYProductTangent
+    ha401 ha2000 hrect hkRange
+    (fun hB => cert.smallXYTangent ha401 ha2000 hrect hkRange hsmall hB)
+    (cert.smallTangentEdge ha401 ha2000 hrect hkRange hsmall)
+
+theorem PositiveSaddleTangentProductBudgetCertificate.temperedMajorant
+    (cert : PositiveSaddleTangentProductBudgetCertificate)
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k) :
+    normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k :=
+  normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
+    ha401 ha2000 hrect hkRange htempered
+    (fun hB => cert.temperedXY ha401 ha2000 hrect hkRange htempered hB)
 
 theorem PositiveSaddleTangentCheckedRowsCertificate.toTangentProductBudgetCertificate
     (cert : PositiveSaddleTangentCheckedRowsCertificate) :
