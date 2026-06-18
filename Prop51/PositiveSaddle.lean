@@ -22444,6 +22444,307 @@ theorem positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum_scaled_le_factorial
   · rw [if_neg hdeep, if_neg hdeep]
     norm_num
 
+/-- Power-crude summand for the `DeltaRat` part after replacing
+`DeltaRat p ((posNhi a)/2)` by the deliberately loose
+`2 (p+1) (6a)^p` bound.  This is a technical Lean majorant for the deep-low
+tail, not a separate estimate in the LaTeX write-up. -/
+def positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+    (a s : Nat) : ℚ :=
+  (192 / 25 : ℚ) * (a : ℚ) *
+    ((6 : ℚ)^(a - s) *
+      (((a - s - 1).factorial : Nat) : ℚ)) *
+    (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ)) *
+    (((a - s + 1 : Nat) : ℚ) * (((6 : ℚ) * (a : ℚ))^(a - s)))
+
+theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm_le_powerCrude
+    {a s : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm a s
+      ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
+  have hN_one : (1 : ℚ) ≤ (posNhi a : ℚ) / 2 := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    nlinarith
+  have hN_nonneg : 0 ≤ (posNhi a : ℚ) / 2 := le_trans zero_le_one hN_one
+  have hN_le : (posNhi a : ℚ) / 2 ≤ (6 : ℚ) * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hpow_le :
+      ((posNhi a : ℚ) / 2)^(a - s)
+        ≤ ((6 : ℚ) * (a : ℚ))^(a - s) :=
+    pow_le_pow_left₀ hN_nonneg hN_le (a - s)
+  have hdelta :=
+    DeltaRat_le_two_count_mul_pow (a - s)
+      (N := (posNhi a : ℚ) / 2) hN_one
+  have hinner :
+      (((a - s + 1 : Nat) : ℚ) * ((posNhi a : ℚ) / 2)^(a - s))
+        ≤ (((a - s + 1 : Nat) : ℚ) *
+            (((6 : ℚ) * (a : ℚ))^(a - s))) :=
+    mul_le_mul_of_nonneg_left hpow_le (by positivity)
+  have hdelta_power :
+      DeltaRat (a - s) ((posNhi a : ℚ) / 2)
+        ≤ 2 * ((((a - s + 1 : Nat) : ℚ) *
+            (((6 : ℚ) * (a : ℚ))^(a - s)))) :=
+    hdelta.trans (mul_le_mul_of_nonneg_left hinner (by norm_num))
+  have hcoef_nonneg :
+      0 ≤ (96 / 25 : ℚ) * (a : ℚ) *
+        ((6 : ℚ)^(a - s) *
+          (((a - s - 1).factorial : Nat) : ℚ)) *
+        (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ)) := by
+    positivity
+  calc
+    positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm a s
+        =
+      ((96 / 25 : ℚ) * (a : ℚ) *
+        ((6 : ℚ)^(a - s) *
+          (((a - s - 1).factorial : Nat) : ℚ)) *
+        (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))) *
+        DeltaRat (a - s) ((posNhi a : ℚ) / 2) := by
+          unfold positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm
+          ring
+    _ ≤
+      ((96 / 25 : ℚ) * (a : ℚ) *
+        ((6 : ℚ)^(a - s) *
+          (((a - s - 1).factorial : Nat) : ℚ)) *
+        (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))) *
+        (2 * ((((a - s + 1 : Nat) : ℚ) *
+            (((6 : ℚ) * (a : ℚ))^(a - s))))) := by
+          exact mul_le_mul_of_nonneg_left hdelta_power hcoef_nonneg
+    _ = positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
+          unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+          ring
+
+/-- Block sum of the power-crude Delta majorant. -/
+def positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 3 * (a - s) < a then
+      positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s
+    else
+      0
+
+theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_powerCrude
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a
+      ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum a := by
+  unfold positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a
+  · rw [if_pos hdeep, if_pos hdeep]
+    exact positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm_le_powerCrude
+      (a := a) (s := s) ha
+  · rw [if_neg hdeep, if_neg hdeep]
+
+theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_succ_le
+    {a s : Nat}
+    (hnext : 4 ≤ a - (s + 1) ∧ 3 * (a - (s + 1)) < a) :
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a (s + 1)
+      ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
+  let p : Nat := a - (s + 1)
+  have hs1le : s + 1 ≤ a := by omega
+  have hp_pos_nat : 0 < p := by
+    dsimp [p]
+    omega
+  have ha_pos_nat : 0 < a := by omega
+  have hp_pos : (0 : ℚ) < (p : ℚ) := by exact_mod_cast hp_pos_nat
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha_pos_nat
+  have hs1_pos : (0 : ℚ) < ((s + 1 : Nat) : ℚ) := by positivity
+  have h6a_pos : (0 : ℚ) < (6 : ℚ) * (a : ℚ) := by positivity
+  have hden_pos :
+      (0 : ℚ) <
+        (36 : ℚ) * (p : ℚ) * ((p + 2 : Nat) : ℚ) *
+          ((s + 1 : Nat) : ℚ) := by
+    positivity
+  have hratio_le :
+      ((5 : ℚ) * ((p + 1 : Nat) : ℚ)) /
+          ((36 : ℚ) * (p : ℚ) * ((p + 2 : Nat) : ℚ) *
+            ((s + 1 : Nat) : ℚ))
+        ≤ 1 := by
+    rw [div_le_one₀ hden_pos]
+    have hp_ge : (4 : ℚ) ≤ (p : ℚ) := by
+      dsimp [p]
+      exact_mod_cast hnext.1
+    have hs_ge : (1 : ℚ) ≤ ((s + 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 1 ≤ s + 1)
+    have hp1_cast : (((p + 1 : Nat) : ℚ)) = (p : ℚ) + 1 := by norm_num
+    have hp2_cast : (((p + 2 : Nat) : ℚ)) = (p : ℚ) + 2 := by norm_num
+    rw [hp1_cast, hp2_cast]
+    have hsmall :
+        (5 : ℚ) * ((p : ℚ) + 1)
+          ≤ 36 * (p : ℚ) * ((p : ℚ) + 2) := by
+      nlinarith
+    have hprod_nonneg :
+        0 ≤ (36 : ℚ) * (p : ℚ) * ((p : ℚ) + 2) := by
+      nlinarith
+    have hden_lower :
+        36 * (p : ℚ) * ((p : ℚ) + 2)
+          ≤ 36 * (p : ℚ) * ((p : ℚ) + 2) *
+            ((s + 1 : Nat) : ℚ) := by
+      calc
+        36 * (p : ℚ) * ((p : ℚ) + 2)
+            = 36 * (p : ℚ) * ((p : ℚ) + 2) * 1 := by ring
+        _ ≤ 36 * (p : ℚ) * ((p : ℚ) + 2) *
+              ((s + 1 : Nat) : ℚ) :=
+            mul_le_mul_of_nonneg_left hs_ge hprod_nonneg
+    exact hsmall.trans hden_lower
+  have hs_fac :
+      (((s + 1).factorial : Nat) : ℚ) =
+        ((s + 1 : Nat) : ℚ) * (s.factorial : ℚ) := by
+    rw [Nat.factorial_succ, Nat.cast_mul]
+  have hp_fac :
+      (p.factorial : ℚ) =
+        (p : ℚ) * (((p - 1).factorial : Nat) : ℚ) := by
+    exact_mod_cast (Nat.mul_factorial_pred (by omega : p ≠ 0)).symm
+  have hsub_next : a - (s + 1) = p := rfl
+  have hsub_prev : a - s = p + 1 := by
+    dsimp [p]
+    omega
+  have hcount_next : a - (s + 1) + 1 = p + 1 := by
+    rfl
+  have hcount_prev : a - s + 1 = p + 2 := by
+    dsimp [p]
+    omega
+  have hpow6 :
+      (6 : ℚ)^(p + 1) = (6 : ℚ)^p * 6 := by
+    rw [pow_succ]
+  have hpow6a :
+      ((6 : ℚ) * (a : ℚ))^(p + 1) =
+        ((6 : ℚ) * (a : ℚ))^p * ((6 : ℚ) * (a : ℚ)) := by
+    rw [pow_succ]
+  have hpow5 :
+      ((5 : ℚ) * (a : ℚ))^(s + 1) =
+        ((5 : ℚ) * (a : ℚ))^s * ((5 : ℚ) * (a : ℚ)) := by
+    rw [pow_succ]
+  have hterm_eq :
+      positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a (s + 1)
+        =
+      positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s *
+        (((5 : ℚ) * ((p + 1 : Nat) : ℚ)) /
+          ((36 : ℚ) * (p : ℚ) * ((p + 2 : Nat) : ℚ) *
+            ((s + 1 : Nat) : ℚ))) := by
+    unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+    rw [hcount_next, hcount_prev, hsub_next, hsub_prev]
+    rw [show p + 1 - 1 = p by omega, show p - 1 = p - 1 by rfl]
+    rw [hpow6, hpow6a, hpow5, hp_fac, hs_fac]
+    field_simp [hp_pos.ne', ha_pos.ne', hs1_pos.ne', h6a_pos.ne',
+      (by positivity : (s.factorial : ℚ) ≠ 0)]
+    ring
+  have hterm_nonneg :
+      0 ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
+    unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+    positivity
+  calc
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a (s + 1)
+        =
+      positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s *
+        (((5 : ℚ) * ((p + 1 : Nat) : ℚ)) /
+          ((36 : ℚ) * (p : ℚ) * ((p + 2 : Nat) : ℚ) *
+            ((s + 1 : Nat) : ℚ))) := hterm_eq
+    _ ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s * 1 := by
+          exact mul_le_mul_of_nonneg_left hratio_le hterm_nonneg
+    _ = positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
+          ring
+
+theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_le_start
+    {a s : Nat} (ha : 3000 ≤ a)
+    (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s
+      ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
+          (positiveLargeTailSoloSharpDeepLowStart a) := by
+  let start := positiveLargeTailSoloSharpDeepLowStart a
+  have hstart_le : start ≤ s := by
+    dsimp [start]
+    exact positiveLargeTailSoloSharpDeepLowStart_le_of_deep hdeep
+  obtain ⟨d, rfl⟩ : ∃ d : Nat, s = start + d := by
+    exact ⟨s - start, by omega⟩
+  have hstart_deep :
+      4 ≤ a - start ∧ 3 * (a - start) < a := by
+    dsimp [start]
+    exact positiveLargeTailSoloSharpDeepLowStart_deep ha
+  have haux :
+      ∀ d : Nat,
+        4 ≤ a - (start + d) ∧ 3 * (a - (start + d)) < a →
+        positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a (start + d)
+          ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a start := by
+    intro d hd
+    induction d with
+    | zero =>
+        simp
+    | succ d ih =>
+        have hnext :
+            4 ≤ a - ((start + d) + 1) ∧
+              3 * (a - ((start + d) + 1)) < a := by
+          simpa [Nat.add_assoc] using hd
+        have hprev :
+            4 ≤ a - (start + d) ∧
+              3 * (a - (start + d)) < a := by
+          constructor
+          · omega
+          · have hle : a - (start + d) ≤ a - start := by omega
+            omega
+        calc
+          positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+              a (start + Nat.succ d)
+              =
+            positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+              a ((start + d) + 1) := by
+              rw [Nat.succ_eq_add_one, Nat.add_assoc]
+          _ ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+              a (start + d) :=
+              positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_succ_le
+                (a := a) (s := start + d) hnext
+          _ ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+              a start := ih hprev
+  exact haux d (by simpa [start] using hdeep)
+
+def positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock
+    (a : Nat) : ℚ :=
+  ((a + 1 : Nat) : ℚ) *
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
+      (positiveLargeTailSoloSharpDeepLowStart a)
+
+theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_start
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum a
+      ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock a := by
+  unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum
+    positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock
+  have htop_nonneg :
+      0 ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
+        (positiveLargeTailSoloSharpDeepLowStart a) := by
+    unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
+    positivity
+  calc
+    (∑ s ∈ Finset.range (a + 1),
+      if 4 ≤ a - s ∧ 3 * (a - s) < a then
+        positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s
+      else
+        0)
+        ≤ ∑ _s ∈ Finset.range (a + 1),
+          positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
+            (positiveLargeTailSoloSharpDeepLowStart a) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a
+          · rw [if_pos hdeep]
+            exact
+              positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_le_start
+                (a := a) (s := s) ha hdeep
+          · rw [if_neg hdeep]
+            exact htop_nonneg
+    _ =
+      ((a + 1 : Nat) : ℚ) *
+        positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
+          (positiveLargeTailSoloSharpDeepLowStart a) := by
+        simp [nsmul_eq_mul]
+
 theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_factorialCrude
     {a : Nat} (ha : 3000 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
