@@ -26,8 +26,11 @@ Strategies include:
   * active-analytic-product-tangent-solo-n-fixed-edge-k-chunked: row-active
     tangent, solo, and fixed-edge atoms, with the product estimates supplied
     as analytic hypotheses rather than emitted raw-product atom theorems.
-    Those product hypotheses start at k >= 2; the generated theorem inserts
-    Lean's `Bq N 1 <= 0` reduction when rebuilding the existing certificate.
+    Those product hypotheses start at k >= 2; the tempered product hypothesis
+    is only needed on the sign-lock complement
+    `k < 361 || 40*k < 3*N`.  The generated theorem inserts Lean's
+    `Bq N 1 <= 0` reduction and the formal sign-lock bound when rebuilding the
+    existing certificate.
   * --emit-single-chunk FIELD: emit one cacheable `native_decide` theorem for
     a concrete product, tangent, solo, or edge chunk.
   * --emit-single-chunk-suite: emit all single-chunk theorems for a concrete
@@ -2013,7 +2016,8 @@ def analytic_product_binder_lines() -> list[str]:
         "            positiveSmallXYProductTangentBound a N k)",
         "    (htemperedXY :",
         "      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →",
-        "        k ∈ positiveKRange a → ceilSqrt N < k → 2 ≤ k → 0 < Bq N k →",
+        "        k ∈ positiveKRange a → ceilSqrt N < k →",
+        "          (k < 361 ∨ 40 * k < 3 * N) → 2 ≤ k → 0 < Bq N k →",
         "          Xnorm N k * Ynorm N (posJ a k) ≤",
         "            positiveTemperedXYProductBound a N k)",
     ]
@@ -5907,8 +5911,22 @@ def active_analytic_product_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
         "      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB",
         "  temperedXY := by",
         "    intro a N k ha h2000 hrect hk htempered hB",
-        "    exact htemperedXY ha h2000 hrect hk htempered",
-        "      (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB) hB",
+        "    have hk2 : 2 ≤ k :=",
+        "      two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB",
+        "    by_cases hsmallK : k < 361",
+        "    · exact htemperedXY ha h2000 hrect hk htempered",
+        "        (Or.inl hsmallK) hk2 hB",
+        "    · have hk361 : 361 ≤ k := Nat.le_of_not_gt hsmallK",
+        "      by_cases hNk : 40 * k < 3 * N",
+        "      · exact htemperedXY ha h2000 hrect hk htempered",
+        "          (Or.inr hNk) hk2 hB",
+        "      · have h3N_le_40k : 3 * N ≤ 40 * k := by omega",
+        "        have h3N_le_40kQ : (3 : ℚ) * (N : ℚ) ≤ 40 * (k : ℚ) := by",
+        "          exact_mod_cast h3N_le_40k",
+        "        have hN40 : (N : ℚ) ≤ (40 / 3 : ℚ) * (k : ℚ) := by",
+        "          nlinarith",
+        "        exact positiveTemperedXYProductBound_of_signLock",
+        "          ha h2000 hrect hk htempered hk361 hN40",
     ]
     if args.use_single_chunk_theorems:
         add_active_tangent_row_n_k_dispatch_field_from_single_chunks(
