@@ -21562,6 +21562,186 @@ def positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum
     else
       0
 
+/-- The `r = 1` head contribution in the deep-low solo residual.  This is
+the explicit `72/125 * 2^{-p}` part of
+`positiveLargeTailSoloSharpInnerDeltaBudget`. -/
+def positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 3 * (a - s) < a then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        ((posNhi a : ℚ) * c (a - s) *
+          ((72 / 125 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+    else
+      0
+
+/-- The `DeltaRat` tail contribution in the deep-low solo residual. -/
+def positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 3 * (a - s) < a then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        ((posNhi a : ℚ) * c (a - s) *
+          (((1 / 2 : ℚ) * (1 / 2 : ℚ)^(a - s)) *
+            DeltaRat (a - s) ((posNhi a : ℚ) / 2)))
+    else
+      0
+
+theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_eq_head_add_delta
+    (a : Nat) :
+    positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a =
+      positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum a +
+        positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum a := by
+  unfold positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum
+    positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun s _ => ?_
+  by_cases hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a
+  · simp [hdeep, positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall,
+      positiveLargeTailSoloSharpInnerDeltaBudget]
+    ring
+  · simp [hdeep]
+
+/-- The explicit factorial-crude summand for the `r = 1` head of the
+deep-low solo residual. -/
+def positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+    (a s : Nat) : ℚ :=
+  (13824 / 3125 : ℚ) * (a : ℚ) *
+    ((6 : ℚ)^(a - s) *
+      (((a - s - 1).factorial : Nat) : ℚ)) *
+    (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))
+
+theorem positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
+    {a s : Nat} (ha : 3000 ≤ a)
+    (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) *
+          ((posNhi a : ℚ) * c (a - s) *
+            ((72 / 125 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+      ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
+  have hsle : s ≤ a := by omega
+  have hN_le : (posNhi a : ℚ) ≤ 12 * (a : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    nlinarith
+  have hbase_nonneg : 0 ≤ (5 * (posNhi a : ℚ) / 12) := by
+    positivity
+  have hbase_le :
+      5 * (posNhi a : ℚ) / 12 ≤ 5 * (a : ℚ) := by
+    nlinarith
+  have hpow_le :
+      (5 * (posNhi a : ℚ) / 12)^s ≤ (5 * (a : ℚ))^s :=
+    pow_le_pow_left₀ hbase_nonneg hbase_le s
+  have hcub := c_ub (a - s) (by omega : 1 ≤ a - s)
+  have hpow_split :
+      (2 : ℚ)^a * (1 / 2 : ℚ)^(a - s) = (2 : ℚ)^s := by
+    nth_rewrite 1 [show a = s + (a - s) by omega]
+    rw [pow_add]
+    have hcancel :
+        (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s) = 1 := by
+      rw [← mul_pow]
+      norm_num
+    calc
+      (2 : ℚ)^s * (2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)
+          = (2 : ℚ)^s *
+              ((2 : ℚ)^(a - s) * (1 / 2 : ℚ)^(a - s)) := by
+            ring
+      _ = (2 : ℚ)^s := by
+            rw [hcancel]
+            ring
+  have hscaled_eq :
+      (4 : ℚ) * (2 : ℚ)^a *
+          ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) *
+            ((posNhi a : ℚ) * c (a - s) *
+              ((72 / 125 : ℚ) * (1 / 2 : ℚ)^(a - s))))
+        =
+      (288 / 125 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+          ((5 * (posNhi a : ℚ) / 12)^s /
+            (s.factorial : ℚ)) := by
+    rw [c_one]
+    rw [show ((posNhi a : ℚ) / 2 * (5 / 6 : ℚ) / 2) =
+        5 * (posNhi a : ℚ) / 24 by ring]
+    rw [show (5 * (posNhi a : ℚ) / 12) =
+        (2 : ℚ) * (5 * (posNhi a : ℚ) / 24) by ring]
+    rw [mul_pow]
+    rw [← hpow_split]
+    ring
+  have htail_nonneg :
+      0 ≤ ((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ) := by
+    positivity
+  have hcoef_nonneg : 0 ≤ (3456 / 125 : ℚ) * (a : ℚ) := by
+    positivity
+  have hc_scaled :
+      (3456 / 125 : ℚ) * (a : ℚ) *
+          (c (a - s) *
+            (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ)))
+        ≤
+      (3456 / 125 : ℚ) * (a : ℚ) *
+          (((4 / 25 : ℚ) *
+              ((6 : ℚ)^(a - s) *
+                (((a - s - 1).factorial : Nat) : ℚ))) *
+            (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))) := by
+    exact mul_le_mul_of_nonneg_left
+      (mul_le_mul_of_nonneg_right hcub htail_nonneg) hcoef_nonneg
+  rw [hscaled_eq]
+  calc
+    (288 / 125 : ℚ) * (posNhi a : ℚ) * c (a - s) *
+        ((5 * (posNhi a : ℚ) / 12)^s /
+          (s.factorial : ℚ))
+        ≤
+      (288 / 125 : ℚ) * (12 * (a : ℚ)) * c (a - s) *
+        (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ)) := by
+          gcongr
+          · exact mul_nonneg (by positivity) (c_nonneg (a - s))
+          · exact c_nonneg (a - s)
+    _ =
+      (3456 / 125 : ℚ) * (a : ℚ) *
+        (c (a - s) *
+          (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))) := by
+          ring
+    _ ≤
+      (3456 / 125 : ℚ) * (a : ℚ) *
+          (((4 / 25 : ℚ) *
+              ((6 : ℚ)^(a - s) *
+                (((a - s - 1).factorial : Nat) : ℚ))) *
+            (((5 : ℚ) * (a : ℚ))^s / (s.factorial : ℚ))) := hc_scaled
+    _ = positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s := by
+          unfold positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm
+          ring
+
+/-- Explicit factorial-crude majorant for the `r = 1` head of the deep-low
+solo residual. -/
+def positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ 3 * (a - s) < a then
+      positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s
+    else
+      0
+
+theorem positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum_scaled_le_factorialCrude
+    {a : Nat} (ha : 3000 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum a
+      ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a := by
+  unfold positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum
+    positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a
+  · rw [if_pos hdeep, if_pos hdeep]
+    exact
+      positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
+        (a := a) (s := s) ha hdeep
+  · rw [if_neg hdeep, if_neg hdeep]
+    norm_num
+
 theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_deepLow
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
