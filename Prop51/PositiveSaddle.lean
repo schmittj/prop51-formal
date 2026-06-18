@@ -2899,6 +2899,16 @@ theorem positiveLargeTailYGcompClosedBlockSum_nonneg (N j : Nat) :
     exact div_nonneg hnum_nonneg hdenpos.le
   exact mul_nonneg hlin_nonneg hinner_nonneg
 
+theorem positiveLargeTailXGcompClosedFactorialBlockSum_nonneg (N k : Nat) :
+    0 ≤ positiveLargeTailXGcompClosedFactorialBlockSum N k := by
+  rw [positiveLargeTailXGcompClosedFactorialBlockSum_eq_closedBlockSum]
+  exact positiveLargeTailXGcompClosedBlockSum_nonneg N k
+
+theorem positiveLargeTailYGcompClosedFactorialBlockSum_nonneg (N j : Nat) :
+    0 ≤ positiveLargeTailYGcompClosedFactorialBlockSum N j := by
+  rw [positiveLargeTailYGcompClosedFactorialBlockSum_eq_closedBlockSum]
+  exact positiveLargeTailYGcompClosedBlockSum_nonneg N j
+
 theorem positiveLargeTailXGcompBlockSum_le_closedBlockSum (N k : Nat) :
     positiveLargeTailXGcompBlockSum N k
       ≤ positiveLargeTailXGcompClosedBlockSum N k := by
@@ -13754,6 +13764,18 @@ theorem positiveLargeTailProductYClosedBlockBound_nonneg (a N k : Nat) :
   unfold positiveLargeTailProductYClosedBlockBound
   exact positiveLargeTailYGcompClosedBlockSum_nonneg N (posJ a k)
 
+theorem positiveLargeTailProductXClosedFactorialBlockBound_nonneg
+    (a N k : Nat) :
+    0 ≤ positiveLargeTailProductXClosedFactorialBlockBound a N k := by
+  unfold positiveLargeTailProductXClosedFactorialBlockBound
+  exact positiveLargeTailXGcompClosedFactorialBlockSum_nonneg N k
+
+theorem positiveLargeTailProductYClosedFactorialBlockBound_nonneg
+    (a N k : Nat) :
+    0 ≤ positiveLargeTailProductYClosedFactorialBlockBound a N k := by
+  unfold positiveLargeTailProductYClosedFactorialBlockBound
+  exact positiveLargeTailYGcompClosedFactorialBlockSum_nonneg N (posJ a k)
+
 theorem positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound
     (a N k : Nat) :
     positiveLargeTailProductXClosedActiveBlockBound a N k =
@@ -18439,6 +18461,12 @@ theorem positiveLargeTailSoloGcompClosedBlockSum_nonneg (a N : Nat) :
     0 ≤ positiveLargeTailSoloGcompClosedBlockSum a N := by
   unfold positiveLargeTailSoloGcompClosedBlockSum
   exact positiveLargeTailYGcompClosedBlockSum_nonneg N a
+
+theorem positiveLargeTailSoloGcompClosedFactorialBlockSum_nonneg
+    (a N : Nat) :
+    0 ≤ positiveLargeTailSoloGcompClosedFactorialBlockSum a N := by
+  rw [positiveLargeTailSoloGcompClosedFactorialBlockSum_eq_closedBlockSum]
+  exact positiveLargeTailSoloGcompClosedBlockSum_nonneg a N
 
 /-- The decomposed recurrence sum is bounded by the explicit double block
 sum. -/
