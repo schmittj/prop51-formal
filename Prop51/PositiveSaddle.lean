@@ -3065,6 +3065,14 @@ theorem positiveLargeTailYGcompClosedFactorialSplitBlockSum_nonneg
   rw [← positiveLargeTailYGcompClosedFactorialBlockSum_eq_splitBlockSum]
   exact positiveLargeTailYGcompClosedFactorialBlockSum_nonneg N j
 
+/-- The factorial-only `X` inner closed-composition sum is nonnegative. -/
+theorem positiveLargeTailXGcompClosedInnerFactorial_nonneg
+    (N p : Nat) :
+    0 ≤ positiveLargeTailXGcompClosedInnerFactorial N p := by
+  unfold positiveLargeTailXGcompClosedInnerFactorial
+  refine Finset.sum_nonneg fun r _ => ?_
+  positivity
+
 /-- The factorial-only `Y` inner closed-composition sum is nonnegative. -/
 theorem positiveLargeTailYGcompClosedInnerFactorial_nonneg
     (N p : Nat) :
@@ -3072,6 +3080,30 @@ theorem positiveLargeTailYGcompClosedInnerFactorial_nonneg
   unfold positiveLargeTailYGcompClosedInnerFactorial
   refine Finset.sum_nonneg fun r _ => ?_
   positivity
+
+/-- The factorial-only `X` inner closed-composition sum is monotone in the
+rectangle variable `N`. -/
+theorem positiveLargeTailXGcompClosedInnerFactorial_mono_N
+    {N M p : Nat} (hNM : N ≤ M) :
+    positiveLargeTailXGcompClosedInnerFactorial N p
+      ≤ positiveLargeTailXGcompClosedInnerFactorial M p := by
+  unfold positiveLargeTailXGcompClosedInnerFactorial
+  refine Finset.sum_le_sum fun r _ => ?_
+  have hbase :
+      (N : ℚ) * (4 / 25) ≤ (M : ℚ) * (4 / 25) := by
+    exact mul_le_mul_of_nonneg_right (by exact_mod_cast hNM)
+      (by norm_num : (0 : ℚ) ≤ 4 / 25)
+  have hpow :
+      ((N : ℚ) * (4 / 25))^r ≤ ((M : ℚ) * (4 / 25))^r :=
+    pow_le_pow_left₀
+      (by positivity : 0 ≤ (N : ℚ) * (4 / 25)) hbase r
+  have hcoef :
+      0 ≤ 6^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ) := by
+    positivity
+  simpa [mul_assoc, div_eq_mul_inv] using
+    mul_le_mul_of_nonneg_right hpow hcoef
 
 /-- The factorial-only `Y` inner closed-composition sum is monotone in the
 rectangle variable `N`. -/
@@ -3096,6 +3128,23 @@ theorem positiveLargeTailYGcompClosedInnerFactorial_mono_N
   simpa [mul_assoc, div_eq_mul_inv] using
     mul_le_mul_of_nonneg_right hpow hcoef
 
+/-- The outer linear-exponential factor in the factorial-only `X` block sum
+is monotone in `N`. -/
+theorem positiveLargeTailXGcompClosedFactorialLinear_mono_N
+    {N M s : Nat} (hNM : N ≤ M) :
+    (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+      ≤ (((M : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+  have hbase : (N : ℚ) * c 1 ≤ (M : ℚ) * c 1 := by
+    rw [c_one]
+    exact mul_le_mul_of_nonneg_right (by exact_mod_cast hNM)
+      (by norm_num : (0 : ℚ) ≤ 5 / 6)
+  have hpow :
+      ((N : ℚ) * c 1)^s ≤ ((M : ℚ) * c 1)^s :=
+    pow_le_pow_left₀
+      (by rw [c_one]; positivity : 0 ≤ (N : ℚ) * c 1)
+      hbase s
+  exact div_le_div_of_nonneg_right hpow (by positivity)
+
 /-- The outer linear-exponential factor in the factorial-only `Y` block sum
 is monotone in `N`. -/
 theorem positiveLargeTailYGcompClosedFactorialLinear_mono_N
@@ -3114,6 +3163,31 @@ theorem positiveLargeTailYGcompClosedFactorialLinear_mono_N
       (by rw [c_one]; positivity : 0 ≤ (N : ℚ) / 2 * c 1 / 2)
       hbase s
   exact div_le_div_of_nonneg_right hpow (by positivity)
+
+/-- The factorial-only `X` closed block sum is monotone in the rectangle
+variable `N`. -/
+theorem positiveLargeTailXGcompClosedFactorialBlockSum_mono_N
+    {N M k : Nat} (hNM : N ≤ M) :
+    positiveLargeTailXGcompClosedFactorialBlockSum N k
+      ≤ positiveLargeTailXGcompClosedFactorialBlockSum M k := by
+  unfold positiveLargeTailXGcompClosedFactorialBlockSum
+  refine Finset.sum_le_sum fun s _ => ?_
+  have hlin :
+      (((N : ℚ) * c 1)^s / (s.factorial : ℚ))
+        ≤ (((M : ℚ) * c 1)^s / (s.factorial : ℚ)) :=
+    positiveLargeTailXGcompClosedFactorialLinear_mono_N hNM
+  have hinner :
+      positiveLargeTailXGcompClosedInnerFactorial N (k - s)
+        ≤ positiveLargeTailXGcompClosedInnerFactorial M (k - s) :=
+    positiveLargeTailXGcompClosedInnerFactorial_mono_N hNM
+  have hinner_nonneg :
+      0 ≤ positiveLargeTailXGcompClosedInnerFactorial N (k - s) :=
+    positiveLargeTailXGcompClosedInnerFactorial_nonneg N (k - s)
+  have hlin_nonneg :
+      0 ≤ (((M : ℚ) * c 1)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  exact mul_le_mul hlin hinner hinner_nonneg hlin_nonneg
 
 /-- The factorial-only `Y` closed block sum is monotone in the rectangle
 variable `N`. -/
@@ -3139,6 +3213,17 @@ theorem positiveLargeTailYGcompClosedFactorialBlockSum_mono_N
     rw [c_one]
     positivity
   exact mul_le_mul hlin hinner hinner_nonneg hlin_nonneg
+
+/-- The split-final-term factorial-only `X` closed block sum is monotone in
+the rectangle variable `N`.  This is kept as a rewrite from the canonical
+factorial block sum, avoiding a separate algebra proof for the split form. -/
+theorem positiveLargeTailXGcompClosedFactorialSplitBlockSum_mono_N
+    {N M k : Nat} (hNM : N ≤ M) :
+    positiveLargeTailXGcompClosedFactorialSplitBlockSum N k
+      ≤ positiveLargeTailXGcompClosedFactorialSplitBlockSum M k := by
+  rw [← positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum N k,
+    ← positiveLargeTailXGcompClosedFactorialBlockSum_eq_splitBlockSum M k]
+  exact positiveLargeTailXGcompClosedFactorialBlockSum_mono_N hNM
 
 /-- The split-final-term factorial-only `Y` closed block sum is monotone in
 the rectangle variable `N`.  This is kept as a rewrite from the canonical
@@ -14091,6 +14176,48 @@ theorem positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
     0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound a N k := by
   rw [positiveLargeTailProductYClosedFactorialSplitBlockBound_eq_factorialBlockBound]
   exact positiveLargeTailProductYClosedFactorialBlockBound_nonneg a N k
+
+/-- Product-side split-final-term factorial `X` bound is monotone in the
+rectangle variable `N`. -/
+theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_mono_N
+    {a N M k : Nat} (hNM : N ≤ M) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N k
+      ≤ positiveLargeTailProductXClosedFactorialSplitBlockBound a M k := by
+  unfold positiveLargeTailProductXClosedFactorialSplitBlockBound
+  exact positiveLargeTailXGcompClosedFactorialSplitBlockSum_mono_N
+    (k := k) hNM
+
+/-- Product-side split-final-term factorial `Y` bound is monotone in the
+rectangle variable `N`. -/
+theorem positiveLargeTailProductYClosedFactorialSplitBlockBound_mono_N
+    {a N M k : Nat} (hNM : N ≤ M) :
+    positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+      ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound a M k := by
+  unfold positiveLargeTailProductYClosedFactorialSplitBlockBound
+  exact positiveLargeTailYGcompClosedFactorialSplitBlockSum_mono_N
+    (j := posJ a k) hNM
+
+/-- The product of the split-final-term factorial product-side `X` and `Y`
+bounds is monotone in the rectangle variable `N`. -/
+theorem positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_mono_N
+    {a N M k : Nat} (hNM : N ≤ M) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k
+      ≤ positiveLargeTailProductXClosedFactorialSplitBlockBound a M k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a M k := by
+  have hX :=
+    positiveLargeTailProductXClosedFactorialSplitBlockBound_mono_N
+      (a := a) (k := k) hNM
+  have hY :=
+    positiveLargeTailProductYClosedFactorialSplitBlockBound_mono_N
+      (a := a) (k := k) hNM
+  have hYnonneg :
+      0 ≤ positiveLargeTailProductYClosedFactorialSplitBlockBound a N k :=
+    positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg a N k
+  have hXnonneg_M :
+      0 ≤ positiveLargeTailProductXClosedFactorialSplitBlockBound a M k :=
+    positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg a M k
+  exact mul_le_mul hX hY hYnonneg hXnonneg_M
 
 theorem positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound
     (a N k : Nat) :
