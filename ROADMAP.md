@@ -783,6 +783,13 @@ Status:
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
       and its row-active analogue, and the generator emits that shape with
       `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-full-solo-bound-full`.
+      The large-tail prefix proof-production script
+      `scripts/positive_saddle_large_tail_prefix_template.py` emits the four
+      generated prefix certificates expected by this full-hybrid route:
+      product `xBound`/`yBound` bound chunks, product scalar chunks for
+      `xBound a k * yBound a k`, solo `soloBound` bound chunks, and solo
+      scalar chunks.  It deliberately covers only `2000 < a < 3000`; the
+      `3000 ≤ a` estimates remain separate Lean fields.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.

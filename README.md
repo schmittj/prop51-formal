@@ -342,6 +342,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
   and its row-active theorem; the generator selects them with
   `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-xy-bound-full-solo-bound-full`.
+  The companion script
+  `scripts/positive_saddle_large_tail_prefix_template.py` emits the generated
+  prefix inputs for this full-hybrid route: product `xBound`/`yBound` prefix
+  bound chunks, product scalar chunks against `xBound a k * yBound a k`,
+  solo `soloBound` prefix bound chunks, and solo scalar chunks.  It covers
+  only `2000 < a < 3000`; the `3000 ≤ a` analytic fields remain explicit
+  Lean inputs, matching the TeX/Lean separation of finite prefix computation
+  from the large-side estimates.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -735,6 +743,14 @@ All Lean proofs are sorry-free.  Headline theorems:
   selected atom families for separate production scheduling; emit the final
   `--use-single-chunk-theorems` assembly without that filter after importing
   all generated field modules.
+  For the large-tail full-hybrid prefix strip, use
+  `scripts/positive_saddle_large_tail_prefix_template.py --dry-run-counts`
+  first, then `--emit-single-chunk-manifest` or `--emit-single-chunk-shard`
+  with `--single-chunk-field` to schedule product-bound, product-scalar,
+  solo-bound, and solo-scalar atoms separately.  The emitted prefix
+  certificate theorem should be assembled with `--use-single-chunk-theorems`
+  after importing all generated shard modules; it still supplies only the
+  prefix fields, not the analytic `3000 ≤ a` obligations.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the
