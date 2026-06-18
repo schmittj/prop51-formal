@@ -314,7 +314,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   split-factorial sums.  The wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
   assembles this surrogate route into the same preferred large-tail audit
-  target.  The corresponding final finite-window capstones are
+  target.  For generators that bound the two product factors separately,
+  `Prop51.PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate`
+  records separate `xBound`/`yBound` fields and reuses the same scalar chunks
+  on `xBound a k * yBound a k`; the wrapper
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNXYBoundHybrid_soloFastUpperEdgeBoundHybrid`
+  converts it to the same audit target.  The corresponding final
+  finite-window capstones are
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
   and its row-active sibling
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.

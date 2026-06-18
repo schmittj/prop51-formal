@@ -1797,6 +1797,75 @@ theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCerti
     · exact cert.prefixChunks.toPrefixCertificate.temperedScalar
         ha (Nat.lt_of_not_ge haLarge) hk htempered
 
+/-- Hybrid product certificate against separate surrogate bounds for the
+upper-edge `X` and `Y` split-factorial factors.
+
+This records the same mathematical target as the TeX split-factorial product
+bound, but lets generated proof data estimate the two factors separately and
+reuse the product-bound scalar chunk checks on `xBound a k * yBound a k`. -/
+structure PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+    (xBound yBound : Nat → Nat → ℚ) (aLen kLen : Nat) : Prop where
+  xBound_le :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      positiveLargeTailProductXClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ xBound a k
+  yBound_le :
+    ∀ {a k : Nat}, 2000 < a → k ∈ positiveKRange a →
+      positiveLargeTailProductYClosedFactorialSplitBlockBound
+          a (posNhi a) k ≤ yBound a k
+  prefixChunks :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+      (fun a k => xBound a k * yBound a k) aLen kLen
+  largeSmall :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) →
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+  largeTempered :
+    ∀ {a k : Nat}, 3000 ≤ a →
+      k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+          (fun a k => xBound a k * yBound a k) a k
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate.toXYBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundCertificate
+      xBound yBound where
+  xBound_le := cert.xBound_le
+  yBound_le := cert.yBound_le
+  smallScalar := by
+    intro a k ha hk hsmall
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeSmall haLarge hk hsmall
+    · exact cert.prefixChunks.toPrefixCertificate.smallScalar
+        ha (Nat.lt_of_not_ge haLarge) hk hsmall
+  temperedScalar := by
+    intro a k ha hk htempered
+    by_cases haLarge : 3000 ≤ a
+    · exact cert.largeTempered haLarge hk htempered
+    · exact cert.prefixChunks.toPrefixCertificate.temperedScalar
+        ha (Nat.lt_of_not_ge haLarge) hk htempered
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate.toProductBoundCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
+      (fun a k => xBound a k * yBound a k) :=
+  cert.toXYBoundCertificate.toProductBoundCertificate
+
+theorem PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate.toUpperEdgeLowerNCertificate
+    {xBound yBound : Nat → Nat → ℚ} {aLen kLen : Nat}
+    (cert :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate
+        xBound yBound aLen kLen) :
+    PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate :=
+  cert.toProductBoundCertificate.toUpperEdgeLowerNCertificate
+
 /-- Boolean atom for a fast upper-edge solo budget after replacing the
 actual split-factorial solo sum by a rational surrogate `soloBound`. -/
 def checkPositiveLargeTailSoloFastUpperEdgeBound

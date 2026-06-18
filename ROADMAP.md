@@ -747,6 +747,11 @@ Status:
       the final scalar budgets against those cheaper bounds.  The wrapper
       `positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
       assembles the surrogate route into the same large-tail audit target.
+      A sibling
+      `PositiveSaddleLargeTailProductFastUpperEdgeLowerNXYBoundHybridCertificate`
+      keeps separate `xBound` and `yBound` witnesses for the product factors
+      and routes them through the same scalar chunks on
+      `xBound a k * yBound a k`.
       Final finite-window capstones for this route are exposed as
       `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
       and the row-active sibling
