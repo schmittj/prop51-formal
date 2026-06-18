@@ -314,6 +314,12 @@ def positiveSmallFirstCellQBudget (a N : Nat) (qBound : ℚ) : Prop :=
     ≤ 9360 * (posJ a 2 : ℚ) *
       positiveSmallLargeExp a 2 * c (posJ a 2)
 
+/-- Row-only endpoint form of the first retained product-cell budget used by
+the canonical large-tail product route. -/
+def positiveSmallFirstCellYUpperEdgeBudget (a : Nat) : Prop :=
+  positiveSmallFirstCellQBudget a (posNhi a)
+    (positiveLargeTailProductYUpperEdgeExactBound a 2)
+
 /-- The direct first-cell budget using the actual `Qq` coefficient. -/
 def positiveSmallFirstCellRawQBudget (a N : Nat) : Prop :=
   positiveSmallFirstCellQBudget a N (Qq N (posJ a 2))
@@ -439,11 +445,10 @@ theorem positiveSmallFirstCellQBudget_of_upperEdgeQBound
 `Y` block majorant used in the canonical product route. -/
 theorem positiveSmallFirstCellQBudget_of_YUpperEdgeBudgetAtUpperEdge
     {a N : Nat} (hrect : positiveRectangle a N)
-    (hbudget :
-      positiveSmallFirstCellQBudget a (posNhi a)
-        (positiveLargeTailProductYUpperEdgeExactBound a 2)) :
+    (hbudget : positiveSmallFirstCellYUpperEdgeBudget a) :
     positiveSmallFirstCellQBudget a N
         (positiveLargeTailProductYUpperEdgeExactBound a 2) := by
+  unfold positiveSmallFirstCellYUpperEdgeBudget at hbudget
   refine positiveSmallFirstCellQBudget_of_upperEdgeQBound hrect ?_ hbudget
   unfold positiveLargeTailProductYUpperEdgeExactBound
   exact positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
@@ -1143,8 +1148,7 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndFastUpperEdgeLower
           ≤ xyBound a k)
     (hbudgetTwoUpper :
       ∀ {a : Nat}, 3000 ≤ a →
-        positiveSmallFirstCellQBudget a (posNhi a)
-          (positiveLargeTailProductYUpperEdgeExactBound a 2))
+        positiveSmallFirstCellYUpperEdgeBudget a)
     (hsmallGeThree :
       ∀ {a k : Nat}, 3000 ≤ a →
         k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
