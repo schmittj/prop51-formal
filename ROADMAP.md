@@ -709,6 +709,9 @@ Status:
       `--emit-final --final-tail-refined-atomic-bounds`, and it converts back
       to the canonical atomic-bounds route.  This quotient-form step split is
       a deliberate Lean refinement of the raw-cleared LaTeX presentation.
+      Generated final files can also target the reduced factorial-only
+      product/solo block-sum tail interface with
+      `--emit-final --final-tail-closed-factorial-block-sum`.
       Grouped
       raw-cleared unit-reserve
       candidate proofs can now be split back into the six atomic fields, so

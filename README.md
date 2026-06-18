@@ -465,7 +465,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `--final-tail-atomic-parts`, `--final-tail-atomic-bounds`, or
   `--final-tail-raw-cleared-unit-bounds`; use
   `--final-tail-refined-atomic-bounds` for the explicit refined atomic route
-  above, `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
+  above, `--final-tail-closed-factorial-block-sum` for the reduced
+  factorial-only product/solo block-sum tail target,
+  `--final-tail-tempered-raw-exp-ratio-reserve-bounds` for the
   route that fills the small step in Lean but still accepts all three reserve
   atoms, or `--final-tail-tempered-raw-exp-ratio-tempered-reserve-bounds` for
   the route that also fills the small first reserve in Lean.  Use
