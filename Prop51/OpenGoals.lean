@@ -388,6 +388,67 @@ theorem Qq_le_positiveLargeTailProductYUpperEdgeExactBound
   unfold positiveLargeTailProductYUpperEdgeExactBound
   exact hsameN.trans hmono
 
+/-- If the first-cell `Qq` majorant is independent of `N`, it is enough to
+check the scalar first-cell budget at the upper rectangle edge.
+
+This is the endpoint reduction used by the completion route.  It is purely
+algebraic: the only `N`-dependent factor in
+`positiveSmallFirstCellQBudget` is `5*N - 72`, which is monotone on the
+rectangle once the supplied `qBound` is nonnegative. -/
+theorem positiveSmallFirstCellQBudget_of_upperEdgeQBound
+    {a N : Nat} (hrect : positiveRectangle a N) {qBound : ℚ}
+    (hqBound : 0 ≤ qBound)
+    (hbudget :
+      positiveSmallFirstCellQBudget a (posNhi a) qBound) :
+    positiveSmallFirstCellQBudget a N qBound := by
+  unfold positiveSmallFirstCellQBudget at hbudget ⊢
+  let scale : ℚ :=
+    (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) * qBound
+  have hNle : (N : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hrect.2
+  have hlinear :
+      (5 : ℚ) * (N : ℚ) - 72 ≤
+        5 * (posNhi a : ℚ) - 72 := by
+    linarith
+  have hscale_nonneg : 0 ≤ scale := by
+    dsimp [scale]
+    positivity
+  have hscaled :
+      scale * ((5 : ℚ) * (N : ℚ) - 72) ≤
+        scale * (5 * (posNhi a : ℚ) - 72) :=
+    mul_le_mul_of_nonneg_left hlinear hscale_nonneg
+  calc
+    (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (N : ℚ) - 72) * qBound
+        =
+      scale * ((5 : ℚ) * (N : ℚ) - 72) := by
+        dsimp [scale]
+        ring
+    _ ≤ scale * (5 * (posNhi a : ℚ) - 72) := hscaled
+    _ =
+      (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (posNhi a : ℚ) - 72) * qBound := by
+        dsimp [scale]
+        ring
+    _ ≤
+      9360 * (posJ a 2 : ℚ) *
+        positiveSmallLargeExp a 2 * c (posJ a 2) := hbudget
+
+/-- Upper-edge specialization of
+`positiveSmallFirstCellQBudget_of_upperEdgeQBound` for the exact split-factorial
+`Y` block majorant used in the canonical product route. -/
+theorem positiveSmallFirstCellQBudget_of_YUpperEdgeBudgetAtUpperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hbudget :
+      positiveSmallFirstCellQBudget a (posNhi a)
+        (positiveLargeTailProductYUpperEdgeExactBound a 2)) :
+    positiveSmallFirstCellQBudget a N
+        (positiveLargeTailProductYUpperEdgeExactBound a 2) := by
+  refine positiveSmallFirstCellQBudget_of_upperEdgeQBound hrect ?_ hbudget
+  unfold positiveLargeTailProductYUpperEdgeExactBound
+  exact positiveLargeTailProductYClosedFactorialSplitBlockBound_nonneg
+    a (posNhi a) 2
+
 /-- The direct `Qq` first-cell budget implies the live raw-cleared product
 target for `k = 2`.
 
@@ -1065,6 +1126,44 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoAndFastUpperEdgeLowerNProduct
       intro a N ha hrect
       exact positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
         ha hrect (hbudgetTwo ha hrect))
+    hsmallGeThree htemperedGeThree
+
+/-- Endpoint first-cell variant of the canonical combined-product constructor.
+
+The `k = 2` budget now has to be checked only at the upper rectangle edge
+`N = posNhi a`; monotonicity of `positiveSmallFirstCellQBudget` transports it
+to every `N` in the rectangle.  The `k ≥ 3` tail is unchanged and remains the
+combined-product endpoint scalar route. -/
+theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hbudgetTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellQBudget a (posNhi a)
+          (positiveLargeTailProductYUpperEdgeExactBound a 2))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a N ha hrect
+      exact
+        positiveSmallFirstCellQBudget_of_YUpperEdgeBudgetAtUpperEdge
+          (a := a) (N := N) hrect (hbudgetTwoUpper ha))
     hsmallGeThree htemperedGeThree
 
 /-- Separate-`X`/`Y` variant of the first-term/remainder product-bound route.
