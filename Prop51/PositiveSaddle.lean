@@ -13622,6 +13622,14 @@ def positiveLargeTailProductXClosedBlockBound (_a N k : Nat) : ℚ :=
 def positiveLargeTailProductYClosedBlockBound (a N k : Nat) : ℚ :=
   positiveLargeTailYGcompClosedBlockSum N (posJ a k)
 
+/-- Active closed product-side `X` block bound using `GcompClosedBound`. -/
+def positiveLargeTailProductXClosedActiveBlockBound (_a N k : Nat) : ℚ :=
+  positiveLargeTailXGcompClosedActiveBlockSum N k
+
+/-- Active closed product-side `Y` block bound using `GcompClosedBound`. -/
+def positiveLargeTailProductYClosedActiveBlockBound (a N k : Nat) : ℚ :=
+  positiveLargeTailYGcompClosedActiveBlockSum N (posJ a k)
+
 theorem positiveLargeTailProductXClosedBlockBound_nonneg (a N k : Nat) :
     0 ≤ positiveLargeTailProductXClosedBlockBound a N k := by
   unfold positiveLargeTailProductXClosedBlockBound
@@ -13631,6 +13639,23 @@ theorem positiveLargeTailProductYClosedBlockBound_nonneg (a N k : Nat) :
     0 ≤ positiveLargeTailProductYClosedBlockBound a N k := by
   unfold positiveLargeTailProductYClosedBlockBound
   exact positiveLargeTailYGcompClosedBlockSum_nonneg N (posJ a k)
+
+theorem positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound
+    (a N k : Nat) :
+    positiveLargeTailProductXClosedActiveBlockBound a N k =
+      positiveLargeTailProductXClosedBlockBound a N k := by
+  unfold positiveLargeTailProductXClosedActiveBlockBound
+    positiveLargeTailProductXClosedBlockBound
+  exact positiveLargeTailXGcompClosedActiveBlockSum_eq_closedBlockSum N k
+
+theorem positiveLargeTailProductYClosedActiveBlockBound_eq_closedBlockBound
+    (a N k : Nat) :
+    positiveLargeTailProductYClosedActiveBlockBound a N k =
+      positiveLargeTailProductYClosedBlockBound a N k := by
+  unfold positiveLargeTailProductYClosedActiveBlockBound
+    positiveLargeTailProductYClosedBlockBound
+  exact positiveLargeTailYGcompClosedActiveBlockSum_eq_closedBlockSum
+    N (posJ a k)
 
 /-- Named scalar product inequality for the small branch after both `Bplus`
 and `Qplus/Y` coefficient majorants have been opened into explicit `Gcomp`
@@ -13673,6 +13698,46 @@ def positiveLargeTailTemperedProductClosedBlockSumScalar (a N k : Nat) :
     ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
       positiveTemperedLargeExp a k *
         ((N : ℚ) * c k * c (posJ a k))
+
+/-- Small-branch scalar target using the active closed-composition block
+sums, with inactive zero `GcompClosedBound` terms removed. -/
+def positiveLargeTailSmallProductClosedActiveBlockSumScalar
+    (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+      positiveLargeTailProductXClosedActiveBlockBound a N k *
+        positiveLargeTailProductYClosedActiveBlockBound a N k
+    ≤ 130 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveSmallLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+/-- Tempered-branch scalar target using the active closed-composition block
+sums, with inactive zero `GcompClosedBound` terms removed. -/
+def positiveLargeTailTemperedProductClosedActiveBlockSumScalar
+    (a N k : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a k) * (posNlo a : ℚ) *
+      positiveLargeTailProductXClosedActiveBlockBound a N k *
+        positiveLargeTailProductYClosedActiveBlockBound a N k
+    ≤ 192 * ((k : ℚ) * (posJ a k : ℚ)) *
+      positiveTemperedLargeExp a k *
+        ((N : ℚ) * c k * c (posJ a k))
+
+theorem positiveLargeTailSmallProductClosedBlockSumScalar_of_active
+    {a N k : Nat}
+    (h : positiveLargeTailSmallProductClosedActiveBlockSumScalar a N k) :
+    positiveLargeTailSmallProductClosedBlockSumScalar a N k := by
+  unfold positiveLargeTailSmallProductClosedActiveBlockSumScalar
+    positiveLargeTailSmallProductClosedBlockSumScalar at *
+  rwa [positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound,
+    positiveLargeTailProductYClosedActiveBlockBound_eq_closedBlockBound] at h
+
+theorem positiveLargeTailTemperedProductClosedBlockSumScalar_of_active
+    {a N k : Nat}
+    (h : positiveLargeTailTemperedProductClosedActiveBlockSumScalar a N k) :
+    positiveLargeTailTemperedProductClosedBlockSumScalar a N k := by
+  unfold positiveLargeTailTemperedProductClosedActiveBlockSumScalar
+    positiveLargeTailTemperedProductClosedBlockSumScalar at *
+  rwa [positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound,
+    positiveLargeTailProductYClosedActiveBlockBound_eq_closedBlockBound] at h
 
 theorem positiveLargeTailSmallProductBlockSumScalar_of_closed
     {a N k : Nat}
@@ -13806,6 +13871,32 @@ theorem PositiveSaddleLargeTailProductClosedBlockSumScalarCertificate.toBlockSum
   temperedScalar := by
     intro a N k ha hrect hk htempered
     exact positiveLargeTailTemperedProductBlockSumScalar_of_closed
+      (cert.temperedScalar ha hrect hk htempered)
+
+/-- Proof-production wrapper whose fields use the active closed-composition
+block sums, so inactive zero `GcompClosedBound` terms do not appear in the
+certificate target. -/
+structure PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate :
+    Prop where
+  smallScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        positiveLargeTailSmallProductClosedActiveBlockSumScalar a N k
+  temperedScalar :
+    ∀ {a N k : Nat}, 2000 < a → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        positiveLargeTailTemperedProductClosedActiveBlockSumScalar a N k
+
+theorem PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate.toClosedBlockSumScalarCertificate
+    (cert : PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate) :
+    PositiveSaddleLargeTailProductClosedBlockSumScalarCertificate where
+  smallScalar := by
+    intro a N k ha hrect hk hsmall
+    exact positiveLargeTailSmallProductClosedBlockSumScalar_of_active
+      (cert.smallScalar ha hrect hk hsmall)
+  temperedScalar := by
+    intro a N k ha hrect hk htempered
+    exact positiveLargeTailTemperedProductClosedBlockSumScalar_of_active
       (cert.temperedScalar ha hrect hk htempered)
 
 theorem PositiveSaddleLargeTailProductBlockSumCertificate.toProductBoundsCertificate
@@ -18185,6 +18276,15 @@ def positiveLargeTailSoloGcompClosedBlockSumCleared (a N : Nat) : Prop :=
     ≤ 29 * (a : ℚ) * c a *
       partialExpUpper (positiveSoloYExponent a) (8 * a)
 
+/-- Denominator-cleared large-tail solo target using the active closed block
+sum, with inactive zero `GcompClosedBound` terms removed. -/
+def positiveLargeTailSoloGcompClosedActiveBlockSumCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^a *
+      positiveLargeTailSoloGcompClosedActiveBlockSum a N
+    ≤ 29 * (a : ℚ) * c a *
+      partialExpUpper (positiveSoloYExponent a) (8 * a)
+
 /-- Denominator-cleared large-tail solo `Gcomp` saddle target.
 
 This is the variable-cutoff analogue of
@@ -18236,6 +18336,25 @@ theorem positiveLargeTailSoloGcompBlockSumCleared_of_closedBlockSumCleared
   exact (mul_le_mul_of_nonneg_left
     (positiveLargeTailSoloGcompBlockSum_le_closedBlockSum a N) hscale).trans h
 
+/-- An active closed-composition solo bound is the same all-range closed solo
+target, with inactive zero terms removed. -/
+theorem positiveLargeTailSoloGcompClosedBlockSumCleared_of_active
+    {a N : Nat}
+    (h : positiveLargeTailSoloGcompClosedActiveBlockSumCleared a N) :
+    positiveLargeTailSoloGcompClosedBlockSumCleared a N := by
+  unfold positiveLargeTailSoloGcompClosedActiveBlockSumCleared
+    positiveLargeTailSoloGcompClosedBlockSumCleared at *
+  rwa [positiveLargeTailSoloGcompClosedActiveBlockSum_eq_closedBlockSum] at h
+
+/-- An active closed-composition solo bound implies the explicit `Gcomp`
+double-sum solo target. -/
+theorem positiveLargeTailSoloGcompBlockSumCleared_of_closedActiveBlockSumCleared
+    {a N : Nat}
+    (h : positiveLargeTailSoloGcompClosedActiveBlockSumCleared a N) :
+    positiveLargeTailSoloGcompBlockSumCleared a N :=
+  positiveLargeTailSoloGcompBlockSumCleared_of_closedBlockSumCleared
+    (positiveLargeTailSoloGcompClosedBlockSumCleared_of_active h)
+
 /-- A cleared explicit `Gcomp` double-sum bound implies the recurrence-level
 cleared solo saddle target. -/
 theorem positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
@@ -18251,6 +18370,15 @@ theorem positiveLargeTailSoloGcompSaddleCleared_of_closedBlockSumCleared
     positiveLargeTailSoloGcompSaddleCleared a N :=
   positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
     (positiveLargeTailSoloGcompBlockSumCleared_of_closedBlockSumCleared h)
+
+/-- A cleared active closed-composition solo bound implies the
+recurrence-level cleared solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_of_closedActiveBlockSumCleared
+    {a N : Nat}
+    (h : positiveLargeTailSoloGcompClosedActiveBlockSumCleared a N) :
+    positiveLargeTailSoloGcompSaddleCleared a N :=
+  positiveLargeTailSoloGcompSaddleCleared_of_closedBlockSumCleared
+    (positiveLargeTailSoloGcompClosedBlockSumCleared_of_active h)
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/
@@ -18331,6 +18459,19 @@ theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedB
   positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompSaddleCleared
     (fun {a N} ha hrect =>
       positiveLargeTailSoloGcompSaddleCleared_of_closedBlockSumCleared
+        (hY (a := a) (N := N) ha hrect))
+
+/-- Large-tail solo certificate reduced to the active closed-composition
+block-sum target. -/
+theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompClosedActiveBlockSumCleared
+    (hY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedActiveBlockSumCleared a N) :
+    PositiveSaddleLargeTailSoloYBoundCertificate
+      positiveLargeTailSoloTenSeventhsBound :=
+  positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths_of_gcompSaddleCleared
+    (fun {a N} ha hrect =>
+      positiveLargeTailSoloGcompSaddleCleared_of_closedActiveBlockSumCleared
         (hY (a := a) (N := N) ha hrect))
 
 /-- At the first retained tempered index, the large-tail tempered exponent is

@@ -674,7 +674,12 @@ Status:
       `positiveLargeTailYGcompClosedActiveBlockSum`, and
       `positiveLargeTailSoloGcompClosedActiveBlockSum` remove the inactive
       zero `GcompClosedBound` indices and are proved equal to the all-range
-      closed sums.
+      closed sums.  The active certificate
+      `PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate`
+      and audit wrapper
+      `positiveSaddleLargeTailAuditCertificate_of_productClosedActiveBlockSumScalars_soloGcompClosedActiveBlockSumCleared`
+      make that truncated form directly usable by generated or analytic
+      large-tail witnesses.
       The solo field can
       likewise be supplied through `PositiveSaddleLargeTailSoloYBoundCertificate`,
       splitting the `Y_a(N)` saddle bound from the dyadic unit budget.

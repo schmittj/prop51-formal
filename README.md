@@ -241,7 +241,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   The aliases `Prop51.positiveLargeTailXGcompClosedActiveBlockSum`,
   `Prop51.positiveLargeTailYGcompClosedActiveBlockSum`, and
   `Prop51.positiveLargeTailSoloGcompClosedActiveBlockSum` remove the inactive
-  zero `GcompClosedBound` terms while proving equality to the all-range sums.
+  zero `GcompClosedBound` terms while proving equality to the all-range sums;
+  `Prop51.PositiveSaddleLargeTailProductClosedActiveBlockSumScalarCertificate`
+  and
+  `Prop51.positiveSaddleLargeTailAuditCertificate_of_productClosedActiveBlockSumScalars_soloGcompClosedActiveBlockSumCleared`
+  expose that active form as a large-tail audit input.
   For final
   assembly from
   these lower-level product and solo proofs,
