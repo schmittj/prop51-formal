@@ -20947,6 +20947,39 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_targe
         _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
               ring)
 
+theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_remainder
+    {a : Nat} (ha : 3000 ≤ a)
+    (hremainder :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤ (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
+      ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+  have hsimple :=
+    positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_target
+      (a := a) ha
+  have hparts := add_le_add hsimple hremainder
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
+        =
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a +
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a) := by
+          rw [positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_remainder]
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a := by
+          ring
+    _ ≤
+      (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a +
+        (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := hparts
+    _ = 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+          ring
+
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
     {a p : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
@@ -21217,6 +21250,21 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCl
           (positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
             ha)
           (by positivity : 0 ≤ (4 : ℚ) * (2 : ℚ)^a)).trans h)
+
+/-- After the large-degree part is bounded, it remains only to fit the
+complementary split block into the other half of the final solo budget. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_largeDegreeRemainderBlockSum
+    {a : Nat} (ha : 3000 ≤ a)
+    (hremainder :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤ (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+      a (posNhi a) :=
+  positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_largeDegreeSplitBudgetBlockSum
+    ha
+    (positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_remainder
+      ha hremainder)
 
 /-- The fast split-final-term solo shell is stronger than the direct
 `(10/7)^a` cleared target once the large-tail `partialExpUpper` envelope is
