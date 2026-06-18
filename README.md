@@ -730,7 +730,11 @@ All Lean proofs are sorry-free.  Headline theorems:
   balanced shard summaries with per-field atom counts and conservative
   per-shard loop-cell upper bounds, still without materializing atom entries;
   use `--shard-balance cells` when those shard ranges should be balanced by
-  the conservative loop-cell estimate instead of by raw atom count.
+  the conservative loop-cell estimate instead of by raw atom count.  Repeated
+  `--single-chunk-field` flags restrict dry-run, manifest, or shard output to
+  selected atom families for separate production scheduling; emit the final
+  `--use-single-chunk-theorems` assembly without that filter after importing
+  all generated field modules.
   `--emit-single-chunk-shard --shard-index i --shard-count n` emits balanced
   atom modules using the same global ordering as
   `--emit-single-chunk-manifest`.  Manifest and dry-run JSON include the

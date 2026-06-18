@@ -600,7 +600,10 @@ Status:
       and conservative per-shard loop-cell upper bounds without materializing
       atom entries; `--shard-balance cells` applies the same conservative
       loop-cell weighting to both dry-run shard summaries and emitted shard
-      ranges.
+      ranges.  For proof-production scheduling, repeated
+      `--single-chunk-field` flags can restrict dry-run, manifest, or shard
+      output to selected atom families; the final assembly theorem is still
+      emitted without this filter after importing the generated field modules.
       The finer Lean endpoint
       `PositiveSaddleFixedFiniteWindowProductTangentSoloNChunkedAuditCertificate`
       also splits tangent and both displayed-solo finite checks by fixed

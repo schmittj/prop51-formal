@@ -42,6 +42,9 @@ Strategies include:
     without materializing atom entries.
   * --shard-balance cells: split shard ranges by conservative loop-cell
     weight instead of raw atom count.
+  * --single-chunk-field FIELD: restrict dry-run, manifest, or shard
+    production to selected atom families; use this only for scheduling atom
+    modules, then emit the final assembly theorem without this filter.
   * --active-row-covers: target the row-active Lean finite-window wrapper,
     using row-local `N` and retained-`k` covers for emitted atoms/manifests.
   * --use-single-chunk-theorems: assemble the product-n-chunked certificate
@@ -78,6 +81,19 @@ LEAN_MODULE_RE = re.compile(
     r"^[A-Za-z_][A-Za-z0-9_']*(\.[A-Za-z_][A-Za-z0-9_']*)*$"
 )
 DRY_RUN_SAMPLE_AS = (401, 1000, 2000)
+SINGLE_CHUNK_FIELDS = (
+    "product-small",
+    "product-tempered",
+    "product-combined",
+    "tangent",
+    "tangent-n",
+    "solo-saddle",
+    "solo-saddle-n",
+    "solo-budget",
+    "solo-budget-n",
+    "edge",
+    "edge-fixed",
+)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -706,6 +722,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--single-chunk-field",
+        action="append",
+        choices=SINGLE_CHUNK_FIELDS,
+        help=(
+            "restrict --dry-run-counts, --dry-run-active-counts, "
+            "--emit-single-chunk-manifest, or --emit-single-chunk-shard to "
+            "one atom family; repeat for several families"
+        ),
+    )
+    parser.add_argument(
         "--active-row-covers",
         action="store_true",
         help=(
@@ -739,19 +765,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--emit-single-chunk",
-        choices=(
-            "product-small",
-            "product-tempered",
-            "product-combined",
-            "tangent",
-            "tangent-n",
-            "solo-saddle",
-            "solo-saddle-n",
-            "solo-budget",
-            "solo-budget-n",
-            "edge",
-            "edge-fixed",
-        ),
+        choices=SINGLE_CHUNK_FIELDS,
         help="emit one concrete chunk theorem instead of a full certificate",
     )
     parser.add_argument(
@@ -810,6 +824,26 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "--dry-run-shard-count requires --dry-run-counts or "
             "--dry-run-active-counts"
         )
+    if args.single_chunk_field is not None:
+        if not (
+            args.dry_run_counts
+            or args.dry_run_active_counts
+            or args.emit_single_chunk_manifest
+            or args.emit_single_chunk_shard
+        ):
+            parser.error(
+                "--single-chunk-field is only supported with dry runs, "
+                "--emit-single-chunk-manifest, or --emit-single-chunk-shard"
+            )
+        if (
+            args.emit_single_chunk is not None
+            or args.emit_single_chunk_suite
+            or args.use_single_chunk_theorems
+        ):
+            parser.error(
+                "--single-chunk-field cannot be combined with single atom "
+                "emission, suite emission, or full assembly from theorem names"
+            )
     if (
         args.active_row_covers
         and args.strategy
@@ -2036,6 +2070,59 @@ def single_chunk_specs(
     return list(single_chunk_specs_slice(args, 0, single_chunk_total_count(args)))
 
 
+def selected_single_chunk_fields(args: argparse.Namespace) -> set[str] | None:
+    if args.single_chunk_field is None:
+        return None
+    return set(args.single_chunk_field)
+
+
+def filter_single_chunk_shapes(
+    args: argparse.Namespace,
+    shapes: list[tuple[str, int, int | None, int | None]],
+) -> list[tuple[str, int, int | None, int | None]]:
+    selected = selected_single_chunk_fields(args)
+    if selected is None:
+        return shapes
+    return [shape for shape in shapes if shape[0] in selected]
+
+
+def filter_counts_by_selected_fields(
+    args: argparse.Namespace, counts: dict[str, int]
+) -> dict[str, int]:
+    selected = selected_single_chunk_fields(args)
+    if selected is None:
+        return counts
+    return {
+        field: count
+        for field, count in counts.items()
+        if field in selected
+    }
+
+
+def selected_single_chunk_field_payload(args: argparse.Namespace) -> list[str] | str:
+    selected = selected_single_chunk_fields(args)
+    if selected is None:
+        return "all"
+    return sorted(selected)
+
+
+def filter_row_samples_by_selected_fields(
+    args: argparse.Namespace, samples: dict[str, list[dict[str, int]]]
+) -> dict[str, list[dict[str, int]]]:
+    selected = selected_single_chunk_fields(args)
+    if selected is None:
+        return samples
+    sample_keys = set()
+    for field in selected:
+        if field in ("product-small", "product-tempered", "product-combined"):
+            sample_keys.add("product")
+        elif field in ("tangent", "tangent-n"):
+            sample_keys.add("tangent")
+        else:
+            sample_keys.add(field)
+    return {key: value for key, value in samples.items() if key in sample_keys}
+
+
 def single_chunk_shapes(
     args: argparse.Namespace,
 ) -> list[tuple[str, int, int | None, int | None]]:
@@ -2100,7 +2187,7 @@ def single_chunk_shapes(
     )
     edge_count = edge_k_count(args.edge_k_len) if edge_field == "edge-fixed" else 90
     shapes.append((edge_field, row_count(args.edge_row_len), None, edge_count))
-    return shapes
+    return filter_single_chunk_shapes(args, shapes)
 
 
 def active_single_chunk_shapes(
@@ -2160,7 +2247,7 @@ def active_single_chunk_shapes(
                 active_k_chunk_count(args.edge_row_len, args.edge_k_len, row_index),
             )
         )
-    return shapes
+    return filter_single_chunk_shapes(args, shapes)
 
 
 def active_single_chunk_shape_count(
@@ -2538,6 +2625,9 @@ def single_chunk_shard_emit_args(
     ]
     if args.shard_balance != "atoms":
         emit_args.extend(["--shard-balance", args.shard_balance])
+    if args.single_chunk_field is not None:
+        for field in args.single_chunk_field:
+            emit_args.extend(["--single-chunk-field", field])
     return emit_args
 
 
@@ -2565,6 +2655,7 @@ def emit_single_chunk_manifest(args: argparse.Namespace) -> str:
         "cover_mode": "row-active" if args.active_row_covers else "global",
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
+        "single_chunk_fields": selected_single_chunk_field_payload(args),
         "chunk_lengths": dry_run_chunk_lengths(args),
         "extra_imports": args.extra_import,
         "reproducibility": reproducibility_metadata(),
@@ -2846,6 +2937,7 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
             args,
             (count_product_atoms, count_tangent_solo_atoms, count_edge_atoms),
         )
+        counts = filter_counts_by_selected_fields(args, counts)
         cover_mode = "global"
     total = sum(counts.values())
     payload = {
@@ -2853,6 +2945,7 @@ def emit_dry_run_counts(args: argparse.Namespace) -> str:
         "cover_mode": cover_mode,
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
+        "single_chunk_fields": selected_single_chunk_field_payload(args),
         "chunk_lengths": dry_run_chunk_lengths(args),
         "reproducibility": reproducibility_metadata(),
         "dimensions": dimensions,
@@ -3239,6 +3332,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         args,
         (count_product_atoms, count_tangent_solo_atoms, count_edge_atoms),
     )
+    global_counts = filter_counts_by_selected_fields(args, global_counts)
     if args.active_row_covers:
         active_counts, active_dimensions = count_active_single_chunk_atoms(args)
         count_mode = "row-active"
@@ -3255,6 +3349,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
                 count_edge_atoms_active,
             ),
         )
+        active_counts = filter_counts_by_selected_fields(args, active_counts)
         count_mode = "active-estimate"
         note = (
             "Counts skip row-local N/k chunks that cannot intersect the finite "
@@ -3268,6 +3363,7 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "strategy": args.strategy,
         "certificate_theorem": args.name,
         "single_chunk_prefix": args.single_chunk_prefix,
+        "single_chunk_fields": selected_single_chunk_field_payload(args),
         "count_mode": count_mode,
         "note": note,
         "chunk_lengths": dry_run_chunk_lengths(args),
@@ -3280,7 +3376,9 @@ def emit_dry_run_active_counts(args: argparse.Namespace) -> str:
         "global_counts": global_counts,
         "global_total": sum(global_counts.values()),
         "skipped_vs_global": skipped,
-        "row_samples": dry_run_active_row_samples(args),
+        "row_samples": filter_row_samples_by_selected_fields(
+            args, dry_run_active_row_samples(args)
+        ),
         "materialized_chunks": False,
     }
     if args.dry_run_shard_count is not None:
@@ -3299,6 +3397,7 @@ def emit_single_chunk_shard(args: argparse.Namespace) -> str:
     start, stop = single_chunk_shard_bounds(
         args, args.shard_index, args.shard_count
     )
+    field_note = selected_single_chunk_field_payload(args)
     lines = emit_header(args)
     lines.extend(
         [
@@ -3308,6 +3407,7 @@ def emit_single_chunk_shard(args: argparse.Namespace) -> str:
             f"Shard {args.shard_index + 1} of {args.shard_count}; "
             f"balanced by {args.shard_balance}; atoms {start} <= i < {stop} "
             f"out of {total}.",
+            f"Fields: {field_note}.",
             "-/",
             "",
         ]
