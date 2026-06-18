@@ -561,6 +561,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound",
+        action="store_true",
+        help=(
+            "with --emit-final, make the final theorem take surrogate "
+            "product/solo hybrid certificates for the strengthened final "
+            "large-tail route"
+        ),
+    )
+    parser.add_argument(
         "--single-chunk-prefix",
         type=lean_ident,
         default="positiveSaddleGeneratedChunk",
@@ -787,6 +796,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         args.final_tail_tempered_sharp_top_offset_hybrid_raw_exp_chunked_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds,
         args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_upper_middle_exp_target_ten_sevenths_closed_reserve_solo_envelope_bounds,
         args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_ten_sevenths_closed_reserve_solo_upper_edge_product_upper_edge_lower_n_bounds,
+        args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound,
     )
     if sum(bool(selector) for selector in final_tail_selectors) > 1:
         parser.error("--final-tail-* options cannot be combined")
@@ -1341,6 +1351,9 @@ def emit_header(args: argparse.Namespace | None = None) -> list[str]:
         "that finite prefix is supplied through explicit `(a,t)` chunks.",
         "Use the `...-hybrid-ratio-chunked-upper-middle-...` variant when",
         "the prefix is split into raw-budget and exp-ratio chunk certificates.",
+        "Use the `...-hybrid-ratio-chunked-product-bound-solo-bound` variant",
+        "when the final product and solo split sums are supplied through",
+        "separate rational surrogate-bound hybrid certificates.",
         "-/",
     ]
 
@@ -1470,6 +1483,18 @@ def final_tail_type(args: argparse.Namespace) -> str:
 
 
 def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+        return [
+            "    {xyBound : Nat → Nat → ℚ}",
+            "    {soloBound : Nat → ℚ}",
+            "    {productALen productTailKLen soloALen : Nat}",
+            "    (product :",
+            "      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate",
+            "        xyBound productALen productTailKLen)",
+            "    (soloY :",
+            "      PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate",
+            "        soloBound soloALen) :",
+        ]
     if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_fast_upper_edge:
         return [
             "    (product :",
@@ -1650,6 +1675,11 @@ def final_tail_binder_lines(args: argparse.Namespace) -> list[str]:
 
 
 def final_tail_arg(args: argparse.Namespace) -> str:
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+        return (
+            "(positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid "
+            "product soloY)"
+        )
     if args.final_tail_closed_factorial_split_block_sum_fast_product_upper_edge_lower_n_solo_fast_upper_edge:
         return (
             "(positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBlockSumScalarsFastExpUpperEdgeLowerN_soloGcompClosedFactorialSplitBlockSumFastCleared_upperEdge "
@@ -2307,6 +2337,10 @@ def common_finite_emit_args(args: argparse.Namespace) -> list[str]:
     if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_ten_sevenths_closed_reserve_solo_upper_edge_product_upper_edge_lower_n_bounds:
         emit_args.append(
             "--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-ten-sevenths-closed-reserve-solo-upper-edge-product-upper-edge-lower-n-bounds"
+        )
+    if args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+        emit_args.append(
+            "--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound"
         )
     return emit_args
 
@@ -4954,6 +4988,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate"
                 )
                 final_arg = "tail"
+            elif args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+                final_theorem = (
+                    "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail"
+                )
+                final_arg = "product soloY"
             elif args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
                 final_theorem = (
                     "coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"
@@ -5164,6 +5203,11 @@ def combined_product_nk_tangent_solo_n_fixed_edge_k_chunked_theorem_lines(
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloUpperEdgeProductUpperEdgeLowerNBoundsAuditCertificate"
             )
             final_arg = "tail"
+        elif args.final_tail_tempered_sharp_top_offset_hybrid_ratio_chunked_product_bound_solo_bound:
+            final_theorem = (
+                "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail"
+            )
+            final_arg = "product soloY"
         elif args.final_tail_tempered_raw_exp_ratio_reserve_envelope_bounds:
             final_theorem = (
                 "coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedRawExpRatioReserveEnvelopeBoundsAuditCertificate"

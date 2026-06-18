@@ -314,7 +314,10 @@ All Lean proofs are sorry-free.  Headline theorems:
   split-factorial sums.  The wrapper
   `Prop51.positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
   assembles this surrogate route into the same preferred large-tail audit
-  target.
+  target.  The corresponding final finite-window capstones are
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
+  and its row-active sibling
+  `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
   A Lean-only strengthened product sibling
   `Prop51.PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`
   asks for the fast split-final-term product scalar checks only at the upper
@@ -684,6 +687,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   If the solo witness is produced in the stronger fast-shell form at
   `N = posNhi a`, use
   `--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-fast-upper-edge`.
+  If the final product/solo witnesses are supplied through the rational
+  surrogate hybrid certificates, use
+  `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound`.
   Use
   repeated `--extra-import` flags
   when the atom theorems live in separately built Lean modules.  Before

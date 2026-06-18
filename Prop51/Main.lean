@@ -1310,6 +1310,32 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductN
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite tail.toLargeTailAuditCertificate
 
+/-- Final assembly from the fixed-edge finite route and the surrogate
+large-tail proof-production shape.  The product and solo split-factorial
+upper-edge sums are first bounded by rational surrogates, then the final
+budget checks are performed against those surrogates. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen productALen productTailKLen soloALen : Nat}
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate
+        xyBound productALen productTailKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate
+        soloBound soloALen) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid
+      product soloY)
+
 /-- Final assembly from the fixed-edge finite route, the strengthened
 upper-edge/lower-`N` product target, and the stronger fast split-factorial
 solo shell checked only at the upper rectangle edge. -/
@@ -1544,6 +1570,30 @@ theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedPr
     CoefficientNegativity :=
   coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
     finite tail.toLargeTailAuditCertificate
+
+/-- Final assembly from the row-active finite route and the surrogate
+large-tail proof-production shape. -/
+theorem coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail
+    {productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+      productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+      tangentKLen edgeKLen productALen productTailKLen soloALen : Nat}
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (finite :
+      PositiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+        productRowLen tangentRowLen soloSaddleRowLen soloBudgetRowLen edgeRowLen
+        productNLen productKLen tangentNLen soloSaddleNLen soloBudgetNLen
+        tangentKLen edgeKLen)
+    (product :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundHybridCertificate
+        xyBound productALen productTailKLen)
+    (soloY :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundHybridCertificate
+        soloBound soloALen) :
+    CoefficientNegativity :=
+  coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedAuditCertificate
+    finite
+    (positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid
+      product soloY)
 
 /-- Final assembly from the row-active finite route, the strengthened
 upper-edge/lower-`N` product target, and the stronger fast split-factorial

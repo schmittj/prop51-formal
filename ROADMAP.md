@@ -747,6 +747,10 @@ Status:
       the final scalar budgets against those cheaper bounds.  The wrapper
       `positiveSaddleLargeTailAuditCertificate_of_productFastUpperEdgeLowerNProductBoundHybrid_soloFastUpperEdgeBoundHybrid`
       assembles the surrogate route into the same large-tail audit target.
+      Final finite-window capstones for this route are exposed as
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`
+      and the row-active sibling
+      `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedProductBoundSoloBoundTail`.
       The Lean proof-production interface also exposes the strengthened
       product wrapper
       `PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate`.
@@ -1084,6 +1088,9 @@ Status:
       If the solo witness is produced in the stronger fast-shell form at
       `N = posNhi a`, use
       `--final-tail-closed-factorial-split-block-sum-fast-product-upper-edge-lower-n-solo-fast-upper-edge`.
+      If the product and solo witnesses are supplied through rational
+      surrogate hybrid certificates, use
+      `--final-tail-tempered-sharp-top-offset-hybrid-ratio-chunked-product-bound-solo-bound`.
       Since the upper-middle target is now supplied by Lean, the helper
       `positiveSaddleLargeTailAuditCertificate_of_product_solo` leaves only
       the product bounds and solo `Y` envelope as large-tail inputs on this
