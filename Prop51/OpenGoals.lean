@@ -297,6 +297,82 @@ theorem Bq_two_pos_of_large_positiveRectangle {a N : Nat} (ha : 3000 ≤ a)
     unfold posNlo at hNlo
     omega)
 
+/-- Explicit first retained product-cell budget after replacing
+`Y_{a-2}(N)` by the ten-sevenths solo envelope.
+
+This is intentionally stated before cancelling common positive factors, so it
+matches the denominator-cleared raw product target exactly.  The nontrivial
+remaining analytic point is that the needed `Y` envelope is at index
+`posJ a 2 = a-2`, while `N` remains in the larger `a`-rectangle. -/
+def positiveSmallFirstCellTenSeventhsRawBudget (a N : Nat) : Prop :=
+  2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) * Bq N 2 *
+      (((N : ℚ) / 2) * c (posJ a 2) / (2 : ℚ)^(posJ a 2) *
+        positiveLargeTailSoloTenSeventhsBound (posJ a 2) N)
+    ≤ 130 * ((2 : ℚ) * (posJ a 2 : ℚ)) *
+      positiveSmallLargeExp a 2 *
+        ((N : ℚ) * c 2 * c (posJ a 2))
+
+/-- Close the first retained small-branch product cell from a ten-sevenths
+`Y_{a-2}` envelope and the corresponding raw scalar budget.
+
+This records a genuine Lean-side subproblem rather than silently reusing the
+closed solo theorem outside its rectangle: the caller must provide the
+`positiveYgcompBound N (a-2)` envelope in the product rectangle. -/
+theorem positiveSmallLargeXYProductRawCleared_two_of_tenSeventhsY
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    (hY :
+      positiveYgcompBound N (posJ a 2) ≤
+        positiveLargeTailSoloTenSeventhsBound (posJ a 2) N)
+    (hbudget : positiveSmallFirstCellTenSeventhsRawBudget a N) :
+    positiveSmallLargeXYProductRawCleared a N 2 := by
+  have hN : 1 ≤ N :=
+    Nat.succ_le_of_lt (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+  have hj : 1 ≤ posJ a 2 := by
+    unfold posJ
+    omega
+  have hYnorm :
+      Ynorm N (posJ a 2) ≤
+        positiveLargeTailSoloTenSeventhsBound (posJ a 2) N :=
+    (Ynorm_le_positiveYgcompBound N (posJ a 2)).trans hY
+  have hyfactor_nonneg :
+      0 ≤ ((N : ℚ) / 2) * c (posJ a 2) /
+          (2 : ℚ)^(posJ a 2) := by
+    exact div_nonneg
+      (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num))
+        (c_nonneg (posJ a 2)))
+      (by positivity)
+  have hQ :
+      Qq N (posJ a 2) ≤
+        ((N : ℚ) / 2) * c (posJ a 2) /
+          (2 : ℚ)^(posJ a 2) *
+            positiveLargeTailSoloTenSeventhsBound (posJ a 2) N := by
+    rw [Qq_eq_yfactor_mul_Ynorm (N := N) (j := posJ a 2) hN hj]
+    exact mul_le_mul_of_nonneg_left hYnorm hyfactor_nonneg
+  have hBnonneg : 0 ≤ Bq N 2 :=
+    (Bq_two_pos_of_large_positiveRectangle ha hrect).le
+  have hBQ :
+      Bq N 2 * Qq N (posJ a 2)
+        ≤ Bq N 2 *
+          (((N : ℚ) / 2) * c (posJ a 2) /
+            (2 : ℚ)^(posJ a 2) *
+              positiveLargeTailSoloTenSeventhsBound (posJ a 2) N) :=
+    mul_le_mul_of_nonneg_left hQ hBnonneg
+  have hscale :
+      0 ≤ 2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) := by
+    positivity
+  have hleft :
+      2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          Bq N 2 * Qq N (posJ a 2)
+        ≤
+      2 * (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) * Bq N 2 *
+        (((N : ℚ) / 2) * c (posJ a 2) /
+          (2 : ℚ)^(posJ a 2) *
+            positiveLargeTailSoloTenSeventhsBound (posJ a 2) N) := by
+    simpa [mul_assoc] using mul_le_mul_of_nonneg_left hBQ hscale
+  exact hleft.trans (by
+    simpa [positiveSmallFirstCellTenSeventhsRawBudget,
+      positiveSmallLargeXYProductRawCleared] using hbudget)
+
 /-- Product-tail constructor that splits off the first retained product cell.
 
 After the uniform `Bq N 1 ≤ 0` reduction, the first live cell is `k = 2`.
