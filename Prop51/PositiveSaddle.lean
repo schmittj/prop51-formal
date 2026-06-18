@@ -20429,6 +20429,43 @@ theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_deltaBudgetWithSm
       (N := N) hp
   · rw [if_neg hp]
 
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_nonneg
+    (N p : Nat) :
+    0 ≤ positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N p := by
+  unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+  by_cases hp : 4 ≤ p
+  · rw [if_pos hp]
+    unfold positiveLargeTailSoloSharpInnerDeltaBudget
+    have hdelta_nonneg : 0 ≤ DeltaRat p ((N : ℚ) / 2) :=
+      DeltaRat_nonneg p (by positivity)
+    have hbracket_nonneg :
+        0 ≤ (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((N : ℚ) / 2) := by
+      exact add_nonneg (by positivity)
+        (mul_nonneg (by positivity) hdelta_nonneg)
+    exact mul_nonneg
+      (mul_nonneg (Nat.cast_nonneg N) (c_nonneg p))
+      hbracket_nonneg
+  · rw [if_neg hp]
+    exact positiveLargeTailSoloSharpGcompClosedInnerFactorial_nonneg N p
+
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_tiny_le_sixN
+    {N p : Nat} (hN : 1 ≤ N) (hp : p < 4) :
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N p
+      ≤ (6 : ℚ) * (N : ℚ) := by
+  have hNQ : (1 : ℚ) ≤ (N : ℚ) := by exact_mod_cast hN
+  have hN_nonneg : (0 : ℚ) ≤ (N : ℚ) := by exact_mod_cast (Nat.zero_le N)
+  have hp_cases : p = 0 ∨ p = 1 ∨ p = 2 ∨ p = 3 := by omega
+  rcases hp_cases with rfl | rfl | rfl | rfl
+  · simp [positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall]
+    nlinarith
+  · simp [positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall]
+  · simp [positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall]
+    nlinarith
+  · simp [positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall]
+    nlinarith
+
 /-- Cross-multiplied coefficient-ratio bound for a tail coefficient.
 
 For `p = a-s`, this is the large-solo analogue of the usual `c_ub/c_lb`
@@ -21550,6 +21587,173 @@ theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_dee
       simp [hp4, hnotTiny, hmidSecond, hdeep]
   · have htiny : a - s < 4 := Nat.lt_of_not_ge hp4
     simp [hp4, htiny]
+
+theorem positiveLargeTailSoloSharpTinyLinearTerm_le_top
+    {a s : Nat} (ha : 3000 ≤ a)
+    (hs : s ∈ Finset.range (a + 1)) (htiny : a - s < 4) :
+    (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+      ≤
+    (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+      (((a - 3).factorial : Nat) : ℚ)) := by
+  have hsle : s ≤ a := by
+    have hslt : s < a + 1 := Finset.mem_range.mp hs
+    omega
+  have hsge : a - 3 ≤ s := by omega
+  have hbase_ge_one :
+      (1 : ℚ) ≤ (posNhi a : ℚ) / 2 * c 1 / 2 := by
+    rw [c_one]
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hcast]
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    nlinarith
+  have hpow :
+      ((posNhi a : ℚ) / 2 * c 1 / 2)^s
+        ≤ ((posNhi a : ℚ) / 2 * c 1 / 2)^a :=
+    pow_le_pow_right₀ hbase_ge_one hsle
+  have hfacNat : (a - 3).factorial ≤ s.factorial :=
+    Nat.factorial_le hsge
+  have hfac : (((a - 3).factorial : Nat) : ℚ) ≤ (s.factorial : ℚ) := by
+    exact_mod_cast hfacNat
+  have hnum_nonneg :
+      0 ≤ ((posNhi a : ℚ) / 2 * c 1 / 2)^a := by
+    rw [c_one]
+    positivity
+  have hden_top_pos :
+      (0 : ℚ) < (((a - 3).factorial : Nat) : ℚ) := by
+    positivity
+  have hden_s_nonneg : 0 ≤ (s.factorial : ℚ) := by positivity
+  calc
+    ((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)
+        ≤ ((posNhi a : ℚ) / 2 * c 1 / 2)^a / (s.factorial : ℚ) := by
+          exact div_le_div_of_nonneg_right hpow hden_s_nonneg
+    _ ≤ ((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+          (((a - 3).factorial : Nat) : ℚ) := by
+          exact div_le_div_of_nonneg_left hnum_nonneg hden_top_pos hfac
+
+theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_le_top
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
+      ≤ 4 *
+        ((6 : ℚ) * (posNhi a : ℚ) *
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+            (((a - 3).factorial : Nat) : ℚ))) := by
+  let S : Finset Nat := (Finset.range (a + 1)).filter fun s => a - s < 4
+  have hNpos : 1 ≤ posNhi a := by
+    unfold posNhi
+    omega
+  have hS_card : S.card ≤ 4 := by
+    have hsubset :
+        S ⊆ ({a, a - 1, a - 2, a - 3} : Finset Nat) := by
+      intro s hs
+      rcases Finset.mem_filter.mp hs with ⟨hsrange, htiny⟩
+      have hsle : s ≤ a := by
+        have hslt : s < a + 1 := Finset.mem_range.mp hsrange
+        omega
+      have hcases : s = a ∨ s = a - 1 ∨ s = a - 2 ∨ s = a - 3 := by
+        omega
+      rcases hcases with rfl | rfl | rfl | rfl <;> simp
+    exact (Finset.card_le_card hsubset).trans Finset.card_le_four
+  have htop_nonneg :
+      0 ≤ (6 : ℚ) * (posNhi a : ℚ) *
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hterm :
+      ∀ s ∈ S,
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s)
+        ≤
+        (6 : ℚ) * (posNhi a : ℚ) *
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+    intro s hs
+    rcases Finset.mem_filter.mp hs with ⟨hsrange, htiny⟩
+    have hlin :=
+      positiveLargeTailSoloSharpTinyLinearTerm_le_top
+        (a := a) (s := s) ha hsrange htiny
+    have hinner :=
+      positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_tiny_le_sixN
+        (N := posNhi a) (p := a - s) hNpos htiny
+    have hinner_nonneg :
+        0 ≤ positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s) :=
+      positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_nonneg
+        (posNhi a) (a - s)
+    have hlin_top_nonneg :
+        0 ≤ ((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+          (((a - 3).factorial : Nat) : ℚ) := by
+      rw [c_one]
+      positivity
+    calc
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s)
+          ≤
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+          (((a - 3).factorial : Nat) : ℚ)) *
+            ((6 : ℚ) * (posNhi a : ℚ)) := by
+          exact mul_le_mul hlin hinner hinner_nonneg hlin_top_nonneg
+      _ =
+        (6 : ℚ) * (posNhi a : ℚ) *
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+            (((a - 3).factorial : Nat) : ℚ)) := by
+          ring
+  have hsum :=
+    S.sum_le_card_nsmul
+      (fun s =>
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s))
+      ((6 : ℚ) * (posNhi a : ℚ) *
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+          (((a - 3).factorial : Nat) : ℚ))) hterm
+  have hcardQ : (S.card : ℚ) ≤ 4 := by exact_mod_cast hS_card
+  unfold positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum
+  change
+      (∑ s ∈ Finset.range (a + 1),
+        if a - s < 4 then
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) *
+            positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+              (posNhi a) (a - s)
+        else
+          0)
+        ≤ 4 *
+          ((6 : ℚ) * (posNhi a : ℚ) *
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+              (((a - 3).factorial : Nat) : ℚ)))
+  rw [← Finset.sum_filter]
+  change
+      (∑ s ∈ S,
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s))
+        ≤ 4 *
+          ((6 : ℚ) * (posNhi a : ℚ) *
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+              (((a - 3).factorial : Nat) : ℚ)))
+  calc
+    (∑ s ∈ S,
+        (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+            (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+            (posNhi a) (a - s))
+        ≤ (S.card : ℚ) *
+          ((6 : ℚ) * (posNhi a : ℚ) *
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+              (((a - 3).factorial : Nat) : ℚ))) := by
+          simpa [nsmul_eq_mul] using hsum
+    _ ≤ 4 *
+          ((6 : ℚ) * (posNhi a : ℚ) *
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^a /
+              (((a - 3).factorial : Nat) : ℚ))) := by
+          exact mul_le_mul_of_nonneg_right hcardQ htop_nonneg
 
 theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryLow
     {a : Nat} (ha : 3000 ≤ a) :
