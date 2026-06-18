@@ -20516,6 +20516,107 @@ theorem factorial_tail_mul_a_pow_le_three_halves
     _ ≤ ((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s := by
           exact mul_le_mul_of_nonneg_right hfac (by positivity)
 
+/-- Combined large-degree coefficient/factorial estimate for the outer solo
+convolution.  It packages `c_ub/c_lb` and the factorial-ratio estimate into
+the exponential weight that will be summed as a small Poisson tail. -/
+theorem c_tail_mul_five_a_pow_le
+    {a s : Nat} (hp : 1 ≤ a - s) (hlarge : 2 * a ≤ 3 * (a - s)) :
+    c (a - s) * ((5 : ℚ) * (a : ℚ))^s
+      ≤ (144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s := by
+  have hc := c_tail_mul_pow_factorial_le (a := a) (s := s) hp
+  have hf :=
+    factorial_tail_mul_a_pow_le_three_halves
+      (a := a) (s := s) hp hlarge
+  have hfac_pos : (0 : ℚ) < ((a - 1).factorial : ℚ) := by
+    positivity
+  have hpow6_pos : (0 : ℚ) < (6 : ℚ)^s := by positivity
+  have hden_pos :
+      (0 : ℚ) < (6 : ℚ)^s * ((a - 1).factorial : ℚ) := by
+    positivity
+  have hca_nonneg : 0 ≤ c a := c_nonneg a
+  have hcoef_nonneg : 0 ≤ (144 / 125 : ℚ) * c a := by
+    positivity
+  have hc_mul :
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+        ≤
+      (144 / 125 : ℚ) * c a *
+          ((((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s) := by
+    calc
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+          =
+        (c (a - s) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ))) * (a : ℚ)^s := by
+            ring
+      _ ≤
+        ((144 / 125 : ℚ) * c a *
+          (((a - s - 1).factorial : Nat) : ℚ)) * (a : ℚ)^s := by
+            exact mul_le_mul_of_nonneg_right hc (by positivity)
+      _ =
+        (144 / 125 : ℚ) * c a *
+          ((((a - s - 1).factorial : Nat) : ℚ) * (a : ℚ)^s) := by
+            ring
+  have hmul_fac :
+      c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s)
+        ≤
+      (144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s) := by
+    exact hc_mul.trans
+      (mul_le_mul_of_nonneg_left hf hcoef_nonneg)
+  have hdiv :
+      c (a - s) * (a : ℚ)^s
+        ≤ (144 / 125 : ℚ) * c a *
+            ((3 / 2 : ℚ)^s / (6 : ℚ)^s) := by
+    have hrhs_eq :
+        (144 / 125 : ℚ) * c a *
+            ((3 / 2 : ℚ)^s / (6 : ℚ)^s)
+          =
+        ((144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s)) /
+            ((6 : ℚ)^s * ((a - 1).factorial : ℚ)) := by
+      field_simp [hpow6_pos.ne', hfac_pos.ne']
+    rw [hrhs_eq]
+    rw [le_div_iff₀ hden_pos]
+    calc
+      (c (a - s) * (a : ℚ)^s) *
+          ((6 : ℚ)^s * ((a - 1).factorial : ℚ))
+          =
+        c (a - s) *
+          (((6 : ℚ)^s * ((a - 1).factorial : ℚ)) * (a : ℚ)^s) := by
+            ring
+      _ ≤
+        (144 / 125 : ℚ) * c a *
+          (((a - 1).factorial : ℚ) * (3 / 2 : ℚ)^s) := hmul_fac
+  have hpow5_nonneg : 0 ≤ (5 : ℚ)^s := by positivity
+  calc
+    c (a - s) * ((5 : ℚ) * (a : ℚ))^s
+        = (c (a - s) * (a : ℚ)^s) * (5 : ℚ)^s := by
+            rw [mul_pow]
+            ring
+    _ ≤
+        ((144 / 125 : ℚ) * c a *
+            ((3 / 2 : ℚ)^s / (6 : ℚ)^s)) *
+          (5 : ℚ)^s := by
+            exact mul_le_mul_of_nonneg_right hdiv hpow5_nonneg
+    _ = (144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s := by
+          have hpow_eq :
+              ((3 / 2 : ℚ)^s / (6 : ℚ)^s) * (5 : ℚ)^s =
+                (5 / 4 : ℚ)^s := by
+            rw [← div_pow, ← mul_pow]
+            norm_num
+          calc
+            ((144 / 125 : ℚ) * c a *
+                ((3 / 2 : ℚ)^s / (6 : ℚ)^s)) *
+                (5 : ℚ)^s
+                =
+              (144 / 125 : ℚ) * c a *
+                (((3 / 2 : ℚ)^s / (6 : ℚ)^s) * (5 : ℚ)^s) := by
+                ring
+            _ = (144 / 125 : ℚ) * c a * (5 / 4 : ℚ)^s := by
+                rw [hpow_eq]
+
 /-- On the large inner-degree range used for the solo tail, the Δ-budget
 collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
 bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
