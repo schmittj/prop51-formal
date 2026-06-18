@@ -18887,6 +18887,15 @@ theorem positiveLargeTailSoloGcompBlockSumCleared_of_closedFactorialBlockSumClea
   positiveLargeTailSoloGcompBlockSumCleared_of_closedBlockSumCleared
     (positiveLargeTailSoloGcompClosedBlockSumCleared_of_factorial h)
 
+/-- A split-final-term factorial-only active closed-composition solo bound
+implies the explicit `Gcomp` double-sum solo target. -/
+theorem positiveLargeTailSoloGcompBlockSumCleared_of_closedFactorialSplitBlockSumCleared
+    {a N : Nat}
+    (h : positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N) :
+    positiveLargeTailSoloGcompBlockSumCleared a N :=
+  positiveLargeTailSoloGcompBlockSumCleared_of_closedFactorialBlockSumCleared
+    (positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split h)
+
 /-- A cleared explicit `Gcomp` double-sum bound implies the recurrence-level
 cleared solo saddle target. -/
 theorem positiveLargeTailSoloGcompSaddleCleared_of_blockSumCleared
@@ -18920,6 +18929,15 @@ theorem positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialBlockSumCleare
     positiveLargeTailSoloGcompSaddleCleared a N :=
   positiveLargeTailSoloGcompSaddleCleared_of_closedBlockSumCleared
     (positiveLargeTailSoloGcompClosedBlockSumCleared_of_factorial h)
+
+/-- A cleared split-final-term factorial-only active closed-composition solo
+bound implies the recurrence-level cleared solo saddle target. -/
+theorem positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumCleared
+    {a N : Nat}
+    (h : positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N) :
+    positiveLargeTailSoloGcompSaddleCleared a N :=
+  positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialBlockSumCleared
+    (positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split h)
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/

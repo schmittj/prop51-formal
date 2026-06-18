@@ -266,6 +266,39 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSu
       positiveLargeTailSoloGcompClosedBlockSumCleared_of_factorial
         (soloY (a := a) (N := N) ha hrect))
 
+/-- Preferred hybrid-ratio large-tail certificate with the product and solo
+sides supplied through split-final-term factorial-only active
+closed-composition block-sum targets.
+
+The resulting product bound functions are the original explicit block-sum
+bounds; the split-factorial inputs are used only to prove the scalar product
+fields for those bounds. -/
+theorem positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
+    (product :
+      PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarCertificate)
+    (soloY :
+      ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N) :
+    PositiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate
+      999 10
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+      positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound := by
+  have productBounds :
+      PositiveSaddleLargeTailProductBoundsCertificate
+        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound
+        positiveLargeTailProductXBlockBound positiveLargeTailProductYBlockBound :=
+    product.toClosedFactorialBlockSumScalarCertificate
+      |>.toClosedBlockSumScalarCertificate
+      |>.toBlockSumScalarCertificate
+      |>.toBlockSumCertificate
+      |>.toProductBoundsCertificate
+  exact
+    positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedUpperMiddleExpTargetTenSeventhsClosedReserveSoloEnvelopeBoundsAuditCertificate_of_soloGcompSaddleCleared
+      productBounds
+      (fun {a N} ha hrect =>
+        positiveLargeTailSoloGcompSaddleCleared_of_closedFactorialSplitBlockSumCleared
+          (soloY (a := a) (N := N) ha hrect))
+
 /-- Large-tail audit certificate with the product and solo sides supplied
 through split-final-term factorial-only active closed-composition block-sum
 targets. -/
@@ -276,10 +309,7 @@ theorem positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialSplitBl
       ∀ {a N : Nat}, 2000 < a → positiveRectangle a N →
         positiveLargeTailSoloGcompClosedFactorialSplitBlockSumCleared a N) :
     PositiveSaddleLargeTailAuditCertificate :=
-  positiveSaddleLargeTailAuditCertificate_of_productClosedFactorialBlockSumScalars_soloGcompClosedFactorialBlockSumCleared
-    product.toClosedFactorialBlockSumScalarCertificate
-    (fun {a N} ha hrect =>
-      positiveLargeTailSoloGcompClosedFactorialBlockSumCleared_of_split
-        (soloY (a := a) (N := N) ha hrect))
+  (positiveSaddleLargeTailTemperedSharpTopOffsetHybridRatioChunkedCertificate_of_productClosedFactorialSplitBlockSumScalars_soloGcompClosedFactorialSplitBlockSumCleared
+    product soloY).toLargeTailAuditCertificate
 
 end Prop51
