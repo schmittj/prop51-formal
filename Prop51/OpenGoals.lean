@@ -1,4 +1,5 @@
 import Prop51.Main
+import Prop51.Generated.PositiveSaddleFiniteScaledEdge
 
 namespace Prop51
 
@@ -526,6 +527,81 @@ def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge
   soloPrefixNormUnit :=
     positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChunks
       soloPrefix
+
+/-- Constructor for the bounded route with the already-generated scaled
+finite edge-budget shards inserted.
+
+This is a proof-production specialization of
+`BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge`: the edge budget is
+no longer a future bounded-certificate field, since it is supplied by
+`positiveSaddleFiniteScaledEdgeBudget`.  The remaining finite inputs are the
+actual tangent product, finite solo, and `2001 ≤ a < 3000` prefix obligations. -/
+def BoundedPositiveCertificate.ofActiveAnalyticScaledEdge
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen
+      productPrefixALen productPrefixKLen soloPrefixALen : Nat}
+    (tangentRowLenPos : 0 < tangentRowLen)
+    (soloSaddleRowLenPos : 0 < soloSaddleRowLen)
+    (soloBudgetRowLenPos : 0 < soloBudgetRowLen)
+    (tangentNLenPos : 0 < tangentNLen)
+    (soloSaddleNLenPos : 0 < soloSaddleNLen)
+    (soloBudgetNLenPos : 0 < soloBudgetNLen)
+    (tangentKLenPos : 0 < tangentKLen)
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (smallTangentExpEdgeRowRangeNIndexKChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              tangentNLen rowChunk.1 rowChunk.2 →
+        ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+          checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+            tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true)
+    (soloYSaddleClearedRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloSaddleNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+            soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (soloYBudgetRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloBudgetNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+            soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (productPrefix :
+      PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundPrefixChunksCertificate
+        (fun a k =>
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k)
+        productPrefixALen productPrefixKLen)
+    (soloPrefix :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundPrefixChunksCertificate
+        positiveLargeTailSoloUpperEdgeExactBound
+        soloPrefixALen) :
+    BoundedPositiveCertificate :=
+  BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge
+    tangentRowLenPos soloSaddleRowLenPos soloBudgetRowLenPos
+    tangentNLenPos soloSaddleNLenPos soloBudgetNLenPos tangentKLenPos
+    smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
+    soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
+    positiveSaddleFiniteScaledEdgeBudget productPrefix soloPrefix
 
 /-- The large-tail product obligation for the current canonical route.
 
