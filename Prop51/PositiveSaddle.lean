@@ -27671,6 +27671,121 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_targe
         _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
               ring)
 
+/-- A very coarse factorial domination used for active Poisson tails.
+
+The bound is intentionally loose: once the first retained exponent is at
+least `10`, the first omitted `3^L / L!` term is below `1/2` and then
+continues decreasing. -/
+theorem three_pow_div_factorial_le_half_of_ten_le
+    {L : Nat} (hL : 10 ≤ L) :
+    (3 : ℚ)^L / (L.factorial : ℚ) ≤ 1 / 2 := by
+  have hbase :
+      (3 : ℚ)^10 / (((Nat.factorial 10 : Nat) : ℚ)) ≤ 1 / 2 := by
+    norm_num [Nat.factorial]
+  have hstep :
+      ∀ n : Nat, 10 ≤ n →
+        (3 : ℚ)^n / (n.factorial : ℚ) ≤ 1 / 2 →
+        (3 : ℚ)^(n + 1) / (((n + 1).factorial : Nat) : ℚ) ≤ 1 / 2 := by
+    intro n hn hP
+    have hfac :
+        (((n + 1).factorial : Nat) : ℚ) =
+          ((n + 1 : Nat) : ℚ) * (n.factorial : ℚ) := by
+      rw [Nat.factorial_succ]
+      norm_num
+    have hratio : (3 : ℚ) / ((n + 1 : Nat) : ℚ) ≤ 1 := by
+      have hnq : (3 : ℚ) ≤ ((n + 1 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 3 ≤ n + 1)
+      have hpos : (0 : ℚ) < ((n + 1 : Nat) : ℚ) := by positivity
+      rw [div_le_one hpos]
+      exact hnq
+    have hterm_nonneg : 0 ≤ (3 : ℚ)^n / (n.factorial : ℚ) := by
+      positivity
+    calc
+      (3 : ℚ)^(n + 1) / (((n + 1).factorial : Nat) : ℚ)
+          =
+        ((3 : ℚ)^n / (n.factorial : ℚ)) *
+          ((3 : ℚ) / ((n + 1 : Nat) : ℚ)) := by
+          rw [hfac, pow_succ]
+          field_simp [show ((n.factorial : Nat) : ℚ) ≠ 0 by positivity,
+            show ((n + 1 : Nat) : ℚ) ≠ 0 by positivity]
+      _ ≤ ((3 : ℚ)^n / (n.factorial : ℚ)) * 1 := by
+          exact mul_le_mul_of_nonneg_left hratio hterm_nonneg
+      _ ≤ 1 / 2 := by
+          simpa using hP
+  exact Nat.le_induction
+    (m := 10)
+    (P := fun n _ => (3 : ℚ)^n / (n.factorial : ℚ) ≤ 1 / 2)
+    hbase
+    (fun n hn ih => hstep n hn ih)
+    L hL
+
+/-- Any finite Poisson tail with parameter at most `3`, starting at
+`L ≥ 10`, is at most `1`.
+
+This deliberately coarse lemma is strong enough for the active proportional
+and low-middle tails in the product first-cell budget. -/
+theorem poisson_tail_Ico_le_one_of_nonneg_le_three
+    {y : ℚ} (hy0 : 0 ≤ y) (hy3 : y ≤ 3)
+    {L M : Nat} (hL : 10 ≤ L) :
+    ∑ s ∈ Finset.Ico L M, y^s / (s.factorial : ℚ) ≤ 1 := by
+  let q : ℚ := y / (L : ℚ)
+  let A : ℚ := y^L / (L.factorial : ℚ)
+  have hLone : 1 ≤ L := by omega
+  have hLpos : (0 : ℚ) < (L : ℚ) := by
+    exact_mod_cast (by omega : 0 < L)
+  have hLhalf : (3 : ℚ) ≤ (L : ℚ) / 2 := by
+    have hLq : (10 : ℚ) ≤ (L : ℚ) := by exact_mod_cast hL
+    linarith
+  have hq0 : 0 ≤ q := by
+    dsimp [q]
+    exact div_nonneg hy0 hLpos.le
+  have hq_half : q ≤ 1 / 2 := by
+    dsimp [q]
+    rw [div_le_iff₀ hLpos]
+    linarith
+  have hq1 : q < 1 := by
+    linarith
+  have hden_half : (1 / 2 : ℚ) ≤ 1 - q := by
+    linarith
+  have hinv_le_two : 1 / (1 - q) ≤ 2 := by
+    calc
+      1 / (1 - q) ≤ 1 / (1 / 2 : ℚ) :=
+        one_div_le_one_div_of_le (by norm_num) hden_half
+      _ = 2 := by norm_num
+  have hy_pow_le : y^L ≤ (3 : ℚ)^L :=
+    pow_le_pow_left₀ hy0 hy3 L
+  have hfac_nonneg : 0 ≤ (L.factorial : ℚ) := by positivity
+  have hA_le_half : A ≤ 1 / 2 := by
+    have hA_le_three :
+        A ≤ (3 : ℚ)^L / (L.factorial : ℚ) := by
+      dsimp [A]
+      exact div_le_div_of_nonneg_right hy_pow_le hfac_nonneg
+    exact hA_le_three.trans
+      (three_pow_div_factorial_le_half_of_ten_le (L := L) hL)
+  have hA_nonneg : 0 ≤ A := by
+    dsimp [A]
+    positivity
+  rw [Finset.sum_Ico_eq_sum_range]
+  calc
+    ∑ j ∈ Finset.range (M - L), y^(L + j) /
+        (((L + j).factorial : Nat) : ℚ)
+        ≤ ∑ j ∈ Finset.range (M - L), A * q^j := by
+          exact Finset.sum_le_sum fun j _ => by
+            dsimp [A, q]
+            exact partialExpUpper_tail_term_le y hy0 L j hLone
+    _ = A * ∑ j ∈ Finset.range (M - L), q^j := by
+          rw [Finset.mul_sum]
+    _ ≤ A * (1 / (1 - q)) := by
+          exact mul_le_mul_of_nonneg_left
+            (geom_sum_le_inv_one_sub q hq0 hq1 (M - L)) hA_nonneg
+    _ ≤ (1 / 2 : ℚ) * 2 := by
+          have htail_nonneg : 0 ≤ 1 / (1 - q) := by
+            have hden_pos : 0 < 1 - q := by linarith
+            positivity
+          exact mul_le_mul hA_le_half hinv_le_two htail_nonneg
+            (by norm_num)
+    _ = 1 := by norm_num
+
 /-- Active Poisson sum for the proportional part of the sharp solo
 large-degree remainder.
 
@@ -27684,6 +27799,65 @@ def positiveLargeTailSoloSharpProportionalRemainderExpSum (a : Nat) : ℚ :=
       (50 / 27 : ℚ)^s / (s.factorial : ℚ)
     else
       0
+
+theorem positiveLargeTailSoloSharpProportionalRemainderExpSum_le_one
+    {a : Nat} (ha : 2998 ≤ a) :
+    positiveLargeTailSoloSharpProportionalRemainderExpSum a ≤ 1 := by
+  let L : Nat := a / 3 + 1
+  have hL10 : 10 ≤ L := by
+    dsimp [L]
+    omega
+  have htail :
+      ∑ s ∈ Finset.Ico L (a + 1),
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ) ≤ 1 :=
+    poisson_tail_Ico_le_one_of_nonneg_le_three
+      (y := (50 / 27 : ℚ)) (by norm_num) (by norm_num)
+      (L := L) (M := a + 1) hL10
+  unfold positiveLargeTailSoloSharpProportionalRemainderExpSum
+  calc
+    ∑ s ∈ Finset.range (a + 1),
+        (if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ)
+        else
+          0)
+        ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (if L ≤ s then
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ)
+        else
+          0) := by
+          refine Finset.sum_le_sum fun s hs => ?_
+          by_cases hcond :
+              ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+                4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+          · have hsle : s ≤ a := by
+              exact Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+            have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+              intro hsecond
+              exact hcond.1 ⟨hcond.2.1, hsecond⟩
+            have hlargeSecondLt : 3 * (a - s) < 2 * a :=
+              Nat.lt_of_not_ge hnotLargeSecond
+            have hstart : L ≤ s := by
+              dsimp [L]
+              omega
+            rw [if_pos hcond, if_pos hstart]
+          · rw [if_neg hcond]
+            by_cases hstart : L ≤ s
+            · rw [if_pos hstart]
+              positivity
+            · rw [if_neg hstart]
+    _ =
+      ∑ s ∈ Finset.Ico L (a + 1),
+          (50 / 27 : ℚ)^s / (s.factorial : ℚ) := by
+          rw [← Finset.sum_filter]
+          have hfilter :
+              (Finset.range (a + 1)).filter (fun s => L ≤ s) =
+                Finset.Ico L (a + 1) := by
+            ext s
+            simp [Finset.mem_Ico, and_comm]
+          rw [hfilter]
+    _ ≤ 1 := htail
 
 theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_activeExpSum
     {a : Nat} (ha : 1 ≤ a) :
@@ -27738,6 +27912,32 @@ theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_
         positiveLargeTailSoloSharpProportionalRemainderExpSum a := by
           unfold positiveLargeTailSoloSharpProportionalRemainderExpSum
           rw [Finset.mul_sum]
+
+theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
+    {a : Nat} (ha : 2998 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+  have hscaled :=
+    positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_activeExpSum
+      (a := a) (by omega : 1 ≤ a)
+  have htail :=
+    positiveLargeTailSoloSharpProportionalRemainderExpSum_le_one
+      (a := a) ha
+  have hK_nonneg :
+      0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a :=
+    mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  exact hscaled.trans
+    (by
+      calc
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+            positiveLargeTailSoloSharpProportionalRemainderExpSum a
+            ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a * 1 := by
+              exact mul_le_mul_of_nonneg_left htail hK_nonneg
+        _ = (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+              ring)
 
 theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_expSum
     {a : Nat} (ha : 1 ≤ a) :
@@ -27920,6 +28120,67 @@ def positiveLargeTailSoloSharpLowMiddleRemainderExpSum (a : Nat) : ℚ :=
     else
       0
 
+theorem positiveLargeTailSoloSharpLowMiddleRemainderExpSum_le_one
+    {a : Nat} (ha : 2998 ≤ a) :
+    positiveLargeTailSoloSharpLowMiddleRemainderExpSum a ≤ 1 := by
+  let L : Nat := a / 3 + 1
+  have hL10 : 10 ≤ L := by
+    dsimp [L]
+    omega
+  have htail :
+      ∑ s ∈ Finset.Ico L (a + 1),
+          (5 / 2 : ℚ)^s / (s.factorial : ℚ) ≤ 1 :=
+    poisson_tail_Ico_le_one_of_nonneg_le_three
+      (y := (5 / 2 : ℚ)) (by norm_num) (by norm_num)
+      (L := L) (M := a + 1) hL10
+  unfold positiveLargeTailSoloSharpLowMiddleRemainderExpSum
+  calc
+    ∑ s ∈ Finset.range (a + 1),
+        (if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+            4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+          (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+        else
+          0)
+        ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (if L ≤ s then
+          (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+        else
+          0) := by
+          refine Finset.sum_le_sum fun s hs => ?_
+          by_cases hcond :
+              (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+                ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+                4 ≤ a - s ∧ a ≤ 3 * (a - s)
+          · have hsle : s ≤ a := by
+              exact Nat.lt_succ_iff.mp (Finset.mem_range.mp hs)
+            have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+              intro hsecond
+              exact hcond.1.1 ⟨hcond.2.1, hsecond⟩
+            have hlargeSecondLt : 3 * (a - s) < 2 * a :=
+              Nat.lt_of_not_ge hnotLargeSecond
+            have hstart : L ≤ s := by
+              dsimp [L]
+              omega
+            rw [if_pos hcond, if_pos hstart]
+          · rw [if_neg hcond]
+            by_cases hstart : L ≤ s
+            · rw [if_pos hstart]
+              positivity
+            · rw [if_neg hstart]
+    _ =
+      ∑ s ∈ Finset.Ico L (a + 1),
+          (5 / 2 : ℚ)^s / (s.factorial : ℚ) := by
+          rw [← Finset.sum_filter]
+          have hfilter :
+              (Finset.range (a + 1)).filter (fun s => L ≤ s) =
+                Finset.Ico L (a + 1) := by
+            ext s
+            simp [Finset.mem_Ico, and_comm]
+          rw [hfilter]
+    _ ≤ 1 := htail
+
 theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_activeExpSum
     {a : Nat} (ha : 1 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
@@ -27977,6 +28238,32 @@ theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_act
         positiveLargeTailSoloSharpLowMiddleRemainderExpSum a := by
           unfold positiveLargeTailSoloSharpLowMiddleRemainderExpSum
           rw [Finset.mul_sum]
+
+theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
+    {a : Nat} (ha : 2998 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+  have hscaled :=
+    positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_activeExpSum
+      (a := a) (by omega : 1 ≤ a)
+  have htail :=
+    positiveLargeTailSoloSharpLowMiddleRemainderExpSum_le_one
+      (a := a) ha
+  have hK_nonneg :
+      0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a :=
+    mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  exact hscaled.trans
+    (by
+      calc
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+            positiveLargeTailSoloSharpLowMiddleRemainderExpSum a
+            ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a * 1 := by
+              exact mul_le_mul_of_nonneg_left htail hK_nonneg
+        _ = (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+              ring)
 
 /-- Constant-budget version of the sharp low-degree split used by the
 first-cell product proof.

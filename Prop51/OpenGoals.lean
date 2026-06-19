@@ -1601,6 +1601,36 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_remainderParts
         omega)
       hprop hmiddle hveryLow hbudget)
 
+/-- First-cell own-edge target after closing the proportional and low-middle
+active Poisson tails.
+
+The only remaining first-cell remainder input is the very-low residual with
+constant `52278/625`; the two active exponential tails each cost
+`20736/625`. -/
+theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_veryLowRemainder
+    {a : Nat} (ha : 3000 ≤ a)
+    (hveryLow :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
+            (posJ a 2)
+        ≤ (52278 / 625 : ℚ) * (posJ a 2 : ℚ) * c (posJ a 2)) :
+    positiveSmallFirstCellSharpOwnEdgeConstCleared a :=
+  positiveSmallFirstCellSharpOwnEdgeConstCleared_of_remainderParts
+    (a := a) ha
+    (Cprop := 20736 / 625)
+    (Cmiddle := 20736 / 625)
+    (CveryLow := 52278 / 625)
+    (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
+      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+        unfold posJ
+        omega))
+    (positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
+      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+        unfold posJ
+        omega))
+    hveryLow
+    (by norm_num)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
