@@ -1,4 +1,5 @@
 import Prop51.Main
+import Prop51.PositiveSaddle
 import Prop51.Generated.PositiveSaddleFiniteScaledEdge
 
 namespace Prop51
@@ -395,6 +396,40 @@ theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedFastExpBqPosit
       intro a N k ha haPrefix hrect hk htemperedN hnotLock hk3 hB
       exact positiveTemperedLargeXYProductRawCleared_of_fastExp
         (htemperedGeThree ha haPrefix hrect hk htemperedN hnotLock hk3 hB))
+
+/-- Direct saddle proof of the entire bounded product-prefix pointwise field.
+
+This is the bounded-strip counterpart of the direct large-tail route: it
+targets the actual raw `Bq * Qq` predicates and does not use the legacy exact
+upper-edge split-product grid. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofDirectSaddle :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha _haPrefix hrect
+      have hk : 2 ∈ positiveKRange a := by
+        refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+        unfold posKmax
+        rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+        omega
+      have hsmall : 2 ≤ ceilSqrt N := by
+        have hNgt : 1 * 1 < N := by
+          have hlo : posNlo a ≤ N := hrect.1
+          unfold posNlo at hlo
+          omega
+        have hceil : 1 < ceilSqrt N :=
+          lt_ceilSqrt_of_sq_lt (n := N) (k := 1) hNgt
+        omega
+      exact positiveSmallLargeXYProductRawCleared_of_directSaddle_geTwo
+        ha hrect hk hsmall (by omega))
+    (by
+      intro a N k ha _haPrefix hrect hk hsmallN hk3 _hB
+      exact positiveSmallLargeXYProductRawCleared_of_directSaddle_geTwo
+        ha hrect hk hsmallN (by omega))
+    (by
+      intro a N k ha _haPrefix hrect hk htemperedN _hnotLock _hk3 _hB
+      exact positiveTemperedLargeXYProductRawCleared_of_directSaddle
+        ha hrect hk htemperedN)
 
 /-- The bounded positive-saddle obligation for the current canonical route.
 
@@ -4384,6 +4419,40 @@ theorem LargeTailProductCertificate.ofRawClearedFastExpBqPositiveTwoAndGeThreeNa
       intro a N k ha hrect hk htemperedN hnotLock hk3 hB
       exact positiveTemperedLargeXYProductRawCleared_of_fastExp
         (htemperedGeThree ha hrect hk htemperedN hnotLock hk3 hB))
+
+/-- Direct saddle proof of the large-tail product certificate.
+
+This is the corrected completion-facing product route: it supplies the actual
+raw `Bq * Qq` fields directly and bypasses the false exact upper-edge
+split-product constructor. -/
+theorem LargeTailProductCertificate.ofDirectSaddle :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha hrect
+      have hk : 2 ∈ positiveKRange a := by
+        refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+        unfold posKmax
+        rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+        omega
+      have hsmall : 2 ≤ ceilSqrt N := by
+        have hNgt : 1 * 1 < N := by
+          have hlo : posNlo a ≤ N := hrect.1
+          unfold posNlo at hlo
+          omega
+        have hceil : 1 < ceilSqrt N :=
+          lt_ceilSqrt_of_sq_lt (n := N) (k := 1) hNgt
+        omega
+      exact positiveSmallLargeXYProductRawCleared_of_directSaddle_geTwo
+        (by omega : 2000 < a) hrect hk hsmall (by omega))
+    (by
+      intro a N k ha hrect hk hsmallN hk3 _hB
+      exact positiveSmallLargeXYProductRawCleared_of_directSaddle_geTwo
+        (by omega : 2000 < a) hrect hk hsmallN (by omega))
+    (by
+      intro a N k ha hrect hk htemperedN _hnotLock _hk3 _hB
+      exact positiveTemperedLargeXYProductRawCleared_of_directSaddle
+        (by omega : 2000 < a) hrect hk htemperedN)
 
 /-- Product-tail constructor where the first retained cell is supplied by a
 direct bound for `Qq N (a-2)`.
