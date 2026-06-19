@@ -983,6 +983,75 @@ theorem DeltaRat_le_three_fiftieth_of_le_eighteen
     _ ≤ 59 / 1000 + 1 / 1000 := add_le_add hnear hfar
     _ = 3 / 50 := by norm_num
 
+/-- A tighter near-Δ geometric estimate on the proportional low-degree band.
+
+This is a Lean-side strengthening of the paper envelope used only to close the
+finite solo strip down to `a = 401`: on that band the upper edge satisfies
+`N/2 ≤ (40/3) p`, and `p ≥ 181` gives enough margin to keep the final
+coefficient at `3/5`. -/
+theorem DeltaNearGeomBound_le_three_hundredths_of_ge_181 (p : Nat)
+    (hp : 181 ≤ p) :
+    DeltaNearGeomBound p (40 / 3) ≤ 3 / 100 := by
+  have hpQ : (0:ℚ) < p := by exact_mod_cast (by omega : 0 < p)
+  have hp181Q : (181:ℚ) ≤ p := by exact_mod_cast hp
+  have htail :
+      1 / (1 - DeltaNearRatio p (40 / 3)) ≤ 15 / 14 := by
+    have hqle : DeltaNearRatio p (40 / 3) ≤ 1 / 15 := by
+      unfold DeltaNearRatio
+      have hden : (0:ℚ) < 75 * (p:ℚ) := by positivity
+      rw [div_le_iff₀ hden]
+      nlinarith
+    have hlow : (14 / 15 : ℚ) ≤ 1 - DeltaNearRatio p (40 / 3) := by
+      linarith
+    calc
+      1 / (1 - DeltaNearRatio p (40 / 3)) ≤ 1 / (14 / 15 : ℚ) :=
+        one_div_le_one_div_of_le (by norm_num) hlow
+      _ = 15 / 14 := by norm_num
+  have htail_nonneg : 0 ≤ 1 / (1 - DeltaNearRatio p (40 / 3)) := by
+    have hq1 := DeltaNearRatio_lt_one_of_le_20 p (R := (40 / 3 : ℚ))
+      (by norm_num) (by omega)
+    have hpos : (0:ℚ) < 1 - DeltaNearRatio p (40 / 3) := by linarith
+    exact one_div_nonneg.mpr hpos.le
+  have hmain :
+      ((1152/3125) * (40 / 3 : ℚ) * (p:ℚ)
+          / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ))))
+        ≤ 7 / 250 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ p),
+      Nat.cast_sub (by omega : 2 ≤ p)]
+    change
+      (1152 / 3125 : ℚ) * (40 / 3) * (p:ℚ) /
+          (((p:ℚ) - 1) * ((p:ℚ) - 2)) ≤ 7 / 250
+    have hden' : (0:ℚ) < ((p:ℚ)-1) * ((p:ℚ)-2) := by nlinarith
+    rw [div_le_iff₀ hden']
+    nlinarith
+  unfold DeltaNearGeomBound
+  calc
+    ((1152/3125) * (40 / 3 : ℚ) * (p:ℚ)
+        / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+      * (1 / (1 - DeltaNearRatio p (40 / 3))))
+      ≤ (7 / 250) * (15 / 14) :=
+        mul_le_mul hmain htail htail_nonneg (by norm_num)
+    _ = 3 / 100 := by norm_num
+
+theorem DeltaRat_le_six_125_of_le_forty_thirds
+    (p : Nat) {N : ℚ} (hN : 0 ≤ N)
+    (hN40 : N ≤ (40 / 3) * (p:ℚ)) (hp : 181 ≤ p) :
+    DeltaRat p N ≤ 6 / 125 := by
+  have hN20 : N ≤ 20 * (p:ℚ) := by
+    have hp_nonneg : 0 ≤ (p:ℚ) := Nat.cast_nonneg p
+    exact hN40.trans (by nlinarith)
+  have hsplit := DeltaRat_le_nearGeomBound_add_far p
+    hN (by norm_num : (0:ℚ) ≤ 40 / 3) hN40 (by omega : 8 ≤ p)
+    (DeltaNearRatio_lt_one_of_le_20 p (R := (40 / 3 : ℚ))
+      (by norm_num) (by omega))
+  have hnear := DeltaNearGeomBound_le_three_hundredths_of_ge_181 p hp
+  have hfar := DeltaRatFar_le_one_thousand_of_ge_134 p hN hN20
+    (by omega : 134 ≤ p)
+  calc
+    DeltaRat p N ≤ DeltaNearGeomBound p (40 / 3) + DeltaRatFar p N := hsplit
+    _ ≤ 3 / 100 + 1 / 1000 := add_le_add hnear hfar
+    _ ≤ 6 / 125 := by norm_num
+
 private theorem DeltaRatFarTermBound_61_le_inv_linear :
     DeltaRatFarTermBound 61 ≤ 1 / (12000 * (61:ℚ)) := by
   have h61 : ((25*(61:ℚ))/68)^61 ≤ ((61).factorial : ℚ) := factorial_lb 61

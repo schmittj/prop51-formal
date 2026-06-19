@@ -25681,12 +25681,75 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_middleSimple
     exact mul_nonneg (Nat.cast_nonneg _) (c_nonneg p)
   exact mul_le_mul_of_nonneg_left hbracket hscale
 
+/-- Lower-threshold middle-band Δ-budget simplification.
+
+For `401 ≤ a`, the upper edge gives only enough room for a `2/3` coefficient
+on the true low-middle band.  The downstream low-strip proof records the
+resulting `10/9` loss relative to the standard `3/5` simple block. -/
+theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_middleTwoThirds
+    {a p : Nat} (ha : 401 ≤ a) (hp : 4 ≤ p)
+    (hmid : a ≤ 3 * p) :
+    positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
+      ≤ (posNhi a : ℚ) * c p *
+          ((2 / 3 : ℚ) * (1 / 2 : ℚ)^p) := by
+  unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+  rw [if_pos hp]
+  unfold positiveLargeTailSoloSharpInnerDeltaBudget
+  have hN_nonneg : 0 ≤ ((posNhi a : ℚ) / 2) := by positivity
+  have hN18 :
+      ((posNhi a : ℚ) / 2) ≤ 18 * (p : ℚ) := by
+    unfold posNhi
+    have hcast : (((12 * a - 8 : Nat) : ℚ)) = 12 * (a : ℚ) - 8 := by
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    have hmidQ : (a : ℚ) ≤ 3 * (p : ℚ) := by
+      exact_mod_cast hmid
+    rw [hcast]
+    nlinarith
+  have hdelta :
+      DeltaRat p ((posNhi a : ℚ) / 2) ≤ 3 / 50 :=
+    DeltaRat_le_three_fiftieth_of_le_eighteen
+      (p := p) hN_nonneg hN18 (by omega : 134 ≤ p)
+  have hpow_nonneg : 0 ≤ (1 / 2 : ℚ)^p := by positivity
+  have hdelta_coef :
+      (72 / 125 : ℚ) + (1 / 2 : ℚ) * (3 / 50) ≤ 2 / 3 := by
+    norm_num
+  have hbracket :
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+        ≤ (2 / 3 : ℚ) * (1 / 2 : ℚ)^p := by
+    have hdelta_term :
+        ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) * (3 / 50 : ℚ) := by
+      exact mul_le_mul_of_nonneg_left hdelta (by positivity)
+    calc
+      (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+          ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
+            DeltaRat p ((posNhi a : ℚ) / 2)
+          ≤ (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
+              ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) * (3 / 50 : ℚ) := by
+            exact add_le_add le_rfl hdelta_term
+      _ =
+          ((72 / 125 : ℚ) + (1 / 2 : ℚ) * (3 / 50)) *
+            (1 / 2 : ℚ)^p := by
+            ring
+      _ ≤ (2 / 3 : ℚ) * (1 / 2 : ℚ)^p :=
+            mul_le_mul_of_nonneg_right hdelta_coef hpow_nonneg
+  have hscale : 0 ≤ (posNhi a : ℚ) * c p := by
+    exact mul_nonneg (Nat.cast_nonneg _) (c_nonneg p)
+  exact mul_le_mul_of_nonneg_left hbracket hscale
+
 /-- The same Δ-budget simplification on the wider proportional band
-`9a ≤ 20p`.  This is not a new mathematical hypothesis; it is a Lean-side
-split that applies the existing final Δ envelope with `m = p`, leaving only
-the low-inner-degree tail for the final solo estimate. -/
+`9a ≤ 20p`.
+
+The threshold is lower than in the final-envelope version because the
+proportional band gives the sharper upper-edge relation
+`N/2 ≤ (40/3) p`; this is one of the documented Lean-side constant splits
+used to close the finite solo strip. -/
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimple
-    {a p : Nat} (ha : 802 ≤ a) (hp : 4 ≤ p)
+    {a p : Nat} (ha : 401 ≤ a) (hp : 4 ≤ p)
     (hprop : 9 * a ≤ 20 * p) :
     positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
       ≤ (posNhi a : ℚ) * c p *
@@ -25694,8 +25757,6 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimpl
   unfold positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
   rw [if_pos hp]
   unfold positiveLargeTailSoloSharpInnerDeltaBudget
-  have hp_pos_nat : 0 < p := by omega
-  have hp_pos : (0 : ℚ) < (p : ℚ) := by exact_mod_cast hp_pos_nat
   have hN_nonneg : 0 ≤ ((posNhi a : ℚ) / 2) := by positivity
   have hN40 :
       ((posNhi a : ℚ) / 2) ≤ (40 / 3 : ℚ) * (p : ℚ) := by
@@ -25708,19 +25769,13 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimpl
     rw [hcast]
     nlinarith
   have hdelta :
-      DeltaRat p ((posNhi a : ℚ) / 2) ≤ (66 / 5 : ℚ) / (p : ℚ) :=
-    DeltaRat_le_final_envelope (p := p) (m := p)
-      (N := ((posNhi a : ℚ) / 2)) hN_nonneg hN40
-      (by omega : 361 ≤ p) (by omega : 2 * p ≤ 3 * p)
+      DeltaRat p ((posNhi a : ℚ) / 2) ≤ 6 / 125 :=
+    DeltaRat_le_six_125_of_le_forty_thirds
+      (p := p) hN_nonneg hN40 (by omega : 181 ≤ p)
   have hpow_nonneg : 0 ≤ (1 / 2 : ℚ)^p := by positivity
   have hdelta_coef :
-      (72 / 125 : ℚ) + (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (p : ℚ))
-        ≤ 3 / 5 := by
-    have hpQ : (275 : ℚ) ≤ (p : ℚ) := by
-      exact_mod_cast (by omega : 275 ≤ p)
-    rw [div_eq_mul_inv]
-    field_simp [hp_pos.ne']
-    nlinarith
+      (72 / 125 : ℚ) + (1 / 2 : ℚ) * (6 / 125) ≤ 3 / 5 := by
+    norm_num
   have hbracket :
       (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
           ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
@@ -25729,20 +25784,17 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_proportionalSimpl
     have hdelta_term :
         ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
             DeltaRat p ((posNhi a : ℚ) / 2)
-          ≤ ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
-              ((66 / 5 : ℚ) / (p : ℚ)) := by
+          ≤ ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) * (6 / 125 : ℚ) := by
       exact mul_le_mul_of_nonneg_left hdelta (by positivity)
     calc
       (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
           ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
             DeltaRat p ((posNhi a : ℚ) / 2)
           ≤ (72 / 125 : ℚ) * (1 / 2 : ℚ)^p +
-              ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) *
-                ((66 / 5 : ℚ) / (p : ℚ)) := by
+              ((1 / 2 : ℚ) * (1 / 2 : ℚ)^p) * (6 / 125 : ℚ) := by
             exact add_le_add le_rfl hdelta_term
       _ =
-          ((72 / 125 : ℚ) +
-              (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (p : ℚ))) *
+          ((72 / 125 : ℚ) + (1 / 2 : ℚ) * (6 / 125)) *
             (1 / 2 : ℚ)^p := by
             ring
       _ ≤ (3 / 5 : ℚ) * (1 / 2 : ℚ)^p :=
@@ -29377,8 +29429,105 @@ theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_lowMiddle_add_ve
           exact hmid h.2
         simp [hmid, hlarge, hprop]
 
+/-- Low-threshold low-degree split.
+
+For `401 ≤ a`, the middle part is available with coefficient `2/3` rather
+than the standard `3/5`; since `(2/3) = (10/9) * (3/5)`, the low-middle simple
+block is charged with an explicit `10/9` factor. -/
+theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_lowMiddle_scaled_add_veryLow
+    {a : Nat} (ha : 401 ≤ a) :
+    positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+      ≤ (10 / 9 : ℚ) *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a +
+        positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a := by
+  unfold positiveLargeTailSoloSharpLowDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum
+    positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
+  rw [Finset.mul_sum, ← Finset.sum_add_distrib]
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hmid : 4 ≤ a - s ∧ a ≤ 3 * (a - s)
+  · by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+    · have hlowMiddle : ¬
+          ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+            4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+        intro h
+        exact h.1.1 hlarge
+      simp [hlarge]
+    · by_cases hprop : 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+      · have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact h.1.2 hprop
+        simp [hprop]
+      · have hlin_nonneg :
+            0 ≤ (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) := by
+          rw [c_one]
+          positivity
+        have hinner :=
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_middleTwoThirds
+            (a := a) (p := a - s) ha hmid.1 hmid.2
+        have hmul := mul_le_mul_of_nonneg_left hinner hlin_nonneg
+        have hcond :
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) :=
+          ⟨⟨hlarge, hprop⟩, hmid⟩
+        rw [if_neg hlarge, if_neg hprop, if_pos hcond,
+          if_neg hlarge, if_neg hprop, if_pos hmid]
+        calc
+          (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+              positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall
+                (posNhi a) (a - s)
+              ≤
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((2 / 3 : ℚ) * (1 / 2 : ℚ)^(a - s))) := hmul
+          _ =
+            (10 / 9 : ℚ) *
+              ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                  (s.factorial : ℚ)) *
+                ((posNhi a : ℚ) * c (a - s) *
+                  ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))) + 0 := by
+              ring
+  · by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+    · have hnotMidSecond : ¬ a ≤ 3 * (a - s) := by
+        intro hsecond
+        exact hmid ⟨hlarge.1, hsecond⟩
+      have hlowMiddle : ¬
+          ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+            4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+        intro h
+        exact h.1.1 hlarge
+      simp [hlarge.1, hlarge.2, hnotMidSecond]
+    · by_cases hprop : 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+      · have hnotMidSecond : ¬ a ≤ 3 * (a - s) := by
+          intro hsecond
+          exact hmid ⟨hprop.1, hsecond⟩
+        have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+          intro hsecond
+          exact hlarge ⟨hprop.1, hsecond⟩
+        have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact h.1.2 hprop
+        simp [hprop.1, hprop.2, hnotMidSecond, hnotLargeSecond]
+      · have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact hmid h.2
+        simp [hmid, hlarge, hprop]
+
 theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
-    {a : Nat} (ha : 802 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
       ≤ positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
         positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a := by
@@ -30271,6 +30420,75 @@ theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_scaled_le_const_of_
     _ = Clow * (a : ℚ) * c a := by
           ring
 
+/-- Low-threshold constant-budget wrapper for the low-degree split.
+
+This packages the explicit `10/9` loss from
+`positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_lowMiddle_scaled_add_veryLow`. -/
+theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_scaled_le_const_of_lowMiddle_veryLow_loose
+    {a : Nat} (ha : 401 ≤ a)
+    {Cmiddle CveryLow Clow : ℚ}
+    (hmiddle :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
+        ≤ Cmiddle * (a : ℚ) * c a)
+    (hveryLow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+        ≤ CveryLow * (a : ℚ) * c a)
+    (hbudget : (10 / 9 : ℚ) * Cmiddle + CveryLow ≤ Clow) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+      ≤ Clow * (a : ℚ) * c a := by
+  have hsplit :=
+    positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_lowMiddle_scaled_add_veryLow
+      (a := a) ha
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
+    mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
+  have hscaled_split :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        ((10 / 9 : ℚ) *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a) :=
+    mul_le_mul_of_nonneg_left hsplit hscale
+  have hmiddle_scaled :
+      (10 / 9 : ℚ) *
+          ((4 : ℚ) * (2 : ℚ)^a *
+            positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a)
+        ≤
+      (10 / 9 : ℚ) * (Cmiddle * (a : ℚ) * c a) :=
+    mul_le_mul_of_nonneg_left hmiddle (by norm_num)
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        ((10 / 9 : ℚ) *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a) :=
+          hscaled_split
+    _ =
+      (10 / 9 : ℚ) *
+          ((4 : ℚ) * (2 : ℚ)^a *
+            positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a) +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a := by
+          ring
+    _ ≤
+      (10 / 9 : ℚ) * (Cmiddle * (a : ℚ) * c a) +
+        CveryLow * (a : ℚ) * c a :=
+          add_le_add hmiddle_scaled hveryLow
+    _ =
+      ((10 / 9 : ℚ) * Cmiddle + CveryLow) * ((a : ℚ) * c a) := by
+          ring
+    _ ≤ Clow * ((a : ℚ) * c a) :=
+          mul_le_mul_of_nonneg_right hbudget hac_nonneg
+    _ = Clow * (a : ℚ) * c a := by
+          ring
+
 /-- Constant-budget version of the sharp large-degree remainder split.
 
 For the product `k = 2` first cell, this is the useful surface: after the
@@ -30303,7 +30521,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_o
       (a := a) (by omega : 722 ≤ a) hmiddle hveryLow le_rfl
   have hsplit :=
     positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
-      (a := a) ha
+      (a := a) (by omega : 401 ≤ a)
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
     mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
@@ -30341,14 +30559,85 @@ theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_o
     _ = C * (a : ℚ) * c a := by
           ring
 
+/-- Low-threshold constant-budget wrapper for the sharp large-degree
+remainder split.
+
+The proportional part still uses the standard `3/5` simplification at
+`401 ≤ a`; only the true low-middle residual carries the extra `10/9` charge. -/
+theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_of_prop_lowMiddle_veryLow_loose
+    {a : Nat} (ha : 401 ≤ a)
+    {Cprop Cmiddle CveryLow C : ℚ}
+    (hprop :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+        ≤ Cprop * (a : ℚ) * c a)
+    (hmiddle :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
+        ≤ Cmiddle * (a : ℚ) * c a)
+    (hveryLow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
+        ≤ CveryLow * (a : ℚ) * c a)
+    (hbudget : Cprop + (10 / 9 : ℚ) * Cmiddle + CveryLow ≤ C) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+      ≤ C * (a : ℚ) * c a := by
+  have hlow :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+        ≤ ((10 / 9 : ℚ) * Cmiddle + CveryLow) * (a : ℚ) * c a :=
+    positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_scaled_le_const_of_lowMiddle_veryLow_loose
+      (a := a) ha hmiddle hveryLow le_rfl
+  have hsplit :=
+    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
+      (a := a) ha
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
+  have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
+    mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
+  have hscaled_split :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a) :=
+    mul_le_mul_of_nonneg_left hsplit hscale
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a) :=
+          hscaled_split
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a := by
+          ring
+    _ ≤
+      Cprop * (a : ℚ) * c a +
+        ((10 / 9 : ℚ) * Cmiddle + CveryLow) * (a : ℚ) * c a :=
+          add_le_add hprop hlow
+    _ =
+      (Cprop + (10 / 9 : ℚ) * Cmiddle + CveryLow) *
+        ((a : ℚ) * c a) := by
+          ring
+    _ ≤ C * ((a : ℚ) * c a) :=
+          mul_le_mul_of_nonneg_right hbudget hac_nonneg
+    _ = C * (a : ℚ) * c a := by
+          ring
+
 /-- Constant-budget sharp solo split estimate converted to the final
 `(10/7)^a` target on the whole prefix/tail range.
 
 This is the prefix-friendly solo route: the hard residual components are
-bounded by absolute constants, and for `a ≥ 802` the final exponential
+bounded by absolute constants, and for `a ≥ 401` the final exponential
 envelope easily absorbs the total `290 * a * c a` cost. -/
 theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const
-    {a : Nat} (ha : 802 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
       ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
@@ -30374,8 +30663,8 @@ theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_targe
       (4 : ℚ) * (2 : ℚ)^a *
           positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
         ≤ 150 * (a : ℚ) * c a :=
-    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_of_prop_lowMiddle_veryLow
-      (a := a) (by omega : 802 ≤ a)
+    positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_of_prop_lowMiddle_veryLow_loose
+      (a := a) ha
       (Cprop := 20736 / 625) (Cmiddle := 20736 / 625)
       (CveryLow := 3) (C := 150)
       hprop hmiddle hveryLow (by norm_num)
@@ -30572,7 +30861,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_half_ta
       (a := a) ha
   have hsplit :=
     positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
-      (a := a) (by omega : 802 ≤ a)
+      (a := a) (by omega : 401 ≤ a)
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   have hscaled_split :
       (4 : ℚ) * (2 : ℚ)^a *
