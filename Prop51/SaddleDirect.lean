@@ -1472,4 +1472,796 @@ theorem one_add_pow_le_expPrefix {d : ℚ} (hd : 0 ≤ d) (n : Nat) :
       _ = expPrefix (((n + 1 : Nat) : ℚ) * d) (n + 1) := by
             simp [expPrefix]
 
+private theorem nat_mul_pred_factorial_cast_eq_factorial
+    {n : Nat} (hn : 1 ≤ n) :
+    (n : ℚ) * ((n - 1).factorial : ℚ) = (n.factorial : ℚ) := by
+  rw [show n = (n - 1) + 1 by omega, Nat.factorial_succ, Nat.cast_mul]
+  norm_num
+
+/-- Small-branch normalization from the lower bound on `c_k`.
+
+This is the algebraic absorption
+`(6s)^k / c_k <= (36/5) k s^k/k!`, stated without division. -/
+theorem smallSaddlePrefactor_le_monomial {s k : Nat} (hk : 1 ≤ k) :
+    ((6 : ℚ) * (s : ℚ))^k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          ((s : ℚ)^k / (k.factorial : ℚ)) := by
+  have hck := c_lb k hk
+  have hscale_nonneg :
+      0 ≤ (36 / 5 : ℚ) * (k : ℚ) *
+          ((s : ℚ)^k / (k.factorial : ℚ)) := by
+    positivity
+  have hfact := nat_mul_pred_factorial_cast_eq_factorial (n := k) hk
+  have hfac_pos : (0 : ℚ) < (k.factorial : ℚ) := by
+    exact_mod_cast k.factorial_pos
+  calc
+    ((6 : ℚ) * (s : ℚ))^k
+        =
+        ((36 / 5 : ℚ) * (k : ℚ) *
+            ((s : ℚ)^k / (k.factorial : ℚ))) *
+          ((5 / 36 : ℚ) * ((6 : ℚ)^k * ((k - 1).factorial : ℚ))) := by
+          rw [mul_pow]
+          field_simp [hfac_pos.ne']
+          rw [← hfact]
+          ring
+    _ ≤ ((36 / 5 : ℚ) * (k : ℚ) *
+            ((s : ℚ)^k / (k.factorial : ℚ))) * c k :=
+          mul_le_mul_of_nonneg_left hck hscale_nonneg
+    _ = (36 / 5 : ℚ) * (k : ℚ) * c k *
+          ((s : ℚ)^k / (k.factorial : ℚ)) := by ring
+
+theorem smallSaddlePrefactor_le_prefix {s k : Nat} (hk : 1 ≤ k) :
+    ((6 : ℚ) * (s : ℚ))^k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix (s : ℚ) k := by
+  have hs_nonneg : 0 ≤ (s : ℚ) := Nat.cast_nonneg s
+  have hmono :
+      (s : ℚ)^k / (k.factorial : ℚ) ≤ expPrefix (s : ℚ) k :=
+    monomial_le_expPrefix hs_nonneg le_rfl
+  have hscale_nonneg :
+      0 ≤ (36 / 5 : ℚ) * (k : ℚ) * c k := by
+    exact mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg k)) (c_nonneg k)
+  calc
+    ((6 : ℚ) * (s : ℚ))^k
+        ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            ((s : ℚ)^k / (k.factorial : ℚ)) :=
+          smallSaddlePrefactor_le_monomial hk
+    _ ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix (s : ℚ) k :=
+          mul_le_mul_of_nonneg_left hmono hscale_nonneg
+
+/-- Tempered `B+` normalization:
+`(45k/17)^k / c_k <= (36/5) k (6/5)^k`. -/
+theorem temperedBPrefactor_le_pow {k : Nat} (hk : 1 ≤ k) :
+    (45 * (k : ℚ) / 17)^k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          (6 / 5 : ℚ)^k := by
+  have hck := c_lb k hk
+  have hfactorial := factorial_lb k
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk
+  have hscale_nonneg :
+      0 ≤ (36 / 5 : ℚ) * (k : ℚ) * (6 / 5 : ℚ)^k := by
+    positivity
+  have hfact := nat_mul_pred_factorial_cast_eq_factorial (n := k) hk
+  have hck_scaled :
+      (36 / 5 : ℚ) * (k : ℚ) * c k * (6 / 5 : ℚ)^k
+        ≥ (6 : ℚ)^k * (k.factorial : ℚ) * (6 / 5 : ℚ)^k := by
+    calc
+      (6 : ℚ)^k * (k.factorial : ℚ) * (6 / 5 : ℚ)^k
+          =
+          ((36 / 5 : ℚ) * (k : ℚ) *
+            ((6 / 5 : ℚ)^k)) *
+            ((5 / 36 : ℚ) * ((6 : ℚ)^k * ((k - 1).factorial : ℚ))) := by
+            rw [← hfact]
+            ring
+      _ ≤ ((36 / 5 : ℚ) * (k : ℚ) *
+              ((6 / 5 : ℚ)^k)) * c k :=
+            mul_le_mul_of_nonneg_left hck hscale_nonneg
+      _ = (36 / 5 : ℚ) * (k : ℚ) * c k * (6 / 5 : ℚ)^k := by ring
+  have hprefactor :
+      (45 * (k : ℚ) / 17)^k
+        ≤ (6 : ℚ)^k * (k.factorial : ℚ) * (6 / 5 : ℚ)^k := by
+    have hmul := mul_le_mul_of_nonneg_left hfactorial
+      (by positivity : 0 ≤ (6 : ℚ)^k * (6 / 5 : ℚ)^k)
+    calc
+      (45 * (k : ℚ) / 17)^k
+          = (6 : ℚ)^k * ((25 * (k : ℚ)) / 68)^k *
+              (6 / 5 : ℚ)^k := by
+            rw [← mul_pow, ← mul_pow]
+            field_simp [show (17 : ℚ) ≠ 0 by norm_num]
+            ring
+      _ ≤ (6 : ℚ)^k * (k.factorial : ℚ) *
+              (6 / 5 : ℚ)^k := by
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hmul
+  exact hprefactor.trans hck_scaled
+
+theorem temperedBPrefactor_le_prefix {k : Nat} (hk : 1 ≤ k) :
+    (45 * (k : ℚ) / 17)^k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix ((k : ℚ) / 5) k := by
+  have hpow :
+      (6 / 5 : ℚ)^k ≤ expPrefix ((k : ℚ) / 5) k := by
+    have h := one_add_pow_le_expPrefix (d := (1 / 5 : ℚ)) (by norm_num) k
+    have hbase : (1 + (1 / 5 : ℚ)) = 6 / 5 := by norm_num
+    have harg : (k : ℚ) * (1 / 5 : ℚ) = (k : ℚ) / 5 := by ring
+    rw [hbase, harg] at h
+    exact h
+  have hscale_nonneg :
+      0 ≤ (36 / 5 : ℚ) * (k : ℚ) * c k := by
+    exact mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg k)) (c_nonneg k)
+  calc
+    (45 * (k : ℚ) / 17)^k
+        ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            (6 / 5 : ℚ)^k :=
+          temperedBPrefactor_le_pow hk
+    _ ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix ((k : ℚ) / 5) k :=
+          mul_le_mul_of_nonneg_left hpow hscale_nonneg
+
+/-- Tempered `Q` normalization, including the outside `2 * 2^j` factor. -/
+theorem temperedQPrefactor_le_pow {j : Nat} (hj : 1 ≤ j) :
+    2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+      ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+          (6 / 5 : ℚ)^j := by
+  have hck := c_lb j hj
+  have hfactorial := factorial_lb j
+  have hscale_nonneg :
+      0 ≤ (72 / 5 : ℚ) * (j : ℚ) * (6 / 5 : ℚ)^j := by
+    positivity
+  have hfact := nat_mul_pred_factorial_cast_eq_factorial (n := j) hj
+  have hck_scaled :
+      (72 / 5 : ℚ) * (j : ℚ) * c j * (6 / 5 : ℚ)^j
+        ≥ 2 * (6 : ℚ)^j * (j.factorial : ℚ) * (6 / 5 : ℚ)^j := by
+    calc
+      2 * (6 : ℚ)^j * (j.factorial : ℚ) * (6 / 5 : ℚ)^j
+          =
+          ((72 / 5 : ℚ) * (j : ℚ) *
+            ((6 / 5 : ℚ)^j)) *
+            ((5 / 36 : ℚ) * ((6 : ℚ)^j * ((j - 1).factorial : ℚ))) := by
+            rw [← hfact]
+            ring
+      _ ≤ ((72 / 5 : ℚ) * (j : ℚ) *
+              ((6 / 5 : ℚ)^j)) * c j :=
+            mul_le_mul_of_nonneg_left hck hscale_nonneg
+      _ = (72 / 5 : ℚ) * (j : ℚ) * c j * (6 / 5 : ℚ)^j := by ring
+  have hprefactor :
+      2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+        ≤ 2 * (6 : ℚ)^j * (j.factorial : ℚ) *
+            (6 / 5 : ℚ)^j := by
+    have hmul := mul_le_mul_of_nonneg_left hfactorial
+      (by positivity : 0 ≤ 2 * (6 : ℚ)^j * (6 / 5 : ℚ)^j)
+    calc
+      2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+          = 2 * (6 : ℚ)^j * ((25 * (j : ℚ)) / 68)^j *
+              (6 / 5 : ℚ)^j := by
+            calc
+              2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+                  = 2 * ((2 : ℚ)^j * (45 * (j : ℚ) / 34)^j) := by ring
+              _ = 2 * ((2 : ℚ) * (45 * (j : ℚ) / 34))^j := by
+                    rw [← mul_pow]
+              _ = 2 * ((6 : ℚ) * ((25 * (j : ℚ)) / 68) *
+                    (6 / 5 : ℚ))^j := by
+                    congr 1
+                    congr 1
+                    field_simp [show (34 : ℚ) ≠ 0 by norm_num,
+                      show (68 : ℚ) ≠ 0 by norm_num]
+                    ring
+              _ = 2 * (6 : ℚ)^j * ((25 * (j : ℚ)) / 68)^j *
+                    (6 / 5 : ℚ)^j := by
+                    rw [mul_pow, mul_pow]
+                    ring
+      _ ≤ 2 * (6 : ℚ)^j * (j.factorial : ℚ) *
+              (6 / 5 : ℚ)^j := by
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hmul
+  exact hprefactor.trans hck_scaled
+
+theorem temperedQPrefactor_le_prefix {j : Nat} (hj : 1 ≤ j) :
+    2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+      ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+          expPrefix ((j : ℚ) / 5) j := by
+  have hpow :
+      (6 / 5 : ℚ)^j ≤ expPrefix ((j : ℚ) / 5) j := by
+    have h := one_add_pow_le_expPrefix (d := (1 / 5 : ℚ)) (by norm_num) j
+    have hbase : (1 + (1 / 5 : ℚ)) = 6 / 5 := by norm_num
+    have harg : (j : ℚ) * (1 / 5 : ℚ) = (j : ℚ) / 5 := by ring
+    rw [hbase, harg] at h
+    exact h
+  have hscale_nonneg :
+      0 ≤ (72 / 5 : ℚ) * (j : ℚ) * c j := by
+    exact mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg j)) (c_nonneg j)
+  calc
+    2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+        ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+            (6 / 5 : ℚ)^j :=
+          temperedQPrefactor_le_pow hj
+    _ ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+            expPrefix ((j : ℚ) / 5) j :=
+          mul_le_mul_of_nonneg_left hpow hscale_nonneg
+
+/-- Small-branch normalized `B+` estimate before prefix convolution. -/
+theorem Bplusq_le_small_normalizedPrefix
+    {N s k : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s)
+    (hNs : N ≤ s * s) :
+    Bplusq N k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix (s : ℚ) k *
+          expPrefix (5 * (s : ℚ) / 36 + 1 / 5) k := by
+  let G : ℚ := 5 * (s : ℚ) / 36 + 1 / 5
+  have hG_nonneg : 0 ≤ G := by
+    dsimp [G]
+    positivity
+  have hprefix_nonneg : 0 ≤ expPrefix G k :=
+    expPrefix_nonneg hG_nonneg k
+  have hcoeff :
+      Bplusq N k ≤ ((6 : ℚ) * (s : ℚ))^k * expPrefix G k := by
+    dsimp [G]
+    exact Bplusq_le_small_saddle hs hk hks hNs
+  have hpref :
+      ((6 : ℚ) * (s : ℚ))^k
+        ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix (s : ℚ) k :=
+    smallSaddlePrefactor_le_prefix (by omega : 1 ≤ k)
+  calc
+    Bplusq N k
+        ≤ ((6 : ℚ) * (s : ℚ))^k * expPrefix G k := hcoeff
+    _ ≤ ((36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix (s : ℚ) k) * expPrefix G k :=
+          mul_le_mul_of_nonneg_right hpref hprefix_nonneg
+    _ = (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix (s : ℚ) k * expPrefix G k := by ring
+
+/-- Tempered normalized `B+` estimate before prefix convolution. -/
+theorem Bplusq_le_tempered_normalizedPrefix
+    {N k : Nat} (hk : 40 ≤ k) :
+    Bplusq N k
+      ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix ((k : ℚ) / 5) k *
+          expPrefix
+            (17 * (N : ℚ) / (54 * (k : ℚ)) +
+              4 * (N : ℚ) / (25 * (k : ℚ))) k := by
+  let G : ℚ :=
+    17 * (N : ℚ) / (54 * (k : ℚ)) +
+      4 * (N : ℚ) / (25 * (k : ℚ))
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast (by omega : 0 < k)
+  have hG_nonneg : 0 ≤ G := by
+    dsimp [G]
+    positivity
+  have hprefix_nonneg : 0 ≤ expPrefix G k :=
+    expPrefix_nonneg hG_nonneg k
+  have hcoeff :
+      Bplusq N k ≤ (45 * (k : ℚ) / 17)^k * expPrefix G k := by
+    dsimp [G]
+    exact Bplusq_le_tempered_saddle hk
+  have hpref :
+      (45 * (k : ℚ) / 17)^k
+        ≤ (36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix ((k : ℚ) / 5) k :=
+    temperedBPrefactor_le_prefix (by omega : 1 ≤ k)
+  calc
+    Bplusq N k
+        ≤ (45 * (k : ℚ) / 17)^k * expPrefix G k := hcoeff
+    _ ≤ ((36 / 5 : ℚ) * (k : ℚ) * c k *
+            expPrefix ((k : ℚ) / 5) k) * expPrefix G k :=
+          mul_le_mul_of_nonneg_right hpref hprefix_nonneg
+    _ = (36 / 5 : ℚ) * (k : ℚ) * c k *
+          expPrefix ((k : ℚ) / 5) k * expPrefix G k := by ring
+
+/-- Tempered normalized `Q` estimate before prefix convolution.
+The left side includes the external `2 * 2^j` factor from the product target. -/
+theorem two_pow_Qq_le_tempered_normalizedPrefix
+    {N j : Nat} (hj : 40 ≤ j) :
+    2 * (2 : ℚ)^j * Qq N j
+      ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+          expPrefix ((j : ℚ) / 5) j *
+          expPrefix
+            (17 * (N : ℚ) / (108 * (j : ℚ)) +
+              2 * (N : ℚ) / (25 * (j : ℚ))) j := by
+  let G : ℚ :=
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+      2 * (N : ℚ) / (25 * (j : ℚ))
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast (by omega : 0 < j)
+  have hG_nonneg : 0 ≤ G := by
+    dsimp [G]
+    positivity
+  have hprefix_nonneg : 0 ≤ expPrefix G j :=
+    expPrefix_nonneg hG_nonneg j
+  have hcoeff :
+      Qq N j ≤ (45 * (j : ℚ) / 34)^j * expPrefix G j := by
+    dsimp [G]
+    exact Qq_le_tempered_saddle hj
+  have hscaled :
+      2 * (2 : ℚ)^j * Qq N j
+        ≤ (2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j) *
+            expPrefix G j := by
+    calc
+      2 * (2 : ℚ)^j * Qq N j
+          ≤ 2 * (2 : ℚ)^j *
+              ((45 * (j : ℚ) / 34)^j * expPrefix G j) :=
+            mul_le_mul_of_nonneg_left hcoeff (by positivity)
+      _ = (2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j) *
+            expPrefix G j := by ring
+  have hpref :
+      2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j
+        ≤ (72 / 5 : ℚ) * (j : ℚ) * c j *
+            expPrefix ((j : ℚ) / 5) j :=
+    temperedQPrefactor_le_prefix (by omega : 1 ≤ j)
+  calc
+    2 * (2 : ℚ)^j * Qq N j
+        ≤ (2 * (2 : ℚ)^j * (45 * (j : ℚ) / 34)^j) *
+            expPrefix G j := hscaled
+    _ ≤ ((72 / 5 : ℚ) * (j : ℚ) * c j *
+            expPrefix ((j : ℚ) / 5) j) * expPrefix G j :=
+          mul_le_mul_of_nonneg_right hpref hprefix_nonneg
+    _ = (72 / 5 : ℚ) * (j : ℚ) * c j *
+          expPrefix ((j : ℚ) / 5) j * expPrefix G j := by ring
+
+theorem expPrefix_mul_four_le {x y z w : ℚ}
+    (hx : 0 ≤ x) (hy : 0 ≤ y) (hz : 0 ≤ z) (hw : 0 ≤ w)
+    {m n p q M : Nat} (hM : m + n + p + q ≤ M) :
+    expPrefix x m * expPrefix y n *
+        expPrefix z p * expPrefix w q
+      ≤ expPrefix (x + y + z + w) M := by
+  have hxy : expPrefix x m * expPrefix y n ≤ expPrefix (x + y) (m + n) :=
+    expPrefix_mul_le hx hy m n
+  have hzw : expPrefix z p * expPrefix w q ≤ expPrefix (z + w) (p + q) :=
+    expPrefix_mul_le hz hw p q
+  have hzw_nonneg : 0 ≤ expPrefix z p * expPrefix w q :=
+    mul_nonneg (expPrefix_nonneg hz p) (expPrefix_nonneg hw q)
+  have hxy_sum_nonneg : 0 ≤ expPrefix (x + y) (m + n) :=
+    expPrefix_nonneg (add_nonneg hx hy) (m + n)
+  have hprod :
+      (expPrefix x m * expPrefix y n) *
+          (expPrefix z p * expPrefix w q)
+        ≤ expPrefix (x + y) (m + n) *
+            expPrefix (z + w) (p + q) :=
+    mul_le_mul hxy hzw hzw_nonneg hxy_sum_nonneg
+  have hconv :
+      expPrefix (x + y) (m + n) * expPrefix (z + w) (p + q)
+        ≤ expPrefix ((x + y) + (z + w)) ((m + n) + (p + q)) :=
+    expPrefix_mul_le (add_nonneg hx hy) (add_nonneg hz hw) (m + n) (p + q)
+  have hidx :
+      expPrefix ((x + y) + (z + w)) ((m + n) + (p + q))
+        ≤ expPrefix ((x + y) + (z + w)) M :=
+    expPrefix_mono_index
+      (add_nonneg (add_nonneg hx hy) (add_nonneg hz hw))
+      (by omega)
+  calc
+    expPrefix x m * expPrefix y n *
+        expPrefix z p * expPrefix w q
+        = (expPrefix x m * expPrefix y n) *
+            (expPrefix z p * expPrefix w q) := by ring
+    _ ≤ expPrefix (x + y) (m + n) *
+          expPrefix (z + w) (p + q) := hprod
+    _ ≤ expPrefix ((x + y) + (z + w)) ((m + n) + (p + q)) := hconv
+    _ ≤ expPrefix ((x + y) + (z + w)) M := hidx
+    _ = expPrefix (x + y + z + w) M := by ring
+
+/-- Small-branch product core before replacing the actual `Q` gas by an
+`a/j` envelope.  This is the direct replacement for the retired exact
+upper-edge split-product route. -/
+theorem Bq_Qq_small_prefixCore
+    {a N s k j : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s)
+    (hNs : N ≤ s * s) (hj : 40 ≤ j) (hka : k + j ≤ a) :
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+      ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((s : ℚ) + (5 * (s : ℚ) / 36 + 1 / 5) +
+              (j : ℚ) / 5 +
+              (17 * (N : ℚ) / (108 * (j : ℚ)) +
+                2 * (N : ℚ) / (25 * (j : ℚ))))
+            (2 * a) := by
+  let Gx : ℚ := 5 * (s : ℚ) / 36 + 1 / 5
+  let Gy : ℚ :=
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+      2 * (N : ℚ) / (25 * (j : ℚ))
+  let Bbd : ℚ :=
+    (36 / 5 : ℚ) * (k : ℚ) * c k *
+      expPrefix (s : ℚ) k * expPrefix Gx k
+  let Qbd : ℚ :=
+    (72 / 5 : ℚ) * (j : ℚ) * c j *
+      expPrefix ((j : ℚ) / 5) j * expPrefix Gy j
+  let C : ℚ := (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j)
+  have hs_nonneg : 0 ≤ (s : ℚ) := Nat.cast_nonneg s
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast (by omega : 0 < j)
+  have hj5_nonneg : 0 ≤ (j : ℚ) / 5 := by positivity
+  have hGx_nonneg : 0 ≤ Gx := by
+    dsimp [Gx]
+    positivity
+  have hGy_nonneg : 0 ≤ Gy := by
+    dsimp [Gy]
+    positivity
+  have hQq_nonneg : 0 ≤ Qq N j := by
+    unfold Qq
+    refine expCoeff_nonneg ?_ j
+    intro r
+    exact div_nonneg
+      (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) (c_nonneg r))
+      (by positivity)
+  have hqscaled_nonneg : 0 ≤ 2 * (2 : ℚ)^j * Qq N j := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (pow_nonneg (by norm_num) j))
+      hQq_nonneg
+  have hBbd_nonneg : 0 ≤ Bbd := by
+    dsimp [Bbd]
+    exact mul_nonneg
+      (mul_nonneg
+        (mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg k)) (c_nonneg k))
+        (expPrefix_nonneg hs_nonneg k))
+      (expPrefix_nonneg hGx_nonneg k)
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    have hscalar :
+        0 ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) := by
+      positivity
+    have hcprod : 0 ≤ c k * c j :=
+      mul_nonneg (c_nonneg k) (c_nonneg j)
+    exact mul_nonneg hscalar hcprod
+  have hb :
+      Bplusq N k ≤ Bbd := by
+    dsimp [Bbd, Gx]
+    exact Bplusq_le_small_normalizedPrefix hs hk hks hNs
+  have hq :
+      2 * (2 : ℚ)^j * Qq N j ≤ Qbd := by
+    dsimp [Qbd, Gy]
+    exact two_pow_Qq_le_tempered_normalizedPrefix hj
+  have hBq :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) := by
+    calc
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+          = Bq N k * (2 * (2 : ℚ)^j * Qq N j) := by ring
+      _ ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) :=
+          mul_le_mul_of_nonneg_right (Bq_le_Bplusq N k) hqscaled_nonneg
+  have hbounds :
+      Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) ≤ Bbd * Qbd :=
+    mul_le_mul hb hq hqscaled_nonneg hBbd_nonneg
+  have hprefix :
+      expPrefix (s : ℚ) k * expPrefix Gx k *
+          expPrefix ((j : ℚ) / 5) j * expPrefix Gy j
+        ≤ expPrefix ((s : ℚ) + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+    expPrefix_mul_four_le hs_nonneg hGx_nonneg hj5_nonneg hGy_nonneg
+      (m := k) (n := k) (p := j) (q := j) (M := 2 * a) (by omega)
+  have hprefix_scaled :
+      Bbd * Qbd
+        ≤ C * expPrefix ((s : ℚ) + Gx + (j : ℚ) / 5 + Gy) (2 * a) := by
+    calc
+      Bbd * Qbd
+          = C * (expPrefix (s : ℚ) k * expPrefix Gx k *
+              expPrefix ((j : ℚ) / 5) j * expPrefix Gy j) := by
+            dsimp [Bbd, Qbd, C]
+            ring
+      _ ≤ C * expPrefix ((s : ℚ) + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+          mul_le_mul_of_nonneg_left hprefix hC_nonneg
+  calc
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) := hBq
+    _ ≤ Bbd * Qbd := hbounds
+    _ ≤ C * expPrefix ((s : ℚ) + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+      hprefix_scaled
+    _ =
+        (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((s : ℚ) + (5 * (s : ℚ) / 36 + 1 / 5) +
+              (j : ℚ) / 5 +
+              (17 * (N : ℚ) / (108 * (j : ℚ)) +
+                2 * (N : ℚ) / (25 * (j : ℚ))))
+            (2 * a) := by
+          dsimp [C, Gx, Gy]
+
+/-- Tempered product core before replacing the actual `B`/`Q` gases by
+`a/k` and `a/j` envelopes. -/
+theorem Bq_Qq_tempered_prefixCore
+    {a N k j : Nat} (hk : 40 ≤ k) (hj : 40 ≤ j) (hka : k + j ≤ a) :
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+      ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((k : ℚ) / 5 +
+              (17 * (N : ℚ) / (54 * (k : ℚ)) +
+                4 * (N : ℚ) / (25 * (k : ℚ))) +
+              (j : ℚ) / 5 +
+              (17 * (N : ℚ) / (108 * (j : ℚ)) +
+                2 * (N : ℚ) / (25 * (j : ℚ))))
+            (2 * a) := by
+  let Gx : ℚ :=
+    17 * (N : ℚ) / (54 * (k : ℚ)) +
+      4 * (N : ℚ) / (25 * (k : ℚ))
+  let Gy : ℚ :=
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+      2 * (N : ℚ) / (25 * (j : ℚ))
+  let Bbd : ℚ :=
+    (36 / 5 : ℚ) * (k : ℚ) * c k *
+      expPrefix ((k : ℚ) / 5) k * expPrefix Gx k
+  let Qbd : ℚ :=
+    (72 / 5 : ℚ) * (j : ℚ) * c j *
+      expPrefix ((j : ℚ) / 5) j * expPrefix Gy j
+  let C : ℚ := (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j)
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast (by omega : 0 < k)
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast (by omega : 0 < j)
+  have hk5_nonneg : 0 ≤ (k : ℚ) / 5 := by positivity
+  have hj5_nonneg : 0 ≤ (j : ℚ) / 5 := by positivity
+  have hGx_nonneg : 0 ≤ Gx := by
+    dsimp [Gx]
+    positivity
+  have hGy_nonneg : 0 ≤ Gy := by
+    dsimp [Gy]
+    positivity
+  have hQq_nonneg : 0 ≤ Qq N j := by
+    unfold Qq
+    refine expCoeff_nonneg ?_ j
+    intro r
+    exact div_nonneg
+      (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) (c_nonneg r))
+      (by positivity)
+  have hqscaled_nonneg : 0 ≤ 2 * (2 : ℚ)^j * Qq N j := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (pow_nonneg (by norm_num) j))
+      hQq_nonneg
+  have hBbd_nonneg : 0 ≤ Bbd := by
+    dsimp [Bbd]
+    exact mul_nonneg
+      (mul_nonneg
+        (mul_nonneg (mul_nonneg (by norm_num) (Nat.cast_nonneg k)) (c_nonneg k))
+        (expPrefix_nonneg hk5_nonneg k))
+      (expPrefix_nonneg hGx_nonneg k)
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    have hscalar :
+        0 ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) := by
+      positivity
+    have hcprod : 0 ≤ c k * c j :=
+      mul_nonneg (c_nonneg k) (c_nonneg j)
+    exact mul_nonneg hscalar hcprod
+  have hb :
+      Bplusq N k ≤ Bbd := by
+    dsimp [Bbd, Gx]
+    exact Bplusq_le_tempered_normalizedPrefix hk
+  have hq :
+      2 * (2 : ℚ)^j * Qq N j ≤ Qbd := by
+    dsimp [Qbd, Gy]
+    exact two_pow_Qq_le_tempered_normalizedPrefix hj
+  have hBq :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) := by
+    calc
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+          = Bq N k * (2 * (2 : ℚ)^j * Qq N j) := by ring
+      _ ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) :=
+          mul_le_mul_of_nonneg_right (Bq_le_Bplusq N k) hqscaled_nonneg
+  have hbounds :
+      Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) ≤ Bbd * Qbd :=
+    mul_le_mul hb hq hqscaled_nonneg hBbd_nonneg
+  have hprefix :
+      expPrefix ((k : ℚ) / 5) k * expPrefix Gx k *
+          expPrefix ((j : ℚ) / 5) j * expPrefix Gy j
+        ≤ expPrefix ((k : ℚ) / 5 + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+    expPrefix_mul_four_le hk5_nonneg hGx_nonneg hj5_nonneg hGy_nonneg
+      (m := k) (n := k) (p := j) (q := j) (M := 2 * a) (by omega)
+  have hprefix_scaled :
+      Bbd * Qbd
+        ≤ C * expPrefix ((k : ℚ) / 5 + Gx + (j : ℚ) / 5 + Gy) (2 * a) := by
+    calc
+      Bbd * Qbd
+          = C * (expPrefix ((k : ℚ) / 5) k * expPrefix Gx k *
+              expPrefix ((j : ℚ) / 5) j * expPrefix Gy j) := by
+            dsimp [Bbd, Qbd, C]
+            ring
+      _ ≤ C * expPrefix ((k : ℚ) / 5 + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+          mul_le_mul_of_nonneg_left hprefix hC_nonneg
+  calc
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ Bplusq N k * (2 * (2 : ℚ)^j * Qq N j) := hBq
+    _ ≤ Bbd * Qbd := hbounds
+    _ ≤ C * expPrefix ((k : ℚ) / 5 + Gx + (j : ℚ) / 5 + Gy) (2 * a) :=
+      hprefix_scaled
+    _ =
+        (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((k : ℚ) / 5 +
+              (17 * (N : ℚ) / (54 * (k : ℚ)) +
+                4 * (N : ℚ) / (25 * (k : ℚ))) +
+              (j : ℚ) / 5 +
+              (17 * (N : ℚ) / (108 * (j : ℚ)) +
+                2 * (N : ℚ) / (25 * (j : ℚ))))
+            (2 * a) := by
+          dsimp [C, Gx, Gy]
+
+theorem temperedBGas_le_a_over_k
+    {a N k : Nat} (hk : 1 ≤ k) (hNa : N ≤ 12 * a) :
+    17 * (N : ℚ) / (54 * (k : ℚ)) +
+        4 * (N : ℚ) / (25 * (k : ℚ))
+      ≤ (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) := by
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk
+  have hNaQ : (N : ℚ) ≤ 12 * (a : ℚ) := by
+    have hcast : (N : ℚ) ≤ ((12 * a : Nat) : ℚ) := by
+      exact_mod_cast hNa
+    simpa [Nat.cast_mul] using hcast
+  have hNdiv :
+      (N : ℚ) / (k : ℚ) ≤ (12 * (a : ℚ)) / (k : ℚ) :=
+    div_le_div_of_nonneg_right hNaQ hkpos.le
+  have hgas_eq :
+      17 * (N : ℚ) / (54 * (k : ℚ)) +
+          4 * (N : ℚ) / (25 * (k : ℚ))
+        = (641 / 1350 : ℚ) * ((N : ℚ) / (k : ℚ)) := by
+    field_simp [hkpos.ne']
+    ring
+  calc
+    17 * (N : ℚ) / (54 * (k : ℚ)) +
+        4 * (N : ℚ) / (25 * (k : ℚ))
+        = (641 / 1350 : ℚ) * ((N : ℚ) / (k : ℚ)) := hgas_eq
+    _ ≤ (641 / 1350 : ℚ) * ((12 * (a : ℚ)) / (k : ℚ)) :=
+        mul_le_mul_of_nonneg_left hNdiv (by norm_num)
+    _ = (1282 / 225 : ℚ) * (a : ℚ) / (k : ℚ) := by ring
+    _ ≤ (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) := by
+        have hcoeff : (1282 / 225 : ℚ) ≤ 57 / 10 := by norm_num
+        have hak_nonneg : 0 ≤ (a : ℚ) * (k : ℚ)⁻¹ :=
+          mul_nonneg (Nat.cast_nonneg a) (inv_nonneg.mpr hkpos.le)
+        simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using
+          mul_le_mul_of_nonneg_right hcoeff hak_nonneg
+
+theorem temperedQGas_le_a_over_j
+    {a N j : Nat} (hj : 1 ≤ j) (hNa : N ≤ 12 * a) :
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+        2 * (N : ℚ) / (25 * (j : ℚ))
+      ≤ (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) := by
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast hj
+  have hNaQ : (N : ℚ) ≤ 12 * (a : ℚ) := by
+    have hcast : (N : ℚ) ≤ ((12 * a : Nat) : ℚ) := by
+      exact_mod_cast hNa
+    simpa [Nat.cast_mul] using hcast
+  have hNdiv :
+      (N : ℚ) / (j : ℚ) ≤ (12 * (a : ℚ)) / (j : ℚ) :=
+    div_le_div_of_nonneg_right hNaQ hjpos.le
+  have hgas_eq :
+      17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ))
+        = (641 / 2700 : ℚ) * ((N : ℚ) / (j : ℚ)) := by
+    field_simp [hjpos.ne']
+    ring
+  calc
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+        2 * (N : ℚ) / (25 * (j : ℚ))
+        = (641 / 2700 : ℚ) * ((N : ℚ) / (j : ℚ)) := hgas_eq
+    _ ≤ (641 / 2700 : ℚ) * ((12 * (a : ℚ)) / (j : ℚ)) :=
+        mul_le_mul_of_nonneg_left hNdiv (by norm_num)
+    _ = (641 / 225 : ℚ) * (a : ℚ) / (j : ℚ) := by ring
+    _ ≤ (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) := by
+        have hcoeff : (641 / 225 : ℚ) ≤ 29 / 10 := by norm_num
+        have haj_nonneg : 0 ≤ (a : ℚ) * (j : ℚ)⁻¹ :=
+          mul_nonneg (Nat.cast_nonneg a) (inv_nonneg.mpr hjpos.le)
+        simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using
+          mul_le_mul_of_nonneg_right hcoeff haj_nonneg
+
+private theorem productCoreConstant_nonneg (k j : Nat) :
+    0 ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) := by
+  have hscalar :
+      0 ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) := by
+    positivity
+  have hcprod : 0 ≤ c k * c j :=
+    mul_nonneg (c_nonneg k) (c_nonneg j)
+  exact mul_nonneg hscalar hcprod
+
+/-- Small-branch reusable product inequality in the normalized core form
+recommended by the direct saddle route. -/
+theorem Bq_Qq_small_core
+    {a N s k j : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s)
+    (hNs : N ≤ s * s) (hj : 40 ≤ j) (hka : k + j ≤ a)
+    (hNa : N ≤ 12 * a) :
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+      ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            (41 * (s : ℚ) / 36 + (j : ℚ) / 5 +
+              (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) + 1 / 5)
+            (2 * a) := by
+  let E0 : ℚ :=
+    (s : ℚ) + (5 * (s : ℚ) / 36 + 1 / 5) +
+      (j : ℚ) / 5 +
+      (17 * (N : ℚ) / (108 * (j : ℚ)) +
+        2 * (N : ℚ) / (25 * (j : ℚ)))
+  let E1 : ℚ :=
+    41 * (s : ℚ) / 36 + (j : ℚ) / 5 +
+      (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) + 1 / 5
+  let C : ℚ := (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j)
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast (by omega : 0 < j)
+  have hE0_nonneg : 0 ≤ E0 := by
+    dsimp [E0]
+    positivity
+  have hGy_le :
+      17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ))
+        ≤ (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) :=
+    temperedQGas_le_a_over_j (by omega : 1 ≤ j) hNa
+  have hE0_le : E0 ≤ E1 := by
+    dsimp [E0, E1]
+    linarith
+  have hcore :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ C * expPrefix E0 (2 * a) := by
+    dsimp [C, E0]
+    exact Bq_Qq_small_prefixCore hs hk hks hNs hj hka
+  have hmono :
+      C * expPrefix E0 (2 * a) ≤ C * expPrefix E1 (2 * a) :=
+    mul_le_mul_of_nonneg_left
+      (expPrefix_mono_arg hE0_nonneg hE0_le (2 * a))
+      (productCoreConstant_nonneg k j)
+  calc
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ C * expPrefix E0 (2 * a) := hcore
+    _ ≤ C * expPrefix E1 (2 * a) := hmono
+    _ =
+        (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            (41 * (s : ℚ) / 36 + (j : ℚ) / 5 +
+              (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) + 1 / 5)
+            (2 * a) := by
+          dsimp [C, E1]
+
+/-- Tempered reusable product inequality in the normalized core form
+recommended by the direct saddle route. -/
+theorem Bq_Qq_tempered_core
+    {a N k j : Nat} (hk : 40 ≤ k) (hj : 40 ≤ j)
+    (hka : k + j ≤ a) (hNa : N ≤ 12 * a) :
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+      ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((a : ℚ) / 5 +
+              (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) +
+              (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ))
+            (2 * a) := by
+  let E0 : ℚ :=
+    (k : ℚ) / 5 +
+      (17 * (N : ℚ) / (54 * (k : ℚ)) +
+        4 * (N : ℚ) / (25 * (k : ℚ))) +
+      (j : ℚ) / 5 +
+      (17 * (N : ℚ) / (108 * (j : ℚ)) +
+        2 * (N : ℚ) / (25 * (j : ℚ)))
+  let E1 : ℚ :=
+    (a : ℚ) / 5 +
+      (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) +
+      (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ)
+  let C : ℚ := (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j)
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast (by omega : 0 < k)
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast (by omega : 0 < j)
+  have hE0_nonneg : 0 ≤ E0 := by
+    dsimp [E0]
+    positivity
+  have hBgas_le :
+      17 * (N : ℚ) / (54 * (k : ℚ)) +
+          4 * (N : ℚ) / (25 * (k : ℚ))
+        ≤ (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) :=
+    temperedBGas_le_a_over_k (by omega : 1 ≤ k) hNa
+  have hQgas_le :
+      17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ))
+        ≤ (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) :=
+    temperedQGas_le_a_over_j (by omega : 1 ≤ j) hNa
+  have hkaQ : (k : ℚ) + (j : ℚ) ≤ (a : ℚ) := by
+    exact_mod_cast hka
+  have hkj5_le : (k : ℚ) / 5 + (j : ℚ) / 5 ≤ (a : ℚ) / 5 := by
+    linarith
+  have hE0_le : E0 ≤ E1 := by
+    dsimp [E0, E1]
+    linarith
+  have hcore :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ C * expPrefix E0 (2 * a) := by
+    dsimp [C, E0]
+    exact Bq_Qq_tempered_prefixCore hk hj hka
+  have hmono :
+      C * expPrefix E0 (2 * a) ≤ C * expPrefix E1 (2 * a) :=
+    mul_le_mul_of_nonneg_left
+      (expPrefix_mono_arg hE0_nonneg hE0_le (2 * a))
+      (productCoreConstant_nonneg k j)
+  calc
+    2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ C * expPrefix E0 (2 * a) := hcore
+    _ ≤ C * expPrefix E1 (2 * a) := hmono
+    _ =
+        (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix
+            ((a : ℚ) / 5 +
+              (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) +
+              (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ))
+            (2 * a) := by
+          dsimp [C, E1]
+
 end Prop51
