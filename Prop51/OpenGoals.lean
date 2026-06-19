@@ -3251,6 +3251,64 @@ theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoA
           (hproductBound ha hk hk3)
           (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
 
+/-- Sharp-first-cell variant of the combined product-bound scalar constructor.
+
+The first retained cell is handled by a sharp fast recurrence-level bound on
+`Qq N (a-2)`.  The `k ≥ 3` tail is the same endpoint product-bound scalar
+route as in
+`LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsTwoAndGeThreeNatSignLockComplement`.
+This avoids both the coarse ten-sevenths first-cell envelope and the older
+non-sharp `Y` upper-edge detour. -/
+theorem LargeTailProductCertificate.ofSharpQFastTwoAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsharpTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallFirstCellSharpQFastCleared a N)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpQFastTwoAndGeThreeNatSignLockComplement
+    hsharpTwo
+    (by
+      intro a N k ha hrect hk hsmallN hk3 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (hproductBound ha hk hk3)
+          (hsmallGeThree ha hk hsmallEdge hk3))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk3 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (hproductBound ha hk hk3)
+          (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
+
 /-- Canonical combined-product constructor for the remaining large-tail
 product route.
 
