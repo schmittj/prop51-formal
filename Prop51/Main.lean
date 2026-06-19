@@ -22,14 +22,14 @@ of Proposition 5.1 there).
   interval certificate (`61 ≤ a ≤ 400`, Layer B), and the Layer A majorant
   bridge `b_a(μ) ≤ U_a(N)` (paper eq. 8) together cover every relevant
   genus `g ≤ 1199` and every positive partition.
-* `a ≥ 401` (effective analytic bound): formalized as a family of conditional
-  positive-saddle certificates.  The sign-lock side is closed; the canonical
-  proof-facing endpoint is now the row-active fixed-edge finite-window
-  certificate paired with the refined atomic large-tail interface, exposed
-  below as
+* `a ≥ 401` (effective analytic bound): the closed production route is
+  assembled in `Prop51/Completion.lean` as
+  `Prop51.coefficientNegativity : CoefficientNegativity`, using the
+  direct-saddle certificates from `Prop51/OpenGoals.lean`.  This file still
+  exposes older conditional positive-saddle capstones, including
   `coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`.
   Older table-backed and non-active capstones remain available as audit and
-  profiling interfaces, but are not the intended final production route.
+  profiling interfaces, but are not the production route.
 -/
 import Prop51.Defs
 import Prop51.Partitions
