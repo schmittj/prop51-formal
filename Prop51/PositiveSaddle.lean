@@ -24160,7 +24160,7 @@ theorem positiveLargeTailSoloSharpProportionalSimpleTerm_scaled_le_expTerm
 
 /-- Pointwise bound for the middle part of the low-degree solo remainder. -/
 theorem positiveLargeTailSoloSharpMiddleSimpleTerm_scaled_le_expTerm
-    {a s : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ a - s)
+    {a s : Nat} (_ha : 1 ≤ a) (hp : 4 ≤ a - s)
     (hmid : a ≤ 3 * (a - s)) :
     (4 : ℚ) * (2 : ℚ)^a *
         ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
@@ -27751,8 +27751,66 @@ theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_
         _ = (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
               ring)
 
+/-- Active Poisson sum for the middle part of the sharp solo low-degree
+remainder. -/
+def positiveLargeTailSoloSharpMiddleRemainderExpSum (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if 4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+      (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+    else
+      0
+
+theorem positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_activeExpSum
+    {a : Nat} (ha : 1 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          positiveLargeTailSoloSharpMiddleRemainderExpSum a := by
+  unfold positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        (∑ s ∈ Finset.range (a + 1),
+          if 4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0)
+        =
+      ∑ s ∈ Finset.range (a + 1),
+        (4 : ℚ) * (2 : ℚ)^a *
+          (if 4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0) := by
+          rw [Finset.mul_sum]
+    _ ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          (if 4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+          else
+            0) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hmid : 4 ≤ a - s ∧ a ≤ 3 * (a - s)
+          · rw [if_pos hmid, if_pos hmid]
+            exact
+              positiveLargeTailSoloSharpMiddleSimpleTerm_scaled_le_expTerm
+                (a := a) (s := s) ha hmid.1 hmid.2
+          · rw [if_neg hmid, if_neg hmid]
+            norm_num
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        positiveLargeTailSoloSharpMiddleRemainderExpSum a := by
+          unfold positiveLargeTailSoloSharpMiddleRemainderExpSum
+          rw [Finset.mul_sum]
+
 theorem positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_expSum
-    {a : Nat} (ha : 3000 ≤ a) :
+    {a : Nat} (ha : 1 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum a
       ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
@@ -27812,7 +27870,7 @@ theorem positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_eighth
       ≤ (29 / 8 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hsum :=
     positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_expSum
-      (a := a) ha
+      (a := a) (by omega : 1 ≤ a)
   have hpoisson :
       (∑ s ∈ Finset.range (a + 1),
           (5 / 2 : ℚ)^s / (s.factorial : ℚ)) ≤ 13 := by
