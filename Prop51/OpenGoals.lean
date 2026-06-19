@@ -108,7 +108,7 @@ theorem positiveSaddleLargeTailSoloPrefixNormUnit_of_sharpConst :
       positivity
     exact (mul_le_mul_of_nonneg_left hdelta_le hscale).trans
       (positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const
-        (a := a) (by omega : 2001 ≤ a))
+        (a := a) (by omega : 802 ≤ a))
   have hEdge :
       positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
         a (posNhi a) :=
@@ -1756,11 +1756,11 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_veryLowRemainder
     (Cmiddle := 20736 / 625)
     (CveryLow := 52278 / 625)
     (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
-      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
+      (a := posJ a 2) (show 401 ≤ posJ a 2 by
         unfold posJ
         omega))
     (positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
-      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
+      (a := posJ a 2) (show 401 ≤ posJ a 2 by
         unfold posJ
         omega))
     hveryLow
@@ -1778,7 +1778,7 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_large
     (a := a) ha ?_
   have hvery :=
     positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_three
-      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
+      (a := posJ a 2) (show 401 ≤ posJ a 2 by
         unfold posJ
         omega)
   have hjc_nonneg : 0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
@@ -6279,6 +6279,59 @@ theorem finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared
     (by omega : 1 ≤ a)] at hunit
   exact le_positiveSoloBudget_of_mul_200000000_le_one hunit
 
+/-- Analytic sharp finite-solo saddle estimate on the upper part of the
+bounded window.
+
+This is the finite-window payoff from lowering the constant-budget sharp solo
+split in `PositiveSaddle` from `a ≥ 2001` to `a ≥ 802`.  The argument is the
+same upper-edge monotonicity path used by the solo prefix proof, but it now
+applies inside the bounded strip. -/
+theorem finiteSoloSharpGcompSaddleTenSeventhsCleared_of_const
+    {a N : Nat} (ha : 802 ≤ a) (hrect : positiveRectangle a N) :
+    positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N := by
+  have hdelta :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+        ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+    have hdelta_le :
+        positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+          ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a :=
+      positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
+        (a := a) (by omega : 361 ≤ a)
+    have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
+      positivity
+    exact (mul_le_mul_of_nonneg_left hdelta_le hscale).trans
+      (positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const
+        (a := a) ha)
+  have hEdge :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deltaBudgetBlockSum
+      hdelta
+  exact
+    positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+      (positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+        hrect hEdge)
+
+/-- Finite solo after the analytic `802 ≤ a` suffix has been inserted.
+
+The only remaining finite-solo input is now the lower strip `401 ≤ a ≤ 801`.
+This is a strict reduction of the earlier `401 ≤ a ≤ 2000` theorem-facing
+obligation. -/
+theorem finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared_lowStrip
+    (hsharpLow :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 801 → positiveRectangle a N →
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget :=
+  finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared
+    (by
+      intro a N ha h2000 hrect
+      by_cases hupper : 802 ≤ a
+      · exact finiteSoloSharpGcompSaddleTenSeventhsCleared_of_const
+          (a := a) (N := N) hupper hrect
+      · exact hsharpLow ha (by omega : a ≤ 801) hrect)
+
 /-- Current completion theorem after the direct product route.
 
 The finite and prefix product obligations and the large-tail product/solo
@@ -6307,5 +6360,21 @@ theorem completion_of_directSaddle_finiteSolo
     CoefficientNegativity :=
   completion_of_directSaddle soloY
     positiveSaddleLargeTailSoloPrefixNormUnit_of_sharpConst
+
+/-- Current strongest completion wrapper after inserting the analytic finite
+solo suffix.
+
+All direct-saddle product obligations, all large/prefix solo obligations, and
+the finite solo range `802 ≤ a ≤ 2000` are concrete.  The only remaining
+theorem-facing input is the sharp finite-solo saddle target on
+`401 ≤ a ≤ 801`. -/
+theorem completion_of_directSaddle_finiteSolo_lowStrip
+    (hsharpLow :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 801 → positiveRectangle a N →
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    CoefficientNegativity :=
+  completion_of_directSaddle_finiteSolo
+    (finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared_lowStrip
+      hsharpLow)
 
 end Prop51

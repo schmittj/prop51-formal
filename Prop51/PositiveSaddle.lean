@@ -25954,14 +25954,14 @@ theorem positiveLargeTailSoloSharpDeepLowStart_le_of_deep
   omega
 
 theorem positiveLargeTailSoloSharpDeepLowStart_deep
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     4 ≤ a - positiveLargeTailSoloSharpDeepLowStart a ∧
       3 * (a - positiveLargeTailSoloSharpDeepLowStart a) < a := by
   unfold positiveLargeTailSoloSharpDeepLowStart
   omega
 
 theorem one_add_three_div_pow_le_twohundred
-    {a s : Nat} (ha : 2001 ≤ a) (hs : s ≤ a) :
+    {a s : Nat} (ha : 401 ≤ a) (hs : s ≤ a) :
     (1 + (3 : ℚ) / (a : ℚ))^s ≤ 200 := by
   let n : Nat := a / 3
   have ha_pos_nat : 0 < a := by omega
@@ -26032,7 +26032,7 @@ theorem one_add_three_div_pow_le_twohundred
   exact hpow_s_a.trans (hpow_base.trans (hpow_exp.trans hmain))
 
 theorem one_add_three_div_pow_le_fifty
-    {a s : Nat} (ha : 2001 ≤ a) (hs : s ≤ a) :
+    {a s : Nat} (ha : 401 ≤ a) (hs : s ≤ a) :
     (1 + (3 : ℚ) / (a : ℚ))^s ≤ 50 := by
   let n : Nat := a / 3
   have ha_pos_nat : 0 < a := by omega
@@ -26219,7 +26219,7 @@ theorem positiveLargeTailSoloSharpDeepLowStart_add_three
   omega
 
 theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock (a + 3)
       ≤ (2000000 : ℚ) * (a : ℚ) *
         positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a := by
@@ -26345,7 +26345,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
       _ ≤ ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) := hmul
   have hnum_upper :
       ((a + 3 : Nat) : ℚ)^2 ≤ 4 * (a : ℚ)^2 := by
-    have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
     rw [show ((a + 3 : Nat) : ℚ) = (a : ℚ) + 3 by norm_num]
     nlinarith
   have hden_pos :
@@ -26473,7 +26473,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_targetLower
     have hprev : P (m - 3) := ih (m - 3) (by omega) hm3
     have hblock :=
       positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
-        (a := m - 3) (by omega : 2001 ≤ m - 3)
+        (a := m - 3) (by omega : 401 ≤ m - 3)
     have htarget :=
       positiveLargeTailSoloSharpDeepLowHeadTargetLower_step
         (a := m - 3) hm3
@@ -26498,7 +26498,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_targetLower
   exact hall a ha
 
 theorem positiveLargeTailSoloSharpDeepLowHeadTerm_scaled_le_factorialCrude
-    {a s : Nat} (ha : 2001 ≤ a)
+    {a s : Nat} (ha : 401 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
     (4 : ℚ) * (2 : ℚ)^a *
         ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
@@ -26611,7 +26611,7 @@ def positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum
       0
 
 theorem positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum_scaled_le_factorialCrude
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpDeepLowDegreeHeadBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a := by
@@ -26639,7 +26639,7 @@ def positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm
     DeltaRat (a - s) ((posNhi a : ℚ) / 2)
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaTerm_scaled_le_factorialCrude
-    {a s : Nat} (ha : 2001 ≤ a)
+    {a s : Nat} (ha : 401 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
     (4 : ℚ) * (2 : ℚ)^a *
         ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
@@ -26832,7 +26832,7 @@ def positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum
       0
 
 theorem positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum_scaled_le_factorialCrude
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpDeepLowDegreeDeltaBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a := by
@@ -26861,7 +26861,7 @@ def positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm
     (((a - s + 1 : Nat) : ℚ) * (((6 : ℚ) * (a : ℚ))^(a - s)))
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm_le_powerCrude
-    {a s : Nat} (ha : 2001 ≤ a) :
+    {a s : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm a s
       ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s := by
   have hN_one : (1 : ℚ) ≤ (posNhi a : ℚ) / 2 := by
@@ -26870,7 +26870,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeTerm_le_powerCrude
       rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
       norm_num
     rw [hcast]
-    have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
     nlinarith
   have hN_nonneg : 0 ≤ (posNhi a : ℚ) / 2 := le_trans zero_le_one hN_one
   have hN_le : (posNhi a : ℚ) / 2 ≤ (6 : ℚ) * (a : ℚ) := by
@@ -26935,7 +26935,7 @@ def positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum
       0
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_powerCrude
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum a := by
   unfold positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum
@@ -27058,7 +27058,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_succ_le
           ring
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm_le_start
-    {a s : Nat} (ha : 2001 ≤ a)
+    {a s : Nat} (ha : 401 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
     positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a s
       ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeTerm a
@@ -27116,7 +27116,7 @@ def positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock
       (positiveLargeTailSoloSharpDeepLowStart a)
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_start
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock a := by
   unfold positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum
@@ -27247,7 +27247,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaTargetLower_step
           rw [htarget_step]
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_step
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock (a + 3)
       ≤ (540000 : ℚ) * (a : ℚ)^2 *
         positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock a := by
@@ -27424,37 +27424,37 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_step
         _ ≤ ((s + 2 : Nat) : ℚ) * ((s + 1 : Nat) : ℚ) := hmul
     have hnum_upper :
         ((a + 3 : Nat) : ℚ)^3 ≤ (4 / 3 : ℚ) * (a : ℚ)^3 := by
-      have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+      have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
       have hlin :
-          ((a + 3 : Nat) : ℚ) ≤ (501 / 500 : ℚ) * (a : ℚ) := by
+          ((a + 3 : Nat) : ℚ) ≤ (11 / 10 : ℚ) * (a : ℚ) := by
         rw [show ((a + 3 : Nat) : ℚ) = (a : ℚ) + 3 by norm_num]
-        have hthree : (3 : ℚ) ≤ (1 / 500 : ℚ) * (a : ℚ) := by
+        have hthree : (3 : ℚ) ≤ (1 / 10 : ℚ) * (a : ℚ) := by
           calc
-            (3 : ℚ) ≤ (1 / 500 : ℚ) * 2001 := by norm_num
-            _ ≤ (1 / 500 : ℚ) * (a : ℚ) :=
-                mul_le_mul_of_nonneg_left haQ (by norm_num)
+            (3 : ℚ) ≤ (1 / 10 : ℚ) * 401 := by norm_num
+            _ ≤ (1 / 10 : ℚ) * (a : ℚ) :=
+                  mul_le_mul_of_nonneg_left haQ (by norm_num)
         calc
           (a : ℚ) + 3
-              ≤ (a : ℚ) + (1 / 500 : ℚ) * (a : ℚ) :=
+              ≤ (a : ℚ) + (1 / 10 : ℚ) * (a : ℚ) :=
                 by
                   simpa [add_comm, add_left_comm, add_assoc]
                     using add_le_add_left hthree (a : ℚ)
-          _ = (501 / 500 : ℚ) * (a : ℚ) := by ring
+          _ = (11 / 10 : ℚ) * (a : ℚ) := by ring
       have hpow :
           ((a + 3 : Nat) : ℚ)^3
-            ≤ ((501 / 500 : ℚ) * (a : ℚ))^3 :=
+            ≤ ((11 / 10 : ℚ) * (a : ℚ))^3 :=
         pow_le_pow_left₀ (by positivity) hlin 3
       have hcoef :
-          ((501 / 500 : ℚ)^3) * (a : ℚ)^3
+          ((11 / 10 : ℚ)^3) * (a : ℚ)^3
             ≤ (4 / 3 : ℚ) * (a : ℚ)^3 := by
         have ha3_nonneg : 0 ≤ (a : ℚ)^3 := pow_nonneg ha_pos.le 3
         exact mul_le_mul_of_nonneg_right
-          (by norm_num : (501 / 500 : ℚ)^3 ≤ 4 / 3)
+          (by norm_num : (11 / 10 : ℚ)^3 ≤ 4 / 3)
           ha3_nonneg
       calc
         ((a + 3 : Nat) : ℚ)^3
-            ≤ ((501 / 500 : ℚ) * (a : ℚ))^3 := hpow
-        _ = ((501 / 500 : ℚ)^3) * (a : ℚ)^3 := by
+            ≤ ((11 / 10 : ℚ) * (a : ℚ))^3 := hpow
+        _ = ((11 / 10 : ℚ)^3) * (a : ℚ)^3 := by
               rw [mul_pow]
         _ ≤ (4 / 3 : ℚ) * (a : ℚ)^3 := hcoef
     have hden_pos :
@@ -27604,7 +27604,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_le_targetLowe
     have hprev : P (m - 3) := ih (m - 3) (by omega) hm3
     have hblock :=
       positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_step
-        (a := m - 3) (by omega : 2001 ≤ m - 3)
+        (a := m - 3) (by omega : 401 ≤ m - 3)
     have hprevBlock_nonneg :
         0 ≤ positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock
           (m - 3) := by
@@ -27656,7 +27656,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_remaining_ta
       ≤ (87 / 64 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hblock :=
     positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_start
-      (a := a) (by omega : 2001 ≤ a)
+      (a := a) (by omega : 401 ≤ a)
   have hfirst :=
     positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_le_targetLower
       (a := a) ha
@@ -27693,12 +27693,12 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_remainin
     positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a
       ≤ (87 / 64 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a :=
   (positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_powerCrude
-    (a := a) (by omega : 2001 ≤ a)).trans
+    (a := a) (by omega : 401 ≤ a)).trans
     (positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_remaining_target
       (a := a) ha)
 
 theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_factorialCrude
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a +
@@ -27824,7 +27824,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_succ_le
           ring
 
 theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_le_start
-    {a s : Nat} (ha : 2001 ≤ a)
+    {a s : Nat} (ha : 401 ≤ a)
     (hdeep : 4 ≤ a - s ∧ 3 * (a - s) < a) :
     positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a s
       ≤ positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
@@ -27876,7 +27876,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm_le_start
   exact haux d (by simpa [start] using hdeep)
 
 theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_start
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a
       ≤ ((a + 1 : Nat) : ℚ) *
         positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeTerm a
@@ -27916,7 +27916,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_targetLow
       ≤ positiveLargeTailSoloSharpDeepLowHeadTargetLower a := by
   have hstart :=
     positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_start
-      (a := a) (by omega : 2001 ≤ a)
+      (a := a) (by omega : 401 ≤ a)
   have hfirst :=
     positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_targetLower
       (a := a) ha
@@ -27967,7 +27967,7 @@ theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_sixte
       ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hcrude :=
     positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_factorialCrude
-      (a := a) (by omega : 2001 ≤ a)
+      (a := a) (by omega : 401 ≤ a)
   have hhead :=
     positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_sixtyfourth_target
       (a := a) ha
@@ -28014,7 +28014,7 @@ theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_le_tiny_add_dee
     simp [hp4, htiny]
 
 theorem positiveLargeTailSoloSharpTinyLinearTerm_le_top
-    {a s : Nat} (ha : 2001 ≤ a)
+    {a s : Nat} (ha : 401 ≤ a)
     (hs : s ∈ Finset.range (a + 1)) (htiny : a - s < 4) :
     (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
       ≤
@@ -28032,7 +28032,7 @@ theorem positiveLargeTailSoloSharpTinyLinearTerm_le_top
       rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
       norm_num
     rw [hcast]
-    have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
     nlinarith
   have hpow :
       ((posNhi a : ℚ) / 2 * c 1 / 2)^s
@@ -28059,7 +28059,7 @@ theorem positiveLargeTailSoloSharpTinyLinearTerm_le_top
           exact div_le_div_of_nonneg_left hnum_nonneg hden_top_pos hfac
 
 theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_le_top
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
       ≤ 4 *
         ((6 : ℚ) * (posNhi a : ℚ) *
@@ -28181,7 +28181,7 @@ theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_le_top
           exact mul_le_mul_of_nonneg_right hcardQ htop_nonneg
 
 theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_crude
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
       ≤ 1152 * (a : ℚ) *
@@ -28439,7 +28439,7 @@ theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_sixteent
       ≤ (29 / 16 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hcrude :=
     positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_crude
-      (a := a) (by omega : 2001 ≤ a)
+      (a := a) (by omega : 401 ≤ a)
   have hcore :=
     positiveLargeTailSoloSharpTinyCrude_factorial_core (a := a) ha
   have hfac3_pos :
@@ -28616,7 +28616,7 @@ theorem positiveLargeTailSoloSharpDeepLowBaseTargetLower_le_ac
   exact mul_le_mul_of_nonneg_left hc ha_nonneg
 
 theorem positiveLargeTailSoloSharpDeepLowBaseTargetLower_step_twoMillion
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (2000000 : ℚ) * (a : ℚ) *
         positiveLargeTailSoloSharpDeepLowBaseTargetLower a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower (a + 3) := by
@@ -28669,7 +28669,7 @@ theorem positiveLargeTailSoloSharpDeepLowBaseTargetLower_step_twoMillion
   have hR_lower : (2000000 : ℚ) * (a : ℚ) ≤ R := by
     dsimp [R]
     field_simp [ha_pos.ne']
-    have haQ : (2001 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
     have h1 : (a : ℚ) ≤ ((a + 1 : Nat) : ℚ) := by exact_mod_cast (by omega : a ≤ a + 1)
     have h2 : (a : ℚ) ≤ ((a + 2 : Nat) : ℚ) := by exact_mod_cast (by omega : a ≤ a + 2)
     have h3 : (a : ℚ) ≤ ((a + 3 : Nat) : ℚ) := by exact_mod_cast (by omega : a ≤ a + 3)
@@ -28790,32 +28790,32 @@ theorem positiveLargeTailSoloSharpDeepLowBaseTargetLower_step_fiveForty
           rw [htarget_step]
 
 theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_baseTargetLower
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower a := by
   let P : Nat → Prop := fun m =>
     positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock m
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower m
-  have hbase0 : P 2001 := by
+  have hbase0 : P 401 := by
     native_decide
-  have hbase1 : P 2002 := by
+  have hbase1 : P 402 := by
     native_decide
-  have hbase2 : P 2003 := by
+  have hbase2 : P 403 := by
     native_decide
-  have hall : ∀ m : Nat, 2001 ≤ m → P m := by
+  have hall : ∀ m : Nat, 401 ≤ m → P m := by
     intro m
     refine Nat.strong_induction_on m ?_
     intro m ih hm
-    by_cases hm0 : m = 2001
+    by_cases hm0 : m = 401
     · subst m
       exact hbase0
-    by_cases hm1 : m = 2002
+    by_cases hm1 : m = 402
     · subst m
       exact hbase1
-    by_cases hm2 : m = 2003
+    by_cases hm2 : m = 403
     · subst m
       exact hbase2
-    have hm3 : 2001 ≤ m - 3 := by omega
+    have hm3 : 401 ≤ m - 3 := by omega
     have hprev : P (m - 3) := ih (m - 3) (by omega) hm3
     have hblock :=
       positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_step
@@ -28846,25 +28846,25 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFirstCrudeBlock_le_baseTargetLower
   exact hall a ha
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_le_baseTargetLower
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower a := by
   let P : Nat → Prop := fun m =>
     positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock m
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower m
-  have hbaseRange : ∀ m ∈ List.range' 2001 502, P m := by
+  have hbaseRange : ∀ m ∈ List.range' 401 2102, P m := by
     have hallBool :
-        ∀ m ∈ List.range' 2001 502, decide (P m) = true := by
+        ∀ m ∈ List.range' 401 2102, decide (P m) = true := by
       exact List.all_eq_true.mp (by native_decide)
     intro m hm
     exact of_decide_eq_true (hallBool m hm)
-  have hall : ∀ m : Nat, 2001 ≤ m → P m := by
+  have hall : ∀ m : Nat, 401 ≤ m → P m := by
     intro m
     refine Nat.strong_induction_on m ?_
     intro m ih hm
     by_cases hbase : m < 2503
     · exact hbaseRange m ((List.mem_range'_1).mpr ⟨hm, by omega⟩)
-    have hm3lo : 2001 ≤ m - 3 := by omega
+    have hm3lo : 401 ≤ m - 3 := by omega
     have hm3hi : 2500 ≤ m - 3 := by omega
     have hprev : P (m - 3) := ih (m - 3) (by omega) hm3lo
     have hblock :=
@@ -28896,7 +28896,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerFirstCrudeBlock_le_baseTarget
   exact hall a ha
 
 theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_baseTargetLower
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower a := by
   have hstart :=
@@ -28911,7 +28911,7 @@ theorem positiveLargeTailSoloSharpDeepLowHeadFactorialCrudeBlockSum_le_baseTarge
         using hfirst)
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_baseTargetLower
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower a := by
   have hblock :=
@@ -28926,7 +28926,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaPowerCrudeBlockSum_le_baseTargetLo
         using hfirst)
 
 theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_baseTargetLower
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum a
       ≤ positiveLargeTailSoloSharpDeepLowBaseTargetLower a :=
   (positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_powerCrude
@@ -28935,7 +28935,7 @@ theorem positiveLargeTailSoloSharpDeepLowDeltaFactorialCrudeBlockSum_le_baseTarg
       (a := a) ha)
 
 theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_two
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum a
       ≤ 2 * (a : ℚ) * c a := by
@@ -28966,7 +28966,7 @@ theorem positiveLargeTailSoloSharpDeepLowDegreeRemainderBlockSum_scaled_le_two
           ring
 
 theorem positiveLargeTailSoloSharpTinyCrude_factorial_core_const
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (41472 / 5 : ℚ) * ((5 / 6 : ℚ) * (a : ℚ))^a
       ≤ (((a - 3).factorial : Nat) : ℚ) *
         (((a - 1).factorial : Nat) : ℚ) := by
@@ -28974,9 +28974,9 @@ theorem positiveLargeTailSoloSharpTinyCrude_factorial_core_const
     (41472 / 5 : ℚ) * ((5 / 6 : ℚ) * (m : ℚ))^m
       ≤ (((m - 3).factorial : Nat) : ℚ) *
         (((m - 1).factorial : Nat) : ℚ)
-  have hbase : P 2001 := by
+  have hbase : P 401 := by
     native_decide
-  have hstep : ∀ m : Nat, 2001 ≤ m → P m → P (m + 1) := by
+  have hstep : ∀ m : Nat, 401 ≤ m → P m → P (m + 1) := by
     intro m hm hP
     have hm_pos_nat : 0 < m := by omega
     have hm_pos : (0 : ℚ) < (m : ℚ) := by exact_mod_cast hm_pos_nat
@@ -29004,7 +29004,7 @@ theorem positiveLargeTailSoloSharpTinyCrude_factorial_core_const
         (68 / 25 : ℚ) *
             ((5 / 6 : ℚ) * ((m + 1 : Nat) : ℚ))
           ≤ ((m - 2 : Nat) : ℚ) * (m : ℚ) := by
-      have hmQ : (2001 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
+      have hmQ : (401 : ℚ) ≤ (m : ℚ) := by exact_mod_cast hm
       have hcast_sub : (((m - 2 : Nat) : ℚ)) = (m : ℚ) - 2 := by
         rw [Nat.cast_sub (by omega : 2 ≤ m)]
         norm_num
@@ -29083,20 +29083,20 @@ theorem positiveLargeTailSoloSharpTinyCrude_factorial_core_const
       _ =
         (((m + 1 - 3).factorial : Nat) : ℚ) *
           (((m + 1 - 1).factorial : Nat) : ℚ) := hright_step.symm
-  obtain ⟨n, rfl⟩ : ∃ n : Nat, a = 2001 + n := by
-    exact ⟨a - 2001, by omega⟩
-  have htail : ∀ n : Nat, P (2001 + n) := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, a = 401 + n := by
+    exact ⟨a - 401, by omega⟩
+  have htail : ∀ n : Nat, P (401 + n) := by
     intro n
     induction n with
     | zero =>
         simpa using hbase
     | succ n ih =>
-        have hm : 2001 ≤ 2001 + n := by omega
-        exact hstep (2001 + n) hm ih
+        have hm : 401 ≤ 401 + n := by omega
+        exact hstep (401 + n) hm ih
   exact htail n
 
 theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_one
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum a
       ≤ (a : ℚ) * c a := by
@@ -29174,7 +29174,7 @@ theorem positiveLargeTailSoloSharpTinyDegreeRemainderBlockSum_scaled_le_one
         (a := a) (by omega : 1 ≤ a)))
 
 theorem positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_three
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
       ≤ 3 * (a : ℚ) * c a := by
@@ -29746,7 +29746,7 @@ def positiveLargeTailSoloSharpProportionalRemainderExpSum (a : Nat) : ℚ :=
       0
 
 theorem positiveLargeTailSoloSharpProportionalRemainderExpSum_le_one
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpProportionalRemainderExpSum a ≤ 1 := by
   let L : Nat := a / 3 + 1
   have hL10 : 10 ≤ L := by
@@ -29859,7 +29859,7 @@ theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_
           rw [Finset.mul_sum]
 
 theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
       ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
@@ -30066,7 +30066,7 @@ def positiveLargeTailSoloSharpLowMiddleRemainderExpSum (a : Nat) : ℚ :=
       0
 
 theorem positiveLargeTailSoloSharpLowMiddleRemainderExpSum_le_one
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloSharpLowMiddleRemainderExpSum a ≤ 1 := by
   let L : Nat := a / 3 + 1
   have hL10 : 10 ≤ L := by
@@ -30185,7 +30185,7 @@ theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_act
           rw [Finset.mul_sum]
 
 theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 401 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
       ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
@@ -30345,10 +30345,10 @@ theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_o
 `(10/7)^a` target on the whole prefix/tail range.
 
 This is the prefix-friendly solo route: the hard residual components are
-bounded by absolute constants, and for `a ≥ 2001` the final exponential
+bounded by absolute constants, and for `a ≥ 802` the final exponential
 envelope easily absorbs the total `290 * a * c a` cost. -/
 theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const
-    {a : Nat} (ha : 2001 ≤ a) :
+    {a : Nat} (ha : 802 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
       ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
@@ -30357,19 +30357,19 @@ theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_targe
           positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
         ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a :=
     positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
-      (a := a) ha
+      (a := a) (by omega : 401 ≤ a)
   have hmiddle :
       (4 : ℚ) * (2 : ℚ)^a *
           positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
         ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a :=
     positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
-      (a := a) ha
+      (a := a) (by omega : 401 ≤ a)
   have hveryLow :
       (4 : ℚ) * (2 : ℚ)^a *
           positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a
         ≤ 3 * (a : ℚ) * c a :=
     positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_three
-      (a := a) ha
+      (a := a) (by omega : 401 ≤ a)
   have hremainder :
       (4 : ℚ) * (2 : ℚ)^a *
           positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
