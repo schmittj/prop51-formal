@@ -9869,6 +9869,115 @@ theorem partialExpUpper_le_mul_of_six_step_shift
     _ ≤ target * partialExpUpper z T :=
           mul_le_mul_of_nonneg_left hfactor_le htarget0
 
+/-- Eight equal first-order shifts give an octic growth estimate for
+`partialExpUpper`.
+
+This is derived from the existing six-step estimate plus two final one-step
+shifts.  It is used for the next product-tail cell, whose scalar prefactor is
+effectively quartic in the rectangle edge. -/
+theorem partialExpUpper_mul_one_add_eighth_pow_eight_le_of_add
+    {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d / 8)^8 * partialExpUpper y T ≤ partialExpUpper (y+d) T := by
+  let e : ℚ := d / 8
+  have he0 : 0 ≤ e := by
+    dsimp [e]
+    positivity
+  have h6nonneg : 0 ≤ (6 : ℚ) * e := by positivity
+  have hbase6 : y + (6 : ℚ) * e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase7 : y + (6 : ℚ) * e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase8 : y + (6 : ℚ) * e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hy6 : 0 ≤ y + (6 : ℚ) * e :=
+    add_nonneg hy h6nonneg
+  have hy7 : 0 ≤ y + (6 : ℚ) * e + e :=
+    add_nonneg hy6 he0
+  have hstep6raw :
+      (1 + ((6 : ℚ) * e) / 6)^6 * partialExpUpper y T
+        ≤ partialExpUpper (y + (6 : ℚ) * e) T :=
+    partialExpUpper_mul_one_add_sixth_pow_six_le_of_add
+      (y := y) (d := (6 : ℚ) * e) (T := T)
+      hy h6nonneg hT hbase6
+  have hstep6 :
+      (1 + e)^6 * partialExpUpper y T
+        ≤ partialExpUpper (y + (6 : ℚ) * e) T := by
+    convert hstep6raw using 2
+    ring
+  have hstep7 :
+      (1 + e) * partialExpUpper (y + (6 : ℚ) * e) T
+        ≤ partialExpUpper (y + (6 : ℚ) * e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + (6 : ℚ) * e) (d := e) (T := T)
+        hy6 he0 hT hbase7
+  have hstep8 :
+      (1 + e) * partialExpUpper (y + (6 : ℚ) * e + e) T
+        ≤ partialExpUpper (y + (6 : ℚ) * e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + (6 : ℚ) * e + e) (d := e) (T := T)
+        hy7 he0 hT hbase8
+  have hfactor0 : 0 ≤ 1 + e := by linarith
+  have hfactor2 : 0 ≤ (1 + e)^2 := by positivity
+  calc
+    (1 + d / 8)^8 * partialExpUpper y T
+        = (1 + e)^2 * ((1 + e)^6 * partialExpUpper y T) := by
+            dsimp [e]
+            ring
+    _ ≤ (1 + e)^2 * partialExpUpper (y + (6 : ℚ) * e) T :=
+          mul_le_mul_of_nonneg_left hstep6 hfactor2
+    _ = (1 + e) * ((1 + e) *
+          partialExpUpper (y + (6 : ℚ) * e) T) := by
+          ring
+    _ ≤ (1 + e) *
+          partialExpUpper (y + (6 : ℚ) * e + e) T :=
+          mul_le_mul_of_nonneg_left hstep7 hfactor0
+    _ ≤ partialExpUpper (y + (6 : ℚ) * e + e + e) T := hstep8
+    _ = partialExpUpper (y+d) T := by
+          congr 1
+          dsimp [e]
+          ring
+
+/-- Octic variant of `partialExpUpper_le_mul_of_three_step_shift`. -/
+theorem partialExpUpper_le_mul_of_eight_step_shift
+    {y z d₀ target : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd₀ : 0 ≤ d₀) (hT : 1 ≤ T) (hzT : z < (T : ℚ))
+    (hdrop : y + d₀ ≤ z)
+    (hbudget : 1 ≤ target * (1 + d₀ / 8)^8) :
+    partialExpUpper y T ≤ target * partialExpUpper z T := by
+  have hy_le_shift : y ≤ y + d₀ := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt (hy_le_shift.trans hdrop) hzT
+  have hshift0 : 0 ≤ y + d₀ := add_nonneg hy hd₀
+  have hshiftT : y + d₀ < (T : ℚ) := lt_of_le_of_lt hdrop hzT
+  have hgrowth :
+      (1 + d₀ / 8)^8 * partialExpUpper y T
+        ≤ partialExpUpper (y+d₀) T :=
+    partialExpUpper_mul_one_add_eighth_pow_eight_le_of_add
+      (y := y) (d := d₀) (T := T) hy hd₀ hT hshiftT
+  have hmono :
+      partialExpUpper (y+d₀) T ≤ partialExpUpper z T :=
+    partialExpUpper_mono_of_nonneg_le_lt hshift0 hdrop hzT
+  have hfactor_le :
+      (1 + d₀ / 8)^8 * partialExpUpper y T ≤ partialExpUpper z T :=
+    hgrowth.trans hmono
+  have hfactor_pos : 0 < (1 + d₀ / 8)^8 := by positivity
+  have htarget0 : 0 ≤ target := by nlinarith
+  have hupper0 : 0 ≤ partialExpUpper y T :=
+    partialExpUpper_nonneg_of_nonneg_lt hy hyT
+  calc
+    partialExpUpper y T
+        = 1 * partialExpUpper y T := by ring
+    _ ≤ (target * (1 + d₀ / 8)^8) * partialExpUpper y T :=
+          mul_le_mul_of_nonneg_right hbudget hupper0
+    _ = target * ((1 + d₀ / 8)^8 * partialExpUpper y T) := by ring
+    _ ≤ target * partialExpUpper z T :=
+          mul_le_mul_of_nonneg_left hfactor_le htarget0
+
 /-- Negative-binomial shell used to bound the variable-cutoff
 `partialExpUpper ((a : ℚ) * q) a`.
 
