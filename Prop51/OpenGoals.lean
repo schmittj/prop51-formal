@@ -897,9 +897,11 @@ def BoundedPositiveCertificate.ofActiveAnalyticScaledEdgeDirectPrefix
 This is intentionally stated as the normalized combined actual product target,
 not as the older independent `Gcomp` majorant product.  This matches the TeX
 combined-product route: the raw `Bq * Qq` form can be supplied via
-`LargeTailProductCertificate.ofRawCleared`, while the stronger legacy
-upper-edge/lower-`N` `Gcomp` scalar route remains available only as a
-compatibility constructor below. -/
+`LargeTailProductCertificate.ofRawCleared`.  The legacy upper-edge/lower-`N`
+`Gcomp` scalar constructors below are kept for comparison with older generated
+artifacts, but they are no longer a viable completion route for the exact
+split-factorial product: the small `k ≥ 4` exact-upper-edge obligation is
+false already at `(a,k) = (3000,4)`. -/
 structure LargeTailProductCertificate where
   largeSmall :
     ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
@@ -5266,14 +5268,14 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProd
 
 /-- Closed first-cell exact-upper-edge specialization.
 
-This is the smallest live exact-product surface after the first-cell work:
+This is retained as a compatibility surface for older exact-split artifacts:
 choosing the exact upper-edge split-factorial product makes the `xyBound`
 product-bound field definitional, while the retained `k = 2` cell is closed
-through the sharp own-edge envelope.  This is a Lean-side edge-shift
-specialization of the paper route: the direct upper-edge `Y` first-cell
-budget still exposes a shifted solo input, but the sharp first-cell envelope
-has already paid that mismatch.  The remaining work is exactly the two `k ≥ 3`
-scalar product inequalities below. -/
+through the sharp own-edge envelope.  It should not be used as the main
+completion route.  The exact split-factorial `Y` surrogate loses the dyadic
+gain needed in the high-`j` cells; the corrected route proves the actual
+`Bq * Qq` raw-cleared predicates and feeds
+`LargeTailProductCertificate.ofRawCleared`. -/
 theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignLockComplement
     (hsmallGeThree :
       ∀ {a k : Nat}, 3000 ≤ a →
@@ -5303,14 +5305,16 @@ theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignL
       exact le_rfl)
     hsmallGeThree htemperedGeThree
 
-/-- Exact-upper-edge product constructor with the actual `k = 3` cell removed
+/-- Legacy exact-upper-edge product constructor with the actual `k = 3` cell removed
 by the closed form `Bq_three_nonpos`.
 
-This is the completion-facing replacement for the older third-cell peel below.
-The Lean proof intentionally diverges from the exact split-product surrogate:
-the actual combined product has `Bq N 3 ≤ 0`, so the third cell contributes a
-nonpositive raw term and no shifted solo `Y_{a-3}` estimate is needed.  The
-remaining exact upper-edge product scalar work starts at `k ≥ 4`. -/
+This constructor remains useful for auditing older architecture, but it is not
+completion-facing.  The `hsmallGeFour` field is false for the exact
+split-factorial upper-edge product at `(a,k,j) = (3000,4,2996)`: the coarse
+`Y` split contains a `6^j (j-1)!` term, and the outside `2^j` normalization is
+not absorbed by the target exponential.  Future product-tail work should
+target the actual raw predicates and use `LargeTailProductCertificate.ofRawCleared`
+instead. -/
 theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeFourNatSignLockComplement
     (hsmallGeFour :
       ∀ {a k : Nat}, 3000 ≤ a →
