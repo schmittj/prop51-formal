@@ -1177,6 +1177,15 @@ theorem positiveLargeTailProductYUpperEdgeExactBound_two_eq_shiftedSolo
         (posJ a 2) (posNhi a) := by
   rfl
 
+/-- The product-side `Y` upper-edge bound in the next retained cell is again
+the shifted solo split-factorial block sum, now at `j = a - 3`. -/
+theorem positiveLargeTailProductYUpperEdgeExactBound_three_eq_shiftedSolo
+    (a : Nat) :
+    positiveLargeTailProductYUpperEdgeExactBound a 3 =
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+        (posJ a 3) (posNhi a) := by
+  rfl
+
 /-- Scalar comparison left after proving the shifted first-cell `Y` block by
 the fast solo-style exponential envelope.
 
@@ -2710,6 +2719,141 @@ theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_two
   norm_num [positiveLargeTailXGcompClosedFactorialSplitBlockSum,
     Finset.sum_range_succ, c_one, c_two]
   ring_nf
+
+/-- Degree-three closed form for the product-side `X` upper-edge split sum.
+
+This is the first genuine tail cell after the closed `k = 2` first-cell
+envelope.  The planned `k = 3` product peel uses this polynomial factor with
+the same shifted solo-style estimate for the `Y` side; keeping the closed form
+named prevents the proof from repeatedly unfolding the double split sum. -/
+theorem positiveLargeTailProductXClosedFactorialSplitBlockBound_three
+    (a N : Nat) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a N 3 =
+      (N : ℚ) * (1728 / 25) + (N : ℚ)^2 * (24 / 5) +
+        (N : ℚ)^3 * (125 / 1296) := by
+  unfold positiveLargeTailProductXClosedFactorialSplitBlockBound
+  rw [positiveLargeTailXGcompClosedFactorialSplitBlockSum_eq_Icc]
+  norm_num [positiveLargeTailXGcompClosedFactorialSplitBlockSum,
+    Finset.sum_range_succ, c_one]
+  norm_num [Nat.factorial]
+  ring_nf
+
+/-- Scalar comparison left after proving the `k = 3` shifted `Y` block by
+the fast solo-style exponential envelope.
+
+This is the exact analogue of
+`positiveSmallFirstCellShiftedSoloFastExpBudget`, with the degree-three `X`
+factor left explicit.  The closed form
+`positiveLargeTailProductXClosedFactorialSplitBlockBound_three` is intended
+for the subsequent one-dimensional proof of this budget. -/
+def positiveSmallThirdCellShiftedSoloFastExpBudget (a : Nat) : Prop :=
+  (29 / 2 : ℚ) * (posNhi a : ℚ) *
+      positiveLargeTailProductXUpperEdgeExactBound a 3 *
+        partialExpUpperFast (positiveSoloYExponent (posJ a 3))
+          (8 * posJ a 3)
+    ≤ 390 * positiveSmallLargeExpFast a 3 *
+      ((posNlo a : ℚ) * c 3)
+
+/-- The `k = 3` small-branch product scalar follows from a shifted solo-style
+fast bound for the `Y` factor and the remaining scalar budget above.
+
+This peels the first genuine tail cell into the same two ingredients as the
+closed `k = 2` first-cell proof: a shifted solo `Y` estimate and a
+one-dimensional scalar comparison. -/
+theorem positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three_of_shiftedSoloFastCleared
+    {a : Nat}
+    (hsolo :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        (posJ a 3) (posNhi a))
+    (hbudget : positiveSmallThirdCellShiftedSoloFastExpBudget a) :
+    positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      (fun a k =>
+        positiveLargeTailProductXUpperEdgeExactBound a k *
+          positiveLargeTailProductYUpperEdgeExactBound a k) a 3 := by
+  unfold positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+  change
+    2 * (2 : ℚ)^(posJ a 3) * (posNhi a : ℚ) *
+        (positiveLargeTailProductXUpperEdgeExactBound a 3 *
+          positiveLargeTailProductYUpperEdgeExactBound a 3)
+      ≤ 130 * ((3 : ℚ) * (posJ a 3 : ℚ)) *
+        positiveSmallLargeExpFast a 3 *
+          ((posNlo a : ℚ) * c 3 * c (posJ a 3))
+  rw [positiveLargeTailProductYUpperEdgeExactBound_three_eq_shiftedSolo]
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    at hsolo
+  unfold positiveSmallThirdCellShiftedSoloFastExpBudget at hbudget
+  have hXnonneg :
+      0 ≤ positiveLargeTailProductXUpperEdgeExactBound a 3 := by
+    unfold positiveLargeTailProductXUpperEdgeExactBound
+    exact positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg
+      a (posNhi a) 3
+  have hscale_nonneg :
+      0 ≤
+        ((posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 / 2) := by
+    exact div_nonneg
+      (mul_nonneg (Nat.cast_nonneg _) hXnonneg)
+      (by norm_num : (0 : ℚ) ≤ 2)
+  have hscaledSolo :
+      ((posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 / 2) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 3) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 3) (posNhi a))
+        ≤
+      ((posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 / 2) *
+        (29 * (posJ a 3 : ℚ) * c (posJ a 3) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 3))
+            (8 * posJ a 3)) :=
+    mul_le_mul_of_nonneg_left hsolo hscale_nonneg
+  have hjc_nonneg : 0 ≤ (posJ a 3 : ℚ) * c (posJ a 3) :=
+    mul_nonneg (Nat.cast_nonneg _) (c_nonneg (posJ a 3))
+  have hbudgetScaled :
+      ((posJ a 3 : ℚ) * c (posJ a 3)) *
+        ((29 / 2 : ℚ) * (posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 3))
+              (8 * posJ a 3))
+        ≤
+      ((posJ a 3 : ℚ) * c (posJ a 3)) *
+        (390 * positiveSmallLargeExpFast a 3 *
+          ((posNlo a : ℚ) * c 3)) :=
+    mul_le_mul_of_nonneg_left hbudget hjc_nonneg
+  calc
+    2 * (2 : ℚ)^(posJ a 3) * (posNhi a : ℚ) *
+        (positiveLargeTailProductXUpperEdgeExactBound a 3 *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 3) (posNhi a))
+        =
+      ((posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 / 2) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 3) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 3) (posNhi a)) := by
+        ring
+    _ ≤
+      ((posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 / 2) *
+        (29 * (posJ a 3 : ℚ) * c (posJ a 3) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 3))
+            (8 * posJ a 3)) := hscaledSolo
+    _ =
+      ((posJ a 3 : ℚ) * c (posJ a 3)) *
+        ((29 / 2 : ℚ) * (posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3 *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 3))
+              (8 * posJ a 3)) := by
+        ring
+    _ ≤
+      ((posJ a 3 : ℚ) * c (posJ a 3)) *
+        (390 * positiveSmallLargeExpFast a 3 *
+          ((posNlo a : ℚ) * c 3)) := hbudgetScaled
+    _ =
+      130 * ((3 : ℚ) * (posJ a 3 : ℚ)) *
+        positiveSmallLargeExpFast a 3 *
+          ((posNlo a : ℚ) * c 3 * c (posJ a 3)) := by
+        ring
 
 /-- The degree-two upper-edge `X` split sum is large enough to pay for the
 actual first-cell linear `Bq` factor after the old product scalar inequality
