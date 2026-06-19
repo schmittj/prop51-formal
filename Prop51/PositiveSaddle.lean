@@ -24547,6 +24547,24 @@ def positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum
     else
       0
 
+/-- Middle band after preserving the exclusions already built into the
+low-degree remainder.
+
+Unlike `positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum`, this does
+not re-include the large-degree or proportional bands.  It is the useful
+middle component for the constant own-edge first-cell budget. -/
+def positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum
+    (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+        ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+        4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+      (((posNhi a : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+        ((posNhi a : ℚ) * c (a - s) *
+          ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+    else
+      0
+
 /-- The residual very-low inner-degree tail after the `a ≤ 3p` middle band
 has also been removed. -/
 def positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
@@ -27332,6 +27350,89 @@ theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_middle_add_veryL
         simp [hprop.1, hprop.2, hnotMidSecond, hnotLargeSecond]
       · simp [hmid, hlarge, hprop]
 
+/-- Sharper low-degree split preserving the exclusions of the large and
+proportional bands.
+
+This is the split used for the constant own-edge first-cell budget: only the
+true low-middle tail is sent to the middle simple envelope, and the remaining
+part is exactly the existing very-low residual. -/
+theorem positiveLargeTailSoloSharpLowDegreeRemainderBlockSum_le_lowMiddle_add_veryLow
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpLowDegreeRemainderBlockSum a
+      ≤ positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a +
+        positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum a := by
+  unfold positiveLargeTailSoloSharpLowDegreeRemainderBlockSum
+    positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum
+    positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_le_sum fun s _ => ?_
+  by_cases hmid : 4 ≤ a - s ∧ a ≤ 3 * (a - s)
+  · by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+    · have hlowMiddle : ¬
+          ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+            4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+        intro h
+        exact h.1.1 hlarge
+      simp [hlarge]
+    · by_cases hprop : 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+      · have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact h.1.2 hprop
+        simp [hprop]
+      · have hlin_nonneg :
+            0 ≤ (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+              (s.factorial : ℚ)) := by
+          rw [c_one]
+          positivity
+        have hinner :=
+          positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_middleSimple
+            (a := a) (p := a - s) ha hmid.1 hmid.2
+        have hmul := mul_le_mul_of_nonneg_left hinner hlin_nonneg
+        have hcond :
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) :=
+          ⟨⟨hlarge, hprop⟩, hmid⟩
+        rw [if_neg hlarge, if_neg hprop, if_pos hcond,
+          if_neg hlarge, if_neg hprop, if_pos hmid]
+        simpa using hmul
+  · by_cases hlarge : 4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)
+    · have hnotMidSecond : ¬ a ≤ 3 * (a - s) := by
+        intro hsecond
+        exact hmid ⟨hlarge.1, hsecond⟩
+      have hlowMiddle : ¬
+          ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+            ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+            4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+        intro h
+        exact h.1.1 hlarge
+      simp [hlarge.1, hlarge.2, hnotMidSecond]
+    · by_cases hprop : 4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+      · have hnotMidSecond : ¬ a ≤ 3 * (a - s) := by
+          intro hsecond
+          exact hmid ⟨hprop.1, hsecond⟩
+        have hnotLargeSecond : ¬ 2 * a ≤ 3 * (a - s) := by
+          intro hsecond
+          exact hlarge ⟨hprop.1, hsecond⟩
+        have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact h.1.2 hprop
+        simp [hprop.1, hprop.2, hnotMidSecond, hnotLargeSecond]
+      · have hlowMiddle : ¬
+            ((¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s)) := by
+          intro h
+          exact hmid h.2
+        simp [hmid, hlarge, hprop]
+
 theorem positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_le_proportional_add_lowDegree
     {a : Nat} (ha : 3000 ≤ a) :
     positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
@@ -27807,6 +27908,75 @@ theorem positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_active
       (20736 / 625 : ℚ) * (a : ℚ) * c a *
         positiveLargeTailSoloSharpMiddleRemainderExpSum a := by
           unfold positiveLargeTailSoloSharpMiddleRemainderExpSum
+          rw [Finset.mul_sum]
+
+/-- Active Poisson sum for the low-middle part after preserving the
+large/proportional exclusions. -/
+def positiveLargeTailSoloSharpLowMiddleRemainderExpSum (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+        ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+        4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+      (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+    else
+      0
+
+theorem positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_activeExpSum
+    {a : Nat} (ha : 1 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          positiveLargeTailSoloSharpLowMiddleRemainderExpSum a := by
+  unfold positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        (∑ s ∈ Finset.range (a + 1),
+          if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0)
+        =
+      ∑ s ∈ Finset.range (a + 1),
+        (4 : ℚ) * (2 : ℚ)^a *
+          (if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0) := by
+          rw [Finset.mul_sum]
+    _ ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          (if (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+              4 ≤ a - s ∧ a ≤ 3 * (a - s) then
+            (5 / 2 : ℚ)^s / (s.factorial : ℚ)
+          else
+            0) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hmid :
+              (¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+                ¬ (4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s))) ∧
+                4 ≤ a - s ∧ a ≤ 3 * (a - s)
+          · rw [if_pos hmid, if_pos hmid]
+            exact
+              positiveLargeTailSoloSharpMiddleSimpleTerm_scaled_le_expTerm
+                (a := a) (s := s) ha hmid.2.1 hmid.2.2
+          · rw [if_neg hmid, if_neg hmid]
+            norm_num
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        positiveLargeTailSoloSharpLowMiddleRemainderExpSum a := by
+          unfold positiveLargeTailSoloSharpLowMiddleRemainderExpSum
           rw [Finset.mul_sum]
 
 theorem positiveLargeTailSoloSharpMiddleRemainderSimpleBlockSum_scaled_le_expSum
