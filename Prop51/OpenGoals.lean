@@ -86,6 +86,41 @@ theorem positiveSaddleLargeTailSoloPrefixNormUnit_of_fastUpperEdgeBoundPrefixChu
     (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
     (by omega : 1 ≤ a) hYUnit
 
+/-- Direct sharp proof of the bounded solo prefix norm-unit field.
+
+This intentionally bypasses the older generated exact-split prefix chunks.
+The proof uses the sharp `Qq` saddle target and the constant-budget split
+estimate in `PositiveSaddle`, so the `2001 ≤ a < 3000` strip is handled by the
+same analytic solo machinery as the tail rather than by a finite grid. -/
+theorem positiveSaddleLargeTailSoloPrefixNormUnit_of_sharpConst :
+    PositiveSaddleLargeTailSoloPrefixNormUnit := by
+  intro a N ha _haPrefix hrect
+  have hdelta :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+        ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
+    have hdelta_le :
+        positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+          ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a :=
+      positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
+        (a := a) (by omega : 361 ≤ a)
+    have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by
+      positivity
+    exact (mul_le_mul_of_nonneg_left hdelta_le hscale).trans
+      (positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const
+        (a := a) (by omega : 2001 ≤ a))
+  have hEdge :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+        a (posNhi a) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deltaBudgetBlockSum
+      hdelta
+  exact
+    positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
+      ha hrect
+      (positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_closedFactorialSplitBlockSumTenSeventhsCleared
+        (positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_upperEdge
+          hrect hEdge))
+
 /-- Compatibility bridge from the older exact fast-upper-edge product prefix
 chunks to the actual product prefix pointwise target.
 
@@ -1721,11 +1756,11 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_veryLowRemainder
     (Cmiddle := 20736 / 625)
     (CveryLow := 52278 / 625)
     (positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_const
-      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
         unfold posJ
         omega))
     (positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum_scaled_le_const
-      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
         unfold posJ
         omega))
     hveryLow
@@ -1743,7 +1778,7 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_large
     (a := a) ha ?_
   have hvery :=
     positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_three
-      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+      (a := posJ a 2) (show 2001 ≤ posJ a 2 by
         unfold posJ
         omega)
   have hjc_nonneg : 0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
@@ -6237,5 +6272,18 @@ theorem completion_of_directSaddle
     (BoundedPositiveCertificate.ofDirectSaddle soloY soloPrefix)
     LargeTailProductCertificate.ofDirectSaddle
     largeTailSoloCertificate
+
+/-- Current strongest completion wrapper.
+
+All direct-saddle product obligations and all large/prefix solo obligations
+are concrete.  The only remaining theorem-facing input is the finite solo
+budget for `401 ≤ a ≤ 2000`. -/
+theorem completion_of_directSaddle_finiteSolo
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget) :
+    CoefficientNegativity :=
+  completion_of_directSaddle soloY
+    positiveSaddleLargeTailSoloPrefixNormUnit_of_sharpConst
 
 end Prop51
