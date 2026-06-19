@@ -1297,6 +1297,312 @@ theorem positiveSmallFirstCellShiftedSoloFastExpBudget_of_large
           dsimp [target]
           field_simp [hCpos.ne']
 
+/-- Low-threshold version of the reusable `(1+3/a)^a` bound.
+
+The proof is the same rational estimate as
+`one_add_three_div_pow_le_fifty`; the lower threshold is useful for the
+shifted first product cell, where the solo index is `a - 2` and hence is
+only `2998` at the canonical large-tail threshold `a = 3000`. -/
+theorem one_add_three_div_pow_le_fifty_of_twelve
+    {a s : Nat} (ha : 12 ≤ a) (hs : s ≤ a) :
+    (1 + (3 : ℚ) / (a : ℚ))^s ≤ 50 := by
+  let n : Nat := a / 3
+  have ha_pos_nat : 0 < a := by omega
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by exact_mod_cast ha_pos_nat
+  have hn_pos_nat : 0 < n := by
+    dsimp [n]
+    omega
+  have hn_pos : (0 : ℚ) < (n : ℚ) := by exact_mod_cast hn_pos_nat
+  have hbase_ge_one : (1 : ℚ) ≤ 1 + (3 : ℚ) / (a : ℚ) := by
+    have hnonneg : (0 : ℚ) ≤ (3 : ℚ) / (a : ℚ) := by positivity
+    linarith
+  have hpow_s_a :
+      (1 + (3 : ℚ) / (a : ℚ))^s
+        ≤ (1 + (3 : ℚ) / (a : ℚ))^a :=
+    pow_le_pow_right₀ hbase_ge_one hs
+  have hmul : (3 : ℚ) * (n : ℚ) ≤ (a : ℚ) := by
+    have hnat : a / 3 * 3 ≤ a := Nat.div_mul_le_self a 3
+    have hq : ((a / 3 * 3 : Nat) : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast hnat
+    dsimp [n]
+    simpa [Nat.cast_mul, mul_comm] using hq
+  have hbase_le :
+      1 + (3 : ℚ) / (a : ℚ) ≤ 1 + 1 / (n : ℚ) := by
+    field_simp [ha_pos.ne', hn_pos.ne']
+    nlinarith
+  have hpow_base :
+      (1 + (3 : ℚ) / (a : ℚ))^a
+        ≤ (1 + 1 / (n : ℚ))^a :=
+    pow_le_pow_left₀ (by positivity) hbase_le a
+  have hexp : a ≤ 3 * (n + 1) := by
+    dsimp [n]
+    omega
+  have hbase2_ge_one : (1 : ℚ) ≤ 1 + 1 / (n : ℚ) := by
+    have hnonneg : (0 : ℚ) ≤ 1 / (n : ℚ) := by positivity
+    linarith
+  have hpow_exp :
+      (1 + 1 / (n : ℚ))^a
+        ≤ (1 + 1 / (n : ℚ))^(3 * (n + 1)) :=
+    pow_le_pow_right₀ hbase2_ge_one hexp
+  have hsplit :
+      (1 + 1 / (n : ℚ))^(3 * (n + 1))
+        =
+      ((1 + 1 / (n : ℚ))^n)^3 *
+        (1 + 1 / (n : ℚ))^3 := by
+    have hnat : 3 * (n + 1) = n * 3 + 3 := by ring
+    rw [hnat, pow_add, pow_mul]
+  have hmain :
+      (1 + 1 / (n : ℚ))^(3 * (n + 1)) ≤ 50 := by
+    have he := one_add_inv_pow_le n (by omega : 1 ≤ n)
+    have hn_ge4 : (4 : ℚ) ≤ (n : ℚ) := by
+      have hn4 : 4 ≤ n := by
+        dsimp [n]
+        omega
+      exact_mod_cast hn4
+    have hb2 : 1 + 1 / (n : ℚ) ≤ 5 / 4 := by
+      field_simp [hn_pos.ne']
+      nlinarith
+    have hfirst :
+        ((1 + 1 / (n : ℚ))^n)^3 ≤ (68 / 25 : ℚ)^3 :=
+      pow_le_pow_left₀ (by positivity) he 3
+    have hsecond :
+        (1 + 1 / (n : ℚ))^3 ≤ (5 / 4 : ℚ)^3 :=
+      pow_le_pow_left₀ (by positivity) hb2 3
+    rw [hsplit]
+    calc
+      ((1 + 1 / (n : ℚ))^n)^3 *
+          (1 + 1 / (n : ℚ))^3
+          ≤ (68 / 25 : ℚ)^3 * (5 / 4 : ℚ)^3 := by
+            exact mul_le_mul hfirst hsecond (by positivity) (by positivity)
+      _ ≤ 50 := by norm_num
+  exact hpow_s_a.trans (hpow_base.trans (hpow_exp.trans hmain))
+
+/-- The shifted first-cell `Y` block at the product upper edge is controlled
+by the same shifted block at its own solo upper edge, at cost `50`.
+
+This is a Lean proof-production divergence from the TeX presentation: the
+paper treats the shifted edge estimate directly, while the formal route now
+records that the rectangle mismatch `posNhi a > posNhi (a - 2)` costs only a
+fixed multiplicative factor.  The remaining first-cell scalar budget can
+therefore absorb this factor instead of strengthening the solo theorem to the
+larger product edge. -/
+theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+        (posJ a 2) (posNhi a)
+      ≤ (50 : ℚ) *
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+          (posJ a 2) (posNhi (posJ a 2)) := by
+  let j : Nat := posJ a 2
+  let R : ℚ := 1 + (3 : ℚ) / (j : ℚ)
+  have hj_large : 12 ≤ j := by
+    dsimp [j]
+    unfold posJ
+    omega
+  have hj_le_self : j ≤ j := le_rfl
+  have hR1 : (1 : ℚ) ≤ R := by
+    dsimp [R]
+    have hj_pos : (0 : ℚ) < (j : ℚ) := by
+      exact_mod_cast (by omega : 0 < j)
+    have hnonneg : (0 : ℚ) ≤ 3 / (j : ℚ) := by positivity
+    linarith
+  have hM :
+      (posNhi a : ℚ) ≤ R * (posNhi j : ℚ) := by
+    have hj_pos : (0 : ℚ) < (j : ℚ) := by
+      exact_mod_cast (by omega : 0 < j)
+    have hposJ_cast : (j : ℚ) = (a : ℚ) - 2 := by
+      dsimp [j]
+      unfold posJ
+      rw [Nat.cast_sub (by omega : 2 ≤ a)]
+      norm_num
+    have hNhi_a : (posNhi a : ℚ) = 12 * (a : ℚ) - 8 := by
+      unfold posNhi
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a)]
+      norm_num
+    have hNhi_j : (posNhi j : ℚ) = 12 * (j : ℚ) - 8 := by
+      unfold posNhi
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * j)]
+      norm_num
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have hden_pos : (0 : ℚ) < (a : ℚ) - 2 := by nlinarith
+    dsimp [R]
+    rw [hNhi_a, hNhi_j, hposJ_cast]
+    rw [← sub_nonneg]
+    field_simp [hden_pos.ne']
+    ring_nf
+    nlinarith
+  have hscaled :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum j (posNhi a)
+        ≤ R^j *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            j (posNhi j) := by
+    unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+    exact
+      positiveLargeTailYGcompClosedFactorialSplitBlockSum_le_scaled_of_natCast_le
+        (N := posNhi j) (M := posNhi a) (j := j) hR1 hM
+  have hpow : R^j ≤ (50 : ℚ) := by
+    dsimp [R]
+    exact one_add_three_div_pow_le_fifty_of_twelve
+      (a := j) (s := j) hj_large hj_le_self
+  have hsum_nonneg :
+      0 ≤ positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+          j (posNhi j) :=
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_nonneg
+      j (posNhi j)
+  have hscaled50 :
+      R^j *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            j (posNhi j)
+        ≤ (50 : ℚ) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            j (posNhi j) :=
+    mul_le_mul_of_nonneg_right hpow hsum_nonneg
+  simpa [j] using hscaled.trans hscaled50
+
+/-- First-cell scalar budget after paying the fixed `50` factor needed to
+move the shifted solo block from `posNhi (a - 2)` to the product edge
+`posNhi a`. -/
+def positiveSmallFirstCellShiftedSoloFiftyFastExpBudget (a : Nat) : Prop :=
+  (29 / 4 : ℚ) * (posNhi a : ℚ) *
+      ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50 *
+        partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+          (8 * posJ a 2)
+    ≤ 9360 * positiveSmallLargeExp a 2
+
+/-- First-cell budget from a shifted solo fast bound checked only at the
+shifted index's own upper edge.
+
+The extra factor `50` is supplied by
+`positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge`.
+This is the narrower completion target for the product first cell: prove the
+ordinary solo-style upper-edge theorem at `j = a - 2`, then discharge the
+separate scalar comparison with the fixed factor included. -/
+theorem positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloOwnEdgeFastCleared
+    {a : Nat} (ha : 3000 ≤ a)
+    (hsolo :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        (posJ a 2) (posNhi (posJ a 2)))
+    (hbudget : positiveSmallFirstCellShiftedSoloFiftyFastExpBudget a) :
+    positiveSmallFirstCellYUpperEdgeBudget a := by
+  unfold positiveSmallFirstCellYUpperEdgeBudget positiveSmallFirstCellQBudget
+  rw [positiveLargeTailProductYUpperEdgeExactBound_two_eq_shiftedSolo]
+  have hscaleEdge :=
+    positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge
+      (a := a) ha
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+    at hsolo
+  have hhi15 : 15 ≤ posNhi a := by
+    unfold posNhi
+    omega
+  have hhi15Q : (15 : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hhi15
+  have hlinear_nonneg :
+      0 ≤ (5 : ℚ) * (posNhi a : ℚ) - 72 := by
+    nlinarith
+  have hscale_nonneg :
+      0 ≤ ((posNhi a : ℚ) *
+        ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) := by
+    positivity
+  have hpow_nonneg : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  have hscaledBlock :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+        ≤
+      (50 : ℚ) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi (posJ a 2))) := by
+    calc
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+          ≤
+        (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          ((50 : ℚ) *
+            positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+              (posJ a 2) (posNhi (posJ a 2))) := by
+          simpa [mul_assoc] using
+            mul_le_mul_of_nonneg_left hscaleEdge hpow_nonneg
+      _ =
+        (50 : ℚ) *
+          ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+            positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+              (posJ a 2) (posNhi (posJ a 2))) := by
+          ring
+  have hsoloScaled :
+      (50 : ℚ) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi (posJ a 2)))
+        ≤
+      (50 : ℚ) *
+        (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) :=
+    mul_le_mul_of_nonneg_left hsolo (by norm_num)
+  have hscaledSolo :
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a))
+        ≤
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((50 : ℚ) *
+          (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2))) :=
+    mul_le_mul_of_nonneg_left (hscaledBlock.trans hsoloScaled)
+      hscale_nonneg
+  have hjc_nonneg : 0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
+    mul_nonneg (Nat.cast_nonneg _) (c_nonneg (posJ a 2))
+  have hbudgetScaled :
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50 *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2))
+        ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) :=
+    mul_le_mul_of_nonneg_left hbudget hjc_nonneg
+  calc
+    (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+          (5 * (posNhi a : ℚ) - 72) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+        =
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)) := by
+        ring
+    _ ≤
+      ((posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) / 4) *
+        ((50 : ℚ) *
+          (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2))) := hscaledSolo
+    _ =
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50 *
+            partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2)) := by
+        ring
+    _ ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) := hbudgetScaled
+    _ =
+      9360 * (posJ a 2 : ℚ) *
+        positiveSmallLargeExp a 2 * c (posJ a 2) := by
+        ring
+
 /-- Large-`a` first-cell budget after the scalar comparison has been closed.
 
 The only remaining first-cell analytic input is now the shifted solo-style
@@ -2527,6 +2833,41 @@ theorem LargeTailProductCertificate.ofShiftedSoloFirstCellAndClosedFactorialSpli
       exact
         positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloFastCleared_large
           ha (hshiftedSoloTwoUpper ha))
+    hsmallGeThree htemperedGeThree
+
+/-- Product-tail constructor using the scaled shifted-solo first-cell route.
+
+This is the completion-facing replacement for asking the shifted solo theorem
+directly at the larger product edge `posNhi a`.  The caller now proves the
+ordinary upper-edge solo-style statement at `j = a - 2`, pays the fixed `50`
+edge-scaling factor through `positiveSmallFirstCellShiftedSoloFiftyFastExpBudget`,
+and supplies the unchanged `k ≥ 3` scalar fields. -/
+theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (hshiftedSoloOwnUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          (posJ a 2) (posNhi (posJ a 2)))
+    (hscaledBudgetTwo :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellShiftedSoloFiftyFastExpBudget a)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloOwnEdgeFastCleared
+          ha (hshiftedSoloOwnUpper ha) (hscaledBudgetTwo ha))
     hsmallGeThree htemperedGeThree
 
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
