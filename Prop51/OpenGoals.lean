@@ -606,6 +606,32 @@ def BoundedPositiveCertificate.ofCombinedProductScaledEdgeMajorantDirectPrefix
       smallXY temperedXY soloY)
     productPrefix soloPrefix
 
+/-- Bounded certificate with all product fields supplied by the direct saddle
+route.
+
+The only bounded inputs left here are the finite solo budget and the solo
+prefix norm-unit field.  The product prefix is the corrected direct `Bq * Qq`
+route, avoiding the legacy exact upper-edge split-product grid. -/
+def BoundedPositiveCertificate.ofDirectSaddle
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate :=
+  BoundedPositiveCertificate.ofCombinedProductScaledEdgeMajorantDirectPrefix
+    (by
+      intro a N k ha ha2000 hrect hk hsmall hB
+      exact positiveSmallXYProductBound_of_directSaddle_geTwo
+        ha ha2000 hrect hk hsmall
+        (two_le_of_Bq_pos (mem_positiveKRange.mp hk).1 hB))
+    (by
+      intro a N k ha ha2000 hrect hk htempered _hB
+      exact positiveTemperedXYProductBound_of_directSaddle
+        ha ha2000 hrect hk htempered)
+    soloY
+    PositiveSaddleLargeTailProductPrefixPointwise.ofDirectSaddle
+    soloPrefix
+
 /-- Compatibility constructor for the previous bounded route, which supplies
 the edge budget through fixed row/`k` chunks. -/
 def BoundedPositiveCertificate.ofActiveAnalyticFixedEdge
@@ -6195,5 +6221,21 @@ theorem completion_of_three_inputs
       (hbounded.toPositiveSaddleCertificate
         pointwise
         positiveSaddleLargeTailCandidateRawClearedUnitReserveBoundsCertificate_hybridClosed)
+
+/-- Current completion theorem after the direct product route.
+
+The finite and prefix product obligations and the large-tail product/solo
+obligations are now concrete.  The remaining theorem-facing inputs are exactly
+the bounded finite solo budget and the solo prefix norm-unit field. -/
+theorem completion_of_directSaddle
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    CoefficientNegativity :=
+  completion_of_three_inputs
+    (BoundedPositiveCertificate.ofDirectSaddle soloY soloPrefix)
+    LargeTailProductCertificate.ofDirectSaddle
+    largeTailSoloCertificate
 
 end Prop51
