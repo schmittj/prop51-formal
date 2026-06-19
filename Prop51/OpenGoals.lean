@@ -1631,6 +1631,39 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_veryLowRemainder
     hveryLow
     (by norm_num)
 
+/-- The sharp own-edge first-cell target is closed analytically.
+
+The final very-low residual costs only `3 * j * c j`, well below the
+remaining `52278/625` allowance after the proportional and low-middle active
+Poisson tails. -/
+theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_large
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveSmallFirstCellSharpOwnEdgeConstCleared a := by
+  refine positiveSmallFirstCellSharpOwnEdgeConstCleared_of_veryLowRemainder
+    (a := a) ha ?_
+  have hvery :=
+    positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum_scaled_le_three
+      (a := posJ a 2) (show 2998 ≤ posJ a 2 by
+        unfold posJ
+        omega)
+  have hjc_nonneg : 0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
+    mul_nonneg (Nat.cast_nonneg _) (c_nonneg _)
+  exact hvery.trans
+    (by
+      calc
+        3 * (posJ a 2 : ℚ) * c (posJ a 2)
+            =
+          3 * ((posJ a 2 : ℚ) * c (posJ a 2)) := by
+            ring
+        _ ≤ (52278 / 625 : ℚ) *
+            ((posJ a 2 : ℚ) * c (posJ a 2)) := by
+            exact mul_le_mul_of_nonneg_right
+              (by norm_num : (3 : ℚ) ≤ 52278 / 625)
+              hjc_nonneg
+        _ = (52278 / 625 : ℚ) * (posJ a 2 : ℚ) *
+            c (posJ a 2) := by
+            ring)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
@@ -3978,6 +4011,37 @@ theorem LargeTailProductCertificate.ofSharpOwnEdgeConstTwoEndpointAndFastUpperEd
       exact
         positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_ownEdge
           ha (hsharpOwnTwo ha))
+    hsmallGeThree htemperedGeThree
+
+/-- Closed first-cell version of the sharp own-edge product constructor.
+
+The retained `k = 2` cell is now discharged by
+`positiveSmallFirstCellSharpOwnEdgeConstCleared_large`; callers only supply
+the combined upper-edge product majorant and the `k ≥ 3` scalar fields. -/
+theorem LargeTailProductCertificate.ofClosedSharpOwnEdgeConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpOwnEdgeConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a ha
+      exact positiveSmallFirstCellSharpOwnEdgeConstCleared_large ha)
     hsmallGeThree htemperedGeThree
 
 /-- Canonical combined-product constructor for the remaining large-tail
