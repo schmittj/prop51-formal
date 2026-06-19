@@ -1485,6 +1485,18 @@ def positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
       partialExpUpperFast (positiveSoloYExponent (posJ a 2))
         (8 * posJ a 2)
 
+/-- Constant-budget version of the explicit sharp first-cell target.
+
+For `3000 ≤ a`, the fast solo exponential factor at degree `a-2` is at
+least `500`, so this constant-cleared inequality implies the fast target.
+It removes the exponential evaluator from the first-cell proof obligation. -/
+def positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+        (posJ a 2) N
+    ≤ 14500 * (posJ a 2 : ℚ) * c (posJ a 2)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
@@ -1554,6 +1566,110 @@ theorem
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
     positivity
   exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
+/-- It is enough to check the constant-budget sharp closed-factorial
+first-cell target at the upper rectangle edge. -/
+theorem
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge :
+      positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+        a (posNhi a)) :
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+      a N := by
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+    at hEdge ⊢
+  have hsum :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) N
+        ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) (posNhi a) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
+      hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
+/-- The constant-budget first-cell target implies the fast explicit sharp
+closed-factorial target in the large-tail range. -/
+theorem
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared_of_const
+    {a N : Nat} (ha : 3000 ≤ a)
+    (h :
+      positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+        a N) :
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+      a N := by
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+    at h
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+  have hj2500 : 2500 ≤ posJ a 2 := by
+    unfold posJ
+    omega
+  have hexp :
+      (500 : ℚ) ≤
+        partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+          (8 * posJ a 2) :=
+    by
+      have hy_ge :
+          (500 : ℚ) ≤ positiveSoloYExponent (posJ a 2) := by
+        have hjQ : (2500 : ℚ) ≤ (posJ a 2 : ℚ) := by
+          exact_mod_cast hj2500
+        unfold positiveSoloYExponent
+        nlinarith
+      have hy0 : 0 ≤ positiveSoloYExponent (posJ a 2) := by
+        unfold positiveSoloYExponent
+        positivity
+      have hyT :
+          positiveSoloYExponent (posJ a 2) <
+            ((8 * posJ a 2 : Nat) : ℚ) := by
+        have hjQ : (1 : ℚ) ≤ (posJ a 2 : ℚ) := by
+          exact_mod_cast (by omega : 1 ≤ posJ a 2)
+        unfold positiveSoloYExponent
+        norm_num [Nat.cast_mul]
+        nlinarith
+      have hterm :
+          positiveSoloYExponent (posJ a 2) ^ (1 : Nat) /
+              (((1 : Nat).factorial : Nat) : ℚ)
+            ≤ partialExpUpper (positiveSoloYExponent (posJ a 2))
+              (8 * posJ a 2) :=
+        expTerm_le_partialExpUpper
+          (z := positiveSoloYExponent (posJ a 2)) (m := 1)
+          (T := 8 * posJ a 2) (by omega : 1 < 8 * posJ a 2)
+          hy0 hyT
+      have hterm_eq :
+          positiveSoloYExponent (posJ a 2) ^ (1 : Nat) /
+              (((1 : Nat).factorial : Nat) : ℚ)
+            = positiveSoloYExponent (posJ a 2) := by
+        norm_num
+      rw [partialExpUpperFast_eq]
+      rw [hterm_eq] at hterm
+      exact hy_ge.trans hterm
+  have hcoef_nonneg :
+      0 ≤ (29 : ℚ) * (posJ a 2 : ℚ) * c (posJ a 2) := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg _))
+      (c_nonneg _)
+  have hbudget :
+      14500 * (posJ a 2 : ℚ) * c (posJ a 2)
+        ≤ 29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2) := by
+    calc
+      14500 * (posJ a 2 : ℚ) * c (posJ a 2)
+          =
+        (29 * (posJ a 2 : ℚ) * c (posJ a 2)) * (500 : ℚ) := by
+          ring
+      _ ≤ (29 * (posJ a 2 : ℚ) * c (posJ a 2)) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2) :=
+          mul_le_mul_of_nonneg_left hexp hcoef_nonneg
+      _ =
+        29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2) := by
+          ring
+  exact h.trans hbudget
 
 /-- The explicit sharp closed-factorial first-cell target implies the
 recurrence-level sharp `Qq` first-cell target. -/
@@ -3507,6 +3623,46 @@ theorem LargeTailProductCertificate.ofSharpClosedFactorialSplitFastTwoEndpointAn
       exact
         positiveSmallFirstCellSharpQFastCleared_of_closedFactorialSplit
           (hsharpTwoUpper ha))
+    hsmallGeThree htemperedGeThree
+
+/-- Endpoint constructor whose first-cell input is the constant-budget sharp
+closed-factorial split block.
+
+This is the most compact current first-cell surface: the exponential factor
+has been absorbed by
+`partialExpUpperFast_positiveSoloYExponent_eight_ge_fiveHundred`, so the
+remaining `k = 2` proof only has to establish a pure constant multiple of
+`(a-2) * c (a-2)`. -/
+theorem LargeTailProductCertificate.ofSharpClosedFactorialSplitConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsharpTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+          a (posNhi a))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpClosedFactorialSplitFastTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared_of_const
+          ha (hsharpTwoUpper ha))
     hsmallGeThree htemperedGeThree
 
 /-- Canonical combined-product constructor for the remaining large-tail
