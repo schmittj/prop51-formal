@@ -16,6 +16,7 @@ import Mathlib.Data.Nat.Factorial.BigOperators
 import Mathlib.Algebra.Order.Floor.Div
 import Mathlib.Analysis.SpecificLimits.Normed
 import Prop51.SignLock
+import Prop51.SaddleDirect
 
 namespace Prop51
 
@@ -13930,6 +13931,403 @@ theorem positiveTemperedXYProductBound_nonneg {a N k : Nat}
       (positiveTemperedExponentUpper_lt_expCutoff ha401 ha2000 hkmax htempered)
   unfold positiveTemperedXYProductBound
   positivity
+
+/-- Denominator bridge for the direct small-product route.
+
+The current executable raw predicate for the finite small branch uses the
+tangent exponent.  The corrected direct saddle route proves the upper-edge
+target `positiveSmallXYProductBound` instead, so this bridge records the
+corresponding denominator-cleared shape. -/
+theorem positiveSmallXYProductBound_of_upperRawCleared
+    {a N k : Nat} (hN : 1 ≤ N) (ha : 1 ≤ a)
+    (hkRange : k ∈ positiveKRange a)
+    (h :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤
+        (2581 / 20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff *
+            ((N : ℚ) * c k * c (posJ a k))) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, _hkmax⟩
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi_pos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos ha
+  have hck_pos : 0 < c k := c_pos k hk1
+  have hcj_pos : 0 < c (posJ a k) :=
+    c_pos (posJ a k) (one_le_posJ_of_mem_positiveKRange ha hkRange)
+  let num : ℚ := 2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)
+  let rhs : ℚ :=
+    (2581 / 20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+      partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff *
+        ((N : ℚ) * c k * c (posJ a k))
+  have hnum :
+      num ≤ rhs / (posNhi a : ℚ) := by
+    rw [le_div_iff₀ hhi_pos]
+    dsimp [num, rhs]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using h
+  have hden_pos :
+      0 < ((N : ℚ)^2) * c k * c (posJ a k) := by
+    positivity
+  rw [Xnorm_mul_Ynorm_eq_raw_div hN ha hkRange]
+  unfold positiveSmallXYProductBound
+  rw [div_le_iff₀ hden_pos]
+  calc
+    2 * (2 : ℚ) ^ posJ a k * Bq N k * Qq N (posJ a k)
+        ≤ rhs / (posNhi a : ℚ) := by
+          simpa [num] using hnum
+    _ =
+        (2581 / 20) *
+          (((k : ℚ) * (posJ a k : ℚ)) /
+            ((N : ℚ) * (posNhi a : ℚ))) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff *
+          (((N : ℚ)^2) * c k * c (posJ a k)) := by
+          dsimp [rhs]
+          field_simp [hNpos.ne', hhi_pos.ne']
+
+/-- Finite-window small-regime product bound from the direct saddle core.
+
+This intentionally bypasses the tangent raw predicate: the corrected direct
+saddle route controls the actual `Bq * Qq` product against the upper-edge
+combined exponent. -/
+theorem positiveSmallXYProductBound_of_directSaddle_geTwo
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (hsmall : k ≤ ceilSqrt N) (hk2 : 2 ≤ k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveSmallXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  let s : Nat := ceilSqrt N
+  let j : Nat := posJ a k
+  let Ecore : ℚ :=
+    41 * (s : ℚ) / 36 + (j : ℚ) / 5 +
+      (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ) + 1 / 5
+  let Eup : ℚ := positiveSmallExponentUpper a k
+  have ha1 : 1 ≤ a := by omega
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hhi_pos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos ha1
+  have hs32 : 32 ≤ s := by
+    have hlt : 31 * 31 < N := by
+      have hlo : posNlo a ≤ N := hrect.1
+      unfold posNlo at hlo
+      omega
+    have hceil : 31 < ceilSqrt N := lt_ceilSqrt_of_sq_lt hlt
+    dsimp [s]
+    omega
+  have hNs : N ≤ s * s := by
+    dsimp [s]
+    exact le_ceilSqrt_sq N
+  have hks : k ≤ s := by
+    dsimp [s]
+    exact hsmall
+  have hj40 : 40 ≤ j := by
+    have hself := self_le_ten_mul_posJ_of_le_posKmax hkmax
+    dsimp [j]
+    omega
+  have hka : k + j ≤ a := by
+    have hk_le_a : k ≤ a := by
+      exact le_of_lt (lt_self_of_le_posKmax ha1 hkmax)
+    dsimp [j]
+    unfold posJ
+    omega
+  have hNa : N ≤ 12 * a := by
+    have hhi := hrect.2
+    unfold posNhi at hhi
+    omega
+  have hcore :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix Ecore (2 * a) := by
+    dsimp [Ecore, j, s]
+    exact Bq_Qq_small_core hs32 hk2 hks hNs hj40 hka hNa
+  have hconst :
+      (2592 / 25 : ℚ) * (posNhi a : ℚ)
+        ≤ (5 / 3 : ℚ) * (2581 / 20 : ℚ) * (N : ℚ) := by
+    have hNloQ : (6 : ℚ) * (a : ℚ) - 7 ≤ (N : ℚ) := by
+      have hcast : ((posNlo a : Nat) : ℚ) ≤ (N : ℚ) := by
+        exact_mod_cast hrect.1
+      have hlo_eq : ((posNlo a : Nat) : ℚ) = (6 : ℚ) * (a : ℚ) - 7 := by
+        unfold posNlo
+        rw [Nat.cast_sub (by omega : 7 ≤ 6 * a), Nat.cast_mul]
+        norm_num
+      simpa [hlo_eq] using hcast
+    have hhi_eq : ((posNhi a : Nat) : ℚ) = (12 : ℚ) * (a : ℚ) - 8 := by
+      unfold posNhi
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a), Nat.cast_mul]
+      norm_num
+    rw [hhi_eq]
+    have haQ : (401 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha401
+    have hbase :
+        (2592 / 25 : ℚ) * ((12 : ℚ) * (a : ℚ) - 8)
+          ≤ (5 / 3 : ℚ) * (2581 / 20 : ℚ) *
+              ((6 : ℚ) * (a : ℚ) - 7) := by
+      nlinarith
+    have hNstep :
+        (5 / 3 : ℚ) * (2581 / 20 : ℚ) *
+            ((6 : ℚ) * (a : ℚ) - 7)
+          ≤ (5 / 3 : ℚ) * (2581 / 20 : ℚ) * (N : ℚ) :=
+      mul_le_mul_of_nonneg_left hNloQ (by norm_num)
+    exact hbase.trans hNstep
+  have hjpos : (0 : ℚ) < (j : ℚ) := by
+    dsimp [j]
+    exact_mod_cast posJ_pos_of_le_posKmax ha1 hkmax
+  have hEcore_nonneg : 0 ≤ Ecore := by
+    dsimp [Ecore]
+    positivity
+  have hprefix_nonneg : 0 ≤ expPrefix Ecore (2 * a) :=
+    expPrefix_nonneg hEcore_nonneg (2 * a)
+  have hEup_nonneg : 0 ≤ Eup := by
+    dsimp [Eup]
+    exact positiveSmallExponentUpper_nonneg
+      (posJ_pos_of_le_posKmax ha1 hkmax)
+  have hEabs_le : Ecore + 2 / 3 ≤ Eup := by
+    have hs_le : s ≤ posSmallCutoff a := by
+      dsimp [s]
+      exact ceilSqrt_mono hrect.2
+    have hs_leQ : (s : ℚ) ≤ (posSmallCutoff a : ℚ) := by
+      exact_mod_cast hs_le
+    have hcoef :
+        41 * (s : ℚ) / 36
+          ≤ (1139 / 1000 : ℚ) * (posSmallCutoff a : ℚ) := by
+      have hleft :
+          41 * (s : ℚ) / 36
+            ≤ (41 / 36 : ℚ) * (posSmallCutoff a : ℚ) := by
+        have hcoef_nonneg : (0 : ℚ) ≤ 41 / 36 := by norm_num
+        simpa [div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc] using
+          mul_le_mul_of_nonneg_left hs_leQ hcoef_nonneg
+      have hright :
+          (41 / 36 : ℚ) * (posSmallCutoff a : ℚ)
+            ≤ (1139 / 1000 : ℚ) * (posSmallCutoff a : ℚ) := by
+        exact mul_le_mul_of_nonneg_right (by norm_num)
+          (Nat.cast_nonneg (posSmallCutoff a))
+      exact hleft.trans hright
+    dsimp [Ecore, Eup, j]
+    unfold positiveSmallExponentUpper
+    ring_nf
+    nlinarith [hcoef]
+  have hprefix_absorb :
+      (5 / 3 : ℚ) * expPrefix Ecore (2 * a)
+        ≤ expPrefix (Ecore + 2 / 3) (2 * a + 1) := by
+    have hmul :=
+      expPrefix_mul_le hEcore_nonneg (by norm_num : 0 ≤ (2 / 3 : ℚ))
+        (2 * a) 1
+    have hfive : expPrefix (2 / 3 : ℚ) 1 = 5 / 3 :=
+      five_thirds_eq_expPrefix_two_thirds_one
+    calc
+      (5 / 3 : ℚ) * expPrefix Ecore (2 * a)
+          = expPrefix Ecore (2 * a) * expPrefix (2 / 3 : ℚ) 1 := by
+            rw [hfive]
+            ring
+      _ ≤ expPrefix (Ecore + 2 / 3) (2 * a + 1) := by
+            simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using hmul
+  have hprefix_le_PE :
+      (5 / 3 : ℚ) * expPrefix Ecore (2 * a)
+        ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+    have hmono :
+        expPrefix (Ecore + 2 / 3) (2 * a + 1)
+          ≤ expPrefix Eup (2 * a + 1) :=
+      expPrefix_mono_arg (add_nonneg hEcore_nonneg (by norm_num)) hEabs_le (2 * a + 1)
+    have htoPE :
+        expPrefix Eup (2 * a + 1)
+          ≤ partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+      have hraw :=
+        expPrefix_le_partialExpUpperExpr (x := Eup) (T₀ := positiveExpCutoff)
+          hEup_nonneg
+          (by
+            dsimp [Eup]
+            exact positiveSmallExponentUpper_lt_expCutoff ha1 ha2000 hkmax)
+          (2 * a + 1)
+      change expPrefix Eup (2 * a + 1) ≤ partialExpUpper Eup positiveExpCutoff
+      unfold partialExpUpper
+      exact hraw
+    exact hprefix_absorb.trans (hmono.trans htoPE)
+  have hraw :
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+        ≤
+        (2581 / 20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+          partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff *
+            ((N : ℚ) * c k * c (posJ a k)) := by
+    have hleft :
+        (posNhi a : ℚ) *
+          (2 * (2 : ℚ)^j * Bq N k * Qq N j)
+        ≤ (posNhi a : ℚ) *
+          ((2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+            expPrefix Ecore (2 * a)) :=
+      mul_le_mul_of_nonneg_left hcore hhi_pos.le
+    calc
+      2 * (2 : ℚ)^(posJ a k) * (posNhi a : ℚ) *
+          Bq N k * Qq N (posJ a k)
+          ≤ (2592 / 25 : ℚ) * (posNhi a : ℚ) *
+              ((k : ℚ) * (j : ℚ) * (c k * c j)) *
+              expPrefix Ecore (2 * a) := by
+            dsimp [j] at hleft
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hleft
+      _ ≤ ((5 / 3 : ℚ) * (2581 / 20 : ℚ) * (N : ℚ)) *
+              ((k : ℚ) * (j : ℚ) * (c k * c j)) *
+              expPrefix Ecore (2 * a) := by
+            have hrest :
+                0 ≤ ((k : ℚ) * (j : ℚ) * (c k * c j)) *
+                    expPrefix Ecore (2 * a) := by
+              have hkjc :
+                  0 ≤ (k : ℚ) * (j : ℚ) * (c k * c j) := by
+                exact mul_nonneg
+                  (mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg j))
+                  (mul_nonneg (c_nonneg k) (c_nonneg j))
+              exact mul_nonneg hkjc hprefix_nonneg
+            have hconstRest := mul_le_mul_of_nonneg_right hconst hrest
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hconstRest
+      _ =
+          (2581 / 20 : ℚ) * ((k : ℚ) * (j : ℚ)) *
+              ((N : ℚ) * c k * c j) *
+              ((5 / 3 : ℚ) * expPrefix Ecore (2 * a)) := by
+            ring
+      _ ≤
+          (2581 / 20 : ℚ) * ((k : ℚ) * (j : ℚ)) *
+            ((N : ℚ) * c k * c j) *
+              partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff := by
+            have hscale :
+                0 ≤ (2581 / 20 : ℚ) * ((k : ℚ) * (j : ℚ)) *
+                    ((N : ℚ) * c k * c j) := by
+              exact mul_nonneg
+                (mul_nonneg (by norm_num)
+                  (mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg j)))
+                (mul_nonneg
+                  (mul_nonneg hNpos.le (c_nonneg k))
+                  (c_nonneg j))
+            exact mul_le_mul_of_nonneg_left hprefix_le_PE hscale
+      _ =
+          (2581 / 20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            partialExpUpper (positiveSmallExponentUpper a k) positiveExpCutoff *
+              ((N : ℚ) * c k * c (posJ a k)) := by
+            dsimp [j]
+            ring
+  exact positiveSmallXYProductBound_of_upperRawCleared hN ha1 hkRange hraw
+
+/-- Finite-window tempered-regime product bound from the direct saddle core. -/
+theorem positiveTemperedXYProductBound_of_directSaddle
+    {a N k : Nat} (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
+    (hrect : positiveRectangle a N) (hkRange : k ∈ positiveKRange a)
+    (htempered : ceilSqrt N < k) :
+    Xnorm N k * Ynorm N (posJ a k) ≤
+      positiveTemperedXYProductBound a N k := by
+  rcases (mem_positiveKRange.mp hkRange) with ⟨hk1, hkmax⟩
+  let j : Nat := posJ a k
+  let Ecore : ℚ :=
+    (a : ℚ) / 5 +
+      (57 / 10 : ℚ) * (a : ℚ) / (k : ℚ) +
+      (29 / 10 : ℚ) * (a : ℚ) / (j : ℚ)
+  let Eup : ℚ := positiveTemperedExponentUpper a k
+  have ha1 : 1 ≤ a := by omega
+  have hN : 1 ≤ N := positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
+  have hNpos : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+  have hkpos : (0 : ℚ) < (k : ℚ) := by exact_mod_cast hk1
+  have hjpos_nat : 0 < j := by
+    dsimp [j]
+    exact posJ_pos_of_le_posKmax ha1 hkmax
+  have hjpos : (0 : ℚ) < (j : ℚ) := by exact_mod_cast hjpos_nat
+  have hk40 : 40 ≤ k := by
+    have hlt : 48 * 48 < N := by
+      have hlo : posNlo a ≤ N := hrect.1
+      unfold posNlo at hlo
+      omega
+    have hceil : 48 < ceilSqrt N := lt_ceilSqrt_of_sq_lt hlt
+    omega
+  have hj40 : 40 ≤ j := by
+    have hself := self_le_ten_mul_posJ_of_le_posKmax hkmax
+    dsimp [j]
+    omega
+  have hka : k + j ≤ a := by
+    have hk_le_a : k ≤ a := by
+      exact le_of_lt (lt_self_of_le_posKmax ha1 hkmax)
+    dsimp [j]
+    unfold posJ
+    omega
+  have hNa : N ≤ 12 * a := by
+    have hhi := hrect.2
+    unfold posNhi at hhi
+    omega
+  have hcore :
+      2 * (2 : ℚ)^j * Bq N k * Qq N j
+        ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+          expPrefix Ecore (2 * a) := by
+    dsimp [Ecore, j]
+    exact Bq_Qq_tempered_core hk40 hj40 hka hNa
+  have hEcore_nonneg : 0 ≤ Ecore := by
+    dsimp [Ecore]
+    positivity
+  have hEup_nonneg : 0 ≤ Eup := by
+    dsimp [Eup]
+    exact positiveTemperedExponentUpper_nonneg hk1 hjpos_nat
+  have hEcore_le : Ecore ≤ Eup := by
+    dsimp [Ecore, Eup, j]
+    unfold positiveTemperedExponentUpper
+    ring_nf
+    nlinarith
+  have hprefix_le_PE :
+      expPrefix Ecore (2 * a)
+        ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff := by
+    have hmono :
+        expPrefix Ecore (2 * a) ≤ expPrefix Eup (2 * a) :=
+      expPrefix_mono_arg hEcore_nonneg hEcore_le (2 * a)
+    have htoPE :
+        expPrefix Eup (2 * a)
+          ≤ partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff := by
+      have hraw :=
+        expPrefix_le_partialExpUpperExpr (x := Eup) (T₀ := positiveExpCutoff)
+          hEup_nonneg
+          (by
+            dsimp [Eup]
+            exact positiveTemperedExponentUpper_lt_expCutoff
+              ha401 ha2000 hkmax (temperedRegime_of_rectangle hrect htempered))
+          (2 * a)
+      change expPrefix Eup (2 * a) ≤ partialExpUpper Eup positiveExpCutoff
+      unfold partialExpUpper
+      exact hraw
+    exact hmono.trans htoPE
+  have hraw : positiveTemperedXYProductRawCleared a N k := by
+    unfold positiveTemperedXYProductRawCleared
+    calc
+      2 * (2 : ℚ)^(posJ a k) * Bq N k * Qq N (posJ a k)
+          ≤ (2592 / 25 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+              expPrefix Ecore (2 * a) := by
+            dsimp [j] at hcore
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hcore
+      _ ≤ (2117 / 20 : ℚ) * (k : ℚ) * (j : ℚ) * (c k * c j) *
+              expPrefix Ecore (2 * a) := by
+            have hconst : (2592 / 25 : ℚ) ≤ 2117 / 20 := by norm_num
+            have hrest :
+                0 ≤ (k : ℚ) * (j : ℚ) * (c k * c j) *
+                    expPrefix Ecore (2 * a) := by
+              have hkjc :
+                  0 ≤ (k : ℚ) * (j : ℚ) * (c k * c j) := by
+                exact mul_nonneg
+                  (mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg j))
+                  (mul_nonneg (c_nonneg k) (c_nonneg j))
+              exact mul_nonneg hkjc (expPrefix_nonneg hEcore_nonneg (2 * a))
+            have hconstRest := mul_le_mul_of_nonneg_right hconst hrest
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hconstRest
+      _ ≤ (2117 / 20 : ℚ) * ((k : ℚ) * (j : ℚ)) *
+            partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+              (c k * c j) := by
+            have hscale :
+                0 ≤ (2117 / 20 : ℚ) * ((k : ℚ) * (j : ℚ)) *
+                    (c k * c j) := by
+              exact mul_nonneg
+                (mul_nonneg (by norm_num)
+                  (mul_nonneg (Nat.cast_nonneg k) (Nat.cast_nonneg j)))
+                (mul_nonneg (c_nonneg k) (c_nonneg j))
+            have hmul := mul_le_mul_of_nonneg_left hprefix_le_PE hscale
+            simpa [mul_comm, mul_left_comm, mul_assoc] using hmul
+      _ =
+          (2117 / 20 : ℚ) * ((k : ℚ) * (posJ a k : ℚ)) *
+            partialExpUpper (positiveTemperedExponentUpper a k) positiveExpCutoff *
+              (c k * c (posJ a k)) := by
+            dsimp [j]
+  exact positiveTemperedXYProductBound_of_rawCleared hN ha1 hkRange hraw
 
 theorem positivePrefactor_nonneg {C : ℚ} {a N k : Nat}
     (hC : 0 ≤ C) (hN : 1 ≤ N) (ha : 2 ≤ a) (hk1 : 1 ≤ k)
