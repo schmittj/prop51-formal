@@ -399,22 +399,75 @@ theorem PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedFastExpBqPosit
 /-- The bounded positive-saddle obligation for the current canonical route.
 
 This is intentionally route-facing: the finite `401 ≤ a ≤ 2000` input is any
-proof producer that can build the existing tangent-product budget certificate
-from the live large-tail pointwise and candidate/reserve inputs.  This lets the
-bounded route consume either the older fixed-`k` edge chunks or the newer
-semantic edge-budget checker without changing `Completion.lean`.
+proof producer that can build the existing positive-saddle certificate from the
+live large-tail pointwise and candidate/reserve inputs.  This lets the bounded
+route consume either the older tangent-product chunks or the newer direct
+edge-majorant checker without changing `Completion.lean`.
 
 The `2001 ≤ a < 3000` strip is carried by the direct product prefix pointwise
 and solo prefix norm targets above.  This is a Lean-side divergence from the
 older generated exact upper-edge chunks: those chunks are kept as compatibility
 proof producers, not as theorem-facing fields. -/
 structure BoundedPositiveCertificate where
-  toTangentProductBudget :
+  toPositiveSaddleCertificate :
     PositiveSaddleEntropyShadowLargeExpPointwiseCertificate →
       PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate →
-        PositiveSaddleTangentProductBudgetCertificate
+        PositiveSaddleCertificate (fun _ => positiveSoloBudget)
   productPrefixPointwise : PositiveSaddleLargeTailProductPrefixPointwise
   soloPrefixNormUnit : PositiveSaddleLargeTailSoloPrefixNormUnit
+
+/-- Endpoint-reduced bounded-window target for the current completion route.
+
+This is the bounded checker surface recommended by the completion plan: prove
+the retained positive terms directly below the executable small/tempered edge
+majorants on `401 ≤ a ≤ 2000`, plus the finite solo and edge budgets.  The
+large-`a` entropy tail is intentionally not a field here; `BoundedPositiveCertificate`
+gets it from the current product/solo/candidate route. -/
+structure BoundedMajorantBudgetCertificate : Prop where
+  small :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → k ≤ ceilSqrt N →
+        normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k
+  tempered :
+    ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      k ∈ positiveKRange a → ceilSqrt N < k →
+        normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k
+  soloY :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
+  edgeBudget :
+    ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+      positiveEdgeMajorantSum a ≤ positiveEdgeBudget
+
+theorem BoundedMajorantBudgetCertificate.toPositiveSaddleCertificate
+    (cert : BoundedMajorantBudgetCertificate)
+    (pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate)
+    (candidate :
+      PositiveSaddleEntropyShadowLargeExpCandidateSplitTemperedRawClearedUnitReserveBoundsCertificate) :
+    PositiveSaddleCertificate (fun _ => positiveSoloBudget) :=
+  (show PositiveSaddleMajorantBudgetCertificate from
+    { small := cert.small
+      tempered := cert.tempered
+      soloY := cert.soloY
+      edgeBudget := cert.edgeBudget
+      entropyTail :=
+        (pointwise.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
+          candidate.toRawClearedBoundsCertificate).entropyTail }).toCertificate
+
+/-- Completion-facing bounded constructor for the direct edge-majorant route.
+
+This removes the tangent-product interface from the bounded checker target:
+future generated bounded rows can certify the actual majorants consumed by the
+finite-window assembly, while the prefix strip remains the same theorem-facing
+product/solo obligation used by `Completion.lean`. -/
+def BoundedPositiveCertificate.ofMajorantBudgetDirectPrefix
+    (cert : BoundedMajorantBudgetCertificate)
+    (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate where
+  toPositiveSaddleCertificate := cert.toPositiveSaddleCertificate
+  productPrefixPointwise := productPrefix
+  soloPrefixNormUnit := soloPrefix
 
 /-- Compatibility constructor for the previous bounded route, which supplies
 the edge budget through fixed row/`k` chunks. -/
@@ -437,8 +490,8 @@ def BoundedPositiveCertificate.ofActiveAnalyticFixedEdge
         positiveLargeTailSoloUpperEdgeExactBound
         soloPrefixALen) :
     BoundedPositiveCertificate where
-  toTangentProductBudget := fun pointwise candidate =>
-    cert.toTangentProductBudgetCertificate_of_pointwise pointwise candidate
+  toPositiveSaddleCertificate := fun pointwise candidate =>
+    (cert.toTangentProductBudgetCertificate_of_pointwise pointwise candidate).toCertificate
   productPrefixPointwise :=
     positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProductBoundPrefixChunks
       productPrefix
@@ -514,13 +567,13 @@ def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge
         positiveLargeTailSoloUpperEdgeExactBound
         soloPrefixALen) :
     BoundedPositiveCertificate where
-  toTangentProductBudget := fun pointwise candidate =>
-    positiveSaddleActiveAnalyticProductTangentSoloNSemanticEdge_toTangentProductBudgetCertificate
+  toPositiveSaddleCertificate := fun pointwise candidate =>
+    (positiveSaddleActiveAnalyticProductTangentSoloNSemanticEdge_toTangentProductBudgetCertificate
       tangentRowLenPos soloSaddleRowLenPos soloBudgetRowLenPos
       tangentNLenPos soloSaddleNLenPos soloBudgetNLenPos tangentKLenPos
       smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
       soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
-      edgeBudget pointwise candidate
+      edgeBudget pointwise candidate).toCertificate
   productPrefixPointwise :=
     positiveSaddleLargeTailProductPrefixPointwise_of_fastUpperEdgeLowerNProductBoundPrefixChunks
       productPrefix
@@ -667,13 +720,13 @@ def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdgeDirectPrefix
     (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
     (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
     BoundedPositiveCertificate where
-  toTangentProductBudget := fun pointwise candidate =>
-    positiveSaddleActiveAnalyticProductTangentSoloNSemanticEdge_toTangentProductBudgetCertificate
+  toPositiveSaddleCertificate := fun pointwise candidate =>
+    (positiveSaddleActiveAnalyticProductTangentSoloNSemanticEdge_toTangentProductBudgetCertificate
       tangentRowLenPos soloSaddleRowLenPos soloBudgetRowLenPos
       tangentNLenPos soloSaddleNLenPos soloBudgetNLenPos tangentKLenPos
       smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
       soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
-      edgeBudget pointwise candidate
+      edgeBudget pointwise candidate).toCertificate
   productPrefixPointwise := productPrefix
   soloPrefixNormUnit := soloPrefix
 
@@ -3591,8 +3644,8 @@ theorem completion_of_three_inputs
   let pointwise : PositiveSaddleEntropyShadowLargeExpPointwiseCertificate :=
     hproduct.toPointwise hbounded.productPrefixPointwise soloNorm
   exact
-    coefficientNegativity_of_positiveSaddleTangentProductBudgetCertificate
-      (hbounded.toTangentProductBudget
+    coefficientNegativity_of_positiveSaddleCertificate
+      (hbounded.toPositiveSaddleCertificate
         pointwise
         positiveSaddleLargeTailCandidateRawClearedUnitReserveBoundsCertificate_hybridClosed)
 
