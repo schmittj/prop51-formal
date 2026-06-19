@@ -1467,6 +1467,24 @@ def positiveSmallFirstCellSharpQFastCleared (a N : Nat) : Prop :=
       partialExpUpperFast (positiveSoloYExponent (posJ a 2))
         (8 * posJ a 2)
 
+/-- Explicit sharp closed-factorial target for the first retained product
+cell.
+
+This is the concrete analytic target behind
+`positiveSmallFirstCellSharpQFastCleared`: it replaces the recurrence-level
+`QqSharpGcompBound` by the sharp closed-composition split block already used
+in the solo proof.  This is a Lean-side refinement of the TeX route, whose
+first product cell is naturally sharp; the older non-sharp `Y` product block is
+kept only as a compatibility route below. -/
+def positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+    (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+        (posJ a 2) N
+    ≤ 29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+      partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+        (8 * posJ a 2)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
@@ -1513,6 +1531,68 @@ theorem positiveSmallFirstCellSharpQFastCleared_of_upperEdge
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
     positivity
   exact (mul_le_mul_of_nonneg_left hQ hscale).trans hEdge
+
+/-- It is enough to check the explicit sharp closed-factorial first-cell
+target at the upper rectangle edge. -/
+theorem
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge :
+      positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+        a (posNhi a)) :
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+      a N := by
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+    at hEdge ⊢
+  have hsum :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) N
+        ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) (posNhi a) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
+      hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  exact (mul_le_mul_of_nonneg_left hsum hscale).trans hEdge
+
+/-- The explicit sharp closed-factorial first-cell target implies the
+recurrence-level sharp `Qq` first-cell target. -/
+theorem positiveSmallFirstCellSharpQFastCleared_of_closedFactorialSplit
+    {a N : Nat}
+    (h :
+      positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+        a N) :
+    positiveSmallFirstCellSharpQFastCleared a N := by
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+    at h
+  unfold positiveSmallFirstCellSharpQFastCleared
+  have hQ_le_split :
+      QqSharpGcompBound N (posJ a 2)
+        ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) N := by
+    calc
+      QqSharpGcompBound N (posJ a 2)
+          =
+        positiveLargeTailSoloSharpGcompSaddleSum (posJ a 2) N :=
+          (positiveLargeTailSoloSharpGcompSaddleSum_eq_QqSharpGcompBound
+            (posJ a 2) N).symm
+      _ ≤ positiveLargeTailSoloSharpGcompBlockSum (posJ a 2) N :=
+          positiveLargeTailSoloSharpGcompSaddleSum_le_blockSum
+            (posJ a 2) N
+      _ ≤ positiveLargeTailSoloSharpGcompClosedBlockSum (posJ a 2) N :=
+          positiveLargeTailSoloSharpGcompBlockSum_le_closedBlockSum
+            (posJ a 2) N
+      _ = positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+          (posJ a 2) N :=
+          (positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_eq_closedBlockSum
+            (posJ a 2) N).symm
+      _ = positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) N :=
+          (positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum
+            (posJ a 2) N).symm
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  exact (mul_le_mul_of_nonneg_left hQ_le_split hscale).trans h
 
 /-- A sharp fast `Qq` first-cell estimate supplies the direct first-cell
 `Qq` budget.
@@ -3388,6 +3468,45 @@ theorem LargeTailProductCertificate.ofSharpQFastTwoEndpointAndFastUpperEdgeLower
       intro a N ha hrect
       exact positiveSmallFirstCellSharpQFastCleared_of_upperEdge
         hrect (hsharpTwoUpper ha))
+    hsmallGeThree htemperedGeThree
+
+/-- Endpoint constructor whose first-cell input is the explicit sharp
+closed-factorial split block.
+
+This is the preferred proof surface for the remaining `k = 2` large-tail
+product cell: future work should prove the displayed closed-factorial fast
+inequality, and this constructor turns it into the completion-facing product
+certificate without reintroducing the older non-sharp `Y` route. -/
+theorem LargeTailProductCertificate.ofSharpClosedFactorialSplitFastTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsharpTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared
+          a (posNhi a))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpQFastTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellSharpQFastCleared_of_closedFactorialSplit
+          (hsharpTwoUpper ha))
     hsmallGeThree htemperedGeThree
 
 /-- Canonical combined-product constructor for the remaining large-tail
