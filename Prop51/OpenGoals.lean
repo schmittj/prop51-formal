@@ -5591,73 +5591,90 @@ theorem LargeTailProductCertificate.ofSoloFastUpperEdgeBoundCertificateAndFastUp
 fast split-final-term scalar package.
 
 This packages that stronger product scalar theorem into the current
-completion-facing `LargeTailProductCertificate`: the `k = 2` cell is routed
-through the direct first-cell `Qq` budget above, while the `k ≥ 3` small and
-tempered tails are supplied by the old scalar fields.  The final target still
-uses the combined actual raw product and the sign-lock split. -/
+completion-facing `LargeTailProductCertificate`.  The adapter now follows the
+completion route above: the `k = 2` cell is routed through the sharp first-cell
+chain, the actual `k = 3` combined product is discharged by
+`Bq_three_nonpos`, and only the `k ≥ 4` small and tempered tails use the exact
+upper-edge product scalar fields.  This is a Lean-side correction to the older
+split-surrogate route, which treated the third cell as a shifted solo input. -/
 theorem LargeTailProductCertificate.ofClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
     (product :
       PositiveSaddleLargeTailProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNCertificate) :
     LargeTailProductCertificate :=
-  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+  LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeFourNatSignLockComplement
     (by
-      intro a ha
-      have hk : 2 ∈ positiveKRange a := by
-        refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
-        unfold posKmax
-        rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
-        omega
-      have hsmall : 2 ≤ ceilSqrt (posNhi a) := by
-        have hlt : 1 < ceilSqrt (posNhi a) :=
-          lt_ceilSqrt_of_sq_lt (n := posNhi a) (k := 1) (by
-            unfold posNhi
-            omega)
-        omega
-      exact
-        positiveSmallFirstCellYUpperEdgeBudget_of_exactSmallProductScalar
-          (by omega : 2000 < a)
-          (by
-            have h := product.smallScalar (by omega : 2000 < a) hk hsmall
-            simpa [
-              positiveLargeTailProductXUpperEdgeExactBound,
-              positiveLargeTailProductYUpperEdgeExactBound,
-              positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
-              positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
-              mul_assoc,
-            ] using h))
+      intro a k ha hk hsmall hk4
+      have h := product.smallScalar (by omega : 2000 < a) hk hsmall
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
     (by
-      intro a k ha hk hsmall _hk3
-      exact product.smallScalar (by omega : 2000 < a) hk hsmall)
-    (by
-      intro a k ha hk htempered _hnotLock _hk3
-      exact product.temperedScalar (by omega : 2000 < a) hk htempered)
+      intro a k ha hk htempered _hnotLock hk4
+      have h := product.temperedScalar (by omega : 2000 < a) hk htempered
+      simpa [
+        positiveLargeTailProductXUpperEdgeExactBound,
+        positiveLargeTailProductYUpperEdgeExactBound,
+        positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar,
+        positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN,
+        mul_assoc,
+      ] using h)
 
 /-- Direct adapter from the existing product-bound certificate structure to
 the completion-facing product certificate.
 
-This is still stronger than the preferred first-cell/sign-lock-complement
-route below: the supplied `product` certificate proves the upper-edge/lower-`N`
-scalar inequalities for every live small and tempered cell.  The adapter is
-kept because generated and hybrid large-tail certificates already package
-exactly these fields, and this theorem lets such packages feed
-`Completion.lean` without unpacking their fields by hand. -/
+The supplied `product` certificate proves the upper-edge/lower-`N` scalar
+inequalities for every live small and tempered cell, but this adapter consumes
+only the cells needed by the corrected completion route: `k = 2` directly,
+`k ≥ 4` through the scalar fields, and `k = 3` through `Bq_three_nonpos`.
+Generated and hybrid large-tail certificates can therefore feed
+`Completion.lean` without reopening the obsolete shifted-third-cell route. -/
 theorem LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundCertificate
     {xyBound : Nat → Nat → ℚ}
     (product :
       PositiveSaddleLargeTailProductFastUpperEdgeLowerNProductBoundCertificate
         xyBound) :
     LargeTailProductCertificate :=
-  LargeTailProductCertificate.ofFastUpperEdgeLowerNProductBoundScalarsNatSignLockComplement
-    (xyBound := xyBound)
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeFourNatSignLockComplement
     (by
-      intro a k ha hk
-      exact product.productBound (by omega : 2000 < a) hk)
+      intro a N ha hrect
+      have hk : 2 ∈ positiveKRange a := by
+        refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+        unfold posKmax
+        rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+        omega
+      have hsmallEdge : 2 ≤ ceilSqrt (posNhi a) := by
+        have hlt : 1 < ceilSqrt (posNhi a) :=
+          lt_ceilSqrt_of_sq_lt (n := posNhi a) (k := 1) (by
+            unfold posNhi
+            omega)
+        omega
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (product.productBound (by omega : 2000 < a) hk)
+          (product.smallScalar (by omega : 2000 < a) hk hsmallEdge))
     (by
-      intro a k ha hk hsmall
-      exact product.smallScalar (by omega : 2000 < a) hk hsmall)
+      intro a N k ha hrect hk hsmallN hk4 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (product.productBound (by omega : 2000 < a) hk)
+          (product.smallScalar (by omega : 2000 < a) hk hsmallEdge))
     (by
-      intro a k ha hk htempered _hnotLock
-      exact product.temperedScalar (by omega : 2000 < a) hk htempered)
+      intro a N k ha hrect hk htemperedN _hnotLock hk4 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk
+          (product.productBound (by omega : 2000 < a) hk)
+          (product.temperedScalar (by omega : 2000 < a) hk htemperedEdge))
 
 /-- Separate-`X`/`Y` product-bound certificates also feed the live large-tail
 product target directly via their combined product-bound certificate. -/
