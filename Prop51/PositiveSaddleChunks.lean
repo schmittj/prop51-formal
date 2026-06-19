@@ -3032,6 +3032,56 @@ def checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
     checkPositiveSmallTangentExpEdgeNRangeKChunk
       a (posNlo a + nLen * nIndex) nLen kLo kLen
 
+/-- Any fully checked tangent row range supplies every fixed-`N`/`k` chunk
+inside that row range.
+
+This bridge lets a compact row-range `native_decide` shard feed the active
+chunked bounded constructor.  It is a Lean-side proof-production option only:
+the checked proposition is still the same tangent-edge cell inequality used by
+the existing chunked route. -/
+theorem checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_checkRange
+    {nLen lo len nIndex kLo kLen : Nat}
+    (h : checkPositiveSmallTangentExpEdgeRange lo len = true) :
+    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+      nLen lo len nIndex kLo kLen = true := by
+  unfold checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+  apply List.all_eq_true.mpr
+  intro a haMem
+  rcases List.mem_range'_1.mp haMem with ⟨haLo, haHi⟩
+  have hrow : checkPositiveSmallTangentExpEdgeRow a = true :=
+    checkPositiveSmallTangentExpEdgeRow_of_checkRange h haLo haHi
+  unfold checkPositiveSmallTangentExpEdgeNRangeKChunk
+  apply List.all_eq_true.mpr
+  intro N _hNMem
+  by_cases hrect : positiveRectangle a N
+  · simp [hrect]
+    intro k _hkLo _hkHi
+    by_cases hcell : k ∈ positiveKRange a ∧ k ≤ ceilSqrt N
+    · exact Or.inr <| decide_eq_true
+        (positiveSmallTangentExpEdgeGap_of_checkRow
+          hrow hrect hcell.1 hcell.2)
+    · by_cases hk : k ∈ positiveKRange a
+      · exact Or.inl <| Or.inr (by
+          have hnotle : ¬ k ≤ ceilSqrt N := by
+            intro hle
+            exact hcell ⟨hk, hle⟩
+          omega)
+      · exact Or.inl <| Or.inl hk
+  · simp [hrect]
+
+/-- Scaled fixed-point row-range shards can also feed every active
+fixed-`N`/`k` tangent chunk after converting once to the canonical exact
+range checker. -/
+theorem checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_checkRangeScaledExp
+    {S nLen lo len nIndex kLo kLen : Nat}
+    (hS : 0 < S) (hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h : checkPositiveSmallTangentExpEdgeRangeScaledExp S lo len = true) :
+    checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+      nLen lo len nIndex kLo kLen = true :=
+  checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk_of_checkRange
+    (checkPositiveSmallTangentExpEdgeRange_of_checkRangeScaledExp
+      hS hlo401 hhi2001 h)
+
 /-- Fixed-point version of `checkPositiveSmallTangentExpEdgeNRangeKChunk`.
 
 This is a Lean proof-production deviation from the TeX presentation: the
