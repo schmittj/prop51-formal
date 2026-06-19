@@ -24257,7 +24257,7 @@ collapses to a simple `3/5 * 2^{-p}` coefficient.  This is a Lean-side
 bookkeeping consequence of `DeltaRat_le_final_envelope`; the paper keeps this
 as part of the informal numerical envelope. -/
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSimple
-    {a p : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ p)
+    {a p : Nat} (ha : 361 ≤ a) (hp : 4 ≤ p)
     (hpa : 2 * a ≤ 3 * p) :
     positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
       ≤ (posNhi a : ℚ) * c p *
@@ -24285,7 +24285,7 @@ theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSimple
   have hdelta_coef :
       (72 / 125 : ℚ) + (1 / 2 : ℚ) * ((66 / 5 : ℚ) / (a : ℚ))
         ≤ 3 / 5 := by
-    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have haQ : (361 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
     rw [div_eq_mul_inv]
     field_simp [ha_pos.ne']
     nlinarith
@@ -27481,6 +27481,42 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_oneForty
         _ = 140 * (a : ℚ) * c a := by
               ring)
 
+/-- Constant assembly for the large-degree split budget.
+
+After the dominant simple part costs `140 * a * c a`, the remaining
+non-large-degree block has a `150 * a * c a` allowance in the own-edge
+first-cell route. -/
+theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_twoNinety_of_remainder
+    {a : Nat} (ha : 1 ≤ a)
+    (hremainder :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a
+        ≤ 150 * (a : ℚ) * c a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
+      ≤ 290 * (a : ℚ) * c a := by
+  have hsimple :=
+    positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_oneForty
+      (a := a) ha
+  have hparts := add_le_add hsimple hremainder
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a
+        =
+      (4 : ℚ) * (2 : ℚ)^a *
+        (positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a +
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a) := by
+          rw [positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_remainder]
+    _ =
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a +
+        (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum a := by
+          ring
+    _ ≤ 140 * (a : ℚ) * c a + 150 * (a : ℚ) * c a := hparts
+    _ = 290 * (a : ℚ) * c a := by
+          ring
+
 theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_target
     {a : Nat} (ha : 3000 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
@@ -27877,7 +27913,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_targe
           ring
 
 theorem positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall_le_largeDegreeSplit
-    {a p : Nat} (ha : 3000 ≤ a) :
+    {a p : Nat} (ha : 361 ≤ a) :
     positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall (posNhi a) p
       ≤ positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget a p := by
   unfold positiveLargeTailSoloSharpInnerLargeDegreeSplitBudget
@@ -27896,7 +27932,7 @@ def positiveLargeTailSoloSharpDeltaBudgetBlockSum (a N : Nat) : ℚ :=
       positiveLargeTailSoloSharpInnerDeltaBudgetWithSmall N (a - s)
 
 theorem positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
-    {a : Nat} (ha : 3000 ≤ a) :
+    {a : Nat} (ha : 361 ≤ a) :
     positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
       ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a := by
   unfold positiveLargeTailSoloSharpDeltaBudgetBlockSum
@@ -28144,7 +28180,7 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCl
     positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared_of_deltaBudgetBlockSum
       ((mul_le_mul_of_nonneg_left
           (positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
-            ha)
+            (by omega : 361 ≤ a))
           (by positivity : 0 ≤ (4 : ℚ) * (2 : ℚ)^a)).trans h)
 
 /-- After the large-degree part is bounded, it remains only to fit the

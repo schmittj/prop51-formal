@@ -1509,6 +1509,65 @@ def positiveSmallFirstCellSharpOwnEdgeConstCleared (a : Nat) : Prop :=
         (posJ a 2) (posNhi (posJ a 2))
     ≤ 290 * (posJ a 2 : ℚ) * c (posJ a 2)
 
+/-- The own-edge first-cell target follows from a constant budget on the
+large-degree remainder of the sharp solo block at `j = a - 2`.
+
+This is the current direct first-cell proof surface: the dominant
+large-degree simple block is already bounded by `140 * j * c j`, so the
+remaining non-large-degree block only has to fit into `150 * j * c j`.  The
+argument intentionally uses the sharp split-factorial solo decomposition,
+not the much coarser ten-sevenths solo envelope. -/
+theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_largeDegreeRemainder
+    {a : Nat} (ha : 3000 ≤ a)
+    (hremainder :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum (posJ a 2)
+        ≤ 150 * (posJ a 2 : ℚ) * c (posJ a 2)) :
+    positiveSmallFirstCellSharpOwnEdgeConstCleared a := by
+  unfold positiveSmallFirstCellSharpOwnEdgeConstCleared
+  let j : Nat := posJ a 2
+  have hj_pos : 1 ≤ j := by
+    dsimp [j]
+    unfold posJ
+    omega
+  have hj_delta : 361 ≤ j := by
+    dsimp [j]
+    unfold posJ
+    omega
+  have hsplit :
+      (4 : ℚ) * (2 : ℚ)^j *
+          positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum j
+        ≤ 290 * (j : ℚ) * c j :=
+    positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_twoNinety_of_remainder
+      (a := j) hj_pos (by simpa [j] using hremainder)
+  have hclosed :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          j (posNhi j)
+        ≤ positiveLargeTailSoloSharpDeltaBudgetBlockSum j (posNhi j) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_le_deltaBudgetBlockSum
+      j (posNhi j)
+  have hdelta :
+      positiveLargeTailSoloSharpDeltaBudgetBlockSum j (posNhi j)
+        ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum j :=
+    positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit
+      (a := j) hj_delta
+  have hsum :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          j (posNhi j)
+        ≤ positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum j :=
+    hclosed.trans hdelta
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^j := by
+    positivity
+  have hscaled :
+      (4 : ℚ) * (2 : ℚ)^j *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            j (posNhi j)
+        ≤
+      (4 : ℚ) * (2 : ℚ)^j *
+          positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum j :=
+    mul_le_mul_of_nonneg_left hsum hscale
+  exact (hscaled.trans hsplit)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
