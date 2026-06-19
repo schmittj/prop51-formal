@@ -5,15 +5,13 @@ import Prop51.Generated.PositiveSaddleFiniteScaledEdge
 namespace Prop51
 
 /-!
-`OpenGoals` is the machine-readable dashboard for the remaining route to the
-final theorem.
+`OpenGoals` is the machine-readable dashboard for the positive-saddle route to
+the final theorem.
 
-The intended split is `401 ≤ a < 3000` for bounded checking and `3000 ≤ a` for
-the analytic tail.  The currently available Lean assembly still has separate
-generated interfaces for the old `401 ≤ a ≤ 2000` finite window and the
-`2001 ≤ a < 3000` prefix strip; this dashboard packages both on the bounded
-side through theorem-facing product/solo pointwise obligations, so the product
-and solo inputs are the genuine large-`a` analytic fields.
+The split is `401 ≤ a < 3000` for bounded checking and `3000 ≤ a` for the
+analytic tail.  Older generated and audit interfaces remain in this file, but
+the direct-saddle route now packages the bounded, prefix, product-tail, and
+solo-tail fields into the closed theorem `completion_of_directSaddle_closed`.
 -/
 
 /-- The actual theorem-facing product prefix obligation on `2000 < a < 3000`.

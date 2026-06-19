@@ -29,25 +29,19 @@ The proof (see `paper/prop51.tex`) has three layers:
 | enumeration | `g ≤ 23` (`a ≤ 8`) | exact rationals over all partitions | **proved** (`CertificateSmall.lean`) |
 | majorant, exact | `9 ≤ a ≤ 60` | exact rationals, 10,764 pairs | **proved** (`CertificateExact.lean`) |
 | majorant, interval | `61 ≤ a ≤ 400` | verified 192-bit dyadic intervals, 470,220 pairs | **proved** (`Prop51Kernel.lean` + `IntervalCert.lean` + 8 `native_decide` chunks) |
-| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + positive-saddle audit certificate | **conditional assembly proved** (sign-lock closed; remaining work is a concrete positive-saddle audit certificate) |
+| effective tail | `a ≥ 401` | explicit sign-lock `C₂ = 2215` + direct-saddle positive-saddle certificates | **proved** (`OpenGoals.lean` + `Completion.lean`) |
 
 ## What is machine-checked today
 
 All Lean proofs are sorry-free.  Headline theorems:
 
-* **Canonical completion dashboard**: `Prop51/Completion.lean` is the current
-  final route.  Its theorem
-  `Prop51.coefficientNegativity` has exactly two live inputs:
-  `Prop51.BoundedPositiveCertificate` for the `401 <= a < 3000` bounded
-  range and `Prop51.LargeTailProductCertificate` for the `3000 <= a`
-  product tail.  The large-tail solo input is no longer open: it is supplied
-  by `Prop51.largeTailSoloCertificate` in `Prop51/OpenGoals.lean`.
-  Recent profiling after `536eed8` showed that exact raw/exact-prefix
-  `native_decide` checks are not the next scalable path: a one-row bounded
-  combined-product check and a one-row exact upper-edge prefix solo scalar
-  check both exceeded one minute locally.  The active route should therefore
-  continue with endpoint/majorant reductions and the combined analytic
-  product-tail split, not broad exact `(a,N,k)` grid generation.
+* **Canonical completion theorem**: `Prop51/Completion.lean` proves
+  `Prop51.coefficientNegativity : Prop51.CoefficientNegativity` with no live
+  parameters.  The closed route is the direct-saddle assembly
+  `Prop51.completion_of_directSaddle_closed`: it supplies the bounded
+  certificate, the `2001 <= a < 3000` prefix product/solo fields, the
+  `3000 <= a` product certificate, and the large-tail solo certificate by
+  concrete Lean lemmas.
 
 * `Prop51.bCoeff_neg_g_le_23` — `b_a(μ) < 0` for every generated partition,
   every relevant `g ≤ 23` (≈150k partitions; cardinalities cross-checked
@@ -68,9 +62,9 @@ All Lean proofs are sorry-free.  Headline theorems:
   `C^N · Σ b_a X^a = Π C(X/qᵢ)`, and the majorant inequality) and the Layer B
   soundness theory are fully formalized with **no computational axioms**;
   only the finite certificates use `native_decide`.
-* **Canonical remaining proof-facing route**:
+* **Historical positive-saddle proof-facing routes**:
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveCombinedProductNKChunkedTangentSoloNFixedEdgeKChunkedRefinedAtomicBoundsAuditCertificate`
-  is the intended final conditional endpoint for `a ≥ 401`: it combines the
+  is retained as a conditional endpoint for `a ≥ 401`: it combines the
   corrected row-active fixed-edge combined-product finite-window certificate
   with
   `Prop51.PositiveSaddleLargeTailRefinedAtomicBoundsAuditCertificate`,
@@ -87,16 +81,13 @@ All Lean proofs are sorry-free.  Headline theorems:
   as the corresponding saddle-edge finite target: it keeps the small and
   tempered product estimates as semantic analytic fields, while still using
   the active finite chunks for tangent-edge, solo, and edge-budget checks.
-  Downstream, these adapters now pass through
+  Downstream, these adapters pass through
   `Prop51.PositiveSaddleMajorantBudgetCertificate`, a direct-majorant budget
-  interface for the same finite-window obligations; it is the Lean insertion
-  point for a future proof that bounds `normalizedPositiveIfTerm` directly by
-  the small/tempered majorants instead of routing through product/tangent
-  estimates.
-  This records the intended scalable alternative to exhaustive finite
-  raw-product atoms, but does not replace the generated raw-product endpoint
-  until those analytic product estimates are proved.  The corresponding
-  top-level hybrid-tail capstone family is now exposed in `Prop51.Main`,
+  interface for the same finite-window obligations.
+  This records an earlier scalable alternative to exhaustive finite
+  raw-product atoms.  The direct-saddle completion in `Prop51/Completion.lean`
+  is now the canonical closed route, while the corresponding top-level
+  hybrid-tail capstone family remains exposed in `Prop51.Main`,
   ending with
   `Prop51.coefficientNegativity_of_positiveSaddleFixedFiniteWindowActiveAnalyticProductTangentSoloNFixedEdgeKChunkedTemperedSharpTopOffsetHybridRatioChunkedXYBoundFullHybridSoloBoundFullHybridTail`
   for the full surrogate large-tail proof-production shape.

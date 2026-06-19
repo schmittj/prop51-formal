@@ -1226,13 +1226,14 @@ Status:
       The fixed-scale
       `DisplayedSoloProductClearedTangentEdgeChunks...` endpoint remains in
       Lean as the fully chunked version of the stronger `Gcomp` product audit
-      route, not as the expected final product certificate.  The remaining
-      non-finite inputs are still the large-`a` raw product/solo pointwise
-      certificate and the raw-cleared unit-reserve entropy-tail certificate.
-- [ ] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
-      the final `CoefficientNegativity`.  The combination step itself is now
-      formalized as `coefficientNegativity_of_unorm_tail`, so the remaining
-      assembly input is exactly the large-`a` rectangle theorem for `Unorm`.
+      route, not as the expected final product certificate.  These generated
+      and audit endpoints are retained for profiling and cross-checking; the
+      direct-saddle route now supplies the production bounded/product/solo
+      inputs concretely.
+- [x] assembly: `U_a(N) < 0` for `a ≥ 401`; combine with Layers B/A into
+      the final `CoefficientNegativity`.  The canonical closed entry point is
+      `Prop51.coefficientNegativity`, proved in `Prop51/Completion.lean` from
+      `completion_of_directSaddle_closed`.
 
 ## Infrastructure
 
