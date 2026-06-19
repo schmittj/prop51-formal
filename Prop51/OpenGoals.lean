@@ -3819,6 +3819,45 @@ theorem LargeTailProductCertificate.ofSharpClosedFactorialSplitConstTwoEndpointA
           ha (hsharpTwoUpper ha))
     hsmallGeThree htemperedGeThree
 
+/-- Endpoint constructor whose first-cell input is the sharp own-edge
+constant-budget target.
+
+This is the current narrowest live `k = 2` product surface.  It records the
+Lean-side edge shift explicitly: callers prove the natural solo-style
+upper-edge bound at `j = a - 2`, and the product-edge mismatch is paid by
+`positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_ownEdge`.
+-/
+theorem LargeTailProductCertificate.ofSharpOwnEdgeConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsharpOwnTwo :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellSharpOwnEdgeConstCleared a)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpClosedFactorialSplitConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_ownEdge
+          ha (hsharpOwnTwo ha))
+    hsmallGeThree htemperedGeThree
+
 /-- Canonical combined-product constructor for the remaining large-tail
 product route.
 
