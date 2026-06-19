@@ -3116,6 +3116,48 @@ theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellClosedBudgetAnd
       exact positiveSmallFirstCellShiftedSoloFiftyFastExpBudget_of_large ha)
     hsmallGeThree htemperedGeThree
 
+/-- Combined-product version of the shifted-solo first-cell route.
+
+This is the preferred completion surface after the `k = 2` cell has been
+reduced to the shifted solo upper edge: the genuine `k ≥ 3` tail is supplied
+by one combined upper-edge product majorant `xyBound`, not by separate exact
+`Gcomp` factor scalar fields.  This records the Lean-side deviation from the
+older TeX bookkeeping, while keeping the same normalized combined product
+target consumed by `Completion.lean`. -/
+theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellClosedBudgetAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hshiftedSoloOwnUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          (posJ a 2) (posNhi (posJ a 2)))
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    (xyBound := xyBound)
+    hproductBound
+    (by
+      intro a ha
+      exact
+        positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloOwnEdgeFastCleared
+          ha (hshiftedSoloOwnUpper ha)
+          (positiveSmallFirstCellShiftedSoloFiftyFastExpBudget_of_large ha))
+    hsmallGeThree htemperedGeThree
+
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
 fast split-final-term scalar package.
 
