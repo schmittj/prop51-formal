@@ -9726,6 +9726,149 @@ theorem partialExpUpper_le_mul_of_four_step_shift
     _ ≤ target * partialExpUpper z T :=
           mul_le_mul_of_nonneg_left hfactor_le htarget0
 
+/-- Six equal first-order shifts give a sextic growth estimate for
+`partialExpUpper`.
+
+This is used for the scaled first retained product cell, where the product
+edge is reduced to the shifted solo upper edge at the price of a fixed
+constant. -/
+theorem partialExpUpper_mul_one_add_sixth_pow_six_le_of_add
+    {y d : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd : 0 ≤ d) (hT : 1 ≤ T) (hyt : y + d < (T : ℚ)) :
+    (1 + d / 6)^6 * partialExpUpper y T ≤ partialExpUpper (y+d) T := by
+  let e : ℚ := d / 6
+  have he0 : 0 ≤ e := by
+    dsimp [e]
+    positivity
+  have hbase1 : y + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase2 : y + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase3 : y + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase4 : y + e + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase5 : y + e + e + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hbase6 : y + e + e + e + e + e + e < (T : ℚ) := by
+    dsimp [e]
+    nlinarith
+  have hy1 : 0 ≤ y + e := add_nonneg hy he0
+  have hy2 : 0 ≤ y + e + e := add_nonneg hy1 he0
+  have hy3 : 0 ≤ y + e + e + e := add_nonneg hy2 he0
+  have hy4 : 0 ≤ y + e + e + e + e := add_nonneg hy3 he0
+  have hy5 : 0 ≤ y + e + e + e + e + e := add_nonneg hy4 he0
+  have hstep0 :
+      (1 + e) * partialExpUpper y T ≤ partialExpUpper (y + e) T :=
+    partialExpUpper_mul_one_add_le_of_add
+      (y := y) (d := e) (T := T) hy he0 hT hbase1
+  have hstep1 :
+      (1 + e) * partialExpUpper (y + e) T
+        ≤ partialExpUpper (y + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e) (d := e) (T := T) hy1 he0 hT hbase2
+  have hstep2 :
+      (1 + e) * partialExpUpper (y + e + e) T
+        ≤ partialExpUpper (y + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e) (d := e) (T := T) hy2 he0 hT hbase3
+  have hstep3 :
+      (1 + e) * partialExpUpper (y + e + e + e) T
+        ≤ partialExpUpper (y + e + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e + e) (d := e) (T := T) hy3 he0 hT hbase4
+  have hstep4 :
+      (1 + e) * partialExpUpper (y + e + e + e + e) T
+        ≤ partialExpUpper (y + e + e + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e + e + e) (d := e) (T := T) hy4 he0 hT hbase5
+  have hstep5 :
+      (1 + e) * partialExpUpper (y + e + e + e + e + e) T
+        ≤ partialExpUpper (y + e + e + e + e + e + e) T := by
+    simpa [add_assoc] using
+      partialExpUpper_mul_one_add_le_of_add
+        (y := y + e + e + e + e + e) (d := e) (T := T) hy5 he0 hT hbase6
+  have hfactor0 : 0 ≤ 1 + e := by linarith
+  have hfactor2 : 0 ≤ (1 + e)^2 := by positivity
+  have hfactor3 : 0 ≤ (1 + e)^3 := by positivity
+  have hfactor4 : 0 ≤ (1 + e)^4 := by positivity
+  have hfactor5 : 0 ≤ (1 + e)^5 := by positivity
+  calc
+    (1 + d / 6)^6 * partialExpUpper y T
+        = (1 + e)^5 * ((1 + e) * partialExpUpper y T) := by
+            dsimp [e]
+            ring
+    _ ≤ (1 + e)^5 * partialExpUpper (y + e) T :=
+          mul_le_mul_of_nonneg_left hstep0 hfactor5
+    _ = (1 + e)^4 * ((1 + e) * partialExpUpper (y + e) T) := by
+          ring
+    _ ≤ (1 + e)^4 * partialExpUpper (y + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep1 hfactor4
+    _ = (1 + e)^3 * ((1 + e) *
+          partialExpUpper (y + e + e) T) := by
+          ring
+    _ ≤ (1 + e)^3 * partialExpUpper (y + e + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep2 hfactor3
+    _ = (1 + e)^2 * ((1 + e) *
+          partialExpUpper (y + e + e + e) T) := by
+          ring
+    _ ≤ (1 + e)^2 * partialExpUpper (y + e + e + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep3 hfactor2
+    _ = (1 + e) * ((1 + e) *
+          partialExpUpper (y + e + e + e + e) T) := by
+          ring
+    _ ≤ (1 + e) * partialExpUpper (y + e + e + e + e + e) T :=
+          mul_le_mul_of_nonneg_left hstep4 hfactor0
+    _ ≤ partialExpUpper (y + e + e + e + e + e + e) T := hstep5
+    _ = partialExpUpper (y+d) T := by
+          congr 1
+          dsimp [e]
+          ring
+
+/-- Sextic variant of `partialExpUpper_le_mul_of_three_step_shift`. -/
+theorem partialExpUpper_le_mul_of_six_step_shift
+    {y z d₀ target : ℚ} {T : Nat}
+    (hy : 0 ≤ y) (hd₀ : 0 ≤ d₀) (hT : 1 ≤ T) (hzT : z < (T : ℚ))
+    (hdrop : y + d₀ ≤ z)
+    (hbudget : 1 ≤ target * (1 + d₀ / 6)^6) :
+    partialExpUpper y T ≤ target * partialExpUpper z T := by
+  have hy_le_shift : y ≤ y + d₀ := by linarith
+  have hyT : y < (T : ℚ) := lt_of_le_of_lt (hy_le_shift.trans hdrop) hzT
+  have hshift0 : 0 ≤ y + d₀ := add_nonneg hy hd₀
+  have hshiftT : y + d₀ < (T : ℚ) := lt_of_le_of_lt hdrop hzT
+  have hgrowth :
+      (1 + d₀ / 6)^6 * partialExpUpper y T
+        ≤ partialExpUpper (y+d₀) T :=
+    partialExpUpper_mul_one_add_sixth_pow_six_le_of_add
+      (y := y) (d := d₀) (T := T) hy hd₀ hT hshiftT
+  have hmono :
+      partialExpUpper (y+d₀) T ≤ partialExpUpper z T :=
+    partialExpUpper_mono_of_nonneg_le_lt hshift0 hdrop hzT
+  have hfactor_le :
+      (1 + d₀ / 6)^6 * partialExpUpper y T ≤ partialExpUpper z T :=
+    hgrowth.trans hmono
+  have hfactor_pos : 0 < (1 + d₀ / 6)^6 := by positivity
+  have htarget0 : 0 ≤ target := by nlinarith
+  have hupper0 : 0 ≤ partialExpUpper y T :=
+    partialExpUpper_nonneg_of_nonneg_lt hy hyT
+  calc
+    partialExpUpper y T
+        = 1 * partialExpUpper y T := by ring
+    _ ≤ (target * (1 + d₀ / 6)^6) * partialExpUpper y T :=
+          mul_le_mul_of_nonneg_right hbudget hupper0
+    _ = target * ((1 + d₀ / 6)^6 * partialExpUpper y T) := by ring
+    _ ≤ target * partialExpUpper z T :=
+          mul_le_mul_of_nonneg_left hfactor_le htarget0
+
 /-- Negative-binomial shell used to bound the variable-cutoff
 `partialExpUpper ((a : ℚ) * q) a`.
 

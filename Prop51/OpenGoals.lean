@@ -1469,6 +1469,222 @@ def positiveSmallFirstCellShiftedSoloFiftyFastExpBudget (a : Nat) : Prop :=
           (8 * posJ a 2)
     ≤ 9360 * positiveSmallLargeExp a 2
 
+/-- The small-branch exponential still has enough slack after paying the
+fixed `50` factor from the shifted-edge scaling lemma.
+
+This is the scalar side of the completion-facing first-cell route.  The proof
+is the same exponent-gap argument as
+`positiveSmallFirstCellShiftedSoloFastExpBudget_of_large`, but uses a
+six-step `partialExpUpper` shift so that the square-root gap also pays the
+constant edge-scaling factor. -/
+theorem positiveSmallFirstCellShiftedSoloFiftyFastExpBudget_of_large
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveSmallFirstCellShiftedSoloFiftyFastExpBudget a := by
+  unfold positiveSmallFirstCellShiftedSoloFiftyFastExpBudget
+    positiveSmallLargeExp
+  rw [partialExpUpperFast_eq]
+  let y : ℚ := positiveSoloYExponent (posJ a 2)
+  let z : ℚ := positiveSmallExponentUpper a 2
+  let d : ℚ := (1139 / 1000 : ℚ) * (posSmallCutoff a : ℚ)
+  let C : ℚ :=
+    (29 / 4 : ℚ) * (posNhi a : ℚ) *
+      ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50
+  let target : ℚ := 9360 / C
+  have hNge15 : 15 ≤ posNhi a := by
+    unfold posNhi
+    omega
+  have hNge15Q : (15 : ℚ) ≤ (posNhi a : ℚ) := by
+    exact_mod_cast hNge15
+  have hlinear_pos :
+      0 < (5 : ℚ) * (posNhi a : ℚ) - 72 := by
+    nlinarith
+  have hCpos : 0 < C := by
+    dsimp [C]
+    positivity
+  have hCnonneg : 0 ≤ C := hCpos.le
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    unfold positiveSoloYExponent
+    positivity
+  have hy_lt_a : y < (a : ℚ) := by
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast ha
+    have hj_le : (posJ a 2 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 2
+    dsimp [y]
+    unfold positiveSoloYExponent
+    nlinarith
+  have hcutoff_a_le : a ≤ 8 * posJ a 2 := by
+    unfold posJ
+    omega
+  have hcutoff :
+      partialExpUpper y (8 * posJ a 2) ≤ partialExpUpper y a :=
+    partialExpUpper_cutoff_le_of_le hcutoff_a_le hy0 hy_lt_a
+  have hk : 2 ∈ positiveKRange a := by
+    refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+    unfold posKmax
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+    omega
+  have hz_lt_a : z < (a : ℚ) := by
+    dsimp [z]
+    exact positiveSmallExponentUpper_lt_largeExpCutoff
+      (by omega : 2000 < a) hk
+  have hd0 : 0 ≤ d := by
+    dsimp [d]
+    positivity
+  have hdrop : y + d ≤ z := by
+    have hjposNat : 0 < posJ a 2 := by
+      unfold posJ
+      omega
+    have hjposQ : (0 : ℚ) < (posJ a 2 : ℚ) := by
+      exact_mod_cast hjposNat
+    have hj_le : (posJ a 2 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 2
+    have hratio : 1 ≤ (a : ℚ) / (posJ a 2 : ℚ) := by
+      rw [le_div_iff₀ hjposQ]
+      simpa using hj_le
+    dsimp [y, z, d]
+    unfold positiveSoloYExponent positiveSmallExponentUpper
+    nlinarith
+  have hN_le_s_sq :
+      (posNhi a : ℚ) ≤ (posSmallCutoff a : ℚ)^2 := by
+    have hnat : posNhi a ≤ posSmallCutoff a * posSmallCutoff a := by
+      unfold posSmallCutoff
+      exact le_ceilSqrt_sq (posNhi a)
+    simpa [pow_two] using (show (posNhi a : ℚ) ≤
+      (posSmallCutoff a : ℚ) * (posSmallCutoff a : ℚ) by
+        exact_mod_cast hnat)
+  have hN_sq_le_s_four :
+      (posNhi a : ℚ)^2 ≤ (posSmallCutoff a : ℚ)^4 := by
+    have hNnonneg : 0 ≤ (posNhi a : ℚ) := by positivity
+    have hsSqNonneg : 0 ≤ (posSmallCutoff a : ℚ)^2 := sq_nonneg _
+    calc
+      (posNhi a : ℚ)^2
+          ≤ (posSmallCutoff a : ℚ)^2 * (posNhi a : ℚ) :=
+            by
+              simpa [pow_two, mul_comm, mul_left_comm, mul_assoc] using
+                mul_le_mul_of_nonneg_right hN_le_s_sq hNnonneg
+      _ ≤ (posSmallCutoff a : ℚ)^2 * (posSmallCutoff a : ℚ)^2 :=
+            mul_le_mul_of_nonneg_left hN_le_s_sq hsSqNonneg
+      _ = (posSmallCutoff a : ℚ)^4 := by ring
+  have hC_le_quad :
+      C ≤ (3625 / 2 : ℚ) * (posNhi a : ℚ)^2 := by
+    have hlinear :
+        (5 : ℚ) * (posNhi a : ℚ) - 72
+          ≤ (5 : ℚ) * (posNhi a : ℚ) := by
+      linarith
+    have hscale : 0 ≤ (29 / 4 : ℚ) * (posNhi a : ℚ) * 50 := by
+      positivity
+    dsimp [C]
+    calc
+      (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50
+          ≤ (29 / 4 : ℚ) * (posNhi a : ℚ) *
+              ((5 : ℚ) * (posNhi a : ℚ)) * 50 :=
+            by
+              simpa [mul_assoc, mul_left_comm, mul_comm] using
+                mul_le_mul_of_nonneg_left hlinear hscale
+      _ = (3625 / 2 : ℚ) * (posNhi a : ℚ)^2 := by ring
+  have hcutoff_ge100 : (100 : Nat) ≤ posSmallCutoff a := by
+    unfold posSmallCutoff
+    have hlt : 99 < ceilSqrt (posNhi a) :=
+      lt_ceilSqrt_of_sq_lt (by
+        unfold posNhi
+        omega)
+    omega
+  have hhundred_sq_le_s_sq :
+      (100 : ℚ)^2 ≤ (posSmallCutoff a : ℚ)^2 := by
+    have h100 : (0 : ℚ) ≤ 100 := by norm_num
+    have hle : (100 : ℚ) ≤ (posSmallCutoff a : ℚ) := by
+      exact_mod_cast hcutoff_ge100
+    exact pow_le_pow_left₀ h100 hle 2
+  have hquad_le_gap :
+      (3625 / 2 : ℚ) * (posNhi a : ℚ)^2
+        ≤ 9360 * (d / 6)^6 := by
+    let s : ℚ := (posSmallCutoff a : ℚ)
+    let A : ℚ := 9360 * (1139 / 6000 : ℚ)^6
+    have hcoeff :
+        (3625 / 2 : ℚ) ≤ A * (100 : ℚ)^2 := by
+      dsimp [A]
+      norm_num
+    have hN2nonneg : 0 ≤ (posNhi a : ℚ)^2 := sq_nonneg _
+    have hs4nonneg : 0 ≤ s^4 := by
+      dsimp [s]
+      positivity
+    have hstep1 :
+        (3625 / 2 : ℚ) * (posNhi a : ℚ)^2
+          ≤ (3625 / 2 : ℚ) * s^4 := by
+      dsimp [s]
+      exact mul_le_mul_of_nonneg_left hN_sq_le_s_four (by norm_num)
+    have hstep2 :
+        (3625 / 2 : ℚ) * s^4 ≤ (A * (100 : ℚ)^2) * s^4 :=
+      mul_le_mul_of_nonneg_right hcoeff hs4nonneg
+    have hstep3 :
+        (A * (100 : ℚ)^2) * s^4 ≤ A * s^6 := by
+      have hA_nonneg : 0 ≤ A := by
+        dsimp [A]
+        positivity
+      have hs2 :
+          (100 : ℚ)^2 ≤ s^2 := by
+        dsimp [s]
+        exact hhundred_sq_le_s_sq
+      have hs4_nonneg : 0 ≤ s^4 := by positivity
+      have hmul :
+          (100 : ℚ)^2 * s^4 ≤ s^2 * s^4 :=
+        mul_le_mul_of_nonneg_right hs2 hs4_nonneg
+      calc
+        (A * (100 : ℚ)^2) * s^4
+            = A * ((100 : ℚ)^2 * s^4) := by ring
+        _ ≤ A * (s^2 * s^4) :=
+            mul_le_mul_of_nonneg_left hmul hA_nonneg
+        _ = A * s^6 := by ring
+    calc
+      (3625 / 2 : ℚ) * (posNhi a : ℚ)^2
+          ≤ (3625 / 2 : ℚ) * s^4 := hstep1
+      _ ≤ (A * (100 : ℚ)^2) * s^4 := hstep2
+      _ ≤ A * s^6 := hstep3
+      _ = 9360 * (d / 6)^6 := by
+            dsimp [A, s, d]
+            ring
+  have hgap_le_shift :
+      9360 * (d / 6)^6 ≤ 9360 * (1 + d / 6)^6 := by
+    have hbase0 : 0 ≤ d / 6 := by positivity
+    have hbase : d / 6 ≤ 1 + d / 6 := by linarith
+    exact mul_le_mul_of_nonneg_left
+      (pow_le_pow_left₀ hbase0 hbase 6) (by norm_num)
+  have hpoly : C ≤ 9360 * (1 + d / 6)^6 :=
+    hC_le_quad.trans (hquad_le_gap.trans hgap_le_shift)
+  have hbudget :
+      1 ≤ target * (1 + d / 6)^6 := by
+    have hrewrite :
+        target * (1 + d / 6)^6 =
+          (9360 * (1 + d / 6)^6) / C := by
+      dsimp [target]
+      ring
+    rw [hrewrite]
+    rw [le_div_iff₀ hCpos]
+    nlinarith
+  have hshift :
+      partialExpUpper y a ≤ target * partialExpUpper z a :=
+    partialExpUpper_le_mul_of_six_step_shift
+      (y := y) (z := z) (d₀ := d) (target := target) (T := a)
+      hy0 hd0 (by omega : 1 ≤ a) hz_lt_a hdrop hbudget
+  have hexp :
+      partialExpUpper y (8 * posJ a 2)
+        ≤ target * partialExpUpper z a :=
+    hcutoff.trans hshift
+  calc
+    (29 / 4 : ℚ) * (posNhi a : ℚ) *
+        ((5 : ℚ) * (posNhi a : ℚ) - 72) * 50 *
+        partialExpUpper y (8 * posJ a 2)
+        = C * partialExpUpper y (8 * posJ a 2) := by
+          dsimp [C]
+    _ ≤ C * (target * partialExpUpper z a) :=
+          mul_le_mul_of_nonneg_left hexp hCnonneg
+    _ = 9360 * partialExpUpper z a := by
+          dsimp [target]
+          field_simp [hCpos.ne']
+
 /-- First-cell budget from a shifted solo fast bound checked only at the
 shifted index's own upper edge.
 
@@ -2868,6 +3084,36 @@ theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellAndClosedFactor
       exact
         positiveSmallFirstCellYUpperEdgeBudget_of_shiftedSoloOwnEdgeFastCleared
           ha (hshiftedSoloOwnUpper ha) (hscaledBudgetTwo ha))
+    hsmallGeThree htemperedGeThree
+
+/-- Product-tail constructor after closing the fixed-factor first-cell scalar
+budget.
+
+The first retained product cell now asks only for the shifted solo fast
+upper-edge theorem at `j = a - 2`, `N = posNhi (a - 2)`.  The rectangle-edge
+mismatch and the extra scalar factor are discharged by the preceding lemmas. -/
+theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellClosedBudgetAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    (hshiftedSoloOwnUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          (posJ a 2) (posNhi (posJ a 2)))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerN
+            a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellAndClosedFactorialSplitBlockSumScalarFastExpUpperEdgeLowerNGeThree
+    hshiftedSoloOwnUpper
+    (by
+      intro a ha
+      exact positiveSmallFirstCellShiftedSoloFiftyFastExpBudget_of_large ha)
     hsmallGeThree htemperedGeThree
 
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
