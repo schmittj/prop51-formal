@@ -1452,6 +1452,157 @@ theorem positiveSmallFirstCellShiftedSoloFastExpBudget_of_large
           dsimp [target]
           field_simp [hCpos.ne']
 
+/-- Sharp recurrence-level `Qq` target for the first retained product cell.
+
+This is deliberately a bound on the actual coefficient majorant
+`QqSharpGcompBound`, not on the older product-side non-sharp `Y` block.  The
+closed solo theorem currently available in Lean is sharp and normalized; the
+first product cell can therefore reuse future sharp fast `Qq` estimates
+directly through `positiveSmallFirstCellQBudget` instead of detouring through
+the non-sharp split-factorial product bound. -/
+def positiveSmallFirstCellSharpQFastCleared (a N : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+      QqSharpGcompBound N (posJ a 2)
+    ≤ 29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+      partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+        (8 * posJ a 2)
+
+/-- A sharp fast `Qq` first-cell estimate supplies the direct first-cell
+`Qq` budget.
+
+This records the intended completion route for the `k = 2` product cell:
+prove the sharp fast `Qq` estimate, then use the already-closed scalar
+comparison `positiveSmallFirstCellShiftedSoloFastExpBudget_of_large`.  The
+older non-sharp upper-edge `Y` route remains below as a compatibility path,
+but it is not forced on the canonical product-tail proof. -/
+theorem positiveSmallFirstCellQBudget_of_sharpQFastCleared
+    {a N : Nat} (ha : 3000 ≤ a) (hrect : positiveRectangle a N)
+    (hsharp : positiveSmallFirstCellSharpQFastCleared a N) :
+    positiveSmallFirstCellQBudget a N
+      (QqSharpGcompBound N (posJ a 2)) := by
+  unfold positiveSmallFirstCellSharpQFastCleared at hsharp
+  unfold positiveSmallFirstCellQBudget
+  have hNge15 : 15 ≤ N := by
+    have hNlo : posNlo a ≤ N := hrect.1
+    unfold posNlo at hNlo
+    omega
+  have hlinear_nonneg :
+      0 ≤ (5 : ℚ) * (N : ℚ) - 72 := by
+    have hNge15Q : (15 : ℚ) ≤ (N : ℚ) := by
+      exact_mod_cast hNge15
+    nlinarith
+  have hlinear_le :
+      (5 : ℚ) * (N : ℚ) - 72
+        ≤ (5 : ℚ) * (posNhi a : ℚ) - 72 := by
+    have hNle : (N : ℚ) ≤ (posNhi a : ℚ) := by
+      exact_mod_cast hrect.2
+    nlinarith
+  have hy0 : 0 ≤ positiveSoloYExponent (posJ a 2) := by
+    unfold positiveSoloYExponent
+    positivity
+  have hy_lt_T :
+      positiveSoloYExponent (posJ a 2)
+        < ((8 * posJ a 2 : Nat) : ℚ) := by
+    have hjQ : (1 : ℚ) ≤ (posJ a 2 : ℚ) := by
+      exact_mod_cast (by unfold posJ; omega : 1 ≤ posJ a 2)
+    unfold positiveSoloYExponent
+    rw [Nat.cast_mul]
+    norm_num
+    nlinarith
+  have hpartial_nonneg :
+      0 ≤
+        partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+          (8 * posJ a 2) := by
+    rw [partialExpUpperFast_eq]
+    exact partialExpUpper_nonneg_of_nonneg_lt hy0 hy_lt_T
+  have hcoef_nonneg :
+      0 ≤
+        (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2) := by
+    positivity
+  have hbudget := positiveSmallFirstCellShiftedSoloFastExpBudget_of_large ha
+  unfold positiveSmallFirstCellShiftedSoloFastExpBudget at hbudget
+  have hbudgetN :
+      (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (N : ℚ) - 72) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)
+        ≤ 9360 * positiveSmallLargeExp a 2 := by
+    calc
+      (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (N : ℚ) - 72) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)
+          =
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) *
+          ((5 : ℚ) * (N : ℚ) - 72) := by
+            ring
+      _ ≤
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) :=
+            mul_le_mul_of_nonneg_left hlinear_le hcoef_nonneg
+      _ =
+        (29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (posNhi a : ℚ) - 72) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2) := by
+            ring
+      _ ≤ 9360 * positiveSmallLargeExp a 2 := hbudget
+  have hscale_nonneg :
+      0 ≤ (posNhi a : ℚ) *
+          ((5 : ℚ) * (N : ℚ) - 72) / 4 := by
+    exact div_nonneg
+      (mul_nonneg (Nat.cast_nonneg (posNhi a)) hlinear_nonneg)
+      (by norm_num)
+  have hsharpScaled :=
+    mul_le_mul_of_nonneg_left hsharp hscale_nonneg
+  have hjc_nonneg :
+      0 ≤ (posJ a 2 : ℚ) * c (posJ a 2) :=
+    mul_nonneg (Nat.cast_nonneg _) (c_nonneg (posJ a 2))
+  have hbudgetScaled :
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (N : ℚ) - 72) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2))
+        ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) :=
+    mul_le_mul_of_nonneg_left hbudgetN hjc_nonneg
+  calc
+    (2 : ℚ)^(posJ a 2) * (posNhi a : ℚ) *
+        (5 * (N : ℚ) - 72) *
+        QqSharpGcompBound N (posJ a 2)
+        =
+      ((posNhi a : ℚ) * ((5 : ℚ) * (N : ℚ) - 72) / 4) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          QqSharpGcompBound N (posJ a 2)) := by
+          ring
+    _ ≤
+      ((posNhi a : ℚ) * ((5 : ℚ) * (N : ℚ) - 72) / 4) *
+        (29 * (posJ a 2 : ℚ) * c (posJ a 2) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) := hsharpScaled
+    _ =
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        ((29 / 4 : ℚ) * (posNhi a : ℚ) *
+          ((5 : ℚ) * (N : ℚ) - 72) *
+          partialExpUpperFast (positiveSoloYExponent (posJ a 2))
+            (8 * posJ a 2)) := by
+          ring
+    _ ≤
+      ((posJ a 2 : ℚ) * c (posJ a 2)) *
+        (9360 * positiveSmallLargeExp a 2) := hbudgetScaled
+    _ =
+      9360 * (posJ a 2 : ℚ) *
+        positiveSmallLargeExp a 2 * c (posJ a 2) := by
+          ring
+
 /-- Low-threshold version of the reusable `(1+3/a)^a` bound.
 
 The proof is the same rational estimate as
@@ -2707,6 +2858,39 @@ theorem LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
       exact positiveSmallLargeXYProductRawCleared_two_of_QBound
         (by omega : 2000 < a) hrect (hQTwo ha hrect)
         (hbudgetTwo ha hrect))
+    hsmallGeThree htemperedGeThree
+
+/-- Sharp-`Qq` first-cell specialization of the product-tail constructor.
+
+This is the preferred first-cell surface for the current canonical route.  It
+uses `Qq_le_SharpGcompBound` and
+`positiveSmallFirstCellQBudget_of_sharpQFastCleared`, so the remaining
+`k = 2` analytic input is the sharp fast recurrence-level `Qq` estimate
+`positiveSmallFirstCellSharpQFastCleared`.  The `k ≥ 3` tail remains the
+combined raw product/sign-lock-complement obligation. -/
+theorem LargeTailProductCertificate.ofSharpQFastTwoAndGeThreeNatSignLockComplement
+    (hsharpTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallFirstCellSharpQFastCleared a N)
+    (hsmallGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 3 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeThree :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 3 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofQBoundTwoAndGeThreeNatSignLockComplement
+    (qBound := fun a N => QqSharpGcompBound N (posJ a 2))
+    (by
+      intro a N _ha _hrect
+      exact Qq_le_SharpGcompBound N (posJ a 2))
+    (by
+      intro a N ha hrect
+      exact positiveSmallFirstCellQBudget_of_sharpQFastCleared
+        ha hrect (hsharpTwo ha hrect))
     hsmallGeThree htemperedGeThree
 
 /-- Canonical first-cell specialization of the product-tail constructor:
