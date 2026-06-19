@@ -22645,6 +22645,59 @@ theorem positiveSoloYExponent_le_three_tenths_self
   unfold positiveSoloYExponent
   nlinarith
 
+/-- In the large-tail range the solo exponent is already a large first
+term of the rational exponential surrogate.  This deliberately loose lower
+bound is used to turn constant-times-`a * c a` sharp block estimates into
+the fast `partialExpUpper` budget. -/
+theorem positiveSoloYExponent_ge_fiveHundred
+    {a : Nat} (ha : 2500 ≤ a) :
+    (500 : ℚ) ≤ positiveSoloYExponent a := by
+  have haQ : (2500 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+  unfold positiveSoloYExponent
+  nlinarith
+
+theorem positiveSoloYExponent_lt_eight_self
+    {a : Nat} (ha : 1 ≤ a) :
+    positiveSoloYExponent a < ((8 * a : Nat) : ℚ) := by
+  have haQ : (1 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+  unfold positiveSoloYExponent
+  norm_num [Nat.cast_mul]
+  nlinarith
+
+/-- The variable-cutoff solo exponential surrogate is at least `500` in the
+large-tail range.  The proof uses only the `t = 1` term. -/
+theorem partialExpUpper_positiveSoloYExponent_eight_ge_fiveHundred
+    {a : Nat} (ha : 2500 ≤ a) :
+    (500 : ℚ) ≤ partialExpUpper (positiveSoloYExponent a) (8 * a) := by
+  have hy_ge : (500 : ℚ) ≤ positiveSoloYExponent a :=
+    positiveSoloYExponent_ge_fiveHundred ha
+  have hy0 : 0 ≤ positiveSoloYExponent a := by
+    unfold positiveSoloYExponent
+    positivity
+  have hyT :
+      positiveSoloYExponent a < ((8 * a : Nat) : ℚ) :=
+    positiveSoloYExponent_lt_eight_self (by omega : 1 ≤ a)
+  have hterm :
+      positiveSoloYExponent a ^ (1 : Nat) /
+          (((1 : Nat).factorial : Nat) : ℚ)
+        ≤ partialExpUpper (positiveSoloYExponent a) (8 * a) :=
+    expTerm_le_partialExpUpper
+      (z := positiveSoloYExponent a) (m := 1) (T := 8 * a)
+      (by omega : 1 < 8 * a) hy0 hyT
+  have hterm_eq :
+      positiveSoloYExponent a ^ (1 : Nat) /
+          (((1 : Nat).factorial : Nat) : ℚ)
+        = positiveSoloYExponent a := by
+    norm_num
+  rw [hterm_eq] at hterm
+  exact hy_ge.trans hterm
+
+theorem partialExpUpperFast_positiveSoloYExponent_eight_ge_fiveHundred
+    {a : Nat} (ha : 2500 ≤ a) :
+    (500 : ℚ) ≤ partialExpUpperFast (positiveSoloYExponent a) (8 * a) := by
+  rw [partialExpUpperFast_eq]
+  exact partialExpUpper_positiveSoloYExponent_eight_ge_fiveHundred ha
+
 /-- Variable-cutoff large-tail solo exponential envelope.
 
 The fixed finite-window cutoff `positiveExpCutoff = 800` is not the right
