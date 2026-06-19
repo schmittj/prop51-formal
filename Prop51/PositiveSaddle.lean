@@ -23968,7 +23968,7 @@ theorem c_tail_mul_five_a_pow_le_three
 /-- Pointwise bound for a simplified large-degree solo summand after the
 denominator-clearing factor `4 * 2^a` has been applied. -/
 theorem positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
-    {a s : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ a - s)
+    {a s : Nat} (_ha : 1 ≤ a) (hp : 4 ≤ a - s)
     (hlarge : 2 * a ≤ 3 * (a - s)) :
     (4 : ℚ) * (2 : ℚ)^a *
         ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
@@ -27379,7 +27379,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_eq_simple_add_r
   · simp [hlarge]
 
 theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
-    {a : Nat} (ha : 3000 ≤ a) :
+    {a : Nat} (ha : 1 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
       ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
@@ -27432,6 +27432,55 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
           (5 / 4 : ℚ)^s / (s.factorial : ℚ)) := by
           rw [Finset.mul_sum]
 
+/-- Constant version of the dominant large-degree sharp solo block estimate.
+
+This is the first direct component of the own-edge first-cell product proof:
+it keeps the `4 * 2^a` clearing but removes the much coarser
+`(10/7)^a` envelope used by the standalone solo certificate. -/
+theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_oneForty
+    {a : Nat} (ha : 1 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
+      ≤ 140 * (a : ℚ) * c a := by
+  have hsum :=
+    positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
+      (a := a) ha
+  have hpoisson :
+      (∑ s ∈ Finset.range (a + 1),
+          (5 / 4 : ℚ)^s / (s.factorial : ℚ)) ≤ 4 := by
+    calc
+      (∑ s ∈ Finset.range (a + 1),
+          (5 / 4 : ℚ)^s / (s.factorial : ℚ))
+          ≤ partialExpUpper (5 / 4 : ℚ) 3 :=
+            poissonZero_sum_le_partialExpUpper
+              (5 / 4 : ℚ) 3 (a + 1) (by norm_num) (by norm_num)
+      _ ≤ 4 := by
+            norm_num [partialExpUpper, Finset.sum_range_succ, Nat.factorial]
+  have hK_nonneg :
+      0 ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  have hsum_four :
+      (4 : ℚ) * (2 : ℚ)^a *
+          positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum a
+        ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a * 4 :=
+    hsum.trans (mul_le_mul_of_nonneg_left hpoisson hK_nonneg)
+  have hscalar : (20736 / 625 : ℚ) * 4 ≤ 140 := by
+    norm_num
+  have hac_nonneg : 0 ≤ (a : ℚ) * c a :=
+    mul_nonneg (Nat.cast_nonneg a) (c_nonneg a)
+  exact hsum_four.trans
+    (by
+      calc
+        (20736 / 625 : ℚ) * (a : ℚ) * c a * 4
+            = ((a : ℚ) * c a) * ((20736 / 625 : ℚ) * 4) := by
+              ring
+        _ ≤ ((a : ℚ) * c a) * 140 := by
+              exact mul_le_mul_of_nonneg_left hscalar hac_nonneg
+        _ = 140 * (a : ℚ) * c a := by
+              ring)
+
 theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_target
     {a : Nat} (ha : 3000 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
@@ -27439,7 +27488,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_targe
       ≤ (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hsum :=
     positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_expSum
-      (a := a) ha
+      (a := a) (by omega : 1 ≤ a)
   have hpoisson :
       (∑ s ∈ Finset.range (a + 1),
           (5 / 4 : ℚ)^s / (s.factorial : ℚ)) ≤ 4 := by
