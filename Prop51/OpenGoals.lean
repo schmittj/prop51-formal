@@ -1497,6 +1497,18 @@ def positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
         (posJ a 2) N
     ≤ 14500 * (posJ a 2 : ℚ) * c (posJ a 2)
 
+/-- Own-edge constant-budget target for the sharp first product cell.
+
+The product-edge target has a `14500` constant because it includes the fixed
+factor `50` needed to move from `posNhi (a-2)` to `posNhi a`.  At the natural
+own edge of `j = a - 2`, the remaining target is the cleaner constant
+`290`. -/
+def positiveSmallFirstCellSharpOwnEdgeConstCleared (a : Nat) : Prop :=
+  (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+        (posJ a 2) (posNhi (posJ a 2))
+    ≤ 290 * (posJ a 2 : ℚ) * c (posJ a 2)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
@@ -2086,6 +2098,69 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_productEdge_
             j (posNhi j) :=
     mul_le_mul_of_nonneg_right hpow hsum_nonneg
   simpa [j] using hscaled.trans hscaled50
+
+/-- The own-edge sharp first-cell constant target implies the product-edge
+constant target after paying the fixed edge-scaling factor `50`. -/
+theorem
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_ownEdge
+    {a : Nat} (ha : 3000 ≤ a)
+    (hown : positiveSmallFirstCellSharpOwnEdgeConstCleared a) :
+    positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+      a (posNhi a) := by
+  unfold positiveSmallFirstCellSharpOwnEdgeConstCleared at hown
+  unfold positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared
+  have hedge :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge
+      (a := a) ha
+  have hscale_nonneg : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  have hscaled :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+        ≤
+      (50 : ℚ) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi (posJ a 2))) := by
+    calc
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi a)
+          ≤
+        (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          ((50 : ℚ) *
+            positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+              (posJ a 2) (posNhi (posJ a 2))) := by
+          simpa [mul_assoc] using
+            mul_le_mul_of_nonneg_left hedge hscale_nonneg
+      _ =
+        (50 : ℚ) *
+          ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+            positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+              (posJ a 2) (posNhi (posJ a 2))) := by
+          ring
+  have hownScaled :
+      (50 : ℚ) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi (posJ a 2)))
+        ≤
+      (50 : ℚ) * (290 * (posJ a 2 : ℚ) * c (posJ a 2)) :=
+    mul_le_mul_of_nonneg_left hown (by norm_num)
+  calc
+    (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+        positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) (posNhi a)
+        ≤
+      (50 : ℚ) *
+        ((4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            (posJ a 2) (posNhi (posJ a 2))) := hscaled
+    _ ≤ (50 : ℚ) * (290 * (posJ a 2 : ℚ) * c (posJ a 2)) :=
+      hownScaled
+    _ = 14500 * (posJ a 2 : ℚ) * c (posJ a 2) := by
+      ring
 
 /-- First-cell scalar budget after paying the fixed `50` factor needed to
 move the shifted solo block from `posNhi (a - 2)` to the product edge
