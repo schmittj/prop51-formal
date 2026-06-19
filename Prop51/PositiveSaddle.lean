@@ -24066,7 +24066,7 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleTerm_scaled_le_expTerm
 only change from the large-degree estimate is the looser factorial-ratio
 constant coming from `9a ≤ 20(a-s)`. -/
 theorem positiveLargeTailSoloSharpProportionalSimpleTerm_scaled_le_expTerm
-    {a s : Nat} (ha : 3000 ≤ a) (hp : 4 ≤ a - s)
+    {a s : Nat} (_ha : 1 ≤ a) (hp : 4 ≤ a - s)
     (hprop : 9 * a ≤ 20 * (a - s)) :
     (4 : ℚ) * (2 : ℚ)^a *
         ((((posNhi a : ℚ) / 2 * c 1 / 2)^s /
@@ -27571,8 +27571,76 @@ theorem positiveLargeTailSoloSharpLargeDegreeSimpleBlockSum_scaled_le_half_targe
         _ = (29 / 2 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
               ring)
 
+/-- Active Poisson sum for the proportional part of the sharp solo
+large-degree remainder.
+
+The older estimate below bounds this by a full exponential sum.  The own-edge
+first-cell proof needs the range condition retained, since the proportional
+band starts far out in the Poisson tail. -/
+def positiveLargeTailSoloSharpProportionalRemainderExpSum (a : Nat) : ℚ :=
+  ∑ s ∈ Finset.range (a + 1),
+    if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+        4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+      (50 / 27 : ℚ)^s / (s.factorial : ℚ)
+    else
+      0
+
+theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_activeExpSum
+    {a : Nat} (ha : 1 ≤ a) :
+    (4 : ℚ) * (2 : ℚ)^a *
+        positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
+      ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          positiveLargeTailSoloSharpProportionalRemainderExpSum a := by
+  unfold positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum
+  calc
+    (4 : ℚ) * (2 : ℚ)^a *
+        (∑ s ∈ Finset.range (a + 1),
+          if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0)
+        =
+      ∑ s ∈ Finset.range (a + 1),
+        (4 : ℚ) * (2 : ℚ)^a *
+          (if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+            (((posNhi a : ℚ) / 2 * c 1 / 2)^s /
+                (s.factorial : ℚ)) *
+              ((posNhi a : ℚ) * c (a - s) *
+                ((3 / 5 : ℚ) * (1 / 2 : ℚ)^(a - s)))
+          else
+            0) := by
+          rw [Finset.mul_sum]
+    _ ≤
+      ∑ s ∈ Finset.range (a + 1),
+        (20736 / 625 : ℚ) * (a : ℚ) * c a *
+          (if ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+              4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s) then
+            (50 / 27 : ℚ)^s / (s.factorial : ℚ)
+          else
+            0) := by
+          refine Finset.sum_le_sum fun s _ => ?_
+          by_cases hprop :
+              ¬ (4 ≤ a - s ∧ 2 * a ≤ 3 * (a - s)) ∧
+                4 ≤ a - s ∧ 9 * a ≤ 20 * (a - s)
+          · rw [if_pos hprop, if_pos hprop]
+            exact
+              positiveLargeTailSoloSharpProportionalSimpleTerm_scaled_le_expTerm
+                (a := a) (s := s) ha hprop.2.1 hprop.2.2
+          · rw [if_neg hprop, if_neg hprop]
+            norm_num
+    _ =
+      (20736 / 625 : ℚ) * (a : ℚ) * c a *
+        positiveLargeTailSoloSharpProportionalRemainderExpSum a := by
+          unfold positiveLargeTailSoloSharpProportionalRemainderExpSum
+          rw [Finset.mul_sum]
+
 theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_expSum
-    {a : Nat} (ha : 3000 ≤ a) :
+    {a : Nat} (ha : 1 ≤ a) :
     (4 : ℚ) * (2 : ℚ)^a *
         positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum a
       ≤ (20736 / 625 : ℚ) * (a : ℚ) * c a *
@@ -27636,7 +27704,7 @@ theorem positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_
       ≤ (29 / 4 : ℚ) * (a : ℚ) * c a * (10 / 7 : ℚ)^a := by
   have hsum :=
     positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum_scaled_le_expSum
-      (a := a) ha
+      (a := a) (by omega : 1 ≤ a)
   have hpoisson :
       (∑ s ∈ Finset.range (a + 1),
           (50 / 27 : ℚ)^s / (s.factorial : ℚ)) ≤ 10 := by
