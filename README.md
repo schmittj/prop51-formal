@@ -35,6 +35,20 @@ The proof (see `paper/prop51.tex`) has three layers:
 
 All Lean proofs are sorry-free.  Headline theorems:
 
+* **Canonical completion dashboard**: `Prop51/Completion.lean` is the current
+  final route.  Its theorem
+  `Prop51.coefficientNegativity` has exactly two live inputs:
+  `Prop51.BoundedPositiveCertificate` for the `401 <= a < 3000` bounded
+  range and `Prop51.LargeTailProductCertificate` for the `3000 <= a`
+  product tail.  The large-tail solo input is no longer open: it is supplied
+  by `Prop51.largeTailSoloCertificate` in `Prop51/OpenGoals.lean`.
+  Recent profiling after `536eed8` showed that exact raw/exact-prefix
+  `native_decide` checks are not the next scalable path: a one-row bounded
+  combined-product check and a one-row exact upper-edge prefix solo scalar
+  check both exceeded one minute locally.  The active route should therefore
+  continue with endpoint/majorant reductions and the combined analytic
+  product-tail split, not broad exact `(a,N,k)` grid generation.
+
 * `Prop51.bCoeff_neg_g_le_23` — `b_a(μ) < 0` for every generated partition,
   every relevant `g ≤ 23` (≈150k partitions; cardinalities cross-checked
   against p(n)).
