@@ -253,6 +253,119 @@ theorem monomial_le_expPrefix {x : ℚ} (hx : 0 ≤ x) {r m : Nat}
     linarith
   exact htop.trans (expPrefix_mono_index hx hrm)
 
+theorem expTerm_add_eq_antidiagonal (x y : ℚ) (t : Nat) :
+    (x + y)^t / (t.factorial : ℚ)
+      =
+    ∑ ij ∈ Finset.antidiagonal t,
+      x^ij.1 / (ij.1.factorial : ℚ) *
+        (y^ij.2 / (ij.2.factorial : ℚ)) := by
+  rw [Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  rw [add_pow, Finset.sum_div]
+  refine Finset.sum_congr rfl fun p hp => ?_
+  have hpt : p ≤ t := by
+    have hp' := Finset.mem_range.mp hp
+    omega
+  have hchoose :
+      (((t.choose p : Nat) : ℚ) * (p.factorial : ℚ)) *
+          ((t - p).factorial : ℚ) = (t.factorial : ℚ) := by
+    exact_mod_cast Nat.choose_mul_factorial_mul_factorial hpt
+  have hchoose_pos : (0 : ℚ) < (t.choose p : ℚ) := by
+    exact_mod_cast Nat.choose_pos hpt
+  have hpfac : (0 : ℚ) < (p.factorial : ℚ) := by
+    exact_mod_cast p.factorial_pos
+  have htpfac : (0 : ℚ) < ((t - p).factorial : ℚ) := by
+    exact_mod_cast (t - p).factorial_pos
+  have htfac : (0 : ℚ) < (t.factorial : ℚ) := by
+    exact_mod_cast t.factorial_pos
+  rw [← hchoose]
+  field_simp [hchoose_pos.ne', hpfac.ne', htpfac.ne', htfac.ne']
+
+/-- Product term attached to a pair of exponents. -/
+def expPairTerm (x y : ℚ) (ij : Nat × Nat) : ℚ :=
+  x^ij.1 / (ij.1.factorial : ℚ) *
+    (y^ij.2 / (ij.2.factorial : ℚ))
+
+/-- All exponent pairs with total degree at most `N`, presented as a disjoint
+union of antidiagonals. -/
+def expTrianglePairs (N : Nat) : Finset (Nat × Nat) :=
+  (Finset.range (N + 1)).biUnion fun t => Finset.antidiagonal t
+
+theorem mem_expTrianglePairs {N : Nat} {ij : Nat × Nat} :
+    ij ∈ expTrianglePairs N ↔ ij.1 + ij.2 ≤ N := by
+  unfold expTrianglePairs
+  rw [Finset.mem_biUnion]
+  constructor
+  · rintro ⟨t, ht, hij⟩
+    have htN := Finset.mem_range.mp ht
+    have hijsum := Finset.mem_antidiagonal.mp hij
+    omega
+  · intro hijN
+    refine ⟨ij.1 + ij.2, Finset.mem_range.mpr (by omega), ?_⟩
+    exact Finset.mem_antidiagonal.mpr rfl
+
+private theorem antidiagonal_pairwiseDisjoint (N : Nat) :
+    Set.PairwiseDisjoint (↑(Finset.range (N + 1)) : Set Nat)
+      (fun t => Finset.antidiagonal t) := by
+  intro a _ha b _hb hab
+  exact Finset.disjoint_left.mpr (by
+    intro ij hia hib
+    have hia' := Finset.mem_antidiagonal.mp hia
+    have hib' := Finset.mem_antidiagonal.mp hib
+    exact hab (by omega))
+
+theorem expPrefix_add_eq_triangle_sum (x y : ℚ) (N : Nat) :
+    expPrefix (x + y) N
+      = ∑ ij ∈ expTrianglePairs N, expPairTerm x y ij := by
+  unfold expPrefix
+  calc
+    ∑ t ∈ Finset.range (N + 1), (x + y)^t / (t.factorial : ℚ)
+        =
+      ∑ t ∈ Finset.range (N + 1),
+        ∑ ij ∈ Finset.antidiagonal t, expPairTerm x y ij := by
+          refine Finset.sum_congr rfl fun t _ => ?_
+          rw [expTerm_add_eq_antidiagonal]
+          rfl
+    _ = ∑ ij ∈ expTrianglePairs N, expPairTerm x y ij := by
+          unfold expTrianglePairs
+          rw [Finset.sum_biUnion (antidiagonal_pairwiseDisjoint N)]
+
+theorem expPrefix_mul_eq_rect_sum (x y : ℚ) (m n : Nat) :
+    expPrefix x m * expPrefix y n
+      =
+    ∑ ij ∈ (Finset.range (m + 1)) ×ˢ (Finset.range (n + 1)),
+      expPairTerm x y ij := by
+  unfold expPrefix expPairTerm
+  rw [Finset.sum_product]
+  rw [Finset.sum_mul]
+  refine Finset.sum_congr rfl fun p _ => ?_
+  rw [Finset.mul_sum]
+
+theorem expPairTerm_nonneg {x y : ℚ} (hx : 0 ≤ x) (hy : 0 ≤ y)
+    (ij : Nat × Nat) :
+    0 ≤ expPairTerm x y ij := by
+  unfold expPairTerm
+  have hxpow : 0 ≤ x^ij.1 := pow_nonneg hx ij.1
+  have hypow : 0 ≤ y^ij.2 := pow_nonneg hy ij.2
+  have hxfac : 0 ≤ (ij.1.factorial : ℚ) := by
+    exact_mod_cast (Nat.factorial_pos ij.1).le
+  have hyfac : 0 ≤ (ij.2.factorial : ℚ) := by
+    exact_mod_cast (Nat.factorial_pos ij.2).le
+  exact mul_nonneg (div_nonneg hxpow hxfac) (div_nonneg hypow hyfac)
+
+theorem expPrefix_mul_le {x y : ℚ} (hx : 0 ≤ x) (hy : 0 ≤ y)
+    (m n : Nat) :
+    expPrefix x m * expPrefix y n ≤ expPrefix (x + y) (m + n) := by
+  rw [expPrefix_mul_eq_rect_sum, expPrefix_add_eq_triangle_sum]
+  refine
+    Finset.sum_le_sum_of_subset_of_nonneg
+      (fun ij hij => ?_)
+      (fun ij _ _ => expPairTerm_nonneg hx hy ij)
+  have hij' := Finset.mem_product.mp hij
+  rw [mem_expTrianglePairs]
+  have hi := Finset.mem_range.mp hij'.1
+  have hj := Finset.mem_range.mp hij'.2
+  omega
+
 theorem expPrefix_one (x : ℚ) : expPrefix x 1 = 1 + x := by
   norm_num [expPrefix, Finset.sum_range_succ]
 
