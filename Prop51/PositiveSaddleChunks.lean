@@ -3427,6 +3427,22 @@ def checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
     checkPositiveSoloDisplayedYSaddleClearedNRange
       a (posNlo a + nLen * nIndex) nLen
 
+/-- Hybrid fixed-point/exact displayed-solo saddle check over one `N` chunk. -/
+def checkPositiveSoloDisplayedYSaddleClearedNRangeScaledExpFallback
+    (S a nLo nLen : Nat) : Bool :=
+  (List.range' nLo nLen).all fun N =>
+    if _hrect : positiveRectangle a N then
+      checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback S a N
+    else true
+
+/-- Hybrid displayed-solo saddle check over one fixed `N`-chunk index across
+a row range. -/
+def checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRangeScaledExpFallback
+    (S nLen lo len nIndex : Nat) : Bool :=
+  (List.range' lo len).all fun a =>
+    checkPositiveSoloDisplayedYSaddleClearedNRangeScaledExpFallback
+      S a (posNlo a + nLen * nIndex) nLen
+
 /-- Displayed-solo unit-budget check over one fixed `N`-chunk index across a
 row range. -/
 def checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
@@ -3479,6 +3495,60 @@ theorem checkPositiveSoloDisplayedYSaddleClearedNRange_of_fixedNIndexRowRange
       simpa [checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange]
         using h)
   exact hall a ha_mem
+
+theorem checkPositiveSoloDisplayedYSaddleClearedNRange_of_scaledExpFallback
+    {S a nLo nLen : Nat} (hS : 0 < S) (ha2000 : a ≤ 2000)
+    (h :
+      checkPositiveSoloDisplayedYSaddleClearedNRangeScaledExpFallback
+        S a nLo nLen = true) :
+    checkPositiveSoloDisplayedYSaddleClearedNRange a nLo nLen = true := by
+  have hNs :
+      ∀ x ∈ List.range' nLo nLen,
+        (if hrect : positiveRectangle a x then
+          checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback S a x
+        else true) = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYSaddleClearedNRangeScaledExpFallback]
+        using h)
+  unfold checkPositiveSoloDisplayedYSaddleClearedNRange
+  apply List.all_eq_true.mpr
+  intro N hNmem
+  by_cases hrect : positiveRectangle a N
+  · have hhybrid :
+        checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback S a N =
+          true := by
+      simpa [hrect] using hNs N hNmem
+    have hprop :
+        positiveSoloDisplayedYSaddleCleared a N :=
+      positiveSoloDisplayedYSaddleCleared_of_checkCellScaledExpFallback
+        hS ha2000 hhybrid
+    simp [hrect, checkPositiveSoloDisplayedYSaddleClearedCell]
+    unfold positiveSoloDisplayedYSaddleCleared at hprop
+    rw [← QListQ_getD_eq N a a le_rfl] at hprop
+    exact hprop
+  · simp [hrect]
+
+theorem checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange_of_scaledExpFallback
+    {S nLen lo len nIndex : Nat} (hS : 0 < S)
+    (_hlo401 : 401 ≤ lo) (hhi2001 : lo + len ≤ 2001)
+    (h :
+      checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRangeScaledExpFallback
+        S nLen lo len nIndex = true) :
+    checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+      nLen lo len nIndex = true := by
+  have hall :
+      ∀ a ∈ List.range' lo len,
+        checkPositiveSoloDisplayedYSaddleClearedNRangeScaledExpFallback
+          S a (posNlo a + nLen * nIndex) nLen = true := by
+    exact List.all_eq_true.mp (by
+      simpa [checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRangeScaledExpFallback]
+        using h)
+  unfold checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+  apply List.all_eq_true.mpr
+  intro a haMem
+  rcases List.mem_range'_1.mp haMem with ⟨ha_lo, ha_hi⟩
+  exact checkPositiveSoloDisplayedYSaddleClearedNRange_of_scaledExpFallback
+    hS (by omega : a ≤ 2000) (hall a haMem)
 
 theorem checkPositiveSoloDisplayedYBoundUnitNRange_of_fixedNIndexRowRange
     {nLen lo len nIndex a : Nat}

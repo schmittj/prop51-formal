@@ -14059,6 +14059,33 @@ theorem positiveTemperedExponentUpperNum_lt_den_mul_cutoff {a k : Nat}
     simpa [Nat.cast_mul, mul_comm] using hmul
   exact_mod_cast hmul'
 
+/-- Natural numerator for the displayed solo exponent
+`positiveSoloYExponent a = (2*a + 39)/10`. -/
+def positiveSoloYExponentNum (a : Nat) : Nat :=
+  2 * a + 39
+
+/-- Natural denominator for the displayed solo exponent. -/
+def positiveSoloYExponentDen : Nat :=
+  10
+
+theorem positiveSoloYExponentDen_pos : 0 < positiveSoloYExponentDen := by
+  norm_num [positiveSoloYExponentDen]
+
+theorem positiveSoloYExponent_eq_num_div_den (a : Nat) :
+    positiveSoloYExponent a =
+      (positiveSoloYExponentNum a : ℚ) /
+        (positiveSoloYExponentDen : ℚ) := by
+  unfold positiveSoloYExponent positiveSoloYExponentNum positiveSoloYExponentDen
+  norm_num
+  ring
+
+theorem positiveSoloYExponentNum_lt_den_mul_cutoff {a : Nat}
+    (ha2000 : a ≤ 2000) :
+    positiveSoloYExponentNum a <
+      positiveSoloYExponentDen * positiveExpCutoff := by
+  unfold positiveSoloYExponentNum positiveSoloYExponentDen positiveExpCutoff
+  omega
+
 /-- Fixed-point upper bound for the small finite-window exponential shell. -/
 def positiveSmallPartialExpUpperScaledNat (S a k : Nat) : Nat :=
   scaledPartialExpUpperNat S
@@ -14089,6 +14116,13 @@ def positiveTemperedPartialExpUpperScaledNat (S a k : Nat) : Nat :=
   scaledPartialExpUpperNat S
     (positiveTemperedExponentUpperNum a k)
     (positiveTemperedExponentUpperDen a k)
+    positiveExpCutoff
+
+/-- Fixed-point lower bound for the displayed solo exponential shell. -/
+def positiveSoloPartialExpLowerScaledNat (S a : Nat) : Nat :=
+  scaledPartialExpUpperLowerNat S
+    (positiveSoloYExponentNum a)
+    positiveSoloYExponentDen
     positiveExpCutoff
 
 theorem partialExpUpper_positiveSmallExponentUpper_le_scaled
@@ -14130,6 +14164,23 @@ theorem positiveSmallPartialExpLowerScaled_le_partialExpUpper
     (yd := positiveSmallExponentUpperDen a k)
     (T := positiveExpCutoff) hS hden hnum
 
+theorem positiveSoloPartialExpLowerScaled_le_partialExpUpper
+    {S a : Nat} (hS : 0 < S) (ha2000 : a ≤ 2000) :
+    ((positiveSoloPartialExpLowerScaledNat S a : Nat) : ℚ) /
+        (S : ℚ)
+      ≤ partialExpUpper (positiveSoloYExponent a) positiveExpCutoff := by
+  have hden : 0 < positiveSoloYExponentDen :=
+    positiveSoloYExponentDen_pos
+  have hnum :
+      positiveSoloYExponentNum a <
+        positiveSoloYExponentDen * positiveExpCutoff :=
+    positiveSoloYExponentNum_lt_den_mul_cutoff ha2000
+  rw [positiveSoloYExponent_eq_num_div_den]
+  exact scaledPartialExpUpperLowerNat_le_partialExpUpper_rational
+    (S := S) (yn := positiveSoloYExponentNum a)
+    (yd := positiveSoloYExponentDen)
+    (T := positiveExpCutoff) hS hden hnum
+
 theorem partialExpUpper_positiveSmallTangentExponentAt_le_scaled
     {S a N k : Nat} (hS : 0 < S)
     (ha401 : 401 ≤ a) (ha2000 : a ≤ 2000)
@@ -14168,6 +14219,32 @@ def checkPositiveSmallTangentExpEdgeCellScaledExpFallback
     true
   else
     checkPositiveSmallTangentExpEdgeCell a N k
+
+/-- Scaled Boolean checker for the displayed solo saddle inequality.
+
+The exact checker evaluates the full rational
+`partialExpUpper (positiveSoloYExponent a) positiveExpCutoff`.  This checker
+replaces that exponential shell on the right by a downward-rounded fixed-point
+lower bound and cross-multiplies by `S`; a successful check therefore implies
+the exact cleared saddle inequality. -/
+def checkPositiveSoloDisplayedYSaddleClearedCellScaledExp
+    (S a N : Nat) : Bool :=
+  decide
+    (((4 : ℚ) * (2 : ℚ)^a * (QListQ (cList a) N a).getD a 0) *
+        (S : ℚ)
+      ≤
+      29 * (a : ℚ) * c a *
+        (positiveSoloPartialExpLowerScaledNat S a : ℚ))
+
+/-- Hybrid solo saddle checker: try the fixed-point lower-bound certificate
+first and fall back to the exact rational check only when the rounded bound is
+too conservative. -/
+def checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback
+    (S a N : Nat) : Bool :=
+  if checkPositiveSoloDisplayedYSaddleClearedCellScaledExp S a N then
+    true
+  else
+    checkPositiveSoloDisplayedYSaddleClearedCell a N
 
 def checkPositiveSmallTangentExpEdgeAtNScaledExp
     (S a N : Nat) : Bool :=
@@ -14256,6 +14333,54 @@ theorem positiveSmallTangentExpEdgeGap_of_checkCellScaledExpFallback
   · have hexact : checkPositiveSmallTangentExpEdgeCell a N k = true := by
       simpa [hscaled] using h
     exact positiveSmallTangentExpEdgeGap_of_checkCell hexact
+
+theorem positiveSoloDisplayedYSaddleCleared_of_checkCellScaledExp
+    {S a N : Nat} (hS : 0 < S) (ha2000 : a ≤ 2000)
+    (h : checkPositiveSoloDisplayedYSaddleClearedCellScaledExp S a N = true) :
+    positiveSoloDisplayedYSaddleCleared a N := by
+  let lhs : ℚ :=
+    (4 : ℚ) * (2 : ℚ)^a * (QListQ (cList a) N a).getD a 0
+  let coeff : ℚ := 29 * (a : ℚ) * c a
+  let L : Nat := positiveSoloPartialExpLowerScaledNat S a
+  have hNat : lhs * (S : ℚ) ≤ coeff * (L : ℚ) := by
+    exact of_decide_eq_true h
+  have hSℚ : (0 : ℚ) < (S : ℚ) := by exact_mod_cast hS
+  have hdiv : lhs ≤ coeff * ((L : ℚ) / (S : ℚ)) := by
+    have h' : lhs ≤ (coeff * (L : ℚ)) / (S : ℚ) := by
+      rw [le_div_iff₀ hSℚ]
+      simpa [mul_assoc, mul_left_comm, mul_comm] using hNat
+    simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using h'
+  have hlower :
+      ((L : ℚ) / (S : ℚ))
+        ≤ partialExpUpper (positiveSoloYExponent a) positiveExpCutoff := by
+    change
+      ((positiveSoloPartialExpLowerScaledNat S a : Nat) : ℚ) / (S : ℚ)
+        ≤ partialExpUpper (positiveSoloYExponent a) positiveExpCutoff
+    exact positiveSoloPartialExpLowerScaled_le_partialExpUpper
+      (S := S) hS ha2000
+  have hcoeff_nonneg : 0 ≤ coeff := by
+    unfold coeff
+    exact mul_nonneg
+      (mul_nonneg (by norm_num : (0 : ℚ) ≤ 29) (Nat.cast_nonneg a))
+      (c_nonneg a)
+  unfold positiveSoloDisplayedYSaddleCleared
+  rw [← QListQ_getD_eq N a a le_rfl]
+  exact hdiv.trans (mul_le_mul_of_nonneg_left hlower hcoeff_nonneg)
+
+theorem positiveSoloDisplayedYSaddleCleared_of_checkCellScaledExpFallback
+    {S a N : Nat} (hS : 0 < S) (ha2000 : a ≤ 2000)
+    (h :
+      checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback S a N =
+        true) :
+    positiveSoloDisplayedYSaddleCleared a N := by
+  unfold checkPositiveSoloDisplayedYSaddleClearedCellScaledExpFallback at h
+  by_cases hscaled :
+      checkPositiveSoloDisplayedYSaddleClearedCellScaledExp S a N = true
+  · exact positiveSoloDisplayedYSaddleCleared_of_checkCellScaledExp
+      hS ha2000 hscaled
+  · have hexact : checkPositiveSoloDisplayedYSaddleClearedCell a N = true := by
+      simpa [hscaled] using h
+    exact positiveSoloDisplayedYSaddleCleared_of_checkCell hexact
 
 theorem positiveSmallTangentExpEdgeGap_of_checkAtNScaledExp
     {S a N k : Nat} (hS : 0 < S)
