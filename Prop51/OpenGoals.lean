@@ -2008,6 +2008,85 @@ theorem positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_productEdge_le_fi
     mul_le_mul_of_nonneg_right hpow hsum_nonneg
   simpa [j] using hscaled.trans hscaled50
 
+/-- Sharp analogue of
+`positiveLargeTailSoloGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge`.
+
+The same rectangle mismatch `posNhi a > posNhi (a - 2)` costs a factor `50`
+for the sharp closed-factorial block.  This is the edge-scaling input needed
+to turn the constant first-cell target into a shifted solo-style target at
+the natural upper edge of `j = a - 2`. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_productEdge_le_fifty_shiftedUpperEdge
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+        (posJ a 2) (posNhi a)
+      ≤ (50 : ℚ) *
+        positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          (posJ a 2) (posNhi (posJ a 2)) := by
+  let j : Nat := posJ a 2
+  let R : ℚ := 1 + (3 : ℚ) / (j : ℚ)
+  have hj_large : 12 ≤ j := by
+    dsimp [j]
+    unfold posJ
+    omega
+  have hj_le_self : j ≤ j := le_rfl
+  have hR1 : (1 : ℚ) ≤ R := by
+    dsimp [R]
+    have hj_pos : (0 : ℚ) < (j : ℚ) := by
+      exact_mod_cast (by omega : 0 < j)
+    have hnonneg : (0 : ℚ) ≤ 3 / (j : ℚ) := by positivity
+    linarith
+  have hM :
+      (posNhi a : ℚ) ≤ R * (posNhi j : ℚ) := by
+    have hj_pos : (0 : ℚ) < (j : ℚ) := by
+      exact_mod_cast (by omega : 0 < j)
+    have hposJ_cast : (j : ℚ) = (a : ℚ) - 2 := by
+      dsimp [j]
+      unfold posJ
+      rw [Nat.cast_sub (by omega : 2 ≤ a)]
+      norm_num
+    have hNhi_a : (posNhi a : ℚ) = 12 * (a : ℚ) - 8 := by
+      unfold posNhi
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * a)]
+      norm_num
+    have hNhi_j : (posNhi j : ℚ) = 12 * (j : ℚ) - 8 := by
+      unfold posNhi
+      rw [Nat.cast_sub (by omega : 8 ≤ 12 * j)]
+      norm_num
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by exact_mod_cast ha
+    have hden_pos : (0 : ℚ) < (a : ℚ) - 2 := by nlinarith
+    dsimp [R]
+    rw [hNhi_a, hNhi_j, hposJ_cast]
+    rw [← sub_nonneg]
+    field_simp [hden_pos.ne']
+    ring_nf
+    nlinarith
+  have hscaled :
+      positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          j (posNhi a)
+        ≤ R^j *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            j (posNhi j) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_le_scaled_of_natCast_le
+      (N := posNhi j) (M := posNhi a) (a := j) hR1 hM
+  have hpow : R^j ≤ (50 : ℚ) := by
+    dsimp [R]
+    exact one_add_three_div_pow_le_fifty_of_twelve
+      (a := j) (s := j) hj_large hj_le_self
+  have hsum_nonneg :
+      0 ≤ positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+          j (posNhi j) :=
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_nonneg
+      j (posNhi j)
+  have hscaled50 :
+      R^j *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            j (posNhi j)
+        ≤ (50 : ℚ) *
+          positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum
+            j (posNhi j) :=
+    mul_le_mul_of_nonneg_right hpow hsum_nonneg
+  simpa [j] using hscaled.trans hscaled50
+
 /-- First-cell scalar budget after paying the fixed `50` factor needed to
 move the shifted solo block from `posNhi (a - 2)` to the product edge
 `posNhi a`. -/
