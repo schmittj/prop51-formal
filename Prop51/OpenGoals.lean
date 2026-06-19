@@ -454,6 +454,27 @@ theorem BoundedMajorantBudgetCertificate.toPositiveSaddleCertificate
         (pointwise.toLargeExpCandidateSplitTemperedRawClearedReserveCertificate
           candidate.toRawClearedBoundsCertificate).entropyTail }).toCertificate
 
+/-- Direct bounded-majorant constructor with the generated finite edge budget
+inserted.  The remaining bounded checker fields are exactly the finite
+small/tempered majorant bounds and finite solo budget. -/
+def BoundedMajorantBudgetCertificate.ofScaledEdge
+    (small :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (tempered :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget) :
+    BoundedMajorantBudgetCertificate where
+  small := small
+  tempered := tempered
+  soloY := soloY
+  edgeBudget := positiveSaddleFiniteScaledEdgeBudget
+
 /-- Completion-facing bounded constructor for the direct edge-majorant route.
 
 This removes the tangent-product interface from the bounded checker target:
@@ -468,6 +489,27 @@ def BoundedPositiveCertificate.ofMajorantBudgetDirectPrefix
   toPositiveSaddleCertificate := cert.toPositiveSaddleCertificate
   productPrefixPointwise := productPrefix
   soloPrefixNormUnit := soloPrefix
+
+/-- Completion-facing direct-majorant bounded constructor with the generated
+finite edge budget inserted. -/
+def BoundedPositiveCertificate.ofScaledEdgeMajorantDirectPrefix
+    (small :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N →
+          normalizedPositiveIfTerm a N k ≤ positiveSmallMajorantTerm a k)
+    (tempered :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          normalizedPositiveIfTerm a N k ≤ positiveTemperedMajorantTerm a k)
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate :=
+  BoundedPositiveCertificate.ofMajorantBudgetDirectPrefix
+    (BoundedMajorantBudgetCertificate.ofScaledEdge small tempered soloY)
+    productPrefix soloPrefix
 
 /-- Compatibility constructor for the previous bounded route, which supplies
 the edge budget through fixed row/`k` chunks. -/
