@@ -366,6 +366,179 @@ theorem expPrefix_mul_le {x y : ℚ} (hx : 0 ≤ x) (hy : 0 ≤ y)
   have hj := Finset.mem_range.mp hij'.2
   omega
 
+/-! ## Factorial gas estimates -/
+
+/-- Small-branch factorial gas term `(r-1)! / s^r`. -/
+def smallFactorialGasTerm (s r : Nat) : ℚ :=
+  ((r - 1).factorial : ℚ) / (s : ℚ)^r
+
+def smallFactorialGas (s k : Nat) : ℚ :=
+  ∑ r ∈ Finset.Icc 2 k, smallFactorialGasTerm s r
+
+theorem smallFactorialGasTerm_nonneg (s r : Nat) :
+    0 ≤ smallFactorialGasTerm s r := by
+  unfold smallFactorialGasTerm
+  positivity
+
+theorem smallFactorialGasTerm_succ_le
+    {s r : Nat} (hs : 1 ≤ s) (hr : 1 ≤ r) (hrs : r ≤ s) :
+    smallFactorialGasTerm s (r + 1) ≤ smallFactorialGasTerm s r := by
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  have hratio : (r : ℚ) / (s : ℚ) ≤ 1 := by
+    rw [div_le_one hspos]
+    exact_mod_cast hrs
+  have hrewrite :
+      smallFactorialGasTerm s (r + 1)
+        = smallFactorialGasTerm s r * ((r : ℚ) / (s : ℚ)) := by
+    unfold smallFactorialGasTerm
+    have hfac :
+        (((r + 1 - 1).factorial : Nat) : ℚ)
+          = (r : ℚ) * ((r - 1).factorial : ℚ) := by
+      rw [show r + 1 - 1 = r by omega]
+      rw [show r = (r - 1) + 1 by omega, Nat.factorial_succ]
+      norm_num
+    rw [hfac, pow_succ]
+    field_simp [hspos.ne']
+  rw [hrewrite]
+  calc
+    smallFactorialGasTerm s r * ((r : ℚ) / (s : ℚ))
+        ≤ smallFactorialGasTerm s r * 1 :=
+          mul_le_mul_of_nonneg_left hratio (smallFactorialGasTerm_nonneg s r)
+    _ = smallFactorialGasTerm s r := by ring
+
+theorem smallFactorialGasTerm_le_four
+    {s r : Nat} (h4 : 4 ≤ r) (hrs : r ≤ s) :
+    smallFactorialGasTerm s r ≤ smallFactorialGasTerm s 4 := by
+  induction r, h4 using Nat.le_induction with
+  | base =>
+      rfl
+  | succ r h4r ih =>
+      have hrs_prev : r ≤ s := by omega
+      have hs1 : 1 ≤ s := by omega
+      have hr1 : 1 ≤ r := by omega
+      exact
+        (smallFactorialGasTerm_succ_le (s := s) (r := r) hs1 hr1 hrs_prev).trans
+          (ih hrs_prev)
+
+theorem smallFactorialGasTerm_two (s : Nat) :
+    smallFactorialGasTerm s 2 = 1 / (s : ℚ)^2 := by
+  norm_num [smallFactorialGasTerm]
+
+theorem smallFactorialGasTerm_three (s : Nat) :
+    smallFactorialGasTerm s 3 = 2 / (s : ℚ)^3 := by
+  norm_num [smallFactorialGasTerm]
+
+theorem smallFactorialGasTerm_four (s : Nat) :
+    smallFactorialGasTerm s 4 = 6 / (s : ℚ)^4 := by
+  norm_num [smallFactorialGasTerm, Nat.factorial]
+
+private theorem smallFactorialGas_sum_Icc_two_eq
+    (F : Nat → ℚ) {k : Nat} (hk : 3 ≤ k) :
+    ∑ r ∈ Finset.Icc 2 k, F r
+      = F 2 + F 3 + ∑ r ∈ Finset.Icc 4 k, F r := by
+  have hIcc2 : Finset.Icc 2 k = Finset.Ico 2 (k + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hIcc3 : Finset.Icc 3 k = Finset.Ico 3 (k + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hIcc4 : Finset.Icc 4 k = Finset.Ico 4 (k + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hsplit3 :
+      ∑ r ∈ Finset.Icc 3 k, F r = F 3 + ∑ r ∈ Finset.Icc 4 k, F r := by
+    rw [hIcc3, Finset.sum_eq_sum_Ico_succ_bot (by omega : 3 < k + 1)]
+    rw [← hIcc4]
+  rw [hIcc2, Finset.sum_eq_sum_Ico_succ_bot (by omega : 2 < k + 1)]
+  rw [← hIcc3, hsplit3]
+  ring
+
+theorem smallFactorialGas_tail_ge_four_le
+    {s k : Nat} (hs : 4 ≤ s) (hks : k ≤ s) :
+    ∑ r ∈ Finset.Icc 4 k, smallFactorialGasTerm s r
+      ≤ (s : ℚ) * (6 / (s : ℚ)^4) := by
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  have hterm :
+      ∀ r ∈ Finset.Icc 4 k,
+        smallFactorialGasTerm s r ≤ 6 / (s : ℚ)^4 := by
+    intro r hr
+    have hr' := Finset.mem_Icc.mp hr
+    calc
+      smallFactorialGasTerm s r
+          ≤ smallFactorialGasTerm s 4 :=
+            smallFactorialGasTerm_le_four hr'.1 (hr'.2.trans hks)
+      _ = 6 / (s : ℚ)^4 := smallFactorialGasTerm_four s
+  have hcard : (Finset.Icc 4 k).card ≤ s := by
+    have hsubset : Finset.Icc 4 k ⊆ Finset.Ico 1 (s + 1) := by
+      intro r hr
+      have hr' := Finset.mem_Icc.mp hr
+      exact Finset.mem_Ico.mpr (by omega)
+    calc
+      (Finset.Icc 4 k).card ≤ (Finset.Ico 1 (s + 1)).card :=
+        Finset.card_le_card hsubset
+      _ = s := by
+        simp
+  calc
+    ∑ r ∈ Finset.Icc 4 k, smallFactorialGasTerm s r
+        ≤ ∑ _r ∈ Finset.Icc 4 k, 6 / (s : ℚ)^4 :=
+          Finset.sum_le_sum hterm
+    _ = ((Finset.Icc 4 k).card : ℚ) * (6 / (s : ℚ)^4) := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ (s : ℚ) * (6 / (s : ℚ)^4) := by
+          exact mul_le_mul_of_nonneg_right
+            (by exact_mod_cast hcard)
+            (by positivity : 0 ≤ 6 / (s : ℚ)^4)
+
+private theorem smallFactorialGas_main_expr_eq {x : ℚ} (hx : x ≠ 0) :
+    1 / x^2 + 2 / x^3 + x * (6 / x^4) = 1 / x^2 + 8 / x^3 := by
+  field_simp [hx]
+  ring
+
+private theorem smallFactorialGas_main_numeric_le {x : ℚ}
+    (hxpos : 0 < x) (hx32 : 32 ≤ x) :
+    1 / x^2 + 8 / x^3 ≤ 5 / (4 * x^2) := by
+  field_simp [hxpos.ne']
+  nlinarith
+
+private theorem smallFactorialGas_le_main_terms
+    {s k : Nat} (hs4 : 4 ≤ s) (hk : 3 ≤ k) (hks : k ≤ s) :
+    smallFactorialGas s k ≤ 1 / (s : ℚ)^2 + 8 / (s : ℚ)^3 := by
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  unfold smallFactorialGas
+  rw [smallFactorialGas_sum_Icc_two_eq (fun r => smallFactorialGasTerm s r) hk]
+  calc
+    smallFactorialGasTerm s 2 + smallFactorialGasTerm s 3 +
+        ∑ r ∈ Finset.Icc 4 k, smallFactorialGasTerm s r
+        ≤ 1 / (s : ℚ)^2 + 2 / (s : ℚ)^3 +
+            (s : ℚ) * (6 / (s : ℚ)^4) := by
+          have htail := smallFactorialGas_tail_ge_four_le hs4 hks
+          rw [smallFactorialGasTerm_two, smallFactorialGasTerm_three]
+          simpa [add_assoc, add_comm, add_left_comm] using
+            add_le_add_right htail (1 / (s : ℚ)^2 + 2 / (s : ℚ)^3)
+    _ = 1 / (s : ℚ)^2 + 8 / (s : ℚ)^3 := by
+          exact smallFactorialGas_main_expr_eq hspos.ne'
+
+private theorem smallFactorialGas_main_terms_le
+    {s : Nat} (hs : 32 ≤ s) :
+    1 / (s : ℚ)^2 + 8 / (s : ℚ)^3 ≤ 5 / (4 * (s : ℚ)^2) := by
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  have hs32 : (32 : ℚ) ≤ (s : ℚ) := by exact_mod_cast hs
+  exact smallFactorialGas_main_numeric_le hspos hs32
+
+theorem smallFactorialGas_le_of_ge_three
+    {s k : Nat} (hs : 32 ≤ s) (hk : 3 ≤ k) (hks : k ≤ s) :
+    smallFactorialGas s k ≤ 5 / (4 * (s : ℚ)^2) := by
+  exact
+    (smallFactorialGas_le_main_terms (s := s) (k := k) (by omega) hk hks).trans
+      (smallFactorialGas_main_terms_le (s := s) hs)
+
 theorem expPrefix_one (x : ℚ) : expPrefix x 1 = 1 + x := by
   norm_num [expPrefix, Finset.sum_range_succ]
 
