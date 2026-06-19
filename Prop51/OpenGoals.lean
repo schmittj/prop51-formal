@@ -2408,6 +2408,62 @@ theorem PositiveSaddleLargeTailProductPrefixPointwise.ofYUpperEdgeTwoEndpointAnd
         ha hrect hk
         (htemperedGeThree ha haPrefix hk htemperedEdge hrowAlt hk3))
 
+/-- Combined-product variant of the bounded prefix first-cell split.
+
+This mirrors the large-tail product surface: the first retained cell is handled
+by the row-only `Y` upper-edge budget, while all `k ≥ 3` cells use one rational
+majorant `xyBound` for the upper-edge split-block product. -/
+theorem PositiveSaddleLargeTailProductPrefixPointwise.ofYUpperEdgeTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 2000 < a → a < 3000 → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hbudgetTwoUpper :
+      ∀ {a : Nat}, 2000 < a → a < 3000 →
+        positiveSmallFirstCellYUpperEdgeBudget a)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 2000 < a → a < 3000 →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 2000 < a → a < 3000 →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    PositiveSaddleLargeTailProductPrefixPointwise :=
+  PositiveSaddleLargeTailProductPrefixPointwise.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    (by
+      intro a N ha haPrefix hrect
+      exact positiveSmallLargeXYProductRawCleared_two_of_YUpperEdgeBudget
+        ha hrect
+        (positiveSmallFirstCellQBudget_of_YUpperEdgeBudgetAtUpperEdge
+          hrect (hbudgetTwoUpper ha haPrefix)))
+    (by
+      intro a N k ha haPrefix hrect hk hsmallN hk3 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      exact positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+        ha hrect hk (hproductBound ha haPrefix hk hk3)
+        (hsmallGeThree ha haPrefix hk hsmallEdge hk3))
+    (by
+      intro a N k ha haPrefix hrect hk htemperedN hnotLock hk3 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      exact positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+        ha hrect hk (hproductBound ha haPrefix hk hk3)
+        (htemperedGeThree ha haPrefix hk htemperedEdge hrowAlt hk3))
+
 /-- Explicit first retained product-cell budget after replacing
 `Y_{a-2}(N)` by the ten-sevenths solo envelope.
 
