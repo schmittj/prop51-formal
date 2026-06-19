@@ -472,6 +472,66 @@ theorem Bq_two_pos_of_le {N : Nat} (hN : 15 ≤ N) : 0 < Bq N 2 := by
     div_pos (mul_pos (mul_pos (by norm_num) hNpos) hfactor)
       (by norm_num)
 
+/-- Closed form for the third `B`-coefficient.
+
+The cubic is nonpositive for every `N`; this is the product-tail reason that
+the actual combined-product route has no live `k = 3` cell in the large
+rectangle. -/
+theorem Bq_three (N : Nat) :
+    Bq N 3 =
+      -((N : ℚ) *
+        ((125 / 1296 : ℚ) * (N : ℚ)^2 -
+          (25 / 6 : ℚ) * (N : ℚ) + 1105 / 18)) := by
+  unfold Bq
+  let L : Nat → ℚ := fun r => -(N : ℚ) * c r
+  have h1 : expCoeff L 1 = -((N : ℚ) * c 1) := by
+    have h := expCoeff_succ_mul L 0
+    simpa [L, mul_assoc] using h
+  have h2 : expCoeff L 2 =
+      5 * (N : ℚ) * (5 * (N : ℚ) - 72) / 72 := by
+    have h := Bq_two N
+    simpa [Bq, L] using h
+  have hc2 : c 2 = 5 := by
+    rw [c_succ_succ]
+    norm_num [c_one]
+  have hc3 : c 3 = 1105 / 18 := by
+    norm_num [c, cList, List.range, List.range.loop]
+  have h := expCoeff_succ_mul L 2
+  have hsum :
+      3 * expCoeff L 3 =
+        ∑ t ∈ Finset.range 3,
+          ((t + 1 : Nat) : ℚ) * L (t + 1) *
+            expCoeff L (2 - t) := by
+    simpa using h
+  change expCoeff L 3 =
+    -((N : ℚ) *
+      ((125 / 1296 : ℚ) * (N : ℚ)^2 -
+        (25 / 6 : ℚ) * (N : ℚ) + 1105 / 18))
+  have hthree : (3 : ℚ) ≠ 0 := by norm_num
+  rw [← mul_right_inj' hthree]
+  calc
+    3 * expCoeff L 3 =
+        3 *
+          (-((N : ℚ) *
+          ((125 / 1296 : ℚ) * (N : ℚ)^2 -
+            (25 / 6 : ℚ) * (N : ℚ) + 1105 / 18))) := by
+          rw [hsum]
+          norm_num [Finset.sum_range_succ]
+          rw [h1, h2]
+          norm_num [L, hc2, hc3, c_one]
+          ring
+
+/-- The actual third `B`-coefficient is never positive. -/
+theorem Bq_three_nonpos (N : Nat) : Bq N 3 ≤ 0 := by
+  rw [Bq_three]
+  have hquad :
+      0 ≤
+        (125 / 1296 : ℚ) * (N : ℚ)^2 -
+          (25 / 6 : ℚ) * (N : ℚ) + 1105 / 18 := by
+    have hsquare : 0 ≤ ((N : ℚ) - 108 / 5)^2 := sq_nonneg _
+    nlinarith
+  exact neg_nonpos.mpr (mul_nonneg (Nat.cast_nonneg N) hquad)
+
 /-- `\overline B_k(N) = [X^k] C(X)^N`, the positive exponential majorant for
 `B_k(N)` used in the positive-saddle estimates. -/
 def Bplusq (N k : Nat) : ℚ := expCoeff (fun r => (N : ℚ) * c r) k

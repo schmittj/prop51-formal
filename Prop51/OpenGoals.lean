@@ -4283,6 +4283,43 @@ theorem LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLo
         omega
       · exact htemperedGeThree ha hrect hk htemperedN hnotLock (by omega) hB)
 
+/-- Product-tail constructor after the actual third `B`-coefficient sign
+reduction.
+
+For the combined raw product, `Bq N 3 ≤ 0` identically, so the `k = 3` cell is
+automatic by `positiveSmallLargeXYProductRawCleared_of_Bq_nonpos` (and its
+tempered analogue).  This is a deliberate Lean-side correction to the older
+exact upper-edge product route: no shifted solo `Y_{a-3}` estimate is needed
+for the actual product target. -/
+theorem LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeFourNatSignLockComplement
+    (hsmallTwo :
+      ∀ {a N : Nat}, 3000 ≤ a → positiveRectangle a N →
+        positiveSmallLargeXYProductRawCleared a N 2)
+    (hsmallGeFour :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 4 ≤ k → 0 < Bq N k →
+          positiveSmallLargeXYProductRawCleared a N k)
+    (htemperedGeFour :
+      ∀ {a N k : Nat}, 3000 ≤ a → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k →
+          (k < 361 ∨ 40 * k < 3 * N) → 4 ≤ k → 0 < Bq N k →
+          positiveTemperedLargeXYProductRawCleared a N k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement
+    hsmallTwo
+    (by
+      intro a N k ha hrect hk hsmallN hk3 hB
+      by_cases hk_eq : k = 3
+      · subst k
+        exact False.elim ((not_le_of_gt hB) (Bq_three_nonpos N))
+      · exact hsmallGeFour ha hrect hk hsmallN (by omega) hB)
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk3 hB
+      by_cases hk_eq : k = 3
+      · subst k
+        exact False.elim ((not_le_of_gt hB) (Bq_three_nonpos N))
+      · exact htemperedGeFour ha hrect hk htemperedN hnotLock (by omega) hB)
+
 /-- Fast-exp variant of
 `LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeThreeNatSignLockComplement`.
 
@@ -5136,6 +5173,91 @@ theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignL
         positiveLargeTailProductYUpperEdgeExactBound
       exact le_rfl)
     hsmallGeThree htemperedGeThree
+
+/-- Exact-upper-edge product constructor with the actual `k = 3` cell removed
+by the closed form `Bq_three_nonpos`.
+
+This is the completion-facing replacement for the older third-cell peel below.
+The Lean proof intentionally diverges from the exact split-product surrogate:
+the actual combined product has `Bq N 3 ≤ 0`, so the third cell contributes a
+nonpositive raw term and no shifted solo `Y_{a-3}` estimate is needed.  The
+remaining exact upper-edge product scalar work starts at `k ≥ 4`. -/
+theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeFourNatSignLockComplement
+    (hsmallGeFour :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 4 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k)
+    (htemperedGeFour :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 4 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofRawClearedBqPositiveTwoAndGeFourNatSignLockComplement
+    (by
+      intro a N ha hrect
+      exact
+        positiveSmallLargeXYProductRawCleared_two_of_QBound
+          (by omega : 2000 < a) hrect
+          (Qq_le_SharpGcompBound N (posJ a 2))
+          (positiveSmallFirstCellQBudget_of_sharpQFastCleared ha hrect
+            (positiveSmallFirstCellSharpQFastCleared_of_upperEdge hrect
+              (positiveSmallFirstCellSharpQFastCleared_of_closedFactorialSplit
+                (positiveSmallFirstCellSharpClosedFactorialSplitBlockSumFastCleared_of_const
+                  ha
+                  (positiveSmallFirstCellSharpClosedFactorialSplitBlockSumConstCleared_of_ownEdge
+                    ha
+                    (positiveSmallFirstCellSharpOwnEdgeConstCleared_large
+                      ha)))))))
+    (by
+      intro a N k ha hrect hk hsmallN hk4 _hB
+      have hsmallEdge : k ≤ ceilSqrt (posNhi a) :=
+        hsmallN.trans (ceilSqrt_mono hrect.2)
+      have hproductBound :
+          positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+              a k
+            ≤
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k := by
+        unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+          positiveLargeTailProductXUpperEdgeExactBound
+          positiveLargeTailProductYUpperEdgeExactBound
+        exact le_rfl
+      exact
+        positiveSmallLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk hproductBound
+          (hsmallGeFour ha hk hsmallEdge hk4))
+    (by
+      intro a N k ha hrect hk htemperedN hnotLock hk4 _hB
+      have htemperedEdge : ceilSqrt (posNlo a) < k :=
+        lt_of_le_of_lt (ceilSqrt_mono hrect.1) htemperedN
+      have hrowAlt : k < 361 ∨ 40 * k < 3 * posNhi a := by
+        rcases hnotLock with hsmallK | hN
+        · exact Or.inl hsmallK
+        · exact Or.inr (by
+            have h3N_hi : 3 * N ≤ 3 * posNhi a :=
+              Nat.mul_le_mul_left 3 hrect.2
+            omega)
+      have hproductBound :
+          positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+              a k
+            ≤
+          positiveLargeTailProductXUpperEdgeExactBound a k *
+            positiveLargeTailProductYUpperEdgeExactBound a k := by
+        unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+          positiveLargeTailProductXUpperEdgeExactBound
+          positiveLargeTailProductYUpperEdgeExactBound
+        exact le_rfl
+      exact
+        positiveTemperedLargeXYProductRawCleared_of_fastUpperEdgeLowerNProductBound
+          (by omega : 2000 < a) hrect hk hproductBound
+          (htemperedGeFour ha hk htemperedEdge hrowAlt hk4))
 
 /-- Exact-upper-edge product constructor with the `k = 3` small branch peeled
 off.
