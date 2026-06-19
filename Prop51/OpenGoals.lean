@@ -1170,12 +1170,19 @@ def positiveSmallFirstCellYUpperEdgeBudget (a : Nat) : Prop :=
 same split-factorial solo `Y` block sum at the shifted index `j = a - 2`.
 This is the bridge that lets first-cell work reuse solo-style estimates
 without unfolding the double sum. -/
+theorem positiveLargeTailProductYUpperEdgeExactBound_eq_shiftedSolo
+    (a k : Nat) :
+    positiveLargeTailProductYUpperEdgeExactBound a k =
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+        (posJ a k) (posNhi a) := by
+  rfl
+
 theorem positiveLargeTailProductYUpperEdgeExactBound_two_eq_shiftedSolo
     (a : Nat) :
     positiveLargeTailProductYUpperEdgeExactBound a 2 =
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
         (posJ a 2) (posNhi a) := by
-  rfl
+  exact positiveLargeTailProductYUpperEdgeExactBound_eq_shiftedSolo a 2
 
 /-- The product-side `Y` upper-edge bound in the next retained cell is again
 the shifted solo split-factorial block sum, now at `j = a - 3`. -/
@@ -1184,7 +1191,28 @@ theorem positiveLargeTailProductYUpperEdgeExactBound_three_eq_shiftedSolo
     positiveLargeTailProductYUpperEdgeExactBound a 3 =
       positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
         (posJ a 3) (posNhi a) := by
-  rfl
+  exact positiveLargeTailProductYUpperEdgeExactBound_eq_shiftedSolo a 3
+
+/-- Compare the product-side `Y` upper-edge factor with the solo upper-edge
+factor at the shifted index, paying only the explicit polynomial-degree
+scaling from `posNhi (a-k)` to `posNhi a`.
+
+This is a direct helper for the frozen large-tail product route: future
+`hsmallGeFour`/`htemperedGeFour` proofs can reuse solo-style upper-edge
+estimates for the `Y_{a-k}` factor without re-expanding the split block. -/
+theorem positiveLargeTailProductYUpperEdgeExactBound_le_scaled_shiftedSoloUpperEdge
+    {a k : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hNhi :
+      (posNhi a : ℚ) ≤ R * (posNhi (posJ a k) : ℚ)) :
+    positiveLargeTailProductYUpperEdgeExactBound a k
+      ≤ R^(posJ a k) *
+        positiveLargeTailSoloUpperEdgeExactBound (posJ a k) := by
+  rw [positiveLargeTailProductYUpperEdgeExactBound_eq_shiftedSolo]
+  unfold positiveLargeTailSoloGcompClosedFactorialSplitBlockSum
+    positiveLargeTailSoloUpperEdgeExactBound
+  exact
+    positiveLargeTailYGcompClosedFactorialSplitBlockSum_le_scaled_of_natCast_le
+      hR1 hNhi
 
 /-- Scalar comparison left after proving the shifted first-cell `Y` block by
 the fast solo-style exponential envelope.
