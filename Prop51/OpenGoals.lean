@@ -2754,6 +2754,218 @@ def positiveSmallThirdCellShiftedSoloFastExpBudget (a : Nat) : Prop :=
     ≤ 390 * positiveSmallLargeExpFast a 3 *
       ((posNlo a : ℚ) * c 3)
 
+/-- The degree-three `X` upper-edge factor is bounded by a deliberately
+coarse cubic once `a ≥ 3000`.
+
+This is the numerical core behind the `k = 3` scalar peel: the exact closed
+form has leading coefficient `125/1296 < 1/10`, and the lower-degree terms are
+negligible at the large-tail threshold. -/
+theorem positiveLargeTailProductXUpperEdgeExactBound_three_le_cubic
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveLargeTailProductXUpperEdgeExactBound a 3
+      ≤ (1 / 10 : ℚ) * (posNhi a : ℚ)^3 := by
+  unfold positiveLargeTailProductXUpperEdgeExactBound
+  rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_three]
+  have hNge : (2000 : ℚ) ≤ (posNhi a : ℚ) := by
+    have hNgeNat : 2000 ≤ posNhi a := by
+      unfold posNhi
+      omega
+    exact_mod_cast hNgeNat
+  have hNnonneg : (0 : ℚ) ≤ (posNhi a : ℚ) := by positivity
+  nlinarith [sq_nonneg ((posNhi a : ℚ) - 2000)]
+
+/-- The small-branch exponential at `k = 3` has enough endpoint slack to pay
+for the exact cubic `X_3` factor and the shifted solo-style `Y` estimate.
+
+This is the one-dimensional scalar comparison exposed by
+`positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three_of_shiftedSoloFastCleared`.
+The proof is intentionally coarse: after bounding `X_3` by `N^3/10`, the
+square-root exponent gap pays the resulting quartic factor through the octic
+`partialExpUpper` shift. -/
+theorem positiveSmallThirdCellShiftedSoloFastExpBudget_of_large
+    {a : Nat} (ha : 3000 ≤ a) :
+    positiveSmallThirdCellShiftedSoloFastExpBudget a := by
+  unfold positiveSmallThirdCellShiftedSoloFastExpBudget
+  rw [positiveSmallLargeExpFast_eq]
+  unfold positiveSmallLargeExp
+  rw [partialExpUpperFast_eq]
+  let y : ℚ := positiveSoloYExponent (posJ a 3)
+  let z : ℚ := positiveSmallExponentUpper a 3
+  let d : ℚ := (1139 / 1000 : ℚ) * (posSmallCutoff a : ℚ)
+  let C : ℚ :=
+    (29 / 2 : ℚ) * (posNhi a : ℚ) *
+      positiveLargeTailProductXUpperEdgeExactBound a 3
+  let R : ℚ := 390 * (posNlo a : ℚ) * c 3
+  let target : ℚ := R / C
+  have hNhi_pos : (0 : ℚ) < (posNhi a : ℚ) := by
+    exact_mod_cast posNhi_pos (by omega : 1 ≤ a)
+  have hNlo_pos : (0 : ℚ) < (posNlo a : ℚ) := by
+    exact_mod_cast posNlo_pos (by omega : 2 ≤ a)
+  have hXpos :
+      0 < positiveLargeTailProductXUpperEdgeExactBound a 3 := by
+    unfold positiveLargeTailProductXUpperEdgeExactBound
+    rw [positiveLargeTailProductXClosedFactorialSplitBlockBound_three]
+    positivity
+  have hCpos : 0 < C := by
+    dsimp [C]
+    positivity
+  have hCnonneg : 0 ≤ C := hCpos.le
+  have hc3_lb : (60 : ℚ) ≤ c 3 := by
+    have h := c_lb 3 (by norm_num : 1 ≤ 3)
+    norm_num at h
+    exact h
+  have hc3_nonneg : 0 ≤ c 3 :=
+    (by norm_num : (0 : ℚ) ≤ 60).trans hc3_lb
+  have hRnonneg : 0 ≤ R := by
+    dsimp [R]
+    positivity
+  have hy0 : 0 ≤ y := by
+    dsimp [y]
+    unfold positiveSoloYExponent
+    positivity
+  have hy_lt_a : y < (a : ℚ) := by
+    have haQ : (3000 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast ha
+    have hj_le : (posJ a 3 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 3
+    dsimp [y]
+    unfold positiveSoloYExponent
+    nlinarith
+  have hcutoff_a_le : a ≤ 8 * posJ a 3 := by
+    unfold posJ
+    omega
+  have hcutoff :
+      partialExpUpper y (8 * posJ a 3) ≤ partialExpUpper y a :=
+    partialExpUpper_cutoff_le_of_le hcutoff_a_le hy0 hy_lt_a
+  have hk : 3 ∈ positiveKRange a := by
+    refine mem_positiveKRange.mpr ⟨by omega, ?_⟩
+    unfold posKmax
+    rw [Nat.le_div_iff_mul_le (by norm_num : 0 < 10)]
+    omega
+  have hz_lt_a : z < (a : ℚ) := by
+    dsimp [z]
+    exact positiveSmallExponentUpper_lt_largeExpCutoff
+      (by omega : 2000 < a) hk
+  have hd0 : 0 ≤ d := by
+    dsimp [d]
+    positivity
+  have hdrop : y + d ≤ z := by
+    have hjposNat : 0 < posJ a 3 := by
+      unfold posJ
+      omega
+    have hjposQ : (0 : ℚ) < (posJ a 3 : ℚ) := by
+      exact_mod_cast hjposNat
+    have hj_le : (posJ a 3 : ℚ) ≤ (a : ℚ) := by
+      exact_mod_cast Nat.sub_le a 3
+    have hratio : 1 ≤ (a : ℚ) / (posJ a 3 : ℚ) := by
+      rw [le_div_iff₀ hjposQ]
+      simpa using hj_le
+    dsimp [y, z, d]
+    unfold positiveSoloYExponent positiveSmallExponentUpper
+    nlinarith
+  have hN_le_s_sq :
+      (posNhi a : ℚ) ≤ (posSmallCutoff a : ℚ)^2 := by
+    have hnat : posNhi a ≤ posSmallCutoff a * posSmallCutoff a := by
+      unfold posSmallCutoff
+      exact le_ceilSqrt_sq (posNhi a)
+    simpa [pow_two] using (show (posNhi a : ℚ) ≤
+      (posSmallCutoff a : ℚ) * (posSmallCutoff a : ℚ) by
+        exact_mod_cast hnat)
+  have hN_four_le_s_eight :
+      (posNhi a : ℚ)^4 ≤ (posSmallCutoff a : ℚ)^8 := by
+    have hNnonneg : 0 ≤ (posNhi a : ℚ) := hNhi_pos.le
+    calc
+      (posNhi a : ℚ)^4
+          ≤ ((posSmallCutoff a : ℚ)^2)^4 :=
+            pow_le_pow_left₀ hNnonneg hN_le_s_sq 4
+      _ = (posSmallCutoff a : ℚ)^8 := by ring
+  have hC_le_quartic :
+      C ≤ (29 / 20 : ℚ) * (posNhi a : ℚ)^4 := by
+    have hX :=
+      positiveLargeTailProductXUpperEdgeExactBound_three_le_cubic
+        (a := a) ha
+    have hscale : 0 ≤ (29 / 2 : ℚ) * (posNhi a : ℚ) := by
+      positivity
+    dsimp [C]
+    calc
+      (29 / 2 : ℚ) * (posNhi a : ℚ) *
+          positiveLargeTailProductXUpperEdgeExactBound a 3
+          ≤ (29 / 2 : ℚ) * (posNhi a : ℚ) *
+              ((1 / 10 : ℚ) * (posNhi a : ℚ)^3) :=
+            mul_le_mul_of_nonneg_left hX hscale
+      _ = (29 / 20 : ℚ) * (posNhi a : ℚ)^4 := by ring
+  have hNlo_ge : (10000 : ℚ) ≤ (posNlo a : ℚ) := by
+    have hNlo_geNat : 10000 ≤ posNlo a := by
+      unfold posNlo
+      omega
+    exact_mod_cast hNlo_geNat
+  have hcoeff :
+      (29 / 20 : ℚ)
+        ≤ 390 * 10000 * 60 * (1139 / 8000 : ℚ)^8 := by
+    norm_num
+  have hcoeff_to_R :
+      390 * 10000 * 60 * (1139 / 8000 : ℚ)^8
+        ≤ R * (1139 / 8000 : ℚ)^8 := by
+    dsimp [R]
+    nlinarith
+  have hcoeff_R :
+      (29 / 20 : ℚ) ≤ R * (1139 / 8000 : ℚ)^8 :=
+    hcoeff.trans hcoeff_to_R
+  have hs8_nonneg : 0 ≤ (posSmallCutoff a : ℚ)^8 := by positivity
+  have hquartic_le_gap :
+      (29 / 20 : ℚ) * (posNhi a : ℚ)^4
+        ≤ R * (d / 8)^8 := by
+    calc
+      (29 / 20 : ℚ) * (posNhi a : ℚ)^4
+          ≤ (29 / 20 : ℚ) * (posSmallCutoff a : ℚ)^8 :=
+            mul_le_mul_of_nonneg_left hN_four_le_s_eight
+              (by norm_num : (0 : ℚ) ≤ 29 / 20)
+      _ ≤ (R * (1139 / 8000 : ℚ)^8) *
+            (posSmallCutoff a : ℚ)^8 :=
+            mul_le_mul_of_nonneg_right hcoeff_R hs8_nonneg
+      _ = R * (d / 8)^8 := by
+            dsimp [d]
+            ring
+  have hgap_le_shift :
+      R * (d / 8)^8 ≤ R * (1 + d / 8)^8 := by
+    have hbase0 : 0 ≤ d / 8 := by positivity
+    have hbase : d / 8 ≤ 1 + d / 8 := by linarith
+    exact mul_le_mul_of_nonneg_left
+      (pow_le_pow_left₀ hbase0 hbase 8) hRnonneg
+  have hpoly : C ≤ R * (1 + d / 8)^8 :=
+    hC_le_quartic.trans (hquartic_le_gap.trans hgap_le_shift)
+  have hbudget :
+      1 ≤ target * (1 + d / 8)^8 := by
+    have hrewrite :
+        target * (1 + d / 8)^8 =
+          (R * (1 + d / 8)^8) / C := by
+      dsimp [target]
+      ring
+    rw [hrewrite]
+    rw [le_div_iff₀ hCpos]
+    nlinarith
+  have hshift :
+      partialExpUpper y a ≤ target * partialExpUpper z a :=
+    partialExpUpper_le_mul_of_eight_step_shift
+      (y := y) (z := z) (d₀ := d) (target := target) (T := a)
+      hy0 hd0 (by omega : 1 ≤ a) hz_lt_a hdrop hbudget
+  have hexp :
+      partialExpUpper y (8 * posJ a 3)
+        ≤ target * partialExpUpper z a :=
+    hcutoff.trans hshift
+  calc
+    (29 / 2 : ℚ) * (posNhi a : ℚ) *
+        positiveLargeTailProductXUpperEdgeExactBound a 3 *
+        partialExpUpper y (8 * posJ a 3)
+        = C * partialExpUpper y (8 * posJ a 3) := by
+          dsimp [C]
+    _ ≤ C * (target * partialExpUpper z a) :=
+          mul_le_mul_of_nonneg_left hexp hCnonneg
+    _ = 390 * partialExpUpper z a *
+          ((posNlo a : ℚ) * c 3) := by
+          dsimp [target, R]
+          field_simp [hCpos.ne']
+
 /-- The `k = 3` small-branch product scalar follows from a shifted solo-style
 fast bound for the `Y` factor and the remaining scalar budget above.
 
@@ -2854,6 +3066,20 @@ theorem positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three
         positiveSmallLargeExpFast a 3 *
           ((posNlo a : ℚ) * c 3 * c (posJ a 3)) := by
         ring
+
+/-- Large-`a` `k = 3` small-product scalar after the shifted solo-style `Y`
+bound has been supplied. -/
+theorem positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three_of_shiftedSoloFastCleared_large
+    {a : Nat} (ha : 3000 ≤ a)
+    (hsolo :
+      positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+        (posJ a 3) (posNhi a)) :
+    positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+      (fun a k =>
+        positiveLargeTailProductXUpperEdgeExactBound a k *
+          positiveLargeTailProductYUpperEdgeExactBound a k) a 3 :=
+  positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three_of_shiftedSoloFastCleared
+    hsolo (positiveSmallThirdCellShiftedSoloFastExpBudget_of_large ha)
 
 /-- The degree-two upper-edge `X` split sum is large enough to pay for the
 actual first-cell linear `Bq` factor after the old product scalar inequality
@@ -4340,6 +4566,56 @@ theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignL
         positiveLargeTailProductYUpperEdgeExactBound
       exact le_rfl)
     hsmallGeThree htemperedGeThree
+
+/-- Exact-upper-edge product constructor with the `k = 3` small branch peeled
+off.
+
+The `k = 3` scalar budget is now closed except for the shifted solo-style
+`Y` bound at `j = a - 3`.  The tempered branch has no actual `k = 3` case at
+`a ≥ 3000`, since `ceilSqrt (posNlo a) ≥ 3`.  The remaining exact-product
+tail therefore starts at `k ≥ 4`. -/
+theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductThirdCellAndGeFourNatSignLockComplement
+    (hthirdSolo :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveLargeTailSoloGcompClosedFactorialSplitBlockSumFastCleared
+          (posJ a 3) (posNhi a))
+    (hsmallGeFour :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 4 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k)
+    (htemperedGeFour :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 4 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignLockComplement
+    (by
+      intro a k ha hk hsmall hk3
+      by_cases hk_eq : k = 3
+      · subst k
+        exact
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar_three_of_shiftedSoloFastCleared_large
+            ha (hthirdSolo ha)
+      · exact hsmallGeFour ha hk hsmall (by omega))
+    (by
+      intro a k ha hk htempered hnotLock hk3
+      by_cases hk_eq : k = 3
+      · subst k
+        have hceil_ge_three : 3 ≤ ceilSqrt (posNlo a) := by
+          have hlt : 2 < ceilSqrt (posNlo a) :=
+            lt_ceilSqrt_of_sq_lt (n := posNlo a) (k := 2) (by
+              unfold posNlo
+              omega)
+          omega
+        omega
+      · exact htemperedGeFour ha hk htempered hnotLock (by omega))
 
 /-- Split-final-term scalar specialization of the endpoint first-cell
 constructor.
