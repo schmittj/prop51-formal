@@ -4158,6 +4158,45 @@ theorem LargeTailProductCertificate.ofYUpperEdgeTwoEndpointAndExactUpperEdgeProd
       exact le_rfl)
     hbudgetTwoUpper hsmallGeThree htemperedGeThree
 
+/-- Closed first-cell exact-upper-edge specialization.
+
+This is the smallest live exact-product surface after the first-cell work:
+choosing the exact upper-edge split-factorial product makes the `xyBound`
+product-bound field definitional, while the retained `k = 2` cell is closed
+through the sharp own-edge envelope.  This is a Lean-side edge-shift
+specialization of the paper route: the direct upper-edge `Y` first-cell
+budget still exposes a shifted solo input, but the sharp first-cell envelope
+has already paid that mismatch.  The remaining work is exactly the two `k ≥ 3`
+scalar product inequalities below. -/
+theorem LargeTailProductCertificate.ofClosedExactUpperEdgeProductGeThreeNatSignLockComplement
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            (fun a k =>
+              positiveLargeTailProductXUpperEdgeExactBound a k *
+                positiveLargeTailProductYUpperEdgeExactBound a k) a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofClosedSharpOwnEdgeConstTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    (xyBound := fun a k =>
+      positiveLargeTailProductXUpperEdgeExactBound a k *
+        positiveLargeTailProductYUpperEdgeExactBound a k)
+    (by
+      intro a k _ha _hk _hk3
+      unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+        positiveLargeTailProductXUpperEdgeExactBound
+        positiveLargeTailProductYUpperEdgeExactBound
+      exact le_rfl)
+    hsmallGeThree htemperedGeThree
+
 /-- Split-final-term scalar specialization of the endpoint first-cell
 constructor.
 
