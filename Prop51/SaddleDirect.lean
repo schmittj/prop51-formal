@@ -457,6 +457,30 @@ private theorem smallFactorialGas_sum_Icc_two_eq
   rw [← hIcc3, hsplit3]
   ring
 
+private theorem sum_range_zero_one_Icc_two_eq
+    (F : Nat → ℚ) {k : Nat} (hk : 2 ≤ k) :
+    ∑ r ∈ Finset.range (k + 1), F r
+      = F 0 + F 1 + ∑ r ∈ Finset.Icc 2 k, F r := by
+  have hRange : Finset.range (k + 1) = Finset.Ico 0 (k + 1) := by
+    ext r
+    simp only [Finset.mem_range, Finset.mem_Ico]
+    omega
+  have hIcc1 : Finset.Icc 1 k = Finset.Ico 1 (k + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hIcc2 : Finset.Icc 2 k = Finset.Ico 2 (k + 1) := by
+    ext r
+    simp only [Finset.mem_Icc, Finset.mem_Ico]
+    omega
+  have hsplit1 :
+      ∑ r ∈ Finset.Icc 1 k, F r = F 1 + ∑ r ∈ Finset.Icc 2 k, F r := by
+    rw [hIcc1, Finset.sum_eq_sum_Ico_succ_bot (by omega : 1 < k + 1)]
+    rw [← hIcc2]
+  rw [hRange, Finset.sum_eq_sum_Ico_succ_bot (by omega : 0 < k + 1)]
+  rw [← hIcc1, hsplit1]
+  ring
+
 theorem smallFactorialGas_tail_ge_four_le
     {s k : Nat} (hs : 4 ≤ s) (hks : k ≤ s) :
     ∑ r ∈ Finset.Icc 4 k, smallFactorialGasTerm s r
@@ -538,6 +562,179 @@ theorem smallFactorialGas_le_of_ge_three
   exact
     (smallFactorialGas_le_main_terms (s := s) (k := k) (by omega) hk hks).trans
       (smallFactorialGas_main_terms_le (s := s) hs)
+
+theorem smallFactorialGas_le
+    {s k : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s) :
+    smallFactorialGas s k ≤ 5 / (4 * (s : ℚ)^2) := by
+  by_cases hk3 : 3 ≤ k
+  · exact smallFactorialGas_le_of_ge_three hs hk3 hks
+  · have hk2eq : k = 2 := by omega
+    subst k
+    have hspos : (0 : ℚ) < (s : ℚ) := by
+      exact_mod_cast (by omega : 0 < s)
+    unfold smallFactorialGas
+    simp [smallFactorialGasTerm_two]
+    field_simp [hspos.ne']
+    norm_num
+
+theorem Bplusq_small_weightedGas_le
+    {N s k : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s)
+    (hNs : N ≤ s * s) :
+    ∑ r ∈ Finset.range (k + 1),
+        (1 / ((6 : ℚ) * (s : ℚ)))^r * ((N : ℚ) * c r)
+      ≤ 5 * (s : ℚ) / 36 + 1 / 5 := by
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  have hN_nonneg : 0 ≤ (N : ℚ) := Nat.cast_nonneg N
+  have hNs_rat : (N : ℚ) ≤ (s : ℚ)^2 := by
+    have hcast : (N : ℚ) ≤ ((s * s : Nat) : ℚ) := by
+      exact_mod_cast hNs
+    simpa [pow_two] using hcast
+  let F : Nat → ℚ :=
+    fun r => (1 / ((6 : ℚ) * (s : ℚ)))^r * ((N : ℚ) * c r)
+  have hzero : F 0 = 0 := by
+    dsimp [F]
+    simp
+  have hone : F 1 = 5 * (N : ℚ) / (36 * (s : ℚ)) := by
+    dsimp [F]
+    field_simp [hspos.ne']
+    ring_nf
+  have htail :
+      ∑ r ∈ Finset.Icc 2 k, F r
+        ≤ (N : ℚ) / (5 * (s : ℚ)^2) := by
+    have hterm :
+        ∀ r ∈ Finset.Icc 2 k,
+          F r ≤ ((4 * (N : ℚ)) / 25) * smallFactorialGasTerm s r := by
+      intro r hr
+      have hr' := Finset.mem_Icc.mp hr
+      have hc := c_ub r (by omega : 1 ≤ r)
+      have hscale_nonneg :
+          0 ≤ (1 / ((6 : ℚ) * (s : ℚ)))^r * (N : ℚ) := by
+        positivity
+      calc
+        F r
+            = ((1 / ((6 : ℚ) * (s : ℚ)))^r * (N : ℚ)) * c r := by
+              dsimp [F]
+              ring
+        _ ≤ ((1 / ((6 : ℚ) * (s : ℚ)))^r * (N : ℚ)) *
+              ((4 / 25 : ℚ) * (6^r * ((r - 1).factorial : ℚ))) :=
+              mul_le_mul_of_nonneg_left hc hscale_nonneg
+        _ = ((4 * (N : ℚ)) / 25) * smallFactorialGasTerm s r := by
+              have hcancel :
+                  (1 / ((6 : ℚ) * (s : ℚ)))^r *
+                      (6 : ℚ)^r * (s : ℚ)^r = 1 := by
+                rw [← mul_pow, ← mul_pow]
+                field_simp [hspos.ne']
+                simp
+              unfold smallFactorialGasTerm
+              field_simp [hspos.ne']
+              calc
+                (1 / (6 * (s : ℚ))) ^ r * (N : ℚ) * 6 ^ r * (s : ℚ)^r
+                    = (N : ℚ) *
+                        ((1 / (6 * (s : ℚ))) ^ r * 6 ^ r * (s : ℚ)^r) := by
+                      ring
+                _ = (N : ℚ) * 1 := by rw [hcancel]
+                _ = (N : ℚ) := by ring
+    calc
+      ∑ r ∈ Finset.Icc 2 k, F r
+          ≤ ∑ r ∈ Finset.Icc 2 k,
+              ((4 * (N : ℚ)) / 25) * smallFactorialGasTerm s r :=
+            Finset.sum_le_sum hterm
+      _ = ((4 * (N : ℚ)) / 25) * smallFactorialGas s k := by
+            unfold smallFactorialGas
+            rw [Finset.mul_sum]
+      _ ≤ ((4 * (N : ℚ)) / 25) * (5 / (4 * (s : ℚ)^2)) :=
+            mul_le_mul_of_nonneg_left
+              (smallFactorialGas_le hs hk hks)
+              (by positivity : 0 ≤ (4 * (N : ℚ)) / 25)
+      _ = (N : ℚ) / (5 * (s : ℚ)^2) := by
+            field_simp [hspos.ne']
+            ring
+  have hlin :
+      5 * (N : ℚ) / (36 * (s : ℚ)) ≤ 5 * (s : ℚ) / 36 := by
+    field_simp [hspos.ne']
+    nlinarith
+  have hquad :
+      (N : ℚ) / (5 * (s : ℚ)^2) ≤ 1 / 5 := by
+    field_simp [hspos.ne']
+    nlinarith
+  calc
+    ∑ r ∈ Finset.range (k + 1), F r
+        = F 0 + F 1 + ∑ r ∈ Finset.Icc 2 k, F r :=
+          sum_range_zero_one_Icc_two_eq F hk
+    _ = 0 + 5 * (N : ℚ) / (36 * (s : ℚ)) +
+          ∑ r ∈ Finset.Icc 2 k, F r := by
+          rw [hzero, hone]
+    _ ≤ 0 + 5 * (s : ℚ) / 36 + (1 / 5) := by
+          have hlin0 :
+              0 + 5 * (N : ℚ) / (36 * (s : ℚ)) ≤
+                0 + 5 * (s : ℚ) / 36 := by
+            linarith
+          exact add_le_add hlin0 (htail.trans hquad)
+    _ = 5 * (s : ℚ) / 36 + 1 / 5 := by ring
+
+theorem Bplusq_le_small_saddle
+    {N s k : Nat} (hs : 32 ≤ s) (hk : 2 ≤ k) (hks : k ≤ s)
+    (hNs : N ≤ s * s) :
+    Bplusq N k
+      ≤ ((6 : ℚ) * (s : ℚ))^k *
+          expPrefix (5 * (s : ℚ) / 36 + 1 / 5) k := by
+  let rho : ℚ := 1 / ((6 : ℚ) * (s : ℚ))
+  let gas : ℚ :=
+    ∑ r ∈ Finset.range (k + 1), rho^r * ((N : ℚ) * c r)
+  let G : ℚ := 5 * (s : ℚ) / 36 + 1 / 5
+  have hspos : (0 : ℚ) < (s : ℚ) := by
+    exact_mod_cast (by omega : 0 < s)
+  have hrho_pos : 0 < rho := by
+    dsimp [rho]
+    positivity
+  have hgas_nonneg : 0 ≤ gas := by
+    dsimp [gas, rho]
+    exact Finset.sum_nonneg fun r _ => by
+      exact mul_nonneg (pow_nonneg (le_of_lt hrho_pos) r)
+        (mul_nonneg (Nat.cast_nonneg N) (c_nonneg r))
+  have hgas_le : gas ≤ G := by
+    dsimp [gas, G, rho]
+    exact Bplusq_small_weightedGas_le hs hk hks hNs
+  have hsaddle :
+      rho^k * Bplusq N k ≤ expPrefix gas k := by
+    have hraw :=
+      expCoeff_saddle (rho := rho) (L := fun r => (N : ℚ) * c r)
+        (le_of_lt hrho_pos)
+        (by
+          dsimp
+          simp)
+        (fun r => mul_nonneg (Nat.cast_nonneg N) (c_nonneg r))
+        k
+    simpa [Bplusq, gas] using hraw
+  have hprefix : expPrefix gas k ≤ expPrefix G k :=
+    expPrefix_mono_arg hgas_nonneg hgas_le k
+  have hscaled : rho^k * Bplusq N k ≤ expPrefix G k :=
+    hsaddle.trans hprefix
+  have hrhopow_pos : 0 < rho^k := pow_pos hrho_pos k
+  have hdiv : Bplusq N k ≤ expPrefix G k / rho^k := by
+    rw [le_div_iff₀ hrhopow_pos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hscaled
+  have hdiv_eq :
+      expPrefix G k / rho^k =
+        ((6 : ℚ) * (s : ℚ))^k * expPrefix G k := by
+    have hcancel : ((6 : ℚ) * (s : ℚ))^k * rho^k = 1 := by
+      dsimp [rho]
+      rw [← mul_pow]
+      field_simp [hspos.ne']
+      simp
+    rw [div_eq_iff hrhopow_pos.ne']
+    symm
+    calc
+      ((6 : ℚ) * (s : ℚ))^k * expPrefix G k * rho^k
+          = expPrefix G k * (((6 : ℚ) * (s : ℚ))^k * rho^k) := by
+            rw [mul_comm (((6 : ℚ) * (s : ℚ))^k) (expPrefix G k)]
+            rw [mul_assoc]
+      _ = expPrefix G k * 1 := by rw [hcancel]
+      _ = expPrefix G k := by ring
+  calc
+    Bplusq N k ≤ expPrefix G k / rho^k := hdiv
+    _ = ((6 : ℚ) * (s : ℚ))^k * expPrefix G k := hdiv_eq
 
 /-- The common radius used by the tempered `B+` and `Q` coefficient bounds. -/
 def saddleBeta : ℚ := 34 / 15
@@ -907,6 +1104,311 @@ theorem temperedFactorialGas_le_inv {n : Nat} (hn : 40 ≤ n) :
       _ ≤ 1 := by norm_num
   rw [le_div_iff₀ hnpos]
   simpa [tail, mul_comm, mul_left_comm, mul_assoc] using hscaled
+
+theorem Bplusq_tempered_weightedGas_le
+    {N k : Nat} (hk : 40 ≤ k) :
+    ∑ r ∈ Finset.range (k + 1),
+        (17 / (45 * (k : ℚ)))^r * ((N : ℚ) * c r)
+      ≤ 17 * (N : ℚ) / (54 * (k : ℚ)) +
+          4 * (N : ℚ) / (25 * (k : ℚ)) := by
+  have hkpos : (0 : ℚ) < (k : ℚ) := by
+    exact_mod_cast (by omega : 0 < k)
+  let rho : ℚ := 17 / (45 * (k : ℚ))
+  let F : Nat → ℚ := fun r => rho^r * ((N : ℚ) * c r)
+  have hzero : F 0 = 0 := by
+    dsimp [F, rho]
+    simp
+  have hone : F 1 = 17 * (N : ℚ) / (54 * (k : ℚ)) := by
+    dsimp [F, rho]
+    field_simp [hkpos.ne']
+    ring_nf
+  have htail :
+      ∑ r ∈ Finset.Icc 2 k, F r
+        ≤ 4 * (N : ℚ) / (25 * (k : ℚ)) := by
+    have hterm :
+        ∀ r ∈ Finset.Icc 2 k,
+          F r ≤ ((4 * (N : ℚ)) / 25) * temperedFactorialGasTerm k r := by
+      intro r hr
+      have hr' := Finset.mem_Icc.mp hr
+      have hc := c_ub r (by omega : 1 ≤ r)
+      have hscale_nonneg : 0 ≤ rho^r * (N : ℚ) := by
+        exact mul_nonneg (pow_nonneg (by dsimp [rho]; positivity) r)
+          (Nat.cast_nonneg N)
+      calc
+        F r
+            = (rho^r * (N : ℚ)) * c r := by
+              dsimp [F]
+              ring
+        _ ≤ (rho^r * (N : ℚ)) *
+              ((4 / 25 : ℚ) * (6^r * ((r - 1).factorial : ℚ))) :=
+              mul_le_mul_of_nonneg_left hc hscale_nonneg
+        _ = ((4 * (N : ℚ)) / 25) * temperedFactorialGasTerm k r := by
+              have hpow :
+                  rho^r * (6 : ℚ)^r * (k : ℚ)^r = saddleBeta^r := by
+                dsimp [rho, saddleBeta]
+                rw [← mul_pow, ← mul_pow]
+                field_simp [hkpos.ne']
+                ring
+              unfold temperedFactorialGasTerm
+              field_simp [hkpos.ne']
+              calc
+                rho ^ r * (N : ℚ) * 6 ^ r * (k : ℚ)^r
+                    = (N : ℚ) * (rho^r * 6^r * (k : ℚ)^r) := by
+                      ring
+                _ = (N : ℚ) * saddleBeta^r := by rw [hpow]
+                _ = (N : ℚ) * saddleBeta^r := rfl
+    calc
+      ∑ r ∈ Finset.Icc 2 k, F r
+          ≤ ∑ r ∈ Finset.Icc 2 k,
+              ((4 * (N : ℚ)) / 25) * temperedFactorialGasTerm k r :=
+            Finset.sum_le_sum hterm
+      _ = ((4 * (N : ℚ)) / 25) * temperedFactorialGas k := by
+            unfold temperedFactorialGas
+            rw [Finset.mul_sum]
+      _ ≤ ((4 * (N : ℚ)) / 25) * (1 / (k : ℚ)) :=
+            mul_le_mul_of_nonneg_left
+              (temperedFactorialGas_le_inv hk)
+              (by positivity : 0 ≤ (4 * (N : ℚ)) / 25)
+      _ = 4 * (N : ℚ) / (25 * (k : ℚ)) := by
+            field_simp [hkpos.ne']
+  calc
+    ∑ r ∈ Finset.range (k + 1), F r
+        = F 0 + F 1 + ∑ r ∈ Finset.Icc 2 k, F r :=
+          sum_range_zero_one_Icc_two_eq F (by omega : 2 ≤ k)
+    _ = 0 + 17 * (N : ℚ) / (54 * (k : ℚ)) +
+          ∑ r ∈ Finset.Icc 2 k, F r := by
+          rw [hzero, hone]
+    _ ≤ 0 + 17 * (N : ℚ) / (54 * (k : ℚ)) +
+          4 * (N : ℚ) / (25 * (k : ℚ)) := by
+          linarith
+    _ = 17 * (N : ℚ) / (54 * (k : ℚ)) +
+          4 * (N : ℚ) / (25 * (k : ℚ)) := by ring
+
+theorem Bplusq_le_tempered_saddle
+    {N k : Nat} (hk : 40 ≤ k) :
+    Bplusq N k
+      ≤ (45 * (k : ℚ) / 17)^k *
+          expPrefix
+            (17 * (N : ℚ) / (54 * (k : ℚ)) +
+              4 * (N : ℚ) / (25 * (k : ℚ))) k := by
+  let rho : ℚ := 17 / (45 * (k : ℚ))
+  let gas : ℚ :=
+    ∑ r ∈ Finset.range (k + 1), rho^r * ((N : ℚ) * c r)
+  let G : ℚ :=
+    17 * (N : ℚ) / (54 * (k : ℚ)) +
+      4 * (N : ℚ) / (25 * (k : ℚ))
+  have hkpos : (0 : ℚ) < (k : ℚ) := by
+    exact_mod_cast (by omega : 0 < k)
+  have hrho_pos : 0 < rho := by
+    dsimp [rho]
+    positivity
+  have hgas_nonneg : 0 ≤ gas := by
+    dsimp [gas, rho]
+    exact Finset.sum_nonneg fun r _ => by
+      exact mul_nonneg (pow_nonneg (le_of_lt hrho_pos) r)
+        (mul_nonneg (Nat.cast_nonneg N) (c_nonneg r))
+  have hgas_le : gas ≤ G := by
+    dsimp [gas, G, rho]
+    exact Bplusq_tempered_weightedGas_le hk
+  have hsaddle :
+      rho^k * Bplusq N k ≤ expPrefix gas k := by
+    have hraw :=
+      expCoeff_saddle (rho := rho) (L := fun r => (N : ℚ) * c r)
+        (le_of_lt hrho_pos)
+        (by
+          dsimp
+          simp)
+        (fun r => mul_nonneg (Nat.cast_nonneg N) (c_nonneg r))
+        k
+    simpa [Bplusq, gas] using hraw
+  have hscaled :
+      rho^k * Bplusq N k ≤ expPrefix G k :=
+    hsaddle.trans (expPrefix_mono_arg hgas_nonneg hgas_le k)
+  have hrhopow_pos : 0 < rho^k := pow_pos hrho_pos k
+  have hdiv : Bplusq N k ≤ expPrefix G k / rho^k := by
+    rw [le_div_iff₀ hrhopow_pos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hscaled
+  have hdiv_eq :
+      expPrefix G k / rho^k =
+        (45 * (k : ℚ) / 17)^k * expPrefix G k := by
+    have hcancel : (45 * (k : ℚ) / 17)^k * rho^k = 1 := by
+      dsimp [rho]
+      rw [← mul_pow]
+      field_simp [hkpos.ne']
+      ring
+    rw [div_eq_iff hrhopow_pos.ne']
+    symm
+    calc
+      (45 * (k : ℚ) / 17)^k * expPrefix G k * rho^k
+          = expPrefix G k * ((45 * (k : ℚ) / 17)^k * rho^k) := by
+            rw [mul_comm ((45 * (k : ℚ) / 17)^k) (expPrefix G k)]
+            rw [mul_assoc]
+      _ = expPrefix G k * 1 := by rw [hcancel]
+      _ = expPrefix G k := by ring
+  calc
+    Bplusq N k ≤ expPrefix G k / rho^k := hdiv
+    _ = (45 * (k : ℚ) / 17)^k * expPrefix G k := hdiv_eq
+
+theorem Qq_tempered_weightedGas_le
+    {N j : Nat} (hj : 40 ≤ j) :
+    ∑ r ∈ Finset.range (j + 1),
+        (34 / (45 * (j : ℚ)))^r *
+          (((N : ℚ) / 2) * c r / (2 : ℚ)^r)
+      ≤ 17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ)) := by
+  have hjpos : (0 : ℚ) < (j : ℚ) := by
+    exact_mod_cast (by omega : 0 < j)
+  let rho : ℚ := 34 / (45 * (j : ℚ))
+  let F : Nat → ℚ :=
+    fun r => rho^r * (((N : ℚ) / 2) * c r / (2 : ℚ)^r)
+  have hzero : F 0 = 0 := by
+    dsimp [F, rho]
+    simp
+  have hone : F 1 = 17 * (N : ℚ) / (108 * (j : ℚ)) := by
+    dsimp [F, rho]
+    field_simp [hjpos.ne']
+    ring_nf
+  have htail :
+      ∑ r ∈ Finset.Icc 2 j, F r
+        ≤ 2 * (N : ℚ) / (25 * (j : ℚ)) := by
+    have hterm :
+        ∀ r ∈ Finset.Icc 2 j,
+          F r ≤ ((2 * (N : ℚ)) / 25) * temperedFactorialGasTerm j r := by
+      intro r hr
+      have hr' := Finset.mem_Icc.mp hr
+      have hc := c_ub r (by omega : 1 ≤ r)
+      have hscale_nonneg :
+          0 ≤ rho^r * (((N : ℚ) / 2) / (2 : ℚ)^r) := by
+        exact mul_nonneg (pow_nonneg (by dsimp [rho]; positivity) r)
+          (div_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num))
+            (by positivity))
+      calc
+        F r
+            = (rho^r * (((N : ℚ) / 2) / (2 : ℚ)^r)) * c r := by
+              dsimp [F]
+              field_simp
+        _ ≤ (rho^r * (((N : ℚ) / 2) / (2 : ℚ)^r)) *
+              ((4 / 25 : ℚ) * (6^r * ((r - 1).factorial : ℚ))) :=
+              mul_le_mul_of_nonneg_left hc hscale_nonneg
+        _ = ((2 * (N : ℚ)) / 25) * temperedFactorialGasTerm j r := by
+              have hpow :
+                  rho^r * (3 : ℚ)^r * (j : ℚ)^r = saddleBeta^r := by
+                dsimp [rho, saddleBeta]
+                rw [← mul_pow, ← mul_pow]
+                field_simp [hjpos.ne']
+                ring
+              have h6pow : (6 : ℚ)^r = (2 : ℚ)^r * (3 : ℚ)^r := by
+                rw [← mul_pow]
+                norm_num
+              unfold temperedFactorialGasTerm
+              field_simp [hjpos.ne']
+              rw [h6pow]
+              calc
+                rho ^ r * (N : ℚ) * 4 * ((2 : ℚ)^r * 3 ^ r) * (j : ℚ)^r
+                    = (N : ℚ) * 4 * (2 : ℚ)^r *
+                        (rho^r * 3^r * (j : ℚ)^r) := by
+                      ring
+                _ = (N : ℚ) * 4 * (2 : ℚ)^r * saddleBeta^r := by rw [hpow]
+                _ = (N : ℚ) * 2^2 * (2 : ℚ)^r * saddleBeta^r := by norm_num
+    calc
+      ∑ r ∈ Finset.Icc 2 j, F r
+          ≤ ∑ r ∈ Finset.Icc 2 j,
+              ((2 * (N : ℚ)) / 25) * temperedFactorialGasTerm j r :=
+            Finset.sum_le_sum hterm
+      _ = ((2 * (N : ℚ)) / 25) * temperedFactorialGas j := by
+            unfold temperedFactorialGas
+            rw [Finset.mul_sum]
+      _ ≤ ((2 * (N : ℚ)) / 25) * (1 / (j : ℚ)) :=
+            mul_le_mul_of_nonneg_left
+              (temperedFactorialGas_le_inv hj)
+              (by positivity : 0 ≤ (2 * (N : ℚ)) / 25)
+      _ = 2 * (N : ℚ) / (25 * (j : ℚ)) := by
+            field_simp [hjpos.ne']
+  calc
+    ∑ r ∈ Finset.range (j + 1), F r
+        = F 0 + F 1 + ∑ r ∈ Finset.Icc 2 j, F r :=
+          sum_range_zero_one_Icc_two_eq F (by omega : 2 ≤ j)
+    _ = 0 + 17 * (N : ℚ) / (108 * (j : ℚ)) +
+          ∑ r ∈ Finset.Icc 2 j, F r := by
+          rw [hzero, hone]
+    _ ≤ 0 + 17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ)) := by
+          linarith
+    _ = 17 * (N : ℚ) / (108 * (j : ℚ)) +
+          2 * (N : ℚ) / (25 * (j : ℚ)) := by ring
+
+theorem Qq_le_tempered_saddle
+    {N j : Nat} (hj : 40 ≤ j) :
+    Qq N j
+      ≤ (45 * (j : ℚ) / 34)^j *
+          expPrefix
+            (17 * (N : ℚ) / (108 * (j : ℚ)) +
+              2 * (N : ℚ) / (25 * (j : ℚ))) j := by
+  let rho : ℚ := 34 / (45 * (j : ℚ))
+  let gas : ℚ :=
+    ∑ r ∈ Finset.range (j + 1),
+      rho^r * (((N : ℚ) / 2) * c r / (2 : ℚ)^r)
+  let G : ℚ :=
+    17 * (N : ℚ) / (108 * (j : ℚ)) +
+      2 * (N : ℚ) / (25 * (j : ℚ))
+  have hjpos : (0 : ℚ) < (j : ℚ) := by
+    exact_mod_cast (by omega : 0 < j)
+  have hrho_pos : 0 < rho := by
+    dsimp [rho]
+    positivity
+  have hgas_nonneg : 0 ≤ gas := by
+    dsimp [gas, rho]
+    exact Finset.sum_nonneg fun r _ => by
+      exact mul_nonneg (pow_nonneg (le_of_lt hrho_pos) r)
+        (div_nonneg
+          (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num)) (c_nonneg r))
+          (by positivity))
+  have hgas_le : gas ≤ G := by
+    dsimp [gas, G, rho]
+    exact Qq_tempered_weightedGas_le hj
+  have hsaddle :
+      rho^j * Qq N j ≤ expPrefix gas j := by
+    have hraw :=
+      expCoeff_saddle (rho := rho)
+        (L := fun r => ((N : ℚ) / 2) * c r / (2 : ℚ)^r)
+        (le_of_lt hrho_pos)
+        (by
+          dsimp
+          simp)
+        (fun r => by
+          exact div_nonneg
+            (mul_nonneg (div_nonneg (Nat.cast_nonneg N) (by norm_num))
+              (c_nonneg r))
+            (by positivity))
+        j
+    simpa [Qq, gas] using hraw
+  have hscaled :
+      rho^j * Qq N j ≤ expPrefix G j :=
+    hsaddle.trans (expPrefix_mono_arg hgas_nonneg hgas_le j)
+  have hrhopow_pos : 0 < rho^j := pow_pos hrho_pos j
+  have hdiv : Qq N j ≤ expPrefix G j / rho^j := by
+    rw [le_div_iff₀ hrhopow_pos]
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hscaled
+  have hdiv_eq :
+      expPrefix G j / rho^j =
+        (45 * (j : ℚ) / 34)^j * expPrefix G j := by
+    have hcancel : (45 * (j : ℚ) / 34)^j * rho^j = 1 := by
+      dsimp [rho]
+      rw [← mul_pow]
+      field_simp [hjpos.ne']
+      ring
+    rw [div_eq_iff hrhopow_pos.ne']
+    symm
+    calc
+      (45 * (j : ℚ) / 34)^j * expPrefix G j * rho^j
+          = expPrefix G j * ((45 * (j : ℚ) / 34)^j * rho^j) := by
+            rw [mul_comm ((45 * (j : ℚ) / 34)^j) (expPrefix G j)]
+            rw [mul_assoc]
+      _ = expPrefix G j * 1 := by rw [hcancel]
+      _ = expPrefix G j := by ring
+  calc
+    Qq N j ≤ expPrefix G j / rho^j := hdiv
+    _ = (45 * (j : ℚ) / 34)^j * expPrefix G j := hdiv_eq
 
 theorem expPrefix_one (x : ℚ) : expPrefix x 1 = 1 + x := by
   norm_num [expPrefix, Finset.sum_range_succ]
