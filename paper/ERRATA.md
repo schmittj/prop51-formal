@@ -25,6 +25,14 @@ Found during formalization review; neither affects the conclusions.
    (Numerically verified: no violations of (B-tempered)/(Y-tempered)/the
    small-k bound against true recurrence values at both N edges, a = 401.)
 
+3. **§6 solo shortcut.**  The sentence claiming that the displayed tempered
+   `j = a` saddle bound gives `2^{-a-1}Y_a(N) < exp(-0.49a)` is too sharp at
+   `a = 401`.  The displayed expression itself gives about `7.84e-85` there,
+   while `exp(-0.49*401) ≈ 4.63e-86`.  The corrected proof and
+   `scripts/positive_saddle_scan.py` use the displayed expression directly
+   (in particular it is `< exp(-0.48a) < 1e-83` for `a ≥ 401`), which is still
+   far below the `1e-8` positive-part budget.
+
 ## Formalization notes
 
 These are intentional Lean-vs-TeX differences rather than errors in the

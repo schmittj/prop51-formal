@@ -670,7 +670,15 @@ The accompanying script \texttt{prop51\_tenth\_positive\_saddle\_certificate.py}
   \binom{a-2}{k-1}\ge\frac1a
   \exp\left((a-2)H\left(\frac{k-1}{a-2}\right)\right)
 \end{equation}
-for $a>2000$.  The largest certified total for the displayed majorant in the finite scan occurs at $a=410$ and is less than $5.1\cdot10^{-17}$; the actual recurrence value at the corner $(401,4804)$ is $2.94\cdot10^{-120}$.  Thus the positive part is $<10^{-8}$.  The solo term $2^{-a-1}Y_a(N)$ is bounded by the same tempered saddle with $j=a$ and is $<\e^{-0.49a}<10^{-85}$ for $a\ge401$.
+for $a>2000$.  The largest certified total for the displayed majorant in the corrected finite scan occurs at $a=410$ and is less than $1.1\cdot10^{-16}$; the actual recurrence value at the corner $(401,4804)$ is $2.94\cdot10^{-120}$.  Thus the positive part is $<10^{-8}$.  The solo term $2^{-a-1}Y_a(N)$ is bounded by the same tempered saddle with $j=a$; explicitly,
+\[
+  2^{-a-1}Y_a(N)
+  \le
+  \frac{14.5a}{2(6a-7)}
+  \exp\left(3.9-(\log2-0.2)a\right)
+  <\e^{-0.48a}<10^{-83}
+\]
+for $a\ge401$.
 \end{proof}
 
 \begin{remark}[erratum, this repository]

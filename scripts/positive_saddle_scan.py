@@ -75,7 +75,16 @@ def majorant_for_a(a):
         logsum = logaddexp(logsum, v)
         if worst is None or v > worst[1]:
             worst = (k, v)
-    return logaddexp(logsum, -0.49 * a), worst
+    # Same displayed tempered Y-saddle bound with j = a, including the
+    # dyadic solo normalization 2^{-a-1}Y_a(N).  The older handwritten
+    # shortcut exp(-0.49*a) is too small at a = 401; this expression is the
+    # actual bound used in the proof and is still negligible.
+    solo_log = (
+        math.log(14.5 * a / (2.0 * Nlo))
+        + 3.9
+        - (LOG2 - 0.2) * a
+    )
+    return logaddexp(logsum, solo_log), worst
 
 
 best = None

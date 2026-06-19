@@ -1482,8 +1482,8 @@ def positiveTarget : ℚ := 1 / 100000000
 
 /-- Lean's finite-envelope bookkeeping gives the solo term half of the
 `positiveTarget` budget.  This is intentionally looser than the TeX statement
-`2^{-a-1}Y_a(N) < exp(-0.49a)`; the latter will imply this budget with ample
-room once the solo saddle bound is formalized. -/
+after the §6 erratum: the displayed tempered `j = a` bound gives, for example,
+`2^{-a-1}Y_a(N) < exp(-0.48a)`, which implies this budget with ample room. -/
 def positiveSoloBudget : ℚ := positiveTarget / 2
 
 /-- The remaining half of the `positiveTarget` budget, reserved for the
@@ -1590,8 +1590,9 @@ def positiveEnvelope (a N : Nat) : ℚ :=
 
 /-- A positive-envelope majorant after replacing the solo term by an external
 upper bound.  In the TeX proof this solo bound is supplied by the same
-tempered saddle estimate as the positive summands, giving
-`2^{-a-1}Y_a(N) < exp(-0.49a)`.  Lean keeps that analytic input separate. -/
+tempered saddle estimate as the positive summands.  The repository erratum
+uses the displayed `j = a` expression directly, rather than the too-sharp
+`exp(-0.49a)` shortcut from the tenth revision. -/
 def positiveEnvelopeBound (a : Nat) (soloBound : ℚ) : ℚ :=
   soloBound + positiveEdgeMajorantSum a
 
@@ -33863,9 +33864,9 @@ argument.  The four fields match the current proof split:
 * positive-envelope certificate after inserting the solo bound;
 * entropy tail for `a > 2000`.
 
-The `soloBound` parameter lets a later certificate use either the TeX-style
-`exp(-0.49a)` surrogate or a sharper executable bound without changing the
-assembly layer. -/
+The `soloBound` parameter lets a later certificate use either the corrected
+displayed `j = a` solo expression or a sharper executable bound without
+changing the assembly layer. -/
 structure PositiveSaddleCertificate (soloBound : Nat → ℚ) : Prop where
   small :
     ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
