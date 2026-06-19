@@ -1467,6 +1467,53 @@ def positiveSmallFirstCellSharpQFastCleared (a N : Nat) : Prop :=
       partialExpUpperFast (positiveSoloYExponent (posJ a 2))
         (8 * posJ a 2)
 
+/-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
+parameter. -/
+theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
+    QqSharpGcompBound N m ≤ QqSharpGcompBound M m := by
+  unfold QqSharpGcompBound
+  refine expCoeff_mono ?_ ?_ m
+  · intro j
+    by_cases h0 : j = 0
+    · simp [h0]
+    · by_cases h1 : j = 1
+      · subst j
+        norm_num [c_one]
+        positivity
+      · simp [h0, h1]
+        positivity
+  · intro j
+    have hNMq : (N : ℚ) ≤ (M : ℚ) := by
+      exact_mod_cast hNM
+    by_cases h0 : j = 0
+    · simp [h0]
+    · by_cases h1 : j = 1
+      · subst j
+        norm_num [c_one]
+        nlinarith
+      · simp [h0, h1]
+        have hcoef :
+            (2 * (N : ℚ)) / 25 ≤ (2 * (M : ℚ)) / 25 := by
+          nlinarith
+        exact mul_le_mul_of_nonneg_right
+          (mul_le_mul_of_nonneg_right hcoef (by positivity))
+          (by positivity)
+
+/-- It is enough to check the sharp fast first-cell target at the upper
+rectangle edge. -/
+theorem positiveSmallFirstCellSharpQFastCleared_of_upperEdge
+    {a N : Nat} (hrect : positiveRectangle a N)
+    (hEdge : positiveSmallFirstCellSharpQFastCleared a (posNhi a)) :
+    positiveSmallFirstCellSharpQFastCleared a N := by
+  unfold positiveSmallFirstCellSharpQFastCleared at hEdge ⊢
+  have hQ :
+      QqSharpGcompBound N (posJ a 2)
+        ≤ QqSharpGcompBound (posNhi a) (posJ a 2) :=
+    QqSharpGcompBound_mono_N (m := posJ a 2) hrect.2
+  have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^(posJ a 2) := by
+    positivity
+  exact (mul_le_mul_of_nonneg_left hQ hscale).trans hEdge
+
 /-- A sharp fast `Qq` first-cell estimate supplies the direct first-cell
 `Qq` budget.
 
@@ -3308,6 +3355,40 @@ theorem LargeTailProductCertificate.ofSharpQFastTwoAndFastUpperEdgeLowerNProduct
           (by omega : 2000 < a) hrect hk
           (hproductBound ha hk hk3)
           (htemperedGeThree ha hk htemperedEdge hrowAlt hk3))
+
+/-- Endpoint form of the sharp-first-cell combined product-bound constructor.
+
+By `positiveSmallFirstCellSharpQFastCleared_of_upperEdge`, the sharp `Qq`
+first-cell estimate only has to be proved at `N = posNhi a`. -/
+theorem LargeTailProductCertificate.ofSharpQFastTwoEndpointAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ}
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsharpTwoUpper :
+      ∀ {a : Nat}, 3000 ≤ a →
+        positiveSmallFirstCellSharpQFastCleared a (posNhi a))
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofSharpQFastTwoAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    hproductBound
+    (by
+      intro a N ha hrect
+      exact positiveSmallFirstCellSharpQFastCleared_of_upperEdge
+        hrect (hsharpTwoUpper ha))
+    hsmallGeThree htemperedGeThree
 
 /-- Canonical combined-product constructor for the remaining large-tail
 product route.
