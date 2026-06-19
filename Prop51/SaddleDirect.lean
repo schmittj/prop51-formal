@@ -1,7 +1,10 @@
 import Prop51.Majorant
 import Prop51.ExpBounds
+import Prop51.HPow
 
 namespace Prop51
+
+open PowerSeries
 
 /-!
 Direct saddle toolkit for the corrected product route.
@@ -68,6 +71,124 @@ theorem expCoeff_scale (rho : ℚ) (L : Nat → ℚ) :
 `P_m(x) = sum_{0 <= r <= m} x^r/r!`. -/
 def expPrefix (x : ℚ) (m : Nat) : ℚ :=
   ∑ r ∈ Finset.range (m + 1), x^r / (r.factorial : ℚ)
+
+/-- Coefficients of a power are bounded by the corresponding finite gas.
+
+This is the composition-free bound used by the direct saddle route: if all
+coefficients `M_r` are nonnegative, then every coefficient of `G(t)^q` up to
+degree `p` is bounded by `(M_0 + ... + M_p)^q`. -/
+theorem coeff_pow_le_gas_pow {M : Nat → ℚ} (hM : ∀ r, 0 ≤ M r) :
+    ∀ p q : Nat,
+      coeff p ((mk M : ℚ⟦X⟧)^q)
+        ≤ (∑ r ∈ Finset.range (p + 1), M r)^q := by
+  intro p q
+  revert p
+  induction q with
+  | zero =>
+      intro p
+      by_cases hp : p = 0
+      · subst p
+        simp
+      · simp [hp]
+  | succ q ih =>
+      intro p
+      let Gp : ℚ := ∑ r ∈ Finset.range (p + 1), M r
+      have hGp : 0 ≤ Gp := by
+        dsimp [Gp]
+        exact Finset.sum_nonneg fun r _ => hM r
+      have hcoeff :
+          coeff p ((mk M : ℚ⟦X⟧)^(q + 1))
+            =
+          ∑ t ∈ Finset.range (p + 1),
+            coeff t ((mk M : ℚ⟦X⟧)^q) * M (p - t) := by
+        rw [pow_succ, coeff_mul,
+          Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+        simp [coeff_mk]
+      rw [hcoeff]
+      calc
+        ∑ t ∈ Finset.range (p + 1),
+            coeff t ((mk M : ℚ⟦X⟧)^q) * M (p - t)
+            ≤ ∑ t ∈ Finset.range (p + 1), Gp^q * M (p - t) := by
+              refine Finset.sum_le_sum fun t ht => ?_
+              have ht_le : t ≤ p := by
+                have ht' := Finset.mem_range.mp ht
+                omega
+              have hGt_nonneg :
+                  0 ≤ ∑ r ∈ Finset.range (t + 1), M r := by
+                exact Finset.sum_nonneg fun r _ => hM r
+              have hGt_le :
+                  (∑ r ∈ Finset.range (t + 1), M r) ≤ Gp := by
+                dsimp [Gp]
+                exact
+                  Finset.sum_le_sum_of_subset_of_nonneg
+                    (fun r hr => by
+                      exact Finset.mem_range.mpr (by
+                        have hr' := Finset.mem_range.mp hr
+                        omega))
+                    (fun r _ _ => hM r)
+              have hpow :
+                  (∑ r ∈ Finset.range (t + 1), M r)^q ≤ Gp^q :=
+                pow_le_pow_left₀ hGt_nonneg hGt_le q
+              have hct : coeff t ((mk M : ℚ⟦X⟧)^q) ≤ Gp^q :=
+                (ih t).trans hpow
+              exact mul_le_mul_of_nonneg_right hct (hM (p - t))
+        _ = Gp^q * ∑ t ∈ Finset.range (p + 1), M (p - t) := by
+              rw [Finset.mul_sum]
+        _ = Gp^q * Gp := by
+              dsimp [Gp]
+              rw [← Finset.sum_range_reflect M (p + 1)]
+              simp
+        _ = Gp^(q + 1) := by
+              rw [pow_succ]
+
+theorem coeff_pow_le_total_gas_pow {M : Nat → ℚ} (hM : ∀ r, 0 ≤ M r)
+    {p m q : Nat} (hpm : p ≤ m) :
+    coeff p ((mk M : ℚ⟦X⟧)^q)
+      ≤ (∑ r ∈ Finset.range (m + 1), M r)^q := by
+  have hbase := coeff_pow_le_gas_pow hM p q
+  have hpGas_nonneg :
+      0 ≤ ∑ r ∈ Finset.range (p + 1), M r :=
+    Finset.sum_nonneg fun r _ => hM r
+  have hgas_le :
+      (∑ r ∈ Finset.range (p + 1), M r)
+        ≤ ∑ r ∈ Finset.range (m + 1), M r :=
+    Finset.sum_le_sum_of_subset_of_nonneg
+      (fun r hr => by
+        exact Finset.mem_range.mpr (by
+          have hr' := Finset.mem_range.mp hr
+          omega))
+      (fun r _ _ => hM r)
+  exact hbase.trans (pow_le_pow_left₀ hpGas_nonneg hgas_le q)
+
+/-- Direct saddle bound without scaling. -/
+theorem expCoeff_le_expPrefix_gas {L : Nat → ℚ}
+    (hL0 : L 0 = 0) (hL : ∀ r, 0 ≤ L r) (m : Nat) :
+    expCoeff L m
+      ≤ expPrefix (∑ r ∈ Finset.range (m + 1), L r) m := by
+  rw [expCoeff_eq_sum_pow L hL0 m]
+  unfold expPrefix
+  refine Finset.sum_le_sum fun q hq => ?_
+  have hcoeff :
+      coeff m ((mk L : ℚ⟦X⟧)^q)
+        ≤ (∑ r ∈ Finset.range (m + 1), L r)^q :=
+    coeff_pow_le_total_gas_pow hL (p := m) (m := m) (q := q) le_rfl
+  have hfpos : (0 : ℚ) < (q.factorial : ℚ) := by
+    exact_mod_cast q.factorial_pos
+  exact div_le_div_of_nonneg_right hcoeff hfpos.le
+
+/-- Direct saddle bound after introducing a nonnegative radius `rho`. -/
+theorem expCoeff_saddle {rho : ℚ} (hrho : 0 ≤ rho) {L : Nat → ℚ}
+    (hL0 : L 0 = 0) (hL : ∀ r, 0 ≤ L r) (m : Nat) :
+    rho^m * expCoeff L m
+      ≤ expPrefix (∑ r ∈ Finset.range (m + 1), rho^r * L r) m := by
+  have hscaled0 : (fun r => rho^r * L r) 0 = 0 := by
+    simp [hL0]
+  have hscaled_nonneg : ∀ r, 0 ≤ rho^r * L r := by
+    intro r
+    exact mul_nonneg (pow_nonneg hrho r) (hL r)
+  have h :=
+    expCoeff_le_expPrefix_gas hscaled0 hscaled_nonneg m
+  simpa [expCoeff_scale] using h
 
 @[simp] theorem expPrefix_zero (x : ℚ) : expPrefix x 0 = 1 := by
   simp [expPrefix]
