@@ -603,6 +603,140 @@ def BoundedPositiveCertificate.ofActiveAnalyticScaledEdge
     soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
     positiveSaddleFiniteScaledEdgeBudget productPrefix soloPrefix
 
+/-- Constructor for the bounded route with theorem-facing prefix fields.
+
+This is the completion-facing version of
+`BoundedPositiveCertificate.ofActiveAnalyticSemanticEdge`: the `2001 <= a <
+3000` strip is supplied by the direct product and solo prefix obligations
+from this file, rather than by the older exact upper-edge prefix chunk
+certificates.  This records the Lean proof-production deviation from the TeX
+scan: the bounded assembly should target the same combined product and
+normalized solo estimates used by `Completion.lean`, with exact prefix chunks
+reserved only as a compatibility proof producer. -/
+def BoundedPositiveCertificate.ofActiveAnalyticSemanticEdgeDirectPrefix
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen : Nat}
+    (tangentRowLenPos : 0 < tangentRowLen)
+    (soloSaddleRowLenPos : 0 < soloSaddleRowLen)
+    (soloBudgetRowLenPos : 0 < soloBudgetRowLen)
+    (tangentNLenPos : 0 < tangentNLen)
+    (soloSaddleNLenPos : 0 < soloSaddleNLen)
+    (soloBudgetNLenPos : 0 < soloBudgetNLen)
+    (tangentKLenPos : 0 < tangentKLen)
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (smallTangentExpEdgeRowRangeNIndexKChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              tangentNLen rowChunk.1 rowChunk.2 →
+        ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+          checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+            tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true)
+    (soloYSaddleClearedRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloSaddleNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+            soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (soloYBudgetRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloBudgetNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+            soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (edgeBudget :
+      ∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+        positiveEdgeMajorantSum a ≤ positiveEdgeBudget)
+    (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate where
+  toTangentProductBudget := fun pointwise candidate =>
+    positiveSaddleActiveAnalyticProductTangentSoloNSemanticEdge_toTangentProductBudgetCertificate
+      tangentRowLenPos soloSaddleRowLenPos soloBudgetRowLenPos
+      tangentNLenPos soloSaddleNLenPos soloBudgetNLenPos tangentKLenPos
+      smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
+      soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
+      edgeBudget pointwise candidate
+  productPrefixPointwise := productPrefix
+  soloPrefixNormUnit := soloPrefix
+
+/-- Completion-facing bounded constructor with the generated scaled edge
+budget inserted and direct theorem-facing prefix fields exposed. -/
+def BoundedPositiveCertificate.ofActiveAnalyticScaledEdgeDirectPrefix
+    {tangentRowLen soloSaddleRowLen soloBudgetRowLen
+      tangentNLen soloSaddleNLen soloBudgetNLen tangentKLen : Nat}
+    (tangentRowLenPos : 0 < tangentRowLen)
+    (soloSaddleRowLenPos : 0 < soloSaddleRowLen)
+    (soloBudgetRowLenPos : 0 < soloBudgetRowLen)
+    (tangentNLenPos : 0 < tangentNLen)
+    (soloSaddleNLenPos : 0 < soloSaddleNLen)
+    (soloBudgetNLenPos : 0 < soloBudgetNLen)
+    (tangentKLenPos : 0 < tangentKLen)
+    (smallXYTangent :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductTangentBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (smallTangentExpEdgeRowRangeNIndexKChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks tangentRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              tangentNLen rowChunk.1 rowChunk.2 →
+        ∀ {kChunk : Nat × Nat}, kChunk ∈ positiveTangentFixedKChunks tangentKLen →
+          checkPositiveSmallTangentExpEdgeFixedNIndexRowRangeKChunk
+            tangentNLen rowChunk.1 rowChunk.2 nIndex kChunk.1 kChunk.2 = true)
+    (soloYSaddleClearedRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloSaddleRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloSaddleNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYSaddleClearedFixedNIndexRowRange
+            soloSaddleNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (soloYBudgetRowRangeNIndexChunks :
+      ∀ {rowChunk : Nat × Nat},
+        rowChunk ∈ positiveSaddleFixedRowChunks soloBudgetRowLen →
+        ∀ {nIndex : Nat},
+          nIndex ∈
+            positiveProductFixedNChunkIndicesForRowRange
+              soloBudgetNLen rowChunk.1 rowChunk.2 →
+          checkPositiveSoloDisplayedYBoundUnitFixedNIndexRowRange
+            soloBudgetNLen rowChunk.1 rowChunk.2 nIndex = true)
+    (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate :=
+  BoundedPositiveCertificate.ofActiveAnalyticSemanticEdgeDirectPrefix
+    tangentRowLenPos soloSaddleRowLenPos soloBudgetRowLenPos
+    tangentNLenPos soloSaddleNLenPos soloBudgetNLenPos tangentKLenPos
+    smallXYTangent temperedXY smallTangentExpEdgeRowRangeNIndexKChunks
+    soloYSaddleClearedRowRangeNIndexChunks soloYBudgetRowRangeNIndexChunks
+    positiveSaddleFiniteScaledEdgeBudget productPrefix soloPrefix
+
 /-- The large-tail product obligation for the current canonical route.
 
 This is intentionally stated as the normalized combined actual product target,
