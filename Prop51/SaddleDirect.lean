@@ -539,6 +539,375 @@ theorem smallFactorialGas_le_of_ge_three
     (smallFactorialGas_le_main_terms (s := s) (k := k) (by omega) hk hks).trans
       (smallFactorialGas_main_terms_le (s := s) hs)
 
+/-- The common radius used by the tempered `B+` and `Q` coefficient bounds. -/
+def saddleBeta : ℚ := 34 / 15
+
+/-- Uniform tempered factorial gas term
+`beta^r (r-1)! / n^r`, with `beta = 34/15`. -/
+def temperedFactorialGasTerm (n r : Nat) : ℚ :=
+  saddleBeta^r * ((r - 1).factorial : ℚ) / (n : ℚ)^r
+
+def temperedFactorialGas (n : Nat) : ℚ :=
+  ∑ r ∈ Finset.Icc 2 n, temperedFactorialGasTerm n r
+
+theorem temperedFactorialGasTerm_nonneg (n r : Nat) :
+    0 ≤ temperedFactorialGasTerm n r := by
+  unfold temperedFactorialGasTerm saddleBeta
+  positivity
+
+theorem temperedFactorialGasTerm_succ_eq
+    {n r : Nat} (hn : 1 ≤ n) (hr : 1 ≤ r) :
+    temperedFactorialGasTerm n (r + 1)
+      = temperedFactorialGasTerm n r *
+          (((34 : ℚ) * (r : ℚ)) / ((15 : ℚ) * (n : ℚ))) := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  unfold temperedFactorialGasTerm saddleBeta
+  have hfac :
+      (((r + 1 - 1).factorial : Nat) : ℚ)
+        = (r : ℚ) * ((r - 1).factorial : ℚ) := by
+    rw [show r + 1 - 1 = r by omega]
+    rw [show r = (r - 1) + 1 by omega, Nat.factorial_succ]
+    norm_num
+  rw [hfac, pow_succ (34 / 15 : ℚ), pow_succ (n : ℚ)]
+  field_simp [hnpos.ne']
+
+theorem temperedFactorialGasTerm_succ_le
+    {n r : Nat} (hn : 1 ≤ n) (hr : 1 ≤ r) (hleft : 34 * r ≤ 15 * n) :
+    temperedFactorialGasTerm n (r + 1) ≤ temperedFactorialGasTerm n r := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hratio :
+      ((34 : ℚ) * (r : ℚ)) / ((15 : ℚ) * (n : ℚ)) ≤ 1 := by
+    rw [div_le_one (by positivity : (0 : ℚ) < (15 : ℚ) * (n : ℚ))]
+    exact_mod_cast hleft
+  rw [temperedFactorialGasTerm_succ_eq hn hr]
+  calc
+    temperedFactorialGasTerm n r *
+        (((34 : ℚ) * (r : ℚ)) / ((15 : ℚ) * (n : ℚ)))
+        ≤ temperedFactorialGasTerm n r * 1 :=
+          mul_le_mul_of_nonneg_left hratio (temperedFactorialGasTerm_nonneg n r)
+    _ = temperedFactorialGasTerm n r := by ring
+
+theorem temperedFactorialGasTerm_le_succ
+    {n r : Nat} (hn : 1 ≤ n) (hr : 1 ≤ r) (hright : 15 * n ≤ 34 * r) :
+    temperedFactorialGasTerm n r ≤ temperedFactorialGasTerm n (r + 1) := by
+  have hratio :
+      1 ≤ ((34 : ℚ) * (r : ℚ)) / ((15 : ℚ) * (n : ℚ)) := by
+    rw [le_div_iff₀ (by positivity : (0 : ℚ) < (15 : ℚ) * (n : ℚ))]
+    simpa [one_mul] using
+      (show (15 : ℚ) * (n : ℚ) ≤ (34 : ℚ) * (r : ℚ) by
+        exact_mod_cast hright)
+  rw [temperedFactorialGasTerm_succ_eq hn hr]
+  calc
+    temperedFactorialGasTerm n r
+        = temperedFactorialGasTerm n r * 1 := by ring
+    _ ≤ temperedFactorialGasTerm n r *
+        (((34 : ℚ) * (r : ℚ)) / ((15 : ℚ) * (n : ℚ))) :=
+          mul_le_mul_of_nonneg_left hratio (temperedFactorialGasTerm_nonneg n r)
+
+theorem temperedFactorialGasTerm_two (n : Nat) :
+    temperedFactorialGasTerm n 2 = saddleBeta^2 / (n : ℚ)^2 := by
+  norm_num [temperedFactorialGasTerm]
+
+theorem temperedFactorialGasTerm_three (n : Nat) :
+    temperedFactorialGasTerm n 3 = 2 * saddleBeta^3 / (n : ℚ)^3 := by
+  norm_num [temperedFactorialGasTerm]
+  ring
+
+theorem temperedFactorialGasTerm_four (n : Nat) :
+    temperedFactorialGasTerm n 4 = 6 * saddleBeta^4 / (n : ℚ)^4 := by
+  norm_num [temperedFactorialGasTerm, Nat.factorial]
+  ring
+
+/-- Endpoint envelope `W_n = n^2 u_{n,n}` in factorial form. -/
+def temperedEndpointW (n : Nat) : ℚ :=
+  saddleBeta^n * (n.factorial : ℚ) / (n : ℚ)^(n - 1)
+
+theorem temperedEndpointW_nonneg (n : Nat) :
+    0 ≤ temperedEndpointW n := by
+  unfold temperedEndpointW saddleBeta
+  positivity
+
+private theorem temperedEndpointW_forty_le_half :
+    temperedEndpointW 40 ≤ 1 / 2 := by
+  norm_num [temperedEndpointW, saddleBeta, Nat.factorial]
+
+theorem temperedEndpointW_eq_scaled_last_term
+    {n : Nat} (hn : 1 ≤ n) :
+    (n : ℚ)^2 * temperedFactorialGasTerm n n = temperedEndpointW n := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  unfold temperedEndpointW temperedFactorialGasTerm
+  have hfac :
+      (n.factorial : ℚ) = (n : ℚ) * ((n - 1).factorial : ℚ) := by
+    rw [show n = (n - 1) + 1 by omega, Nat.factorial_succ]
+    norm_num
+  have hpow : (n : ℚ)^n = (n : ℚ)^(n - 1) * (n : ℚ) := by
+    conv_lhs => rw [show n = (n - 1) + 1 by omega]
+    rw [pow_succ]
+    rw [show n - 1 + 1 = n by omega]
+  rw [hfac]
+  field_simp [hnpos.ne']
+  rw [hpow]
+  ring
+
+private theorem saddleBeta_le_one_add_inv_pow_pred
+    {n : Nat} (hn : 40 ≤ n) :
+    saddleBeta ≤ (1 + 1 / (n : ℚ))^(n - 1) := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hmono :
+      (64 / 27 : ℚ) ≤ (1 + 1 / (n : ℚ))^n := by
+    have h :=
+      one_add_inv_pow_mono (n := 3) (m := n) (by norm_num) (by omega)
+    norm_num at h
+    simpa using h
+  let A : ℚ := (1 + 1 / (n : ℚ))^(n - 1)
+  let B : ℚ := 1 + 1 / (n : ℚ)
+  have hA_nonneg : 0 ≤ A := by
+    dsimp [A]
+    positivity
+  have hB_le : B ≤ 41 / 40 := by
+    have hinv : 1 / (n : ℚ) ≤ 1 / 40 := by
+      field_simp [hnpos.ne']
+      exact_mod_cast hn
+    dsimp [B]
+    linarith
+  have hsplit : (1 + 1 / (n : ℚ))^n = A * B := by
+    dsimp [A, B]
+    conv_lhs => rw [show n = (n - 1) + 1 by omega]
+    rw [pow_succ]
+    rw [show n - 1 + 1 = n by omega]
+  have hprod_le : (1 + 1 / (n : ℚ))^n ≤ A * (41 / 40) := by
+    rw [hsplit]
+    exact mul_le_mul_of_nonneg_left hB_le hA_nonneg
+  have hA_lb : (64 / 27 : ℚ) / (41 / 40) ≤ A := by
+    rw [div_le_iff₀ (by norm_num : (0 : ℚ) < 41 / 40)]
+    exact hmono.trans hprod_le
+  have hbeta : saddleBeta ≤ (64 / 27 : ℚ) / (41 / 40) := by
+    norm_num [saddleBeta]
+  exact hbeta.trans hA_lb
+
+private theorem temperedEndpointW_succ_eq {n : Nat} (hn : 1 ≤ n) :
+    temperedEndpointW (n + 1)
+      = temperedEndpointW n *
+          (saddleBeta / (1 + 1 / (n : ℚ))^(n - 1)) := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hbasepos : (0 : ℚ) < 1 + 1 / (n : ℚ) := by positivity
+  have hone :
+      1 + 1 / (n : ℚ) = ((n + 1 : Nat) : ℚ) / (n : ℚ) := by
+    field_simp [hnpos.ne']
+    push_cast
+    ring
+  unfold temperedEndpointW
+  rw [Nat.factorial_succ]
+  rw [hone, div_pow]
+  norm_num
+  field_simp [hnpos.ne', show (((n + 1 : Nat) : ℚ) ≠ 0) by positivity]
+  have hpow :
+      ((n : ℚ) + 1)^n = ((n : ℚ) + 1)^(n - 1) * ((n : ℚ) + 1) := by
+    conv_lhs => rw [show n = (n - 1) + 1 by omega]
+    rw [pow_succ]
+    rw [show n - 1 + 1 = n by omega]
+  rw [hpow]
+  ring
+
+private theorem temperedEndpointW_succ_le
+    {n : Nat} (hn : 40 ≤ n) :
+    temperedEndpointW (n + 1) ≤ temperedEndpointW n := by
+  have hdenpos : (0 : ℚ) < (1 + 1 / (n : ℚ))^(n - 1) := by
+    positivity
+  have hratio :
+      saddleBeta / (1 + 1 / (n : ℚ))^(n - 1) ≤ 1 := by
+    rw [div_le_one hdenpos]
+    exact saddleBeta_le_one_add_inv_pow_pred hn
+  rw [temperedEndpointW_succ_eq (by omega : 1 ≤ n)]
+  calc
+    temperedEndpointW n *
+        (saddleBeta / (1 + 1 / (n : ℚ))^(n - 1))
+        ≤ temperedEndpointW n * 1 :=
+          mul_le_mul_of_nonneg_left hratio (temperedEndpointW_nonneg n)
+    _ = temperedEndpointW n := by ring
+
+theorem temperedEndpointW_le_half {n : Nat} (hn : 40 ≤ n) :
+    temperedEndpointW n ≤ 1 / 2 := by
+  exact Nat.le_induction
+    (m := 40)
+    (P := fun n _ => temperedEndpointW n ≤ 1 / 2)
+    temperedEndpointW_forty_le_half
+    (fun n hn ih => (temperedEndpointW_succ_le hn).trans ih)
+    n hn
+
+theorem temperedFactorialGasTerm_le_four_add_last
+    {n r : Nat} (hn : 40 ≤ n) (hr4 : 4 ≤ r) (hrn : r ≤ n) :
+    temperedFactorialGasTerm n r
+      ≤ temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n := by
+  by_cases hleft : 34 * r ≤ 15 * n
+  · have hle_four :
+        temperedFactorialGasTerm n r ≤ temperedFactorialGasTerm n 4 := by
+      have hmono :
+          ∀ t : Nat, 4 ≤ t → t ≤ r →
+            temperedFactorialGasTerm n t ≤ temperedFactorialGasTerm n 4 := by
+        intro t ht4
+        induction t, ht4 using Nat.le_induction with
+        | base =>
+            intro _htr
+            rfl
+        | succ t ht4t ih =>
+            intro hsucc_le
+            have ht1 : 1 ≤ t := by omega
+            have hcond : 34 * t ≤ 15 * n := by omega
+            exact
+              (temperedFactorialGasTerm_succ_le
+                  (n := n) (r := t) (by omega) ht1 hcond).trans
+                (ih (by omega))
+      exact hmono r hr4 le_rfl
+    exact hle_four.trans
+      (le_add_of_nonneg_right (temperedFactorialGasTerm_nonneg n n))
+  · have hright : 15 * n ≤ 34 * r := by omega
+    have hle_last :
+        temperedFactorialGasTerm n r ≤ temperedFactorialGasTerm n n := by
+      have hmono :
+          ∀ t : Nat, r ≤ t →
+            temperedFactorialGasTerm n r ≤ temperedFactorialGasTerm n t := by
+        intro t hrt
+        induction t, hrt using Nat.le_induction with
+        | base =>
+            rfl
+        | succ t hrt ih =>
+            have ht1 : 1 ≤ t := by omega
+            have hcond : 15 * n ≤ 34 * t := by omega
+            exact ih.trans
+              (temperedFactorialGasTerm_le_succ
+                (n := n) (r := t) (by omega) ht1 hcond)
+      exact hmono n hrn
+    exact hle_last.trans
+      (le_add_of_nonneg_left (temperedFactorialGasTerm_nonneg n 4))
+
+private theorem temperedFactorialGas_low_scaled_le
+    {n : Nat} (hn : 40 ≤ n) :
+    (n : ℚ) *
+        (temperedFactorialGasTerm n 2 + temperedFactorialGasTerm n 3)
+      ≤ 1 / 6 := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hn40 : (40 : ℚ) ≤ (n : ℚ) := by exact_mod_cast hn
+  rw [temperedFactorialGasTerm_two, temperedFactorialGasTerm_three]
+  unfold saddleBeta
+  field_simp [hnpos.ne']
+  nlinarith
+
+private theorem temperedFactorialGas_four_scaled_le
+    {n : Nat} (hn : 40 ≤ n) :
+    (n : ℚ)^2 * temperedFactorialGasTerm n 4 ≤ 1 / 8 := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  have hn40 : (40 : ℚ) ≤ (n : ℚ) := by exact_mod_cast hn
+  rw [temperedFactorialGasTerm_four]
+  unfold saddleBeta
+  field_simp [hnpos.ne']
+  nlinarith
+
+private theorem temperedFactorialGas_last_scaled_le
+    {n : Nat} (hn : 40 ≤ n) :
+    (n : ℚ)^2 * temperedFactorialGasTerm n n ≤ 1 / 2 := by
+  rw [temperedEndpointW_eq_scaled_last_term (by omega : 1 ≤ n)]
+  exact temperedEndpointW_le_half hn
+
+private theorem temperedFactorialGas_tail_le_endpoints
+    {n : Nat} (hn : 40 ≤ n) :
+    ∑ r ∈ Finset.Icc 4 n, temperedFactorialGasTerm n r
+      ≤ (n : ℚ) *
+          (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n) := by
+  have hterm :
+      ∀ r ∈ Finset.Icc 4 n,
+        temperedFactorialGasTerm n r
+          ≤ temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n := by
+    intro r hr
+    have hr' := Finset.mem_Icc.mp hr
+    exact temperedFactorialGasTerm_le_four_add_last hn hr'.1 hr'.2
+  have hcard : (Finset.Icc 4 n).card ≤ n := by
+    have hsubset : Finset.Icc 4 n ⊆ Finset.Ico 1 (n + 1) := by
+      intro r hr
+      have hr' := Finset.mem_Icc.mp hr
+      exact Finset.mem_Ico.mpr (by omega)
+    calc
+      (Finset.Icc 4 n).card ≤ (Finset.Ico 1 (n + 1)).card :=
+        Finset.card_le_card hsubset
+      _ = n := by
+        simp
+  have hconst :
+      0 ≤ temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n :=
+    add_nonneg (temperedFactorialGasTerm_nonneg n 4)
+      (temperedFactorialGasTerm_nonneg n n)
+  calc
+    ∑ r ∈ Finset.Icc 4 n, temperedFactorialGasTerm n r
+        ≤ ∑ _r ∈ Finset.Icc 4 n,
+            (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n) :=
+          Finset.sum_le_sum hterm
+    _ = ((Finset.Icc 4 n).card : ℚ) *
+          (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n) := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ (n : ℚ) *
+          (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n) :=
+          mul_le_mul_of_nonneg_right (by exact_mod_cast hcard) hconst
+
+/-
+Implementation note: the working notes split the middle and high blocks at
+`n - 10`.  For Lean this shorter variant is enough: unimodality bounds every
+term with `4 <= r <= n` by `u_4 + u_n`, and the sharper endpoint estimate
+`n^2 u_n <= 1/2` leaves the final budget below `1`.
+-/
+theorem temperedFactorialGas_le_inv {n : Nat} (hn : 40 ≤ n) :
+    temperedFactorialGas n ≤ 1 / (n : ℚ) := by
+  have hnpos : (0 : ℚ) < (n : ℚ) := by
+    exact_mod_cast (by omega : 0 < n)
+  unfold temperedFactorialGas
+  rw [smallFactorialGas_sum_Icc_two_eq
+    (fun r => temperedFactorialGasTerm n r) (by omega : 3 ≤ n)]
+  let tail : ℚ := ∑ r ∈ Finset.Icc 4 n, temperedFactorialGasTerm n r
+  have hlow := temperedFactorialGas_low_scaled_le (n := n) hn
+  have htail_base :
+      tail ≤ (n : ℚ) *
+        (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n) := by
+    dsimp [tail]
+    exact temperedFactorialGas_tail_le_endpoints hn
+  have htail_scaled :
+      (n : ℚ) * tail ≤ 1 / 8 + 1 / 2 := by
+    have hmul := mul_le_mul_of_nonneg_left htail_base hnpos.le
+    calc
+      (n : ℚ) * tail
+          ≤ (n : ℚ) *
+              ((n : ℚ) *
+                (temperedFactorialGasTerm n 4 + temperedFactorialGasTerm n n)) :=
+            hmul
+      _ = (n : ℚ)^2 * temperedFactorialGasTerm n 4 +
+            (n : ℚ)^2 * temperedFactorialGasTerm n n := by
+            ring
+      _ ≤ 1 / 8 + 1 / 2 :=
+            add_le_add
+              (temperedFactorialGas_four_scaled_le (n := n) hn)
+              (temperedFactorialGas_last_scaled_le (n := n) hn)
+  have hscaled :
+      (n : ℚ) *
+        (temperedFactorialGasTerm n 2 + temperedFactorialGasTerm n 3 + tail)
+        ≤ 1 := by
+    calc
+      (n : ℚ) *
+          (temperedFactorialGasTerm n 2 + temperedFactorialGasTerm n 3 + tail)
+          =
+        (n : ℚ) *
+          (temperedFactorialGasTerm n 2 + temperedFactorialGasTerm n 3) +
+            (n : ℚ) * tail := by
+            ring
+      _ ≤ 1 / 6 + (1 / 8 + 1 / 2) :=
+            add_le_add hlow htail_scaled
+      _ ≤ 1 := by norm_num
+  rw [le_div_iff₀ hnpos]
+  simpa [tail, mul_comm, mul_left_comm, mul_assoc] using hscaled
+
 theorem expPrefix_one (x : ℚ) : expPrefix x 1 = 1 + x := by
   norm_num [expPrefix, Finset.sum_range_succ]
 
