@@ -1568,6 +1568,39 @@ theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_largeDegreeRemainder
     mul_le_mul_of_nonneg_left hsum hscale
   exact (hscaled.trans hsplit)
 
+/-- First-cell own-edge target from the sharp remainder parts.
+
+This is the route intended for the live product certificate.  It records the
+Lean-side split not present in the paper text: after the already-closed
+large-degree simple block, the remaining constant `150` is distributed across
+the proportional, low-middle, and very-low residual bands. -/
+theorem positiveSmallFirstCellSharpOwnEdgeConstCleared_of_remainderParts
+    {a : Nat} (ha : 3000 ≤ a)
+    {Cprop Cmiddle CveryLow : ℚ}
+    (hprop :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpProportionalRemainderSimpleBlockSum
+            (posJ a 2)
+        ≤ Cprop * (posJ a 2 : ℚ) * c (posJ a 2))
+    (hmiddle :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpLowMiddleRemainderSimpleBlockSum
+            (posJ a 2)
+        ≤ Cmiddle * (posJ a 2 : ℚ) * c (posJ a 2))
+    (hveryLow :
+      (4 : ℚ) * (2 : ℚ)^(posJ a 2) *
+          positiveLargeTailSoloSharpVeryLowDegreeRemainderBlockSum
+            (posJ a 2)
+        ≤ CveryLow * (posJ a 2 : ℚ) * c (posJ a 2))
+    (hbudget : Cprop + Cmiddle + CveryLow ≤ 150) :
+    positiveSmallFirstCellSharpOwnEdgeConstCleared a :=
+  positiveSmallFirstCellSharpOwnEdgeConstCleared_of_largeDegreeRemainder ha
+    (positiveLargeTailSoloSharpLargeDegreeRemainderBlockSum_scaled_le_const_of_prop_lowMiddle_veryLow
+      (a := posJ a 2) (show 802 ≤ posJ a 2 by
+        unfold posJ
+        omega)
+      hprop hmiddle hveryLow hbudget)
+
 /-- The sharp recurrence-level `Qq` majorant is monotone in the rectangle
 parameter. -/
 theorem QqSharpGcompBound_mono_N {N M m : Nat} (hNM : N ≤ M) :
