@@ -23137,6 +23137,143 @@ theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_mono_N
     positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
   exact positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_mono_N hNM
 
+/-- Multiplicative rectangle-edge scaling for the sharp factorial-only inner
+closed-composition sum.  Active inner terms have nonlinear degree at most the
+remaining total degree, so the slack factor is `R^p`. -/
+theorem positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_scaled_of_natCast_le
+    {N M p : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial M p
+      ≤ R^p * positiveLargeTailSoloSharpGcompClosedInnerFactorial N p := by
+  have hR0 : 0 ≤ R := by linarith
+  unfold positiveLargeTailSoloSharpGcompClosedInnerFactorial
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun r hr => ?_
+  let C : ℚ :=
+    3^p *
+      (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)
+  have hr_le_p : r ≤ p := by
+    have hpred := (Finset.mem_filter.mp hr).2
+    rcases hpred with hzero | hpos
+    · omega
+    · omega
+  have hbase :
+      (2 * (M : ℚ)) / 25 ≤ R * ((2 * (N : ℚ)) / 25) := by
+    nlinarith
+  have hpow_base :
+      ((2 * (M : ℚ)) / 25)^r
+        ≤ (R * ((2 * (N : ℚ)) / 25))^r :=
+    pow_le_pow_left₀ (by positivity : 0 ≤ (2 * (M : ℚ)) / 25)
+      hbase r
+  have hpow_scaled :
+      ((2 * (M : ℚ)) / 25)^r
+        ≤ R^p * ((2 * (N : ℚ)) / 25)^r := by
+    have hRpow : R^r ≤ R^p := pow_le_pow_right₀ hR1 hr_le_p
+    have hNpow_nonneg : 0 ≤ ((2 * (N : ℚ)) / 25)^r := by positivity
+    calc
+      ((2 * (M : ℚ)) / 25)^r
+          ≤ R^r * ((2 * (N : ℚ)) / 25)^r := by
+            simpa [mul_pow] using hpow_base
+      _ ≤ R^p * ((2 * (N : ℚ)) / 25)^r :=
+          mul_le_mul_of_nonneg_right hRpow hNpow_nonneg
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  calc
+    ((2 * (M : ℚ)) / 25)^r * 3^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)
+        = ((2 * (M : ℚ)) / 25)^r * C := by
+          dsimp [C]
+          ring
+    _ ≤ (R^p * ((2 * (N : ℚ)) / 25)^r) * C :=
+          mul_le_mul_of_nonneg_right hpow_scaled hC_nonneg
+    _ = R^p *
+        (((2 * (N : ℚ)) / 25)^r * 3^p *
+          (4^(r - 1) * ((p - 2*r + 1).factorial : ℚ)) /
+        (r.factorial : ℚ)) := by
+          dsimp [C]
+          ring
+
+/-- Multiplicative rectangle-edge scaling for the sharp factorial-only block
+sum.  Each term has total `N`-degree at most `a`. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_le_scaled_of_natCast_le
+    {N M a : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a M
+      ≤ R^a * positiveLargeTailSoloSharpGcompClosedFactorialBlockSum a N := by
+  have hR0 : 0 ≤ R := by linarith
+  unfold positiveLargeTailSoloSharpGcompClosedFactorialBlockSum
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun s hs => ?_
+  have hsle : s ≤ a := by
+    have hslt : s < a + 1 := by simpa using hs
+    omega
+  have hlin :
+      (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ))
+        ≤ R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) :=
+    positiveLargeTailYGcompClosedFactorialLinear_le_scaled_of_natCast_le
+      hM
+  have hinner :
+      positiveLargeTailSoloSharpGcompClosedInnerFactorial M (a - s)
+        ≤ R^(a - s) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s) :=
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial_le_scaled_of_natCast_le
+      hR1 hM
+  have hinner_nonneg :
+      0 ≤ positiveLargeTailSoloSharpGcompClosedInnerFactorial M (a - s) :=
+    positiveLargeTailSoloSharpGcompClosedInnerFactorial_nonneg M (a - s)
+  have hlinN_nonneg :
+      0 ≤ (((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) := by
+    rw [c_one]
+    positivity
+  have hlin_scaled_nonneg :
+      0 ≤ R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ)) :=
+    mul_nonneg (pow_nonneg hR0 s) hlinN_nonneg
+  have hprod :
+      (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial M (a - s)
+        ≤
+      (R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ))) *
+        (R^(a - s) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s)) :=
+    mul_le_mul hlin hinner hinner_nonneg hlin_scaled_nonneg
+  have hpow : R^s * R^(a - s) = R^a := by
+    rw [← pow_add]
+    congr 1
+    omega
+  calc
+    (((M : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial M (a - s)
+        ≤
+      (R^s * (((N : ℚ) / 2 * c 1 / 2)^s /
+          (s.factorial : ℚ))) *
+        (R^(a - s) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s)) :=
+          hprod
+    _ = R^a *
+        ((((N : ℚ) / 2 * c 1 / 2)^s / (s.factorial : ℚ)) *
+          positiveLargeTailSoloSharpGcompClosedInnerFactorial N (a - s)) := by
+          rw [← hpow]
+          ring
+
+/-- Split-final-term form of the multiplicative rectangle-edge scaling for
+the sharp factorial-only block sum. -/
+theorem positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_le_scaled_of_natCast_le
+    {N M a : Nat} {R : ℚ} (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a M
+      ≤ R^a * positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum a N := by
+  rw [positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum,
+    positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum_eq_factorialBlockSum]
+  exact
+    positiveLargeTailSoloSharpGcompClosedFactorialBlockSum_le_scaled_of_natCast_le
+      hR1 hM
+
 /-- Pointwise Δ-budget for the sharp nonlinear solo inner block.
 
 The `r = 1` closed-composition term is kept explicitly; the `r ≥ 2` tail is
