@@ -17322,6 +17322,42 @@ theorem positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_le_scaled_
       (positiveLargeTailProductXClosedFactorialSplitBlockBound_nonneg a N k)
   exact mul_le_mul hX hY hYnonneg hXscaled_nonneg
 
+/-- Combined product-side split-factorial block scaling with the total
+degree collapsed to `a`.  This is the form expected by product-tail
+surrogates: once `k ≤ a`, the `X` degree `k` and the `Y` degree `a-k` consume
+a single `R^a` edge factor. -/
+theorem positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_le_scaled_degree_of_natCast_le
+    {a N M k : Nat} {R : ℚ} (hk : k ≤ a) (hR1 : 1 ≤ R)
+    (hM : (M : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a M k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a M k
+      ≤
+    R^a *
+      (positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k) := by
+  have hscaled :=
+    positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_le_scaled_of_natCast_le
+      (a := a) (N := N) (M := M) (k := k) hR1 hM
+  have hsum : k + posJ a k = a := by
+    unfold posJ
+    omega
+  calc
+    positiveLargeTailProductXClosedFactorialSplitBlockBound a M k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a M k
+        ≤
+      (R^k * positiveLargeTailProductXClosedFactorialSplitBlockBound a N k) *
+        (R^(posJ a k) *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound a N k) :=
+          hscaled
+    _ = (R^k * R^(posJ a k)) *
+        (positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound a N k) := by
+          ring
+    _ = R^a *
+        (positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+          positiveLargeTailProductYClosedFactorialSplitBlockBound a N k) := by
+          rw [← pow_add, hsum]
+
 theorem positiveLargeTailProductXClosedActiveBlockBound_eq_closedBlockBound
     (a N k : Nat) :
     positiveLargeTailProductXClosedActiveBlockBound a N k =
@@ -17573,6 +17609,25 @@ def positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
     (a k : Nat) : ℚ :=
   positiveLargeTailProductXClosedFactorialSplitBlockBound a (posNhi a) k *
     positiveLargeTailProductYClosedFactorialSplitBlockBound a (posNhi a) k
+
+/-- Upper-edge product scaling with the total degree collapsed to `a`.  This
+specializes
+`positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_le_scaled_degree_of_natCast_le`
+to the surrogate-bound field used by the completion-facing product
+certificate. -/
+theorem positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct_le_scaled_degree_of_natCast_le
+    {a N k : Nat} {R : ℚ} (hk : k ≤ a) (hR1 : 1 ≤ R)
+    (hNhi : (posNhi a : ℚ) ≤ R * (N : ℚ)) :
+    positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+      ≤
+    R^a *
+      (positiveLargeTailProductXClosedFactorialSplitBlockBound a N k *
+        positiveLargeTailProductYClosedFactorialSplitBlockBound a N k) := by
+  unfold positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct
+  exact
+    positiveLargeTailProductClosedFactorialSplitBlockBoundProduct_le_scaled_degree_of_natCast_le
+      (a := a) (N := N) (M := posNhi a) (k := k)
+      hk hR1 hNhi
 
 /-- Exact upper-edge `X` split-factorial product bound, exposed as a
 surrogate function for the full-hybrid generated-prefix route.
