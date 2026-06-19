@@ -3369,6 +3369,44 @@ theorem LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellClosedBudgetAnd
           (positiveSmallFirstCellShiftedSoloFiftyFastExpBudget_of_large ha))
     hsmallGeThree htemperedGeThree
 
+/-- Product-tail constructor using the existing fast solo upper-edge
+certificate as the first-cell input.
+
+This does not change the mathematical route: the `k = 2` product cell is
+still paid for by the shifted solo upper edge.  It only records the Lean-side
+reindexing from `a ≥ 3000` to `j = a - 2 ≥ 2998`, so future proof producers
+that close the standard fast solo upper-edge certificate can feed the live
+product certificate directly. -/
+theorem LargeTailProductCertificate.ofSoloFastUpperEdgeBoundCertificateAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    {xyBound : Nat → Nat → ℚ} {soloBound : Nat → ℚ}
+    (hsoloFast :
+      PositiveSaddleLargeTailSoloFastUpperEdgeBoundCertificate soloBound)
+    (hproductBound :
+      ∀ {a k : Nat}, 3000 ≤ a → k ∈ positiveKRange a →
+        3 ≤ k →
+        positiveLargeTailProductClosedFactorialSplitBlockUpperEdgeProduct a k
+          ≤ xyBound a k)
+    (hsmallGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → k ≤ ceilSqrt (posNhi a) → 3 ≤ k →
+          positiveLargeTailSmallProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k)
+    (htemperedGeThree :
+      ∀ {a k : Nat}, 3000 ≤ a →
+        k ∈ positiveKRange a → ceilSqrt (posNlo a) < k →
+          (k < 361 ∨ 40 * k < 3 * posNhi a) → 3 ≤ k →
+          positiveLargeTailTemperedProductFastUpperEdgeLowerNProductBoundScalar
+            xyBound a k) :
+    LargeTailProductCertificate :=
+  LargeTailProductCertificate.ofShiftedSoloOwnEdgeFirstCellClosedBudgetAndFastUpperEdgeLowerNProductBoundGeThreeNatSignLockComplement
+    (xyBound := xyBound)
+    (by
+      intro a ha
+      exact hsoloFast.toUpperEdge (a := posJ a 2) (by
+        unfold posJ
+        omega))
+    hproductBound hsmallGeThree htemperedGeThree
+
 /-- Compatibility constructor from the existing exact upper-edge/lower-`N`
 fast split-final-term scalar package.
 
