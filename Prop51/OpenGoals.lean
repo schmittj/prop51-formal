@@ -6257,6 +6257,28 @@ theorem completion_of_three_inputs
         pointwise
         positiveSaddleLargeTailCandidateRawClearedUnitReserveBoundsCertificate_hybridClosed)
 
+/-- Finite-solo bridge for the sharp direct-saddle route.
+
+The finite window still needs a proof of the sharp saddle-cleared predicate,
+but after `PositiveSaddle`'s scalar estimate is generalized to `a ≥ 401`,
+that predicate is enough to supply the exact bounded solo budget consumed by
+`BoundedPositiveCertificate.ofDirectSaddle`. -/
+theorem finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared
+    (hsharp :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget := by
+  intro a N ha h2000 hrect
+  have hunit :
+      (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 :=
+    positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared_of_ge_401
+      ha hrect (hsharp ha h2000 hrect)
+  rw [normalizedSoloTerm_eq_dyadic_Ynorm
+    (positiveRectangle_N_pos (by omega : 2 ≤ a) hrect)
+    (by omega : 1 ≤ a)] at hunit
+  exact le_positiveSoloBudget_of_mul_200000000_le_one hunit
+
 /-- Current completion theorem after the direct product route.
 
 The finite and prefix product obligations and the large-tail product/solo

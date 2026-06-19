@@ -17661,8 +17661,8 @@ input is the saddle estimate
 def positiveLargeTailSoloTenSeventhsBound (a N : Nat) : ℚ :=
   (29 / 2 : ℚ) * ((a : ℚ) / (N : ℚ)) * (10 / 7 : ℚ)^a
 
-theorem positiveRectangle_self_div_N_le_one_fifth
-    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+theorem positiveRectangle_self_div_N_le_one_fifth_of_ge_seven
+    {a N : Nat} (ha : 7 ≤ a) (hrect : positiveRectangle a N) :
     (a : ℚ) / (N : ℚ) ≤ 1 / 5 := by
   have hNpos : (0 : ℚ) < (N : ℚ) := by
     exact_mod_cast positiveRectangle_N_pos (by omega : 2 ≤ a) hrect
@@ -17676,33 +17676,47 @@ theorem positiveRectangle_self_div_N_le_one_fifth
     exact_mod_cast h5aN
   nlinarith
 
+theorem positiveRectangle_self_div_N_le_one_fifth
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+    (a : ℚ) / (N : ℚ) ≤ 1 / 5 :=
+  positiveRectangle_self_div_N_le_one_fifth_of_ge_seven
+    (by omega : 7 ≤ a) hrect
+
 def positiveLargeTailSoloTenSeventhsScalarCoarseTerm (a : Nat) : ℚ :=
   (290000000 : ℚ) * (5 / 7 : ℚ)^a
 
-theorem positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one
-    {a : Nat} (ha : 2000 < a) :
+theorem positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one_of_ge_401
+    {a : Nat} (ha : 401 ≤ a) :
     positiveLargeTailSoloTenSeventhsScalarCoarseTerm a ≤ 1 := by
   have hpow :
-      (5 / 7 : ℚ)^a ≤ (5 / 7 : ℚ)^2001 :=
+      (5 / 7 : ℚ)^a ≤ (5 / 7 : ℚ)^401 :=
     rat_pow_le_pow_of_le_one
       (by norm_num : (0 : ℚ) ≤ 5 / 7)
       (by norm_num : (5 / 7 : ℚ) ≤ 1)
-      (by omega : 2001 ≤ a)
+      ha
   have hbase :
-      positiveLargeTailSoloTenSeventhsScalarCoarseTerm 2001 ≤ 1 := by
+      positiveLargeTailSoloTenSeventhsScalarCoarseTerm 401 ≤ 1 := by
     native_decide
   unfold positiveLargeTailSoloTenSeventhsScalarCoarseTerm at *
   exact
     (mul_le_mul_of_nonneg_left hpow
       (by norm_num : (0 : ℚ) ≤ 290000000)).trans hbase
 
-theorem positiveLargeTailSoloTenSeventhsScalarBudget
-    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+theorem positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one
+    {a : Nat} (ha : 2000 < a) :
+    positiveLargeTailSoloTenSeventhsScalarCoarseTerm a ≤ 1 :=
+  positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one_of_ge_401
+    (by omega : 401 ≤ a)
+
+theorem positiveLargeTailSoloTenSeventhsScalarBudget_of_ge_401
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N) :
     (200000000 : ℚ) *
         (positiveDyadicDecay a / 2 *
           positiveLargeTailSoloTenSeventhsBound a N)
       ≤ 1 := by
-  have hratio := positiveRectangle_self_div_N_le_one_fifth ha hrect
+  have hratio :=
+    positiveRectangle_self_div_N_le_one_fifth_of_ge_seven
+      (by omega : 7 ≤ a) hrect
   have hpow_nonneg : 0 ≤ (10 / 7 : ℚ)^a := by positivity
   have hbound :
       positiveLargeTailSoloTenSeventhsBound a N
@@ -17765,7 +17779,17 @@ theorem positiveLargeTailSoloTenSeventhsScalarBudget
   exact hscaled.trans
     (by
       rw [hcoarse]
-      exact positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one ha)
+      exact positiveLargeTailSoloTenSeventhsScalarCoarseTerm_le_one_of_ge_401
+        ha)
+
+theorem positiveLargeTailSoloTenSeventhsScalarBudget
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N) :
+    (200000000 : ℚ) *
+        (positiveDyadicDecay a / 2 *
+          positiveLargeTailSoloTenSeventhsBound a N)
+      ≤ 1 :=
+  positiveLargeTailSoloTenSeventhsScalarBudget_of_ge_401
+    (by omega : 401 ≤ a) hrect
 
 theorem positiveSaddleLargeTailSoloYBoundCertificate_tenSevenths
     (hY :
@@ -31335,8 +31359,8 @@ theorem positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared_of_blockSum
   have hscale : 0 ≤ (4 : ℚ) * (2 : ℚ)^a := by positivity
   exact (mul_le_mul_of_nonneg_left hQ_le_block hscale).trans h
 
-theorem positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
-    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+theorem positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared_of_ge_401
+    {a N : Nat} (ha : 401 ≤ a) (hrect : positiveRectangle a N)
     (h :
       positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
     (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 := by
@@ -31384,12 +31408,21 @@ theorem positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
         field_simp [hden_pos.ne', hpow_pos.ne', hca_pos.ne']
         ring
       rw [hrew]
-      exact positiveLargeTailSoloTenSeventhsScalarBudget ha hrect
+      exact positiveLargeTailSoloTenSeventhsScalarBudget_of_ge_401
+        ha hrect
     exact
       (mul_le_mul_of_nonneg_left hnorm
         (by norm_num : (0 : ℚ) ≤ 200000000)).trans htarget
   exact positiveLargeTailSoloNormUnit_of_sharp_unit hN
     (by omega : 1 ≤ a) hsharpUnit
+
+theorem positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared
+    {a N : Nat} (ha : 2000 < a) (hrect : positiveRectangle a N)
+    (h :
+      positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    (200000000 : ℚ) * normalizedSoloTerm a N ≤ 1 :=
+  positiveLargeTailSoloNormUnit_of_sharpGcompSaddleTenSeventhsCleared_of_ge_401
+    (by omega : 401 ≤ a) hrect h
 
 /-- Convert the cleared solo `Gcomp` saddle estimate into the practical
 `(10/7)^a` large-tail solo envelope. -/

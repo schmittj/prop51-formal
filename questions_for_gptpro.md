@@ -1,68 +1,86 @@
 # Questions for GPT Pro
 
-The current Lean dashboard is still:
+Current Lean state after reading `answer_by_gptpro.md`:
 
 ```lean
-theorem coefficientNegativity
-    (hbounded : BoundedPositiveCertificate)
-    (hproduct : LargeTailProductCertificate) :
+theorem completion_of_directSaddle_finiteSolo
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget) :
     CoefficientNegativity
 ```
 
-After reading `completion_advice2.md`, I benchmarked the direct exact
-raw-product finite route.  A single contiguous atom
+The direct raw-cleared product path and the large/prefix solo path are already
+wired in Lean.  The latest GPT Pro note correctly says to use
+`PositiveSaddleLargeTailProductPrefixPointwise.ofRawCleared` and
+`LargeTailProductCertificate.ofRawCleared`; that is now the current route.
+The remaining exposed input is finite solo for `401 ≤ a ≤ 2000`.
+
+I added a Lean bridge reducing finite solo to the sharp saddle-cleared target:
 
 ```lean
-checkPositiveXYProductRawClearedTableFixedNIndexRowRangeKChunk
-  20 401 1 0 1 5 = true
+theorem finiteSoloBudget_of_sharpGcompSaddleTenSeventhsCleared
+    (hsharp :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N) :
+    ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+      positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget
 ```
 
-does compile, but takes about 50s and 2.84GB.  Smaller atoms:
-
-- `nLen = 1, kLen = 1`: about 3.2s, 2.83GB.
-- `nLen = 10, kLen = 1`: about 17s, 2.83GB.
-- `nLen = 10, kLen = 5`: about 25s, 2.84GB.
-
-This makes a full exact finite grid possible only with very many shards and a
-careful build plan, so the analytic saddle lemma route is much more attractive.
-
-Please supply the most Lean-friendly proof outline for the two product saddle
-inequalities below, with explicit monotonicity or ratio steps and constants
-that can be formalized by rational arithmetic.
-
-1. Finite bounded product, small branch:
+This works because the scalar `(10/7)^a` budget has now been generalized to
+`a ≥ 401`.  So the main missing proof can be any Lean-friendly proof of:
 
 ```lean
-∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
-  k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
-    Xnorm N k * Ynorm N (posJ a k)
-      ≤ positiveSmallXYProductBound a N k
+∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+  positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared a N
 ```
 
-The tangent route has the slightly sharper target
-`positiveSmallXYProductTangentBound a N k`; either is useful.
-
-2. Finite bounded product, tempered branch:
+Equivalently, it is enough to prove the upper-edge version:
 
 ```lean
-∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
-  k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
-    Xnorm N k * Ynorm N (posJ a k)
-      ≤ positiveTemperedXYProductBound a N k
+∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+  positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared
+    a (posNhi a)
 ```
 
-3. Large tail product, starting at `k ≥ 4`, for the frozen constructor:
+or the delta-budget upper-edge version:
 
 ```lean
-LargeTailProductCertificate
-  .ofClosedExactUpperEdgeProductGeFourNatSignLockComplement
+∀ {a : Nat}, 401 ≤ a → a ≤ 2000 →
+  (4 : ℚ) * (2 : ℚ)^a *
+      positiveLargeTailSoloSharpDeltaBudgetBlockSum a (posNhi a)
+    ≤ 29 * (a : ℚ) * c a * (10 / 7 : ℚ)^a
 ```
 
-It requires `hsmallGeFour` and `htemperedGeFour` for
-`positiveLargeTailProductXUpperEdgeExactBound a k *
- positiveLargeTailProductYUpperEdgeExactBound a k`.
+Relevant Lean facts already available:
 
-Most useful would be a proof that avoids expanding a number of summands
-proportional to `a`: for example a first-term-plus-ratio bound, endpoint
-monotonicity in `a,k`, or a simple rational surrogate `xyBound` strong enough
-for both scalar fields.
+- `positiveLargeTailSoloSharpDeltaBudgetBlockSum_upperEdge_le_largeDegreeSplit`
+  reduces the upper edge to
+  `positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum a`.
+- `positiveLargeTailSoloSharpLargeDegreeSplitBudgetBlockSum_scaled_le_target_of_const`
+  proves the target for `a ≥ 2001`.
+- The bottleneck for lowering this is the very-low/deep-low part of the sharp
+  solo split.  Many crude inequalities work from `a ≥ 2001`; lowering all the
+  way to `401` is not just changing hypotheses.
+
+Finite displayed-solo generation currently looks too slow:
+
+- existing `10` rows by first `20` N-values budget atom:
+  about 31 seconds;
+- existing `10` rows by first `20` N-values saddle atom with cached scaled exp:
+  about 115 seconds;
+- one `100` rows by `100` N-values budget/saddle probe timed out at 240 seconds.
+
+Questions:
+
+1. What is the most direct analytic proof of the sharp finite-solo target for
+   `401 ≤ a ≤ 2000`, preferably by modifying the existing sharp split and not
+   introducing a large generated table?
+2. If a hybrid proof is best, what threshold should the analytic proof cover
+   and what finite residue should be generated?
+3. Is there a sharper finite-window scalar/envelope than `(10/7)^a` that makes
+   the deep-low/tiny proof easier below `2001`, while still fitting the
+   `positiveSoloBudget = 1 / 200000000` budget?
+4. If generation is unavoidable, can the displayed-solo saddle checker be
+   replaced by a row-level or interval-level rational certificate that avoids
+   evaluating all `N` cells?
