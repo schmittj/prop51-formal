@@ -2458,6 +2458,15 @@ theorem positiveSoloDisplayedYSaddleCleared_of_checkCell {a N : Nat}
   rw [← QListQ_getD_eq N a a le_rfl]
   exact of_decide_eq_true h
 
+theorem checkPositiveSoloDisplayedYSaddleClearedCell_of_positiveSoloDisplayedYSaddleCleared
+    {a N : Nat} (h : positiveSoloDisplayedYSaddleCleared a N) :
+    checkPositiveSoloDisplayedYSaddleClearedCell a N = true := by
+  unfold checkPositiveSoloDisplayedYSaddleClearedCell
+  apply decide_eq_true
+  unfold positiveSoloDisplayedYSaddleCleared at h
+  rw [← QListQ_getD_eq N a a le_rfl] at h
+  exact h
+
 /-- Soundness of one executable solo-bound row check. -/
 theorem positiveSoloGcompBound_of_checkRow {a N : Nat}
     (h : checkPositiveSoloGcompRow a = true)
