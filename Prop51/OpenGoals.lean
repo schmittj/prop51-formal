@@ -511,6 +511,66 @@ def BoundedPositiveCertificate.ofScaledEdgeMajorantDirectPrefix
     (BoundedMajorantBudgetCertificate.ofScaledEdge small tempered soloY)
     productPrefix soloPrefix
 
+/-- Direct combined-product bounded-majorant constructor with the generated
+scaled edge budget inserted.
+
+This is the proof surface for the bounded checker once the retained positive
+cells are reduced to combined `X_k(N) * Y_{a-k}(N)` estimates.  Lean handles the
+`Bq N k ≤ 0` shortcut and the normalized-summand bookkeeping here; the checker
+only has to supply the positive-`Bq` product inequalities and the finite solo
+budget. -/
+def BoundedMajorantBudgetCertificate.ofCombinedProductScaledEdge
+    (smallXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget) :
+    BoundedMajorantBudgetCertificate where
+  small := by
+    intro a N k ha ha2000 hrect hk hsmall
+    exact normalizedPositiveIfTerm_le_smallMajorant_of_XYProduct
+      ha ha2000 hrect hk
+      (fun hB => smallXY ha ha2000 hrect hk hsmall hB)
+  tempered := by
+    intro a N k ha ha2000 hrect hk htempered
+    exact normalizedPositiveIfTerm_le_temperedMajorant_of_XYProduct
+      ha ha2000 hrect hk htempered
+      (fun hB => temperedXY ha ha2000 hrect hk htempered hB)
+  soloY := soloY
+  edgeBudget := positiveSaddleFiniteScaledEdgeBudget
+
+/-- Completion-facing combined-product bounded constructor with direct prefix
+fields and the generated scaled edge budget inserted. -/
+def BoundedPositiveCertificate.ofCombinedProductScaledEdgeMajorantDirectPrefix
+    (smallXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → k ≤ ceilSqrt N → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveSmallXYProductBound a N k)
+    (temperedXY :
+      ∀ {a N k : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        k ∈ positiveKRange a → ceilSqrt N < k → 0 < Bq N k →
+          Xnorm N k * Ynorm N (posJ a k) ≤
+            positiveTemperedXYProductBound a N k)
+    (soloY :
+      ∀ {a N : Nat}, 401 ≤ a → a ≤ 2000 → positiveRectangle a N →
+        positiveDyadicDecay a / 2 * Ynorm N a ≤ positiveSoloBudget)
+    (productPrefix : PositiveSaddleLargeTailProductPrefixPointwise)
+    (soloPrefix : PositiveSaddleLargeTailSoloPrefixNormUnit) :
+    BoundedPositiveCertificate :=
+  BoundedPositiveCertificate.ofMajorantBudgetDirectPrefix
+    (BoundedMajorantBudgetCertificate.ofCombinedProductScaledEdge
+      smallXY temperedXY soloY)
+    productPrefix soloPrefix
+
 /-- Compatibility constructor for the previous bounded route, which supplies
 the edge budget through fixed row/`k` chunks. -/
 def BoundedPositiveCertificate.ofActiveAnalyticFixedEdge
