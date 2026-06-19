@@ -3866,7 +3866,7 @@ theorem DeltaRatFarTermBound_le_inv_fourth (r : Nat) (hr : 61 ≤ r) :
   | zero =>
       simpa using DeltaRatFarTermBound_61_le_inv_fourth
   | succ k ih =>
-      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 61 ≤ 61+k)
+      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 34 ≤ 61+k)
       have hden₁ : (0:ℚ) < 10^10 * ((61+k : Nat) : ℚ)^4 := by positivity
       have hden₂ : (0:ℚ) < 10^10 * ((61+(k+1) : Nat) : ℚ)^4 := by positivity
       calc
@@ -3956,7 +3956,7 @@ theorem DeltaRatFar_le_delta_three_reserve
   let a : Nat := p/4 + 1
   have hfar := DeltaRatFar_le_two_first
     (p := p) (N := (N : ℚ)) (by positivity : (0 : ℚ) ≤ (N : ℚ))
-    hN20 (by omega : 240 ≤ p)
+    hN20 (by omega : 132 ≤ p)
   have hfirst := DeltaRatFarTermBound_le_inv_fourth a (by
     unfold a
     omega)

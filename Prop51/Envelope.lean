@@ -779,7 +779,7 @@ private theorem DeltaRatFarTermBound_succ_ratio (r : Nat) (hr : 1 ≤ r) :
   push_cast
   ring_nf
 
-theorem DeltaRatFarTermBound_succ_le_half (r : Nat) (hr : 61 ≤ r) :
+theorem DeltaRatFarTermBound_succ_le_half (r : Nat) (hr : 34 ≤ r) :
     DeltaRatFarTermBound (r+1) ≤ DeltaRatFarTermBound r * (1/2) := by
   have hr1 : 1 ≤ r := by omega
   have hrQ : (0:ℚ) < r := by exact_mod_cast (by omega : 0 < r)
@@ -805,7 +805,7 @@ theorem DeltaRatFarTermBound_succ_le_half (r : Nat) (hr : 61 ≤ r) :
           / (((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ)))) ≤ 1/2 := by
     rw [hratio_base]
     rw [div_le_iff₀ hden_pos]
-    have hr61 : (61:ℚ) ≤ r := by exact_mod_cast hr
+    have hr34 : (34:ℚ) ≤ r := by exact_mod_cast hr
     have hden_cast :
         (((2*r : Nat) : ℚ) * (((2*r + 1 : Nat) : ℚ))
           = (2*(r:ℚ)) * (2*(r:ℚ)+1)) := by
@@ -852,7 +852,7 @@ private theorem sum_Icc_eq_shift_from (F : Nat → ℚ) (a b : Nat) :
     omega
   rw [hIccIco, Finset.sum_Ico_eq_sum_range]
 
-theorem DeltaRatFarTermBound_Icc_sum_le_two_first (a b : Nat) (ha : 61 ≤ a) :
+theorem DeltaRatFarTermBound_Icc_sum_le_two_first (a b : Nat) (ha : 34 ≤ a) :
     ∑ r ∈ Finset.Icc a b, DeltaRatFarTermBound r
       ≤ 2 * DeltaRatFarTermBound a := by
   by_cases hab : a ≤ b
@@ -884,12 +884,104 @@ theorem DeltaRatFarTermBound_Icc_sum_le_two_first (a b : Nat) (ha : 61 ≤ a) :
     exact mul_nonneg (by norm_num) (DeltaRatFarTermBound_nonneg a)
 
 theorem DeltaRatFar_le_two_first (p : Nat) {N : ℚ}
-    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 240 ≤ p) :
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 132 ≤ p) :
     DeltaRatFar p N ≤ 2 * DeltaRatFarTermBound (p/4 + 1) := by
   have hfar := DeltaRatFar_le_termBound p hN hN20
   have hsum :=
     DeltaRatFarTermBound_Icc_sum_le_two_first (p/4 + 1) (p/2) (by omega)
   exact hfar.trans hsum
+
+private theorem DeltaRatFarTermBound_34_le_inv_two_thousand :
+    DeltaRatFarTermBound 34 ≤ 1 / 2000 := by
+  native_decide
+
+theorem DeltaRatFar_le_one_thousand_of_ge_134 (p : Nat) {N : ℚ}
+    (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 134 ≤ p) :
+    DeltaRatFar p N ≤ 1 / 1000 := by
+  have hfar := DeltaRatFar_le_termBound p hN hN20
+  have hsubset :
+      ∑ r ∈ Finset.Icc (p/4 + 1) (p/2), DeltaRatFarTermBound r
+        ≤ ∑ r ∈ Finset.Icc 34 (p/2), DeltaRatFarTermBound r := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ ?_
+    · intro r hr
+      obtain ⟨hrlo, hrhi⟩ := Finset.mem_Icc.mp hr
+      exact Finset.mem_Icc.mpr ⟨by omega, hrhi⟩
+    · intro r _hrBig _hrSmall
+      exact DeltaRatFarTermBound_nonneg r
+  have hsum :
+      ∑ r ∈ Finset.Icc 34 (p/2), DeltaRatFarTermBound r
+        ≤ 2 * DeltaRatFarTermBound 34 :=
+    DeltaRatFarTermBound_Icc_sum_le_two_first 34 (p/2) (by omega)
+  calc
+    DeltaRatFar p N
+        ≤ ∑ r ∈ Finset.Icc (p/4 + 1) (p/2),
+            DeltaRatFarTermBound r := hfar
+    _ ≤ ∑ r ∈ Finset.Icc 34 (p/2), DeltaRatFarTermBound r := hsubset
+    _ ≤ 2 * DeltaRatFarTermBound 34 := hsum
+    _ ≤ 2 * (1 / 2000 : ℚ) := by
+          exact mul_le_mul_of_nonneg_left
+            DeltaRatFarTermBound_34_le_inv_two_thousand (by norm_num)
+    _ = 1 / 1000 := by norm_num
+
+theorem DeltaNearGeomBound_le_59_1000_of_ge_134 (p : Nat)
+    (hp : 134 ≤ p) :
+    DeltaNearGeomBound p 18 ≤ 59 / 1000 := by
+  have hpQ : (0:ℚ) < p := by exact_mod_cast (by omega : 0 < p)
+  have hp134Q : (134:ℚ) ≤ p := by exact_mod_cast hp
+  have htail :
+      1 / (1 - DeltaNearRatio p 18) ≤ 17/15 := by
+    have hqle : DeltaNearRatio p 18 ≤ 2/17 := by
+      unfold DeltaNearRatio
+      have hden : (0:ℚ) < 75 * (p:ℚ) := by positivity
+      rw [div_le_iff₀ hden]
+      nlinarith
+    have hlow : (15/17:ℚ) ≤ 1 - DeltaNearRatio p 18 := by linarith
+    calc
+      1 / (1 - DeltaNearRatio p 18) ≤ 1 / (15/17:ℚ) :=
+        one_div_le_one_div_of_le (by norm_num) hlow
+      _ = 17/15 := by norm_num
+  have htail_nonneg : 0 ≤ 1 / (1 - DeltaNearRatio p 18) := by
+    have hq1 := DeltaNearRatio_lt_one_of_le_20 p (R := (18:ℚ))
+      (by norm_num) (by omega)
+    have hpos : (0:ℚ) < 1 - DeltaNearRatio p 18 := by linarith
+    exact one_div_nonneg.mpr hpos.le
+  have hmain :
+      ((1152/3125) * (18:ℚ) * (p:ℚ)
+          / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ))))
+        ≤ 13 / 250 := by
+    rw [Nat.cast_sub (by omega : 1 ≤ p),
+      Nat.cast_sub (by omega : 2 ≤ p)]
+    change
+      (1152 / 3125 : ℚ) * 18 * (p:ℚ) /
+          (((p:ℚ) - 1) * ((p:ℚ) - 2)) ≤ 13 / 250
+    have hden' : (0:ℚ) < ((p:ℚ)-1) * ((p:ℚ)-2) := by nlinarith
+    rw [div_le_iff₀ hden']
+    nlinarith
+  unfold DeltaNearGeomBound
+  calc
+    ((1152/3125) * (18:ℚ) * (p:ℚ)
+        / ((((p-1 : Nat) : ℚ) * ((p-2 : Nat) : ℚ)))
+      * (1 / (1 - DeltaNearRatio p 18)))
+      ≤ (13 / 250) * (17/15) :=
+        mul_le_mul hmain htail htail_nonneg (by norm_num)
+    _ ≤ 59 / 1000 := by norm_num
+
+theorem DeltaRat_le_three_fiftieth_of_le_eighteen
+    (p : Nat) {N : ℚ} (hN : 0 ≤ N)
+    (hN18 : N ≤ 18 * (p:ℚ)) (hp : 134 ≤ p) :
+    DeltaRat p N ≤ 3 / 50 := by
+  have hN20 : N ≤ 20 * (p:ℚ) := by
+    have hp_nonneg : 0 ≤ (p:ℚ) := Nat.cast_nonneg p
+    exact hN18.trans (by nlinarith)
+  have hsplit := DeltaRat_le_nearGeomBound_add_far p
+    hN (by norm_num : (0:ℚ) ≤ 18) hN18 (by omega : 8 ≤ p)
+    (DeltaNearRatio_lt_one_of_le_20 p (R := (18:ℚ)) (by norm_num) (by omega))
+  have hnear := DeltaNearGeomBound_le_59_1000_of_ge_134 p hp
+  have hfar := DeltaRatFar_le_one_thousand_of_ge_134 p hN hN20 hp
+  calc
+    DeltaRat p N ≤ DeltaNearGeomBound p 18 + DeltaRatFar p N := hsplit
+    _ ≤ 59 / 1000 + 1 / 1000 := add_le_add hnear hfar
+    _ = 3 / 50 := by norm_num
 
 private theorem DeltaRatFarTermBound_61_le_inv_linear :
     DeltaRatFarTermBound 61 ≤ 1 / (12000 * (61:ℚ)) := by
@@ -928,7 +1020,7 @@ theorem DeltaRatFarTermBound_le_inv_linear (r : Nat) (hr : 61 ≤ r) :
   | zero =>
       simpa using DeltaRatFarTermBound_61_le_inv_linear
   | succ k ih =>
-      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 61 ≤ 61+k)
+      have hstep := DeltaRatFarTermBound_succ_le_half (61+k) (by omega : 34 ≤ 61+k)
       have hden₁ : (0:ℚ) < 12000 * ((61+k : Nat) : ℚ) := by positivity
       have hden₂ : (0:ℚ) < 12000 * ((61+(k+1) : Nat) : ℚ) := by positivity
       calc
@@ -946,7 +1038,7 @@ theorem DeltaRatFarTermBound_le_inv_linear (r : Nat) (hr : 61 ≤ r) :
 theorem DeltaRatFar_le_inv_start (p : Nat) {N : ℚ}
     (hN : 0 ≤ N) (hN20 : N ≤ 20 * (p:ℚ)) (hp : 240 ≤ p) :
     DeltaRatFar p N ≤ 1 / (6000 * ((p/4 + 1 : Nat) : ℚ)) := by
-  have htwo := DeltaRatFar_le_two_first p hN hN20 hp
+  have htwo := DeltaRatFar_le_two_first p hN hN20 (by omega : 132 ≤ p)
   have hfirst := DeltaRatFarTermBound_le_inv_linear (p/4 + 1) (by omega)
   have hden : (0:ℚ) < 12000 * ((p/4 + 1 : Nat) : ℚ) := by positivity
   calc
