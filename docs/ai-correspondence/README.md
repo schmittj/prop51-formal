@@ -28,29 +28,48 @@ repository's Git log.
 
 ## What is archived here
 
-- `claude-code-sessions.md` — curated, redacted excerpt of the two Claude Code
-  CLI sessions: the first formalization push (Claude Fable 5, layers A–B and the
-  start of C) and the "is the worker stuck?" review and paper work (Claude Opus
-  4.8). Human prompts verbatim; AI responses summarized.
-- `codex-sessions.md` — curated, redacted excerpt of the OpenAI Codex CLI
+- `claude-code-sessions.md` — curated, redacted session record of the two Claude
+  Code CLI sessions: the first formalization push (Claude Fable 5, layers A–B and
+  the start of C) and the "is the worker stuck?" review and paper work (Claude
+  Opus 4.8). Human instructions verbatim; AI responses summarized.
+- `codex-sessions.md` — curated, redacted session record of the OpenAI Codex CLI
   completion drive (the analytic tail, sign lock, positive part, the stuck point
   and its repair, and the publication pass), including the verbatim persistent
-  `/goal` prompt. Human prompts verbatim; AI work summarized.
+  `/goal` prompt. Human instructions verbatim; AI work summarized.
 - `answer_by_gptpro.md`, `questions_for_gptpro.md` — the relayed-question
   exchange that diagnosed the false split-product target and prescribed the
-  direct-saddle fix (paper Cards 6–7).
+  direct-saddle fix (paper Cards 6–7). This is one of the decisive AI outputs,
+  retained verbatim.
 
-The two `*-sessions.md` files are the curated raw outputs recommended for
-Level-A/C work: every genuine human turn is reproduced, with the AI side
-summarized. Redaction was limited to local file paths, the author's email, and a
-few incidental references to unrelated projects; the public conversation links
-are retained.
+The two `*-sessions.md` files are curated, redacted session records: every
+on-topic human instruction from the selected sessions is reproduced, with the AI
+side summarized rather than quoted (so they are records, not raw outputs).
+Redaction was limited to local file paths, the author's email, and a few
+incidental references to unrelated projects; the public conversation links are
+retained.
 
 ## What is deliberately not included
 
 The *full, verbatim* command-line-agent transcripts are not archived. They run to
-roughly 185 MB, dominated by build logs and encrypted model-reasoning blobs, and
-the raw streams contain incidental references to unrelated projects on the
-author's machine. The curated `*-sessions.md` files above capture the
+roughly 185 MB, dominated by opaque internal trace payloads and extensive
+tool/build logs, and the raw streams contain incidental references to unrelated
+projects on the author's machine. The curated session records above capture the
 publishable, on-topic content. No credential files were ever part of this
 record.
+
+## Session metadata
+
+| field | record |
+|---|---|
+| interfaces | Claude web, ChatGPT web, Claude Code (CLI), OpenAI Codex CLI |
+| displayed model names | ChatGPT 5.5 Pro, Claude Fable 5, Claude Opus 4.8 |
+| stable API model identifiers | not exposed by the interfaces used |
+| CLI client versions | not separately recorded |
+| permissions granted to CLI agents | shell, file read/write, network; Codex ran with `workspace-write` |
+| context supplied per session | the repository tree and the LaTeX note (plus, later, the relayed external reviews) |
+| tokens / monetary cost | not retained |
+| toolchain | Lean 4.27.0; Mathlib pinned in `lake-manifest.json` |
+| principal artifacts | the Lean formalization, the LaTeX paper, and the certificates in this repository |
+
+`decisive-outputs.md` additionally collects a few verbatim AI responses from the
+moments that changed the proof's direction.

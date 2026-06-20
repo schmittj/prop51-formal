@@ -7,6 +7,8 @@ authors:
   - family-names: Schmitt
     given-names: Johannes
 type: software
+version: "1.0"
+date-released: "2026-06-20"
 license: Apache-2.0
 repository-code: "https://github.com/schmittj/prop51-formal"
 abstract: >-
@@ -24,3 +26,13 @@ keywords:
   - strata of abelian differentials
   - Chen–Larson conjecture
   - hypergeometric series
+preferred-citation:
+  type: article
+  title: >-
+    Strict negativity of a Chen–Larson hypergeometric coefficient:
+    a computer-assisted and formally verified proof
+  authors:
+    - family-names: Schmitt
+      given-names: Johannes
+  year: 2026
+  # url/doi to be filled in on arXiv/Zenodo release

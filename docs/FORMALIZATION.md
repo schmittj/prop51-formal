@@ -865,5 +865,6 @@ docs/DEVELOPMENT_HISTORY.md   formalization plan: Layers A, A′, B, C
 ## Relation to the paper
 
 `paper/prop51.tex` is the human proof this repository formalizes.  Two
-*errata* against its tenth revision, found during formalization review, are
-recorded in `paper/ERRATA.md` (neither affects the conclusions).
+*errata* against the older tenth-revision note, found during formalization
+review, are recorded in `paper/archive/ERRATA_tenth_revision.md` (they are
+addressed in the release paper and affect none of the conclusions).

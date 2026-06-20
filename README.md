@@ -74,7 +74,7 @@ compiler on those steps (`Lean.ofReduceBool`, `Lean.trustCompiler`). The
 ## Repository layout
 
 ```
-paper/             the LaTeX paper (paper/prop51.tex) and compiled PDF, plus ERRATA.md
+paper/             the LaTeX paper (paper/prop51.tex) and compiled PDF; archive/ holds superseded notes
 Prop51/Theorem.lean   public facade: the series, the identity, the final theorems
 Prop51/Statement.lean concise statement of the target proposition
 Prop51/            the proof library (series bridge, majorant, sign lock, direct saddle, …)

@@ -61,7 +61,11 @@ No real analysis; everything is coefficient identities over ℚ.
 ## Layer C — the effective tail `a ≥ 401`
 
 The paper's §§2–6 with explicit constants.  **Design decision (2026-06-12):
-everything is rationalized — no `Real`, no `π`, no `e`, no Mathlib analysis.**
+rationalize as far as practical — work over `ℚ` with rational surrogates for
+the transcendental ingredients, so that essentially no real-analysis is needed
+and `π` never appears.  (One short exception survives in the completed proof:
+the sign-lock `Π_s` log-product bridge in `SignLock.lean` uses `Real.log` /
+`Real.exp` estimates before returning to rational inequalities.)**
 Each transcendental ingredient of the paper is replaced by a rational
 surrogate, with the constant degradation absorbed by the sign-lock budget
 (`2215` allowed vs. `20340` available — an order of magnitude of slack):

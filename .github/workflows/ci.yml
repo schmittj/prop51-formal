@@ -22,10 +22,29 @@ jobs:
         run: |
           ~/.elan/bin/lake env lean scripts/PublicAxiomsReport.lean | tee public_axioms.txt
           ~/.elan/bin/lake env lean scripts/AxiomsReport.lean | tee axioms.txt
-          # No sorries anywhere:
-          ! grep -rn "sorryAx" public_axioms.txt axioms.txt
-          # Only the documented axioms may occur:
-          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|Lean.trustCompiler|depends on axioms|^$" public_axioms.txt axioms.txt | grep -q "axiom"
+      - name: Check public axiom allowlist
+        # Exact parser: no audited theorem may depend on sorryAx or on any axiom
+        # outside the documented allowlist. (A substring grep can hide an
+        # unexpected axiom printed on the same line as an allowed one.)
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, sys
+          allowed = {
+              "propext", "Classical.choice", "Quot.sound",
+              "Lean.ofReduceBool", "Lean.trustCompiler",
+          }
+          text = pathlib.Path("public_axioms.txt").read_text() \
+               + "\n" + pathlib.Path("axioms.txt").read_text()
+          if "sorryAx" in text:
+              sys.exit("FAIL: an audited theorem depends on sorryAx")
+          found = set()
+          for body in re.findall(r"depends on axioms:\s*\[([^\]]*)\]", text):
+              found.update(n.strip() for n in body.split(",") if n.strip())
+          unexpected = found - allowed
+          if unexpected:
+              sys.exit(f"FAIL: unexpected axioms: {sorted(unexpected)}")
+          print("Axiom allowlist OK:", sorted(found))
+          PY
       - name: Python certificate scripts (fast layer)
         run: |
           python3 scripts/positive_saddle_scan.py --quick
@@ -72,8 +91,9 @@ jobs:
             --emit-final --final-tail-atomic-bounds | \
             grep 'PositiveSaddleLargeTailAtomicBoundsAuditCertificate'
 
-  # Build the LaTeX paper so the source cannot silently break or drift from the
-  # committed PDF. Fails on any LaTeX error; runs latexmk (two passes for refs).
+  # Build the LaTeX paper so the source cannot silently become uncompilable.
+  # Fails on any LaTeX error; runs latexmk (two passes for refs). This does NOT
+  # check that the committed PDF matches the freshly built one.
   paper:
     runs-on: ubuntu-latest
     steps:

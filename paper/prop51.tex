@@ -11,6 +11,13 @@
 \usepackage{listings}
 \usepackage{xurl}
 \usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Strict negativity of a Chen--Larson hypergeometric coefficient},
+  pdfauthor={Johannes Schmitt},
+  pdfsubject={A computer-assisted and formally verified proof},
+  pdfkeywords={Lean 4, formal verification, strata of differentials,
+               hypergeometric series, AI-assisted mathematics}
+}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{proposition}[theorem]{Proposition}
@@ -76,7 +83,7 @@
 \title{Strict negativity of a Chen--Larson hypergeometric coefficient\\
 \large A computer-assisted and formally verified proof}
 \author{Johannes Schmitt}
-\date{Draft of 20 June 2026}
+\date{Version 1.0 (20 June 2026)}
 
 \begin{document}
 \maketitle
@@ -97,8 +104,8 @@ $\mu=(m_1,\ldots,m_n)$ is a positive partition of $2g-2$, then
                    {\C(t)^{2g-2+n}}<0.
 \]
 The proof first removes the partition by a coefficientwise majorization.  A
-rational sign-lock estimate then shows that all convolution indices above
-$0.9a$ contribute nonpositively.  The remaining positive part is controlled
+sign-lock estimate with an explicit rational final margin then shows that all
+convolution indices above $0.9a$ contribute nonpositively.  The remaining positive part is controlled
 by a direct saddle method based on finite exponential prefixes, rather than
 on real-analytic exponential estimates.  Small ranges are discharged by
 exact enumeration and verified rational or dyadic interval certificates; the
@@ -250,14 +257,16 @@ of \(t\), by a finite truncation of an ordinary exponential,
 \]
 Choosing the rescaling well makes this bound sharp; this is the classical
 saddle-point idea, but carried out so that every quantity stays
-rational\footnote{This insistence on staying rational reflects the formal proof
-more than the mathematics.  The Lean development works entirely over \(\Q\):
-quantities that an informal asymptotic argument might estimate with Stirling's
-formula or the real exponential are instead bounded by finite rational
-inequalities, so the proof checker verifies everything by exact arithmetic with
-no real-analysis library and without formally introducing \(\pi\) or \(e\).  The
-slight loss in the resulting constants is absorbed by the large slack in the
-final budget.} and no limit, contour, or transcendental constant ever enters.
+rational\footnote{This emphasis on staying rational reflects the formal proof
+more than the mathematics.  The direct-saddle estimates and the final numerical
+certificate inequalities are formulated over \(\Q\); quantities that an informal
+asymptotic argument might estimate with Stirling's formula or the real
+exponential are bounded by finite rational inequalities.  One short auxiliary
+bridge in the sign-lock proof (Section~\ref{subsec:envelope}) does use formal
+estimates for the real logarithm and exponential to control a factorial product,
+after which the argument returns to rational inequalities; no estimate involving
+\(\pi\) is used.  The slight loss in the resulting constants is absorbed by the
+large slack in the final budget.} and no transcendental constant enters.
 Two finite exponentials multiply in the same spirit,
 \[
   P_m(x)\,P_n(y)\le P_{m+n}(x+y)\qquad(x,y\ge0),
@@ -546,27 +555,89 @@ Lean checks its own dyadic kernel and its rational enclosure semantics.
 
 \section{The effective sign lock}\label{sec:signlock}
 
-For $a\ge401$, the leading term $X_a(N)$ is controlled analytically.  More
-generally, the same estimate forces all sufficiently high convolution
-indices to be nonpositive.
+For $a\ge401$, the leading term $X_a(N)$ is controlled analytically; more
+generally, the same estimate forces all sufficiently high convolution indices to
+be nonpositive.  The argument rests on a single nonlinear estimate, which we
+isolate first.
 
-Define
-\begin{equation}\label{eq:zeta}
-  \zeta=\frac{5N}{36m}.
+\subsection{The nonlinear residual envelope}\label{subsec:envelope}
+
+Write the nonlinear part of the logarithm as
+\[
+  H(t)=\sum_{r\ge2}c_rt^r,
+  \qquad
+  E^-_p(N)=[t^p]\exp\!\big(-N\,H(t)\big),
+\]
+so that $\C(t)^{-N}=\exp(-Nc_1t)\exp(-NH(t))$.  Expanding the exponential groups
+$[t^p]E^-_p(N)$ into factorial-composition blocks and bounding their total by the
+rational coefficient bounds of Section~\ref{sec:coeff} and a rational form of
+Stirling's estimate yields the \emph{normalized residual envelope}: for
+$m\ge361$, $N\le(40/3)m$, and $p\ge2m/3$,
+\begin{equation}\label{eq:residual-envelope}
+  \left|\frac{E^-_p(N)}{-Nc_p}-1\right|\le\frac{66}{5m}.
 \end{equation}
-If $N\le(40/3)m$, then $0\le\zeta\le50/27$.  The recurrence for $X_m$ is
-reorganized into a truncated alternating Poisson-type sum, a controlled
-near-range error, and a far signed tail.  The pure alternating base is
-controlled by a twelve-term prefix together with a paired tail; on
-$0\le\zeta\le50/27$ its final even--odd pair ($r=10,11$) is nonnegative, so the
-first ten terms already supply the convenient uniform lower bound
+In Lean this is \code{Eminus\_normalized\_residual\_le\_final}
+(\code{Prop51/Envelope.lean}), built on the $H$-power machinery of
+\code{Prop51/HPow.lean}.
+
+\subsection{The decomposition and the bound}
+
+Set $\zeta=5N/(36m)$, so that $0\le\zeta\le50/27$ when $N\le(40/3)m$.  With
+$c_1=5/6$, expanding $B_m(N)=[t^m]\C(t)^{-N}$ by the $s$-fold contribution of the
+linear factor $\exp(-Nc_1t)$ gives the exact finite identity
+\begin{equation}\label{eq:signlock-exact}
+  -X_m(N)=\sum_{s=0}^{m}\frac{(-Nc_1)^s}{s!}\left(-\frac{E^-_{m-s}(N)}{Nc_m}\right).
+\end{equation}
+For $s<m$ the residual index $p=m-s$ is positive, and the summand rewrites,
+through the ratio $c_{m-s}/c_m$ and \eqref{eq:residual-envelope}, as
+\begin{equation}\label{eq:signlock-summand}
+  \frac{(-\zeta)^s}{s!}\,\Pi_s\,D_s\,(1+\varepsilon_{m-s}),
+  \qquad
+  \Pi_s=\prod_{i=1}^{s}\frac1{1-i/m},\quad
+  D_s=\frac{d_{m-s}}{d_m},\quad
+  \varepsilon_p=\frac{E^-_p(N)}{-Nc_p}-1 .
+\end{equation}
+With $e_1(s)=s(s+1)/2$, writing
+$\Pi_sD_s(1+\varepsilon_{m-s})=1+\big(e_1(s)-\zeta\big)/m+w_s$ and splitting the
+sum at $s=\floor{m/3}$ turns \eqref{eq:signlock-exact} into three pieces:
+\begin{equation}\label{eq:signlock-three}
+\begin{aligned}
+  -X_m(N)
+  ={}&\underbrace{\sum_{0\le s\le\floor{m/3}}\frac{(-\zeta)^s}{s!}\Big(1+\frac{e_1(s)-\zeta}{m}\Big)}_{\text{near base }\mathcal B_m}
+   \;+\;\underbrace{\sum_{0\le s\le\floor{m/3}}\frac{(-\zeta)^s}{s!}\,w_s}_{\text{near error}}\\[1mm]
+   &+\;\underbrace{\sum_{\floor{m/3}<s\le m}\frac{(-Nc_1)^s}{s!}\left(-\frac{E^-_{m-s}(N)}{Nc_m}\right)}_{\text{far signed tail}} .
+\end{aligned}
+\end{equation}
+These are \code{signLockNearBase}, \code{signLockNearError}, and
+\code{signLockFarSignedTail} in \code{Prop51/SignLock.lean}; the residual
+envelope \eqref{eq:residual-envelope} applies on the near range $s\le m/3$, where
+$p=m-s\ge2m/3$.
+
+\paragraph{The near base.}  The base is a \emph{finite} sum, controlled without
+any appeal to an infinite exponential.  Put
+\[
+  A_{12}(z)=\sum_{s=0}^{11}\frac{(-z)^s}{s!},
+  \qquad
+  C_{12}(z)=\sum_{s=0}^{11}\frac{(-z)^s}{s!}\big(e_1(s)-z\big),
+\]
+so the twelve-term prefix of $\mathcal B_m$ is $A_{12}(\zeta)+C_{12}(\zeta)/m$.
+Two Bernstein-basis certificates on $0\le z\le50/27$ give
+\[
+  A_{12}(z)\ge\lambda,
+  \qquad
+  A_{12}(z)+\frac{C_{12}(z)}{361}\ge\lambda\Big(1-\frac2{361}\Big),
+\]
+where
 \begin{equation}\label{eq:lambda}
- \lambda=
- \sum_{r=0}^{9}\frac{(-50/27)^r}{r!}
- =\frac{678107852315029}{4323713773987629}.
+  \lambda=\sum_{r=0}^{9}\frac{(-50/27)^r}{r!}=\frac{678107852315029}{4323713773987629}
 \end{equation}
+($\lambda$ is defined by ten terms but used beneath the twelve-term certificate).
+A short monotonicity argument in $1/m$ extends the second inequality from $m=361$
+to every $m\ge361$, and the base terms from $s=12$ onward pair into nonnegative
+even--odd blocks; hence $\mathcal B_m\ge\lambda(1-2/m)$.
 
-The error analysis is organized into seven independent rational budgets:
+\paragraph{The near error and far tail.}  The other two pieces are bounded by
+seven independent rational budgets:
 \begin{center}
 \begin{tabular}{lr}
 \toprule
@@ -584,10 +655,13 @@ total & $2215$\\
 \bottomrule
 \end{tabular}
 \end{center}
-Every entry is a theorem over rational numbers.  The twelve-term prefix
-inequalities on $0\le\zeta\le50/27$ are certified after rescaling to
-$[0,1]$ by nonnegative Bernstein coefficients.  The remaining alternating
-tail is paired into nonnegative even--odd blocks.
+Every final allowance is a rational inequality; the factorial-ratio allowance
+passes through the short real-logarithm bridge behind
+\eqref{eq:residual-envelope} before being converted into its rational budget.
+The near-error budgets are certified after rescaling $\zeta$ to $[0,1]$ by
+nonnegative Bernstein coefficients, and the far signed tail (its first omitted
+$s=\floor{m/3}+1$ block onward) is bounded by a crude rational saddle estimate
+for $E^-_{m-s}(N)$.  Together they give a total error at most $2215/m^2$.
 
 \begin{theorem}[Sign lock]\label{thm:signlock}
 If $m\ge361$, $N\ge1$, and $N\le(40/3)m$, then
@@ -598,39 +672,11 @@ If $m\ge361$, $N\ge1$, and $N\le(40/3)m$, then
 \end{theorem}
 
 \begin{proof}
-Set $\zeta=5N/(36m)$ and $p=m-s$.  Expanding $B_m(N)=[t^m]\C(t)^{-N}$ by the
-$s$-fold contribution of the linear part of $-N\log\C$ and normalizing by
-$Nc_m$ gives the finite sum
-\begin{equation}\label{eq:signlock-decomp}
- -X_m(N)=\sum_{s=0}^{m}\frac{(-\zeta)^s}{s!}\,\Pi_s\,D_s\,(1+\varepsilon_{m-s}),
- \qquad
- \Pi_s=\prod_{i=1}^{s}\frac1{1-i/m},\quad D_s=\frac{d_{m-s}}{d_m},
-\end{equation}
-where $\varepsilon_p=E^-_p(N)/(-Nc_p)-1$ is the normalized nonlinear residual,
-which the envelope of Section~\ref{sec:saddle} bounds by
-$\abs{\varepsilon_{m-s}}\le 66/(5m)$ for $s\le m/3$.  Write $e_1(s)=s(s+1)/2$
-and split each factor as
-\[
- \Pi_sD_s(1+\varepsilon_{m-s})=1+\frac{e_1(s)}m-\frac{\zeta}m+w_s .
-\]
-The linear part sums in closed form to the base
-\[
- \mathcal B_m(N):=\sum_{s\ge0}\frac{(-\zeta)^s}{s!}\Big(1+\frac{e_1(s)}m-\frac{\zeta}m\Big)
- =\e^{-\zeta}\Big(1-\frac{2\zeta-\zeta^2/2}{m}\Big)
- \ge\e^{-\zeta}\Big(1-\frac2m\Big)\ge\lambda\Big(1-\frac2m\Big),
-\]
-valid for $0\le\zeta\le50/27$, the last step using the ten-term alternating
-lower bound $\e^{-\zeta}\ge\lambda$ of \eqref{eq:lambda}.  The remaining error
-\[
- \mathcal E_m(N)=\sum_{0\le s\le m/3}\frac{(-\zeta)^s}{s!}\,w_s+(\text{far tail}),
-\]
-collects exactly the seven sources tabulated above --- the $\Pi_s$
-gamma-product residual, the $D_s$ drift, the two- and higher-block nonlinear
-terms of $\varepsilon$, their cross terms, and the $s>m/3$ tail.  Each row of
-that table is the corresponding rational bound, and they sum to
-$\abs{\mathcal E_m(N)}\le 2215/m^2$.  Finally $m^2\big(\lambda(1-2/m)\big)>2215$
-at $m=361$ is an exact rational check, and $m^2\lambda(1-2/m)$ is increasing in
-$m$, so \eqref{eq:signlock} holds for every $m\ge361$.
+Combining $\mathcal B_m\ge\lambda(1-2/m)$ with the error bound $2215/m^2$ in
+\eqref{eq:signlock-three} gives the displayed inequality once
+$\lambda(1-2/m)-2215/m^2>0$.  The latter is an exact rational check at $m=361$
+(where $m^2\lambda(1-2/m)>2215$), and $m^2\lambda(1-2/m)$ is increasing in $m$,
+so it holds for every $m\ge361$.
 \end{proof}
 
 Let
@@ -876,10 +922,13 @@ For $401\le a\le2000$, define
              \frac{29}{10}\frac aj+2.
  \label{eq:Et}
 \end{align}
-For $401\le a\le2000$ and every retained $k$ one has
-$0\le E_s(a,k),E_t(a,k)<800$, so the truncated bound $\PE_{800}$ of
-\eqref{eq:PE} is applicable (its geometric tail term needs the argument below
-the cutoff).
+For $401\le a\le2000$ and every retained $k$ one has $0\le E_s(a,k)<800$.  In
+the tempered regime $s_-<k$ --- and hence whenever $k>\ceil{\sqrt N}$ for an
+admissible $N$, which is where $E_t$ is used --- one also has
+$0\le E_t(a,k)<800$.  (Outside that regime $E_t$ can be far larger, e.g.\
+$E_t(2000,1)\approx1.18\cdot10^4$, but it is never invoked there.)  Thus each
+occurrence of $\PE_{800}$ in \eqref{eq:PE} is well defined in the branch where
+it is used.
 The direct product theorem and elementary rational absorptions give
 \begin{align}
  X_k(N)Y_j(N)
@@ -1142,8 +1191,8 @@ tools.  The human role throughout was orchestration rather than mathematics:
 choosing the problem, designing and relaying prompts, running and maintaining
 the computational and Lean environment, deciding from high-level signals when an
 autonomous run had stalled and an outside review should be solicited, and taking
-final responsibility for this text.  The author did not at any point analyze or
-contribute to the mathematical substance of the proof.  The proof search, much
+final responsibility for this text.  The author did not originate or modify a
+mathematical lemma, estimate, proof strategy, or Lean proof.  The proof search, much
 of the formal development, and parts of this write-up were produced with
 substantial AI assistance; no theorem-level step in the final argument was
 accepted until it had been formalized in Lean or independently checked as
@@ -1158,23 +1207,24 @@ paraphrase, because the prompting strategy is the part of the method most likely
 to transfer to other problems; the AI replies are only summarized, with the most
 relevant exchanges also archived alongside the source.
 
-In the taxonomy of~\cite{FengAletheia} we classify the project as
-\textbf{Level~A}, essentially autonomous.  The core mathematical content --- the
-proof strategy, the analytic estimates, the entire Lean formalization, and the
-two diagnoses that redirected the search --- was generated by AI systems, with
-no essential human mathematical contribution.  The two interventions recorded in
-Cards~6 and~7 are not exceptions to this: each was a diagnosis produced by a
-\emph{separate} AI model, which the author solicited on the basis of a
-high-level signal (an autonomous run that had continued for two days without
-converging) and relayed to the worker, without examining the mathematics
-himself.  This is precisely what separates Level~A from the collaborative
-Level~C: the orchestration was human, but the mathematics was not.  As to
+In the terminology of Feng et al.~\cite{FengAletheia} we classify the project as
+\textbf{Level~A}, essentially autonomous, in its \emph{content-based} sense: no
+human supplied or modified a mathematical lemma, estimate, proof strategy, or
+Lean construction.  Human orchestration was nevertheless important to the
+workflow.  The author selected the problem, designed and relayed prompts,
+maintained the computational environment, chose when to solicit independent AI
+reviews on the basis of high-level progress signals (for instance, an autonomous
+run that had continued for two days without converging), and took final
+editorial responsibility.  In particular the two interventions recorded in
+Cards~6 and~7 were each a diagnosis produced by a \emph{separate} AI model, which
+the author relayed to the worker without examining the mathematics.  Thus
+``essentially autonomous'' here refers to the generation of the core
+mathematical content, not to unattended end-to-end execution.  As to
 significance, the theorem settles the coefficient nonvanishing that Chen and
-Larson isolate as their Proposition~5.1 --- a step toward their Conjecture~1.4
-that they, and colleagues with whom they discussed it, had left without a known
-route --- which the author calibrates around Levels~1--2 of~\cite{FengAletheia},
-offered for and not in place of expert review.  In every case it is the Lean
-proof, not its provenance, that certifies the theorem.
+Larson isolate as their Proposition~5.1; we provisionally place the result at the
+boundary between significance Levels~1 and~2 of~\cite{FengAletheia}, with final
+classification left to expert peer review.  In every case it is the Lean proof,
+not its provenance, that certifies the theorem.
 
 The development had a simple shape, worth stating before the details.  A single
 ChatGPT~5.5 Pro conversation (Card~1) was the central strand in which the
@@ -1293,10 +1343,11 @@ run with a Codex worker for about two days; is this the expected process of
 investigation and optimization, or is the worker stuck in a local minimum or
 dead end? (iii)~Any advice on how to finish, which could be forwarded to the
 worker.}
-\haifield{Reply (summary)} Run in parallel in both systems; both concurred that
-the mathematics was sound but the worker was genuinely stuck --- reshaping one
-product-tail reduction rather than proving it --- and advised proving a single
-combined-product inequality directly instead.\par
+\haifield{Reply (summary)} Run in parallel in both systems; the reviews found no
+fatal obstruction in the main strategy but flagged unresolved analytic estimates
+and a proliferation of proof interfaces, with the worker reshaping one
+product-tail reduction rather than proving it, and advised freezing the
+completion route around a single direct combined-product inequality.\par
 \haifield{Human action} Forwarded the advice to the worker and gathered the
 worker's own specific blocking questions for the deeper review of Card~7.\par
 \haifield{Technique} Reviewing the \emph{process}, not only the mathematics, and
@@ -1337,8 +1388,9 @@ for a theorem, and it marked exactly the moment at which the autonomous worker
 needed an outside perspective.  That perspective, too, came from an AI model; the
 author's part was the orchestration --- reading a high-level signal that the run
 had stalled and routing the question to a fresh review --- not any judgement
-about the mathematics.  The result is autonomous in execution, and the decisions
-that mattered were about \emph{when} the worker was stuck, not how to fix it.
+about the mathematics.  The mathematical content was AI-generated within a
+human-orchestrated multi-agent process, and the human decisions that mattered
+were about \emph{when} the worker was stuck, not how to fix it.
 
 \paragraph{Scope of this record.}
 The seven cards are a curated, not exhaustive, account: they record the
