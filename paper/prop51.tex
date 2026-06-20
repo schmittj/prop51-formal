@@ -262,10 +262,10 @@ more than the mathematics.  The direct-saddle estimates and the final numerical
 certificate inequalities are formulated over \(\Q\); quantities that an informal
 asymptotic argument might estimate with Stirling's formula or the real
 exponential are bounded by finite rational inequalities.  One short auxiliary
-bridge in the sign-lock proof (Section~\ref{subsec:envelope}) does use formal
-estimates for the real logarithm and exponential to control a factorial product,
-after which the argument returns to rational inequalities; no estimate involving
-\(\pi\) is used.  The slight loss in the resulting constants is absorbed by the
+bridge in the sign-lock argument of Section~\ref{sec:signlock} does use formal
+estimates for the real logarithm and exponential to control the factorial
+product $\Pi_s$, after which the argument returns to rational inequalities; no
+estimate involving \(\pi\) is used.  The slight loss in the resulting constants is absorbed by the
 large slack in the final budget.} and no transcendental constant enters.
 Two finite exponentials multiply in the same spirit,
 \[
@@ -568,10 +568,10 @@ Write the nonlinear part of the logarithm as
   \qquad
   E^-_p(N)=[t^p]\exp\!\big(-N\,H(t)\big),
 \]
-so that $\C(t)^{-N}=\exp(-Nc_1t)\exp(-NH(t))$.  Expanding the exponential groups
-$[t^p]E^-_p(N)$ into factorial-composition blocks and bounding their total by the
-rational coefficient bounds of Section~\ref{sec:coeff} and a rational form of
-Stirling's estimate yields the \emph{normalized residual envelope}: for
+so that $\C(t)^{-N}=\exp(-Nc_1t)\exp(-NH(t))$.  Expanding this coefficient into
+factorial-composition blocks and bounding their total by the rational
+coefficient bounds of Section~\ref{sec:coeff} and a rational form of Stirling's
+estimate yields the \emph{normalized residual envelope}: for
 $m\ge361$, $N\le(40/3)m$, and $p\ge2m/3$,
 \begin{equation}\label{eq:residual-envelope}
   \left|\frac{E^-_p(N)}{-Nc_p}-1\right|\le\frac{66}{5m}.
@@ -608,9 +608,13 @@ sum at $s=\floor{m/3}$ turns \eqref{eq:signlock-exact} into three pieces:
    &+\;\underbrace{\sum_{\floor{m/3}<s\le m}\frac{(-Nc_1)^s}{s!}\left(-\frac{E^-_{m-s}(N)}{Nc_m}\right)}_{\text{far signed tail}} .
 \end{aligned}
 \end{equation}
-These are \code{signLockNearBase}, \code{signLockNearError}, and
-\code{signLockFarSignedTail} in \code{Prop51/SignLock.lean}; the residual
-envelope \eqref{eq:residual-envelope} applies on the near range $s\le m/3$, where
+In Lean the three pieces are named, respectively,
+\begin{center}
+\code{signLockNearBase}, \quad \code{signLockNearError}, \quad
+\code{signLockFarSignedTail},
+\end{center}
+all proved in \path{Prop51/SignLock.lean}.  The residual envelope
+\eqref{eq:residual-envelope} applies on the near range $s\le m/3$, where
 $p=m-s\ge2m/3$.
 
 \paragraph{The near base.}  The base is a \emph{finite} sum, controlled without
@@ -655,9 +659,9 @@ total & $2215$\\
 \bottomrule
 \end{tabular}
 \end{center}
-Every final allowance is a rational inequality; the factorial-ratio allowance
-passes through the short real-logarithm bridge behind
-\eqref{eq:residual-envelope} before being converted into its rational budget.
+Every final allowance is a rational inequality.  The factorial-ratio allowance
+uses a short real-logarithm and real-exponential bridge to control $\Pi_s$, after
+which the result is converted back into its rational budget.
 The near-error budgets are certified after rescaling $\zeta$ to $[0,1]$ by
 nonnegative Bernstein coefficients, and the far signed tail (its first omitted
 $s=\floor{m/3}+1$ block onward) is bounded by a crude rational saddle estimate
@@ -1444,9 +1448,10 @@ matters of human and community judgement.  The development also illustrates
 characteristic failure modes of AI-assisted research, which this record
 deliberately preserves: plausible but false intermediate estimates, a
 proliferation of proof interfaces, and convincing local progress on a globally
-false target.  Curated, redacted transcripts of the command-line-agent sessions
---- every genuine human prompt, with the AI side summarized --- together with the
-most relevant review exchanges are archived under \code{docs/ai-correspondence/},
+false target.  Curated, redacted records of the command-line-agent sessions ---
+every on-topic human instruction from the selected sessions, with the AI side
+summarized --- together with the most relevant review exchanges are archived
+under \code{docs/ai-correspondence/},
 and the card titles link to the primary public conversations, so that the
 provenance can be inspected directly.
 
@@ -2005,8 +2010,18 @@ the positive budget:
 The remaining term in \eqref{eq:Unorm} is $2^{-a-1}Y_a(N)$.  The sharp solo
 estimate is proved first at the upper edge $N=N_+$ by splitting the closed
 factorial-composition expansion into low-degree and remainder blocks.  In the
-notation of the formal development, if $\Delta_a(N_+)$ denotes that closed
-block sum, the denominator-cleared estimate is
+notation of the formal development, the closed block sum is
+\begin{equation}\label{eq:app-tail-solo-blocksum}
+\begin{aligned}
+ \Delta_a(N)
+ ={}&\sum_{s=0}^{a-1}\frac{(Nc_1/4)^s}{s!}
+ \sum_{\substack{r\ge1\\2r\le a-s}}
+ \frac{(2N/25)^r\,3^{\,a-s}\,4^{\,r-1}\,(a-s-2r+1)!}{r!}\\
+ &+\frac{(Nc_1/4)^a}{a!},
+\end{aligned}
+\end{equation}
+which is \code{positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum} in
+Lean.  The denominator-cleared estimate at the upper edge is
 \begin{equation}\label{eq:app-tail-solo-sharp}
  4\,2^a\Delta_a(N_+)
  \le29\,a\,c_a\left(\frac{10}{7}\right)^a.
@@ -2107,8 +2122,14 @@ tempered endpoint reserves &
 \path{positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed}\\
 assembled hybrid ratio certificate &
 \path{positiveSaddleLargeTailCandidateRefinedAtomicCertificate_hybridClosed}\\
-solo block and envelope &
-\path{PositiveSaddle.lean}, sharp large-tail solo section\\
+solo block sum $\Delta_a$ &
+\path{positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSum}\\
+solo block-sum cleared &
+\path{positiveLargeTailSoloSharpGcompClosedFactorialSplitBlockSumTenSeventhsCleared}\\
+solo saddle cleared &
+\path{positiveLargeTailSoloSharpGcompSaddleTenSeventhsCleared}\\
+solo scalar budget &
+\path{positiveLargeTailSoloTenSeventhsScalarBudget_of_ge_401}\\
 \bottomrule
 \end{tabular}
 \end{center}

@@ -513,7 +513,9 @@ theorem div_posNhi_le_div_natCast_of_rectangle {a N : Nat} {C : ℚ}
 /-! ## Executable rational summand majorants -/
 
 /-- The finite-window partial-exp cutoff for the §6 scan.  On
-`401 ≤ a ≤ 2000`, both rationalized edge exponents are `< 800`; see
+`401 ≤ a ≤ 2000`, the small edge exponent is `< 800` throughout; the tempered
+edge exponent is `< 800` in the tempered regime, where it is actually used (it
+can be larger for small `k`, outside that regime).  See
 `positiveSmallExponentUpper_lt_expCutoff` and
 `positiveTemperedExponentUpper_lt_expCutoff`. -/
 def positiveExpCutoff : Nat := 800

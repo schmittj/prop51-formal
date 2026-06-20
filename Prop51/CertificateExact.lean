@@ -6,7 +6,8 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 Machine-checked exact-rational negativity of the normalized partition-free
 majorant `Unorm a N = U_a(N)/(N c_a)` on the full rectangle
 `9 ≤ a ≤ 60`, `6a-7 ≤ N ≤ 12a-8` — all 10,764 pairs.  This reproduces, inside
-Lean, the exact certificate layer of the paper (tenth revision, §7), and via
+Lean, the exact certificate layer of the paper (`paper/prop51.tex`, finite
+verification §4), and via
 the majorant inequality (paper eq. 8, Layer A of the roadmap) covers every
 positive partition for all relevant `9 ≤ a ≤ 60`, i.e. all `24 ≤ g ≤ 179`
 with `g ≡ 0, 2 (mod 3)`.

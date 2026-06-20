@@ -31,7 +31,7 @@
 > Completed the formalization goal and marked it complete.
 >
 > What changed:
-> - `Prop51.coefficientNegativity : Prop51.CoefficientNegativity` is now a closed theorem in [Prop51/Completion.lean](prop51/prop51-formal/Prop51/Completion.lean).
+> - `Prop51.coefficientNegativity : Prop51.CoefficientNegativity` is now a closed theorem in [Prop51/Completion.lean](../../Prop51/Completion.lean).
 > - The finite-solo low strip is closed via the direct-saddle route.
 > - README, ROADMAP, `OpenGoals`, `Main`, and `scripts/AxiomsReport.lean` now reflect the closed theorem rather than the earlier conditional route.
 >

@@ -833,9 +833,10 @@ All Lean proofs are sorry-free.  Headline theorems:
 Certificate theorems are proved by `native_decide`, so they depend on the
 axioms `Lean.ofReduceBool` and `Lean.trustCompiler` (evaluation by the Lean
 compiler) in addition to the three standard axioms.  `scripts/AxiomsReport.lean` prints the axioms of
-every headline theorem; CI fails if anything beyond
-`propext, Classical.choice, Quot.sound, Lean.ofReduceBool, Lean.trustCompiler` appears, or if any
-`sorry` is present.  Definitional/spec lemmas use no computational axioms.
+every headline theorem; CI fails if any audited theorem's axiom closure contains
+anything beyond
+`propext, Classical.choice, Quot.sound, Lean.ofReduceBool, Lean.trustCompiler`,
+or depends on `sorryAx`.  Definitional/spec lemmas use no computational axioms.
 
 ## Building
 
@@ -856,7 +857,7 @@ build time.
 Prop51Kernel.lean  executable interval kernel (no Mathlib; natively precompiled)
 Prop51/            Lean library (public facade, soundness theory, certificates)
 scripts/           axiom report, constants check, saddle scans/templates
-paper/             the LaTeX proof document (tenth revision + errata)
+paper/             the release LaTeX paper (prop51.tex); archive/ holds the older tenth-revision note + errata
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
 blueprint/         (planned) Lean blueprint
 docs/DEVELOPMENT_HISTORY.md   formalization plan: Layers A, A′, B, C

@@ -1,18 +1,18 @@
 /-
 Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 
-# The rational Δ-envelope scaffold (paper Lemma 4.1)
+# The rational Δ-envelope (paper Lemma 4.1)
 
-This file starts the formal Layer C envelope.  The paper's displayed
-`Δ(p,N)` uses the analytic upper bound `c_j ≤ (1/6)·6^j(j-1)!`.  The Lean
-development has already rationalized that input to
-`c_j ≤ (4/25)·6^j(j-1)!`, so the coefficient is replaced here by the
-equivalent rationalized form `(36/5)·(4/25)^r·4^(r-1)`.
+This file proves the rational nonlinear-residual envelope of Layer C.  The
+paper's displayed `Δ(p,N)` uses the analytic upper bound `c_j ≤ (1/6)·6^j(j-1)!`;
+the Lean development rationalizes that input to `c_j ≤ (4/25)·6^j(j-1)!`, so the
+coefficient is the equivalent rationalized form `(36/5)·(4/25)^r·4^(r-1)`.
 
-The main result in this file is not yet the final numerical estimate
-`Δ ≤ 13.2/m`; it is the bridge from the already-proved residual bound for
-`Eminus` to this explicit finite Δ-sum.  The remaining numerical work can now
-target `DeltaRat` directly.
+The file is complete: it builds `DeltaRat`, the bridge
+`Eminus_normalized_residual_le_DeltaRat` from the residual bound for `Eminus`,
+and the final numerical estimate `Eminus_normalized_residual_le_final`
+(the normalized residual envelope `|E⁻_p/(-N c_p) − 1| ≤ 66/(5m)` used by the
+sign lock).  Everything here is over `ℚ`.
 -/
 
 import Prop51.HPow

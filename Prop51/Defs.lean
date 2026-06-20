@@ -4,7 +4,7 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 # Definitions for the Chen–Larson Proposition 5.1 coefficient problem
 
 Everything here is *exact rational arithmetic*: the statement layer of the
-problem needs no real analysis.  Reference: `paper/prop51.tex` (tenth revision),
+problem needs no real analysis.  Reference: `paper/prop51.tex`,
 Sections 1–2, and Chen–Larson, arXiv:2603.23850, Proposition 5.1.
 
 ## Design

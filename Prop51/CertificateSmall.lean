@@ -4,7 +4,7 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 # Small-genus certificate: `b_a(μ) < 0` for all `g ≤ 23`, `g ≡ 0,2 (mod 3)`
 
 These are the genera with `a = ⌊g/3⌋ + 1 ≤ 8`, where the partition-free
-majorant is too weak and the paper (tenth revision, §7/§8) enumerates the
+majorant is too weak and the paper (`paper/prop51.tex`, §4) enumerates the
 finitely many partitions instead.  This file machine-checks that enumeration:
 about 150,000 partitions in total, the largest case being the 75,175
 partitions of 44 (g = 23).
