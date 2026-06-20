@@ -1065,7 +1065,10 @@ top-offset quotient theorem applies.  The upper band is treated in the
 reverse direction.  Separate unit-reserve theorems prove that the geometric
 multipliers fit inside the allocated half-budget.  This hybrid construction
 proves the same uniform estimate as \eqref{eq:finite-edge-budget} for every
-$a>2000$.
+$a>2000$.  The exact scalar inequalities behind this ratio--reserve argument ---
+the candidate summands, the adjacent-ratio bounds, the endpoint reserves, and
+the $(10/7)^a$ solo envelope --- are collected in
+Appendix~\ref{app:large-tail-details}.
 
 The solo term is bounded by splitting a closed factorial-composition sum into
 low-degree and remainder blocks, proving upper-edge monotonicity in $N$, and
@@ -1475,6 +1478,640 @@ correspondence is kept in a development archive rather than at repository
 root.
 
 \appendix
+\section{Exact ratio and reserve estimates for the large positive tail}
+\label{app:large-tail-details}
+
+This appendix supplies the scalar inequalities behind the ratio--reserve
+argument of the large positive tail.  Its purpose is twofold: to make the
+infinite summation in Section~\ref{sec:positive} reproducible without reading
+Lean code, and to record exactly where the finite prefix certificates enter.
+All quantities below are rational.  We use the convention $0^0=1$.
+
+\subsection{Candidate summands}
+
+Fix $a>2000$.  Put
+\begin{equation}\label{eq:app-tail-edges}
+ N_-=6a-7,\qquad N_+=12a-8,\qquad
+ s_- = \ceil{\sqrt{N_-}},\qquad s_+=\ceil{\sqrt{N_+}},
+\end{equation}
+and
+\begin{equation}\label{eq:app-tail-indices}
+ K=\floor{\frac{9a}{10}},\qquad
+ \ell=\max\{1,s_-+1\},\qquad
+ m=\floor{\frac a3}+10,\qquad j_k=a-k.
+\end{equation}
+For $a>2000$ one has
+\begin{equation}\label{eq:app-tail-order}
+ 1\le \ell\le m<K<a.
+\end{equation}
+The entropy-shadow factor is
+\begin{equation}\label{eq:app-tail-H}
+ \mathcal H_a(k)=
+ \frac{(k-1)^{k-1}(j_k-1)^{j_k-1}}{(a-2)^{a-2}}.
+\end{equation}
+The maximal-term estimate for the binomial expansion gives
+\begin{equation}\label{eq:app-tail-binom-shadow}
+ \frac{1}{(a-1)\binom{a-2}{k-1}}
+ \le \mathcal H_a(k)
+ \qquad (1\le k<a-1).
+\end{equation}
+For $k=1$ this is simply $1/(a-1)\le1$.  For $k\ge2$, put
+$n=a-2$ and $r=k-1$.  In the binomial expansion
+\[
+ n^n=\sum_{i=0}^{n}\binom ni r^i(n-r)^{n-i},
+\]
+the summand at $i=r$ is maximal.  Hence
+\[
+ n^n\le(n+1)\binom nr r^r(n-r)^{n-r},
+\]
+which rearranges exactly to \eqref{eq:app-tail-binom-shadow}.
+
+Recall the rational exponential upper bound
+\begin{equation}\label{eq:app-tail-PE}
+ \PE_T(x)=\sum_{q=0}^{T-1}\frac{x^q}{q!}
+ +\frac{x^T}{T!}\frac{1}{1-x/T},
+ \qquad 0\le x<T.
+\end{equation}
+Write
+\begin{align}
+ E_s(a,k)
+  &=\frac{1139}{1000}s_+
+    +\frac{j_k}{5}+\frac{29}{10}\frac{a}{j_k}+1,
+ \label{eq:app-tail-Es}\\
+ E_t(a,k)
+  &=\frac a5+\frac{57}{10}\frac{a}{k}
+    +\frac{29}{10}\frac{a}{j_k}+2,
+ \label{eq:app-tail-Et}
+\end{align}
+and set
+\begin{equation}\label{eq:app-tail-LsLt}
+ L_s(a,k)=\PE_a(E_s(a,k)),\qquad
+ L_t(a,k)=\PE_{8a}(E_t(a,k)).
+\end{equation}
+The two candidate summands used in the formal tail proof are
+\begin{align}
+ S_a(k)
+  &=\frac{65}{N_+}\,k j_k\,\mathcal H_a(k)\,2^{-j_k}L_s(a,k),
+ \label{eq:app-tail-S}\\
+ T_a(k)
+  &=\frac{96}{N_-}\,k j_k\,\mathcal H_a(k)\,2^{-j_k}L_t(a,k).
+ \label{eq:app-tail-T}
+\end{align}
+They are not heuristic asymptotic expressions: they are the exact rational
+majorants summed by the Lean proof.
+
+To relate them to the normalized convolution in \eqref{eq:Unorm}, define
+\begin{equation}\label{eq:app-tail-C}
+ \mathcal C_a(N,k)=
+ \frac N2 R_{k,a}2^{-j_k}\max\{X_k(N),0\}\,Y_{j_k}(N).
+\end{equation}
+The direct saddle estimates, the bound \eqref{eq:R-bound}, and
+\eqref{eq:app-tail-binom-shadow} imply
+\begin{align}
+ \mathcal C_a(N,k)&\le S_a(k)
+ &&\text{if }k\le\ceil{\sqrt N},
+ \label{eq:app-tail-pointwise-small}\\
+ \mathcal C_a(N,k)&\le T_a(k)
+ &&\text{if }\ceil{\sqrt N}<k.
+ \label{eq:app-tail-pointwise-temp}
+\end{align}
+The sign lock removes all $k>K$.  Consequently, for every
+$N_-\le N\le N_+$,
+\begin{equation}\label{eq:app-tail-product-to-two-sums}
+ \sum_{1\le k<a}\mathcal C_a(N,k)
+ \le \Sigma_s(a)+\Sigma_t(a),
+\end{equation}
+where
+\begin{equation}\label{eq:app-tail-sums}
+ \Sigma_s(a)=\sum_{k=1}^{\min\{K,s_+\}}S_a(k),
+ \qquad
+ \Sigma_t(a)=\sum_{k=\ell}^{K}T_a(k).
+\end{equation}
+The overlap is deliberately counted twice.  This loses a negligible amount
+and allows the two regimes to be summed independently.
+
+\subsection{The common adjacent quotient}
+
+Let $1\le r<K$ and write $j=a-r$.  Removing the constants and exponential
+shells from either \eqref{eq:app-tail-S} or \eqref{eq:app-tail-T} gives the
+same adjacent quotient
+\begin{equation}\label{eq:app-tail-qraw}
+ \mathfrak q_a(r)=
+ 2\,
+ \frac{(r+1)(j-1)r^r(j-2)^{j-2}}
+ {rj(r-1)^{r-1}(j-1)^{j-1}}.
+\end{equation}
+Thus
+\begin{equation}\label{eq:app-tail-ratio-exact}
+ \frac{S_a(r+1)}{S_a(r)}
+  =\mathfrak q_a(r)\frac{L_s(a,r+1)}{L_s(a,r)},
+ \qquad
+ \frac{T_a(r+1)}{T_a(r)}
+  =\mathfrak q_a(r)\frac{L_t(a,r+1)}{L_t(a,r)}.
+\end{equation}
+For $r\ge2$ (and hence, in the retained range, $j\ge3$), it is useful to factor
+\begin{equation}\label{eq:app-tail-P-factor}
+ \mathfrak q_a(r)=2\frac{r+1}{j}\,\mathcal P_a(r),
+\end{equation}
+where
+\begin{align}
+ \mathcal P_a(r)
+ &:=\frac{r^r}{r(r-1)^{r-1}}
+ \frac{(j-1)(j-2)^{j-2}}{(j-1)^{j-1}}
+ \notag\\
+ &=\left(1+\frac1{r-1}\right)^{r-1}
+   \left(1+\frac1{j-2}\right)^{-(j-2)}.
+ \label{eq:app-tail-P}
+\end{align}
+Since $n\mapsto(1+1/n)^n$ is increasing, one obtains
+\begin{equation}\label{eq:app-tail-P-directions}
+ \mathcal P_a(r)\le1\quad\text{if }r-1\le j-2,
+ \qquad
+ \mathcal P_a(r)\ge1\quad\text{if }j-2\le r-1.
+\end{equation}
+
+We repeatedly use the elementary geometric estimates
+\begin{align}
+ F_{r+1}\le qF_r\ (u\le r<v)
+ &\Longrightarrow
+ \sum_{r=u}^{v}F_r\le\frac{F_u}{1-q},
+ \label{eq:app-tail-forward-geom}\\
+ F_{r-1}\le qF_r\ (u<r\le v)
+ &\Longrightarrow
+ \sum_{r=u}^{v}F_r\le\frac{F_v}{1-q},
+ \label{eq:app-tail-reverse-geom}
+\end{align}
+valid for nonnegative $F_r$ and $0\le q<1$.
+
+\subsection{The small branch}
+
+\begin{lemma}[Small adjacent ratio]\label{lem:app-tail-small-ratio}
+For $a>2000$ and
+\(
+ 1\le r<\min\{K,s_+\},
+\)
+one has
+\begin{equation}\label{eq:app-tail-small-ratio}
+ S_a(r+1)\le\frac12S_a(r).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+On this range the entropy-shadow quotient satisfies
+\begin{equation}\label{eq:app-tail-qraw-half}
+ \mathfrak q_a(r)\le\frac12.
+\end{equation}
+This is a denominator-cleared rational inequality obtained from
+\eqref{eq:app-tail-qraw} and the bounds
+$r<s_+$ and $s_+^2\ge N_+=12a-8$.  The small exponent is nonincreasing:
+\begin{equation}\label{eq:app-tail-Es-mono}
+ E_s(a,r+1)\le E_s(a,r).
+\end{equation}
+Monotonicity of \eqref{eq:app-tail-PE} in its argument therefore gives
+$L_s(a,r+1)\le L_s(a,r)$.  Substitution in
+\eqref{eq:app-tail-ratio-exact} proves the claim.
+\end{proof}
+
+The first candidate has the exact form
+\begin{equation}\label{eq:app-tail-S1}
+ S_a(1)=\frac{65(a-1)}{12a-8}\,2^{-(a-1)}L_s(a,1),
+\end{equation}
+because $\mathcal H_a(1)=1$.  The exponential shell satisfies
+\begin{equation}\label{eq:app-tail-small-shell}
+ L_s(a,1)\le\left(\frac32\right)^a.
+\end{equation}
+Indeed $E_s(a,1)\le3a/10$, and the finite rational exponential bound at
+$3a/10$ is dominated by the negative-binomial envelope $(3/2)^a$.
+Therefore
+\begin{equation}\label{eq:app-tail-small-envelope}
+ 800000000\,S_a(1)
+ \le
+ 800000000\frac{65(a-1)}{12a-8}
+ 2^{-(a-1)}\left(\frac32\right)^a.
+\end{equation}
+The right-hand side is nonincreasing for $a\ge3$; its value at $a=2001$ is
+at most one by an exact rational computation.  Hence
+\begin{equation}\label{eq:app-tail-small-first-unit}
+ 800000000\,S_a(1)\le1\qquad(a>2000).
+\end{equation}
+Combining Lemma~\ref{lem:app-tail-small-ratio},
+\eqref{eq:app-tail-forward-geom}, and
+\eqref{eq:app-tail-small-first-unit} gives
+\begin{equation}\label{eq:app-tail-small-budget}
+ \Sigma_s(a)\le2S_a(1)\le\frac1{400000000}.
+\end{equation}
+The actual guarded convolution term at $k=1$ vanishes because $X_1=-1$.
+The nonzero value $S_a(1)$ is retained only as a convenient first-term reserve
+for the candidate sequence.
+
+\subsection{The lower tempered band}
+
+Put
+\begin{equation}\label{eq:app-tail-q}
+ q_a=\frac{4a-1}{4a}=1-\frac1{4a}.
+\end{equation}
+The lower tempered band is $\ell\le k\le m$.  Its desired step estimate is
+\begin{equation}\label{eq:app-tail-temp-lower-step}
+ T_a(r+1)\le q_aT_a(r)
+ \qquad(\ell\le r<m).
+\end{equation}
+On this range $r-1\le j-2$, so
+$\mathcal P_a(r)\le1$ by \eqref{eq:app-tail-P-directions}, and therefore
+\begin{equation}\label{eq:app-tail-qraw-lower}
+ \mathfrak q_a(r)\le2\frac{r+1}{j}.
+\end{equation}
+Define the sharp exponential quotient target
+\begin{equation}\label{eq:app-tail-U}
+ U^{\sharp}_a(r)=\frac12\frac{j}{r+1}q_a.
+\end{equation}
+Then \eqref{eq:app-tail-qraw-lower} gives the exact budget identity
+\begin{equation}\label{eq:app-tail-U-budget}
+ \mathfrak q_a(r)U^{\sharp}_a(r)\le q_a.
+\end{equation}
+Thus it remains only to prove
+\begin{equation}\label{eq:app-tail-Lt-forward-target}
+ \frac{L_t(a,r+1)}{L_t(a,r)}\le U^{\sharp}_a(r).
+\end{equation}
+
+There are two subranges.  If
+\begin{equation}\label{eq:app-tail-front-range}
+ 3(r+1)\le a,
+\end{equation}
+then
+\begin{equation}\label{eq:app-tail-Et-front-mono}
+ E_t(a,r+1)\le E_t(a,r),
+ \qquad U^{\sharp}_a(r)\ge1.
+\end{equation}
+Hence \eqref{eq:app-tail-Lt-forward-target} follows immediately from
+monotonicity of $\PE_{8a}$.
+
+The only remaining indices are the ten offsets
+\begin{equation}\label{eq:app-tail-top-offset}
+ r=\floor{\frac a3}+t,
+ \qquad 0\le t<10.
+\end{equation}
+For $a\ge3000$ the following two rational inequalities hold uniformly in
+$t$:
+\begin{align}
+ E_t(a,r+1)+\frac{175}{4a}&\le E_t(a,r),
+ \label{eq:app-tail-top-drop}\\
+ 1&\le U^{\sharp}_a(r)\left(1+\frac{175}{12a}\right)^3.
+ \label{eq:app-tail-top-budget}
+\end{align}
+The second estimate is reduced to the nonnegativity of
+\begin{equation}\label{eq:app-tail-top-poly}
+ 550656a^3-76358800a^2-559763750a+144703125.
+\end{equation}
+After writing $a=3000+x$, this polynomial becomes
+\begin{equation}\label{eq:app-tail-top-poly-shift}
+ 550656x^3+4879545200x^2
+ +14408999436250x+14178803653453125,
+\end{equation}
+which is manifestly nonnegative for $x\ge0$.
+
+The finite-exponential three-step shift inequality says that, whenever
+$y+d\le z$,
+\begin{equation}\label{eq:app-tail-three-step}
+ \PE_T(y)\le
+ \left(1+\frac d3\right)^{-3}\PE_T(z)
+\end{equation}
+provided the displayed arguments lie in the certified range.  Applying it
+with $d=175/(4a)$ and using
+\eqref{eq:app-tail-top-drop}--\eqref{eq:app-tail-top-budget} proves
+\eqref{eq:app-tail-Lt-forward-target} for every $a\ge3000$.
+
+For the finite prefix $2001\le a<3000$, define
+\begin{equation}\label{eq:app-tail-theta}
+ \theta_a=1-\frac{213}{5a}=\frac{5a-213}{5a}.
+\end{equation}
+Exact rational certificates verify, for every guarded pair
+$(a,t)$ with \eqref{eq:app-tail-top-offset},
+\begin{align}
+ \frac{L_t(a,r+1)}{L_t(a,r)}&\le\theta_a,
+ \label{eq:app-tail-prefix-exp-ratio}\\
+ (4a)\,\mathfrak q_a(r)\theta_a&\le4a-1.
+ \label{eq:app-tail-prefix-raw}
+\end{align}
+The first computation is split into twenty blocks of fifty consecutive values
+of $a$, each containing the ten offsets $t=0,\ldots,9$.  The second is a
+single $999\times10$ raw-rational block.  These are exact Boolean checks over
+$\mathbb Q$ executed by Lean's native evaluator; no floating-point comparison
+is used.  Equations \eqref{eq:app-tail-prefix-exp-ratio} and
+\eqref{eq:app-tail-prefix-raw} imply \eqref{eq:app-tail-temp-lower-step} in the
+prefix strip.  Together with the symbolic argument above, they prove
+\eqref{eq:app-tail-temp-lower-step} for every $a>2000$.
+
+\subsection{The upper tempered band}
+
+The upper band is $m+1\le k\le K$ and is summed in reverse.  The desired step
+is
+\begin{equation}\label{eq:app-tail-temp-upper-step}
+ T_a(r-1)\le q_aT_a(r)
+ \qquad(m+1<r\le K).
+\end{equation}
+Set
+\begin{equation}\label{eq:app-tail-V}
+ V^{\sharp}_a(r)=\mathfrak q_a(r-1)q_a.
+\end{equation}
+By the exact quotient identity \eqref{eq:app-tail-ratio-exact}, it is enough
+to prove
+\begin{equation}\label{eq:app-tail-Lt-reverse-target}
+ L_t(a,r-1)\le V^{\sharp}_a(r)L_t(a,r).
+\end{equation}
+
+In the far upper band
+\begin{equation}\label{eq:app-tail-far-upper}
+ 3a\le5r,
+\end{equation}
+one has
+\begin{equation}\label{eq:app-tail-far-upper-two}
+ E_t(a,r-1)\le E_t(a,r),
+ \qquad V^{\sharp}_a(r)\ge1.
+\end{equation}
+The second inequality follows from the lower form of
+\eqref{eq:app-tail-P-directions}, applied to the raw quotient at $r-1$.
+Thus \eqref{eq:app-tail-Lt-reverse-target} is immediate in this range.
+
+It remains to treat the middle band
+\begin{equation}\label{eq:app-tail-middle-upper}
+ m+1<r\le K,
+ \qquad 5r<3a.
+\end{equation}
+The exponent shift is bounded by
+\begin{equation}\label{eq:app-tail-middle-shift}
+ E_t(a,r-1)\le E_t(a,r)+\delta_a,
+ \qquad \delta_a=\frac{45}{a}.
+\end{equation}
+Put
+\begin{equation}\label{eq:app-tail-F}
+ \Phi_a=\left(1-\frac{79}{75}\delta_a\right)^{-1}.
+\end{equation}
+The rational exponential estimate used in Lean is
+\begin{equation}\label{eq:app-tail-shift-difference}
+ \PE_{8a}(E+\delta_a)-\PE_{8a}(E)
+ \le \frac{79}{75}\delta_a\,\PE_{8a}(E+\delta_a),
+\end{equation}
+valid here because
+\begin{equation}\label{eq:app-tail-shift-cutoff}
+ E+\delta_a\le\frac{8a-1}{24}.
+\end{equation}
+Rearranging \eqref{eq:app-tail-shift-difference} and using
+\eqref{eq:app-tail-middle-shift} gives
+\begin{equation}\label{eq:app-tail-middle-shell}
+ L_t(a,r-1)\le \Phi_aL_t(a,r).
+\end{equation}
+It remains to show $\Phi_a\le V^{\sharp}_a(r)$.
+
+For this purpose write the raw quotient at $r-1$ as
+\begin{equation}\label{eq:app-tail-reverse-factor}
+ \mathfrak q_a(r-1)=
+ \frac{2r}{a-r+1}\,\mathcal P_a(r-1).
+\end{equation}
+Define
+\begin{equation}\label{eq:app-tail-W}
+ W_a(r)=\Phi_a\frac{4a}{4a-1}\frac{a-r+1}{2r}.
+\end{equation}
+Then $\Phi_a\le V^{\sharp}_a(r)$ is equivalent to
+\begin{equation}\label{eq:app-tail-W-target}
+ W_a(r)\le\mathcal P_a(r-1).
+\end{equation}
+There are two elementary subcases.
+
+If $a+1\le2r$, then direct rational simplification gives
+\begin{equation}\label{eq:app-tail-W-midpoint}
+ W_a(r)\le1,
+\end{equation}
+and \eqref{eq:app-tail-P-directions} gives
+$1\le\mathcal P_a(r-1)$.
+
+If $2r<a+1$, then
+\begin{equation}\label{eq:app-tail-W-lowhalf}
+ W_a(r)\le1-\frac1a.
+\end{equation}
+The required matching lower bound for the power product is obtained from the
+telescoping inequality
+\begin{equation}\label{eq:app-tail-P-gap}
+ \mathcal P_a(s)\ge
+ 1-\frac{(j_s-2)-(s-1)}{2(s-1)(j_s-2)}
+ \qquad(s-1\le j_s-2).
+\end{equation}
+For $s=r-1$ and the present range, the fraction on the right is at most
+$1/a$; hence
+\begin{equation}\label{eq:app-tail-P-lowhalf}
+ 1-\frac1a\le\mathcal P_a(r-1).
+\end{equation}
+This proves \eqref{eq:app-tail-W-target}, then
+\eqref{eq:app-tail-Lt-reverse-target}, and finally
+\eqref{eq:app-tail-temp-upper-step} throughout the upper band.
+
+\subsection{Endpoint reserves and the tempered budget}
+
+The two endpoint exponential shells admit the common envelope
+\begin{equation}\label{eq:app-tail-ten-sevenths}
+ L_t(a,\ell)\le\left(\frac{10}{7}\right)^a,
+ \qquad
+ L_t(a,K)\le\left(\frac{10}{7}\right)^a.
+\end{equation}
+The theorem-facing endpoint estimates are
+\begin{equation}\label{eq:app-tail-endpoint-units}
+ 800000000\,(4a)T_a(\ell)\le1,
+ \qquad
+ 800000000\,(4a)T_a(K)\le1.
+\end{equation}
+We record the coarse envelopes used to prove them.
+
+For the lower endpoint, one has $\ell\le a/4$, discards
+$\mathcal H_a(\ell)\le1$, and keeps only the dyadic decay.  This yields
+\begin{equation}\label{eq:app-tail-Gminus}
+ 800000000(4a)T_a(\ell)
+ \le G_-(a):=
+ 3200000000\,a^3\,2^{-(a-\floor{a/4})}
+ \left(\frac{10}{7}\right)^a.
+\end{equation}
+The four-step comparison
+\begin{equation}\label{eq:app-tail-Gminus-step}
+ G_-(a+4)\le G_-(a)
+\end{equation}
+follows from
+\begin{equation}\label{eq:app-tail-Gminus-constants}
+ a+4\le\frac{401}{400}a,
+ \qquad
+ 10000\left(\frac{401}{400}\right)^3\le19208.
+\end{equation}
+Exact rational checks at $a=2001,2002,2003,2004$ initialize the four residue
+classes and prove the first inequality in
+\eqref{eq:app-tail-endpoint-units}.
+
+For the upper endpoint, the entropy shadow is retained.  The elementary
+bounds
+\begin{equation}\label{eq:app-tail-upper-entropy}
+ \mathcal H_a(K)
+ \le
+ \left(\frac{901}{1000}\right)^{\floor{89a/100}}
+ \left(\frac{101}{1000}\right)^{\floor{a/10}-1}
+\end{equation}
+give
+\begin{align}
+ 800000000(4a)T_a(K)
+ &\le G_+(a)\notag\\
+ &:={}
+ 3200000000\,a^3
+ \left(\frac{901}{1000}\right)^{\floor{89a/100}}
+ \left(\frac{101}{1000}\right)^{\floor{a/10}-1}
+ 2^{-\floor{a/10}}
+ \left(\frac{10}{7}\right)^a.
+ \label{eq:app-tail-Gplus}
+\end{align}
+The one-hundred-step comparison
+\begin{equation}\label{eq:app-tail-Gplus-step}
+ G_+(a+100)\le G_+(a)
+\end{equation}
+follows from
+\begin{equation}\label{eq:app-tail-Gplus-constants}
+ \left(\frac{21}{20}\right)^3
+ \left(\frac{901}{1000}\right)^{89}
+ \left(\frac{101}{1000}\right)^{10}
+ \left(\frac{10}{7}\right)^{100}
+ \le2^{10}.
+\end{equation}
+Exact rational checks for $2001\le a\le2100$ initialize the one hundred
+residue classes and prove the second inequality in
+\eqref{eq:app-tail-endpoint-units}.
+
+Since $1-q_a=1/(4a)$, the lower and upper geometric reserves satisfy
+\begin{align}
+ \sum_{k=\ell}^{m}T_a(k)
+ &\le\frac{T_a(\ell)}{1-q_a}
+  =4aT_a(\ell)\le\frac1{800000000},
+ \label{eq:app-tail-lower-budget}\\
+ \sum_{k=m+1}^{K}T_a(k)
+ &\le\frac{T_a(K)}{1-q_a}
+  =4aT_a(K)\le\frac1{800000000}.
+ \label{eq:app-tail-upper-budget}
+\end{align}
+Therefore
+\begin{equation}\label{eq:app-tail-tempered-budget}
+ \Sigma_t(a)\le\frac1{400000000}.
+\end{equation}
+Together with \eqref{eq:app-tail-small-budget}, this gives the product part of
+the positive budget:
+\begin{equation}\label{eq:app-tail-product-budget}
+ \Sigma_s(a)+\Sigma_t(a)\le\frac1{200000000}
+ \qquad(a>2000).
+\end{equation}
+
+\subsection{The solo term}
+
+The remaining term in \eqref{eq:Unorm} is $2^{-a-1}Y_a(N)$.  The sharp solo
+estimate is proved first at the upper edge $N=N_+$ by splitting the closed
+factorial-composition expansion into low-degree and remainder blocks.  In the
+notation of the formal development, if $\Delta_a(N_+)$ denotes that closed
+block sum, the denominator-cleared estimate is
+\begin{equation}\label{eq:app-tail-solo-sharp}
+ 4\,2^a\Delta_a(N_+)
+ \le29\,a\,c_a\left(\frac{10}{7}\right)^a.
+\end{equation}
+Monotonicity in $N$ then yields the normalized bound
+\begin{equation}\label{eq:app-tail-solo-envelope}
+ Y_a(N)\le\frac{29}{2}\frac aN
+ \left(\frac{10}{7}\right)^a
+ \qquad(N_-\le N\le N_+).
+\end{equation}
+Since $N\ge6a-7$ and $a\ge401$, one has $a/N\le1/5$.  Therefore
+\begin{align}
+ 2^{-a-1}Y_a(N)
+ &\le\frac{29}{4}\frac aN\left(\frac57\right)^a
+ \notag\\
+ &\le\frac{29}{20}\left(\frac57\right)^a.
+ \label{eq:app-tail-solo-geometric}
+\end{align}
+Writing
+\[
+ H_{\mathrm{solo}}(a)=290000000\left(\frac57\right)^a,
+\]
+one has the exact adjacent-$a$ relation
+\begin{equation}\label{eq:app-tail-solo-step}
+ H_{\mathrm{solo}}(a+1)=\frac57H_{\mathrm{solo}}(a).
+\end{equation}
+Thus the sequence is decreasing, and the exact rational check at $a=401$
+gives
+\begin{equation}\label{eq:app-tail-solo-unit}
+ 290000000\left(\frac57\right)^a\le1.
+\end{equation}
+Consequently
+\begin{equation}\label{eq:app-tail-solo-budget-final}
+ 2^{-a-1}Y_a(N)\le\frac1{200000000}.
+\end{equation}
+
+\begin{proposition}[Large positive-tail budget]
+\label{prop:app-tail-final}
+For every $a>2000$ and every $N$ with $6a-7\le N\le12a-8$,
+\begin{equation}\label{eq:app-tail-final}
+ 2^{-a-1}Y_a(N)
+ +\frac N2\sum_{\substack{1\le k<a\\X_k(N)>0}}
+ R_{k,a}2^{-(a-k)}X_k(N)Y_{a-k}(N)
+ \le10^{-8}.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The sign lock removes $k>K$.  The remaining product sum is at most
+\eqref{eq:app-tail-product-budget} by
+\eqref{eq:app-tail-pointwise-small}--\eqref{eq:app-tail-product-to-two-sums}.
+The solo term is at most \eqref{eq:app-tail-solo-budget-final}.  Their sum is
+\(
+ 1/200000000+1/200000000=10^{-8}.
+\)
+\end{proof}
+
+\subsection{Correspondence with the formal proof}
+
+For audit purposes, the principal Lean declarations corresponding to this
+appendix are listed below.  The declaration names are stable in the release
+version of the repository.
+
+\begin{center}
+\scriptsize
+\urlstyle{tt}
+\begin{tabular}{p{0.35\textwidth}p{0.57\textwidth}}
+\toprule
+paper item & Lean declaration or file\\
+\midrule
+$L_s,L_t$ &
+\path{positiveSmallLargeExp}; \path{positiveTemperedLargeExp}\\
+$S_a,T_a$ &
+\path{positiveSmallEntropyShadowExpMajorantTerm};
+\path{positiveTemperedEntropyShadowExpMajorantTerm}\\
+raw quotient $\mathfrak q_a$ &
+\path{positiveEntropyShadowBaseStepRawQuotient}\\
+power product $\mathcal P_a$ &
+\path{positiveEntropyShadowBaseStepRawPowerProduct}\\
+small ratio $1/2$ &
+\path{positiveSaddleLargeTailCandidateSmallRawBaseHalfCertificate}\\
+lower split $m=\floor{a/3}+10$ &
+\path{positiveLargeExpTemperedSplit}\\
+lower sharp target $U^{\sharp}_a$ &
+\path{positiveTemperedLowerSharpExpQuotientTarget}\\
+finite prefix target $\theta_a$ &
+\path{positiveTemperedLowerPrefixTopOffsetExpRatioTarget}\\
+finite prefix certificates &
+\path{PositiveSaddlePrefixExpRatioCertificate.lean};
+\path{PositiveSaddlePrefixRawBudget.lean}\\
+upper-middle shift $45/a$ &
+\path{positiveTemperedUpperMiddleExpShiftBudget}\\
+upper-middle factor $\Phi_a$ &
+\path{positiveTemperedUpperMiddleExpShiftFactor}\\
+small first reserve &
+\path{positiveSaddleLargeTailCandidateSmallFirstReserveCertificate_closed}\\
+tempered endpoint reserves &
+\path{positiveSaddleLargeTailCandidateUnitReserveCertificate_temperedTenSevenths_closed}\\
+assembled hybrid ratio certificate &
+\path{positiveSaddleLargeTailCandidateRefinedAtomicCertificate_hybridClosed}\\
+solo block and envelope &
+\path{PositiveSaddle.lean}, sharp large-tail solo section\\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \section{Public Lean statement}\label{app:lean-statement}
 
