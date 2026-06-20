@@ -859,7 +859,7 @@ scripts/           axiom report, constants check, saddle scans/templates
 paper/             the LaTeX proof document (tenth revision + errata)
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
 blueprint/         (planned) Lean blueprint
-ROADMAP.md         formalization plan: Layers A, A′, B, C
+docs/DEVELOPMENT_HISTORY.md   formalization plan: Layers A, A′, B, C
 ```
 
 ## Relation to the paper

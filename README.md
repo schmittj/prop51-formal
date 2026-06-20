@@ -30,8 +30,10 @@ C(t) = Σ_{r≥0} (6r)! / ((3r)! (2r)!) · (t/72)^r .
 
 In particular this coefficient is nonzero — the hypothesis of Chen–Larson
 Proposition 5.1 — so via their geometric reduction it yields their
-Conjecture 1.4 for holomorphic abelian strata in these residue classes, **for
-all genera**, extending their computer verification (`g ≤ 30`).
+Conjecture 1.4 for holomorphic abelian strata, **for all genera in the residue
+classes `g ≡ 0, 2 (mod 3)`** (the `g ≡ 1` case uses a different series, their
+Proposition 5.2, and is not treated), extending their computer verification
+(`g ≤ 30`).
 
 The public Lean statement is `Prop51.chenLarsonCoefficient_neg` in
 [`Prop51/Theorem.lean`](Prop51/Theorem.lean); that small file also names the
@@ -56,7 +58,8 @@ Lean.ofReduceBool, Lean.trustCompiler        -- from the finite native_decide ce
 ```
 
 and nothing else — no project-specific axiom and no floating-point assumption.
-CI fails if any other axiom or a `sorry` ever appears.
+CI fails if any of the audited public theorems depends on `sorryAx` or on an
+axiom outside this documented list.
 
 ## Trust model
 
@@ -79,7 +82,7 @@ Prop51Kernel.lean  the Mathlib-free, natively-compiled interval kernel
 scripts/           axiom reports, constants checks, certificate generators
 certificates/      the external 192-bit Arb certificate package (9 ≤ a ≤ 400)
 docs/              FORMALIZATION.md (layer-by-layer guide) and the AI-development record
-ROADMAP.md         the formalization plan, now complete
+docs/DEVELOPMENT_HISTORY.md   the (now complete) layered formalization plan
 ```
 
 ## Paper and provenance
@@ -94,4 +97,6 @@ ROADMAP.md         the formalization plan, now complete
 
 ## License
 
-Apache 2.0 — see [`LICENSE`](LICENSE).
+The Lean code and repository are licensed under **Apache 2.0** ([`LICENSE`](LICENSE)).
+The paper (`paper/`) is licensed under **CC BY 4.0** ([`paper/LICENSE`](paper/LICENSE)).
+A machine-readable citation is in [`CITATION.cff`](CITATION.cff).

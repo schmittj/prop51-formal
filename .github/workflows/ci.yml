@@ -29,7 +29,10 @@ jobs:
       - name: Python certificate scripts (fast layer)
         run: |
           python3 scripts/positive_saddle_scan.py --quick
-      - name: Positive saddle generator smoke
+      - name: Positive saddle generator smoke (legacy-regression)
+        # NB: this exercises the historical tangent/exact-product generator
+        # interface, kept as a regression guard. It is not the canonical
+        # direct-saddle producer used by the final proof.
         run: |
           python3 -m py_compile scripts/positive_saddle_fixed_finite_template.py
           common=(
@@ -68,3 +71,16 @@ jobs:
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
             --emit-final --final-tail-atomic-bounds | \
             grep 'PositiveSaddleLargeTailAtomicBoundsAuditCertificate'
+
+  # Build the LaTeX paper so the source cannot silently break or drift from the
+  # committed PDF. Fails on any LaTeX error; runs latexmk (two passes for refs).
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile paper/prop51.tex
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: paper
+          root_file: prop51.tex
+          latexmk_use_xelatex: false

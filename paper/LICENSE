@@ -1,0 +1,12 @@
+The paper in this directory (paper/prop51.tex and the compiled paper/prop51.pdf)
+is licensed under the Creative Commons Attribution 4.0 International License
+(CC BY 4.0).
+
+You are free to share and adapt the material for any purpose, even commercially,
+provided you give appropriate credit.
+
+Full license text: https://creativecommons.org/licenses/by/4.0/legalcode
+Human-readable summary: https://creativecommons.org/licenses/by/4.0/
+
+The Lean code and all other files in the repository are licensed separately
+under the Apache License 2.0; see the top-level LICENSE file.
