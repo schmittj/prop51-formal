@@ -30,13 +30,11 @@ The mathematical objects:
   `b = exp(-Σ_r D_r c_r t^r)`, `D_r = Σ_i (q_i - q_i^{-r})`, `q_i = m_i + 1`.
 * `Unorm a N` — the partition-free majorant `U_a(N)/(N c_a)` of the paper,
   eq. (8)/(11): `b_a(μ) ≤ U_a(N)` for every positive partition of weight
-  `N - n`… (see the paper; the bridge lemma is future work, tracked in
-  `ROADMAP.md`).
+  `N - n` (proved in `Prop51.Majorant`).
 
 The bridge between `bCoeff`/`Unorm` and the official power-series coefficient
-(via `Mathlib.RingTheory.PowerSeries`) is *not* yet formalized; it is the
-"Layer A" milestone in the roadmap.  Everything downstream of the definitions
-below is sorry-free.
+(via `Mathlib.RingTheory.PowerSeries`) is formalized in `Prop51.Bridge` and
+`Prop51.BCoeffSeries`.
 -/
 
 import Mathlib.Algebra.Order.Field.Rat

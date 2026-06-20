@@ -34,7 +34,10 @@ This tenth revision responds to the two latest audits of the ninth proof package
 
 First, the proof of $d_r\le 1/(2\pi)$ is repaired by proving that $A_r/(6^r\Gamma(r))$ increases to $1/(2\pi)$.  Second, the nonlinear envelope is restated only in the actually used range $R\le20$, and all saddle arguments are explicitly for truncated polynomials.  Third, the P4 cross term is corrected to use the full product factors, and the new constants script computes it rather than hard-coding it.  Fourth, the positive-part section now states explicit saddle majorants in two regimes; the supporting script evaluates the resulting finite inequalities and records the worst cases.
 
-The status is slightly more cautious than the ninth revision: the overall argument is now much more audit-ready, and I believe the route closes, but the positive-part saddle majorant still rests on an elementary finite calculus/certificate layer rather than on a theorem-prover formalization.  The finite Arb rectangle $9\le a\le400$ remains unchanged.
+The accompanying Lean formalization has since closed the positive-part saddle
+layer by a rational direct-saddle route and proves the final coefficient
+negativity theorem without hypotheses.  The finite Arb rectangle
+$9\le a\le400$ remains unchanged.
 \end{abstract}
 
 \tableofcontents
@@ -740,6 +743,48 @@ In particular, the coefficient is nonzero, so the hypothesis of Chen--Larson Pro
 \begin{corollary}\label{cor:CL}
 Assuming the geometric reduction of Chen--Larson Proposition 5.1, Conjecture 1.4 of Chen--Larson holds for all holomorphic abelian strata associated with positive partitions in the residue classes $g\equiv0,2\pmod3$.
 \end{corollary}
+
+\section{Use of generative artificial intelligence}\label{sec:genai}
+
+The Lean formalization accompanying this note was developed with substantial
+assistance from generative AI coding systems, under human direction and with
+Lean itself as the final checker.  An earlier part of the formalization was
+produced using Claude Fable 5 through Claude Code.  The later completion
+drive, including the direct-saddle product route, the low-range finite-solo
+closure, and the final theorem wiring, was produced using OpenAI Codex CLI.
+The Codex goal log for the final completion phase recorded about
+$2.31\cdot10^5$ seconds, or roughly 64 hours, of elapsed tool-tracked work.
+
+The AI systems were used to propose Lean proof strategies, locate relevant
+lemmas, perform refactorings, and draft proof terms.  They were not used as a
+trusted oracle.  All mathematical claims included in the formal result are
+checked by Lean, and the trust model is the Lean kernel, Mathlib, and the
+explicitly documented \texttt{native\_decide} certificate axioms
+\texttt{Lean.ofReduceBool} and \texttt{Lean.trustCompiler}.
+
+The formalization process also revealed where the TeX proof and the
+machine-checked proof diverged.  In particular, an attempted exact
+upper-edge split-product route was found to be structurally false at the
+first large-tail cell $(a,k)=(3000,4)$: the coarse split lost the dyadic gain
+and left an uncancelled factor of $2^j$.  No endpoint monotonicity or finite
+grid refinement could have proved that target.  Feedback solicited from GPT
+Pro identified this obstruction and suggested the route that ultimately
+unstuck the proof: keep the product together, use finite exponential
+prefixes, prove prefix convolution inequalities, and normalize only at the
+last step.  The resulting Lean proof uses a rational direct-saddle
+architecture, with finite exponential prefixes and the radius
+$\beta=34/15$, rather than the older separate real-exponential saddle
+majorants described in the informal positive-part section above.
+
+Several smaller discrepancies were also resolved during formalization.  The
+positive-part finite scan in the TeX draft had to be replaced by theorem-facing
+bounded, prefix, and tail certificates; the finite solo strip
+$401\le a\le801$ required a tighter low-range $\Delta$ envelope and an
+explicit $10/9$ accounting loss in the low-middle band; and Lean-side comments
+now record where these constant splits are not literally the prose proof.
+Thus the TeX argument should be read as the mathematical guide, while the
+Lean files provide the authoritative verification of the final constants and
+case splits.
 
 \section{Reproducibility artifacts}\label{sec:artifacts}
 

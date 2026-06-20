@@ -2,3 +2,10 @@
 *.olean
 __pycache__/
 *.pyc
+paper/*.aux
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.pdf
+paper/*.toc

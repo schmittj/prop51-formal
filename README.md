@@ -35,6 +35,13 @@ The proof (see `paper/prop51.tex`) has three layers:
 
 All Lean proofs are sorry-free.  Headline theorems:
 
+* **Public facade**: `Prop51/Theorem.lean` is the small file intended for
+  external inspection.  It names the hypergeometric series `chenLarsonC`,
+  states the Chen--Larson quotient identity
+  `chenLarsonSeries_spec`, and exposes
+  `Prop51.chenLarsonCoefficient_neg` and
+  `Prop51.chenLarsonCoefficient_ne_zero`.  The root file `Prop51.lean`
+  imports this facade.
 * **Canonical completion theorem**: `Prop51/Completion.lean` proves
   `Prop51.coefficientNegativity : Prop51.CoefficientNegativity` with no live
   parameters.  The closed route is the direct-saddle assembly
@@ -834,6 +841,7 @@ every headline theorem; CI fails if anything beyond
 ```sh
 lake exe cache get   # fetch prebuilt mathlib oleans
 lake build           # builds everything incl. the native_decide certificates
+lake env lean scripts/PublicAxiomsReport.lean  # compact public axiom audit
 lake env lean scripts/AxiomsReport.lean   # axiom audit
 ```
 
@@ -845,7 +853,7 @@ build time.
 
 ```
 Prop51Kernel.lean  executable interval kernel (no Mathlib; natively precompiled)
-Prop51/            Lean library (Defs, soundness theory, certificates, Main)
+Prop51/            Lean library (public facade, soundness theory, certificates)
 scripts/           axiom report, constants check, saddle scans/templates
 paper/             the LaTeX proof document (tenth revision + errata)
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)

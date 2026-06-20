@@ -3,9 +3,9 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 
 # Main statements
 
-This file isolates the target theorem of the project and records exactly
-what is proved so far.  It deliberately imports only the definition layer and
-the finite certificates.
+This file records theorem assembly adapters for the coefficient-negativity
+target.  The concise public statement lives in `Prop51.Statement`, and the
+closed public facade lives in `Prop51.Theorem`.
 
 ## The target
 
@@ -31,7 +31,7 @@ of Proposition 5.1 there).
   Older table-backed and non-active capstones remain available as audit and
   profiling interfaces, but are not the production route.
 -/
-import Prop51.Defs
+import Prop51.Statement
 import Prop51.Partitions
 import Prop51.CertificateSmall
 import Prop51.CertificateExact
@@ -42,21 +42,6 @@ import Prop51.PositiveSaddleChunks
 import Prop51.PositiveSaddleHybridRatioCertificate
 
 namespace Prop51
-
-/-- `μ` is a positive partition of `n`: a list of positive parts summing to
-`n`.  (Order is irrelevant to `bCoeff`, which only uses the multiset of
-parts; we do not impose sortedness.) -/
-def IsPartitionOf (μ : List Nat) (n : Nat) : Prop :=
-  μ.sum = n ∧ ∀ m ∈ μ, 1 ≤ m
-
-/-- **The target statement.**  Negativity of the Chen–Larson Proposition 5.1
-coefficient for all relevant genera and all positive partitions.  Proving
-this proposition (sorry-free, with the power-series bridge of Layer A) is the
-goal of this repository. -/
-def CoefficientNegativity : Prop :=
-  ∀ g : Nat, 2 ≤ g → g % 3 ≠ 1 →
-    ∀ μ : List Nat, IsPartitionOf μ (2*g - 2) →
-      bCoeff μ (g/3 + 1) < 0
 
 /-- What is currently machine-checked towards `CoefficientNegativity` for
 small genus: every *generated* partition for every relevant `g ≤ 23`.
