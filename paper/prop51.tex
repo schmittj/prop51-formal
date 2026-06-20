@@ -47,6 +47,32 @@
 }
 \lstset{style=leanstyle}
 
+% Human--AI interaction cards (cf. Feng et al.), dependency-free framed boxes.
+% Usage: \begin{haicard}[<conversation url>]{<title>}{<model>} ... \end{haicard}
+% With a url, the title becomes a coloured hyperlink to the conversation.
+\definecolor{cardlink}{RGB}{0,70,148}
+\newsavebox{\haibox}
+\newenvironment{haicard}[3][]{%
+  \par\medskip\noindent
+  \begin{lrbox}{\haibox}%
+  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}%
+    \small
+    {\sffamily\bfseries
+      \def\haiurl{#1}%
+      \ifx\haiurl\empty #2\else\href{#1}{\textcolor{cardlink}{#2}}\fi
+      \hfill #3}\par\vspace{0.45em}%
+}{%
+  \end{minipage}%
+  \end{lrbox}%
+  \fbox{\usebox{\haibox}}%
+  \par\medskip
+}
+% Field label inside a card.
+\newcommand{\haifield}[1]{\textit{#1.}\enspace\ignorespaces}
+% A short quoted prompt inside a card.
+\newcommand{\haiprompt}[1]{\par\vspace{0.2em}\leftskip1.2em\rightskip1.2em\relax
+  \small\itshape #1\par\leftskip0pt\rightskip0pt\vspace{0.2em}}
+
 \title{Strict negativity of a Chen--Larson hypergeometric coefficient\\
 \large A computer-assisted and formally verified proof}
 \author{Johannes Schmitt}
@@ -125,127 +151,125 @@ for every positive holomorphic partition when $g\equiv0,2\pmod3$.
 Combine Theorem~\ref{thm:main} with Chen--Larson Proposition~5.1.
 \end{proof}
 
-\subsection{Reader-level outline of the proof}
+\subsection{Outline}\label{sec:outline}
 
-After Chen and Larson's geometric reduction, the problem is no longer a
-problem in algebraic geometry.  It is a uniform statement about one
-coefficient in a quotient of power series.  The difficulty is that the
-quotient depends on an arbitrary partition
-\(\mu=(m_1,\ldots,m_n)\), and the theorem asks for the same sign for every
-genus and every such partition.  The proof is therefore organized around two
-questions:
-\begin{enumerate}[leftmargin=2em]
-  \item How can we remove the dependence on the individual parts of \(\mu\)?
-  \item Once only a few numerical parameters remain, how can we prove a
-  strict negative sign uniformly rather than by expanding more and more
-  coefficients?
-\end{enumerate}
+After the geometric reduction, the statement is no longer one of algebraic
+geometry: it is a uniform claim about a single coefficient of a quotient of
+power series.  Two features make it hard.  The quotient depends on an
+arbitrary partition \(\mu=(m_1,\dots,m_n)\) of \(2g-2\), and the same strict
+sign is required for every genus and every such partition.  The proof meets
+these in turn: first it removes the partition, leaving an expression in two
+integer parameters; then it proves the sign for that expression uniformly,
+without ever expanding the coefficient as a number.  This subsection describes
+the argument in words; every object named here is defined precisely in the
+sections that follow.
 
 \paragraph{Removing the partition.}
-Write
+The one structural fact we need about \(\C\) is that its logarithm has
+nonnegative coefficients: writing
 \[
-  \log \C(t)=\sum_{r\ge1}c_rt^r.
+  \log \C(t)=\sum_{r\ge1}c_rt^r,
 \]
-The coefficients \(c_r\) are positive.  This positivity is the basic reason
-the arbitrary partition can be replaced by a worst-case expression.  If
-\(q_i=m_i+1\), then every \(q_i\) is at least \(2\), and
+one has \(c_r>0\) (proved in Section~\ref{sec:coeff}).  Set \(q_i=m_i+1\ge2\)
+and \(N=\sum_i q_i=2g-2+n\); the coefficient of interest is
+\([t^a]\,\prod_i\C(t/q_i)\big/\C(t)^N\).  Rescaling \(t\) inside the logarithm
+writes each factor of the numerator as an exponential, and the product as a
+single exponential,
 \[
-  N=\sum_iq_i=2g-2+n.
+  \C(t/q_i)=\exp\!\Big(\sum_{r\ge1}c_r\,q_i^{-r}\,t^r\Big),
+  \qquad
+  \prod_{i=1}^n\C(t/q_i)=\exp\!\Big(\sum_{r\ge1}c_r\,\sigma_r\,t^r\Big),
+  \quad \sigma_r:=\sum_{i=1}^n q_i^{-r}.
 \]
-The numerator \(\prod_i\C(t/q_i)\) is then coefficientwise no larger than
-\(\C(t/2)^{N/2}\).  Intuitively, among all allowed \(q_i\)'s, replacing the
-individual denominators by the smallest possible denominator \(2\), with the
-correct total weight \(N\), gives an upper bound for the positive numerator.
-Thus the proof no longer has to know the partition itself.  It only has to
-control an expression depending on the two integers \(a\) and \(N\), where
+The coefficients of an exponential \(\exp(\sum_r a_r t^r)\) are polynomials in
+the \(a_r\) with nonnegative coefficients; since here \(a_r=c_r\sigma_r\ge0\),
+each coefficient of the product is a nondecreasing function of every \(\sigma_r\).
+Now \(q_i\ge2\) gives \(\sigma_r\le n\,2^{-r}\), and \(n\le N/2\), so
+\(\sigma_r\le\frac N2\,2^{-r}\); replacing \(\sigma_r\) by this larger value
+turns the product into exactly \(\C(t/2)^{N/2}\).  Hence the numerator is
+dominated coefficientwise,
 \[
-  6a-7\le N\le12a-8.
+  [t^r]\prod_{i}\C(t/q_i)\ \le\ [t^r]\,\C(t/2)^{N/2}
+  \qquad(r\ge0),
 \]
-Below, this upper-bound expression is denoted \(U_a(N)\).  The word
-``majorant'' means only this: \(U_a(N)\) is a partition-independent upper
-bound for the original coefficient.
+by an upper bound that no longer remembers the partition.  Substituting it for
+the numerator and dropping the convolution terms that are automatically
+nonpositive produces a partition-free upper bound \(U_a(N)\) for the target
+coefficient --- a \emph{majorant} --- whose explicit form is recorded in
+\eqref{eq:Udef}.  It then remains to prove
+\[
+  U_a(N)<0
+  \qquad\text{for the two integers }a,N\text{ subject to } 6a-7\le N\le12a-8 .
+\]
 
-\paragraph{Separating the negative main term from the possible positive
-terms.}
-The quotient has a denominator \(\C(t)^N\).  Its coefficients, after a
-normalization, are denoted \(X_r(N)\).  The coefficient of
-\(\C(t/2)^{N/2}\), again normalized, is denoted \(Y_r(N)\).  With this
-notation the majorant has the shape
+\paragraph{A negative main term against small positive corrections.}
+It is convenient to rescale the coefficients of the two relevant series.  Let
+\(X_r(N)\) be the normalized coefficient of \(t^r\) in the denominator
+\(\C(t)^{-N}\), and \(Y_r(N)\) the normalized coefficient of \(t^r\) in
+\(\C(t/2)^{N/2}\) (the precise normalizations are fixed in
+Section~\ref{sec:majorant}).  In these terms the majorant takes the shape
 \[
   \frac{U_a(N)}{Nc_a}
-  =\hbox{one negative candidate }X_a(N)
-   +\hbox{positive correction terms}.
+  = \underbrace{X_a(N)}_{\text{one negative term}}
+   \;+\; \text{(positive correction terms)} .
 \]
-The whole proof is a comparison between these two sides.  We prove that
-\(X_a(N)\) is bounded above by a negative number, with an explicit margin,
-and then show that all possible positive corrections are smaller than that
-margin.
+The proof is a contest between the two sides: we bound \(X_a(N)\) above by a
+\emph{negative} number with an explicit margin, and bound every positive
+correction below that margin.  The corrections come from the convolution and
+are indexed by splittings \(a=k+j\) with \(1\le k<a\).
 
-The correction terms are indexed by splittings \(a=k+j\).  A key point is
-that most of these splittings cannot contribute positively.  The proof shows
-that once \(k\) is larger than \(0.9a\), the coefficient \(X_k(N)\) has
-already become nonpositive throughout the whole rectangle for \(N\).  This is
-the ``sign lock'': after a certain point, the relevant family of coefficients
-is locked into the negative sign, so those terms may be discarded from an
-upper bound.  What remains is the range
+Most splittings contribute nothing.  We prove a \emph{sign lock}: once
+\(k>0.9a\), the coefficient \(X_k(N)\) is already negative throughout the
+whole range of \(N\), so such terms only help an upper bound and may be
+dropped.  This is the technical heart of the negative side, and it leaves only
+the splittings with \(1\le k\le\floor{0.9a}\) to be controlled.
+
+\paragraph{Bounding coefficients without computing them.}
+For the surviving corrections we never expand the coefficients as numbers ---
+that would be hopeless for large \(a\).  Instead we use one elementary
+principle.  If a series is the exponential of a series with nonnegative
+coefficients, its coefficient of \(t^m\) is bounded, for any positive rescaling
+of \(t\), by a finite truncation of an ordinary exponential,
 \[
-  1\le k\le\floor{0.9a}.
+  P_m(x)=\sum_{r=0}^m\frac{x^r}{r!} .
 \]
-
-\paragraph{Bounding coefficients without expanding them.}
-The remaining positive terms still involve products of coefficients, and
-direct expansion would be infeasible for large \(a\).  The proof bounds them
-using finite Taylor polynomials
+Choosing the rescaling well makes this bound sharp; this is the classical
+saddle-point idea, but carried out so that every quantity stays
+rational\footnote{The insistence on staying rational reflects the formal proof
+more than the mathematics.  The Lean development works entirely over \(\Q\):
+each transcendental ingredient --- the limiting constant \(1/(2\pi)\) in the
+coefficient bounds, Stirling's estimate for factorials, and evaluations of the
+exponential --- is replaced by an explicit rational surrogate, so that the proof
+checker can verify every inequality by exact arithmetic with no real-analysis
+library.  The slight loss in the constants is absorbed by the large slack in the
+final budget.} and no limit, contour, or transcendental constant ever enters.
+Two finite exponentials multiply in the same spirit,
 \[
-  P_m(x)=\sum_{r=0}^m\frac{x^r}{r!}.
+  P_m(x)\,P_n(y)\le P_{m+n}(x+y)\qquad(x,y\ge0),
 \]
-The guiding idea is elementary.  If a power series is an exponential of a
-series with nonnegative coefficients, then the coefficient of \(t^m\) can be
-bounded by first scaling \(t\) by a positive number and then bounding all
-ways of obtaining total degree \(m\) by the total mass of the scaled series.
-This is why the argument resembles a saddle-point estimate, but it avoids
-complex analysis and avoids real transcendental estimates at the theorem
-level.  Everything is reduced to rational inequalities involving finite
-Taylor polynomials.
+which is the binomial theorem applied after enlarging a rectangle of indices to
+a triangle.  This last inequality is more important than it looks: an early
+formalization attempt bounded the two factors \(\C(t)^{-N}\) and
+\(\C(t/2)^{N/2}\) separately and multiplied, which discarded a large power of
+\(2\) and produced a false target (Section~\ref{sec:ai}).  The proof that works
+keeps the product together and combines the finite exponentials only at the
+very end.
 
-The second elementary ingredient is that two finite Taylor polynomials can be
-combined:
-\[
-  P_m(x)P_n(y)\le P_{m+n}(x+y)\qquad(x,y\ge0).
-\]
-This is just the binomial theorem after enlarging a rectangle of summation
-indices to a triangle.  It is important because the first failed approach to
-the formal proof tried to bound two factors separately and then multiply the
-bounds.  That separated route lost a large dyadic factor.  The final proof
-keeps the product together and only combines the finite Taylor bounds at the
-last possible moment.
-
-The estimates in Section~\ref{sec:saddle} use two regimes.  When \(k\) is
-small compared with \(N\), the relevant scale is \(s=\ceil{\sqrt N}\).  When
-\(k\) is larger, the scale is \(k\) itself.  The factorial expressions that
-arise from the logarithmic coefficients are controlled by short rational
-estimates.  Later sections call these estimates ``factorial-gas'' bounds;
-for the reader, this means only that a finite sum of factorial terms is
-bounded by a simple rational expression.
-
-\paragraph{Finite verification and the infinite tail.}
-The proof is deliberately split between finite checking and general
-inequalities.  For \(a\le8\), every partition is enumerated and the exact
-rational coefficient is checked directly.  For \(9\le a\le60\), the
-partition-free upper bound \(U_a(N)\) is checked exactly over the relevant
-rectangle.  For \(61\le a\le400\), the same statement is checked by a small
-verified dyadic interval kernel whose soundness is proved in Lean.
-
-For \(a\ge401\), the sign lock gives the explicit negative margin, and the
-positive side is reduced to a small budget.  The finite strip
-\(401\le a\le2000\) is checked by rational certificate chunks.  The strip
-\(2001\le a<3000\) and the infinite range \(a\ge3000\) are handled by the
-same product estimates plus ratio bounds: within each band, the proof shows
-that consecutive terms decrease by a fixed rational factor, so a whole tail
-is bounded by its first term times a geometric reserve.  The final positive
-budget is at most \(10^{-8}\), while the negative margin from the sign lock
-is strictly larger.  This proves \(U_a(N)<0\), hence the original
-Chen--Larson coefficient is negative.
+\paragraph{Finite checking and the infinite tail.}
+The argument is split deliberately between explicit finite verification and
+uniform inequalities.  For \(a\le8\) every partition is enumerated and the
+exact rational coefficient is checked.  For \(9\le a\le60\) the majorant
+\(U_a(N)\) is checked exactly over the rectangle, and for \(61\le a\le400\) the
+same check is run in verified interval arithmetic --- a small calculator for
+intervals of rationals whose soundness is itself proved (so that rounding can
+never certify a false inequality).  For all \(a\ge401\) the sign lock supplies
+the negative margin and the saddle bounds reduce the positive side to a tiny
+budget: the strip \(401\le a\le2000\) is verified directly, and the strip
+\(2001\le a<3000\) together with the genuinely infinite range \(a\ge3000\) are
+closed by showing that consecutive terms shrink by a fixed rational ratio, so
+each tail is at most its first term times a geometric series.  The positive
+budget never exceeds \(10^{-8}\), while the negative margin is strictly larger;
+hence \(U_a(N)<0\), and the Chen--Larson coefficient is negative.
 
 \subsection{Formal verification and scope}
 
@@ -255,12 +279,17 @@ characterizes the quotient generating series by the identity in
 \eqref{eq:CL-series-intro}, and exposes strict negativity and non-vanishing.
 The exact public theorem is reproduced in Appendix~\ref{app:lean-statement}.
 
-The finite certificates use \code{native\_decide}.  Consequently the final
-theorem depends, in addition to the standard logical axioms used by Mathlib,
-on Lean's explicitly tracked native-evaluation trust mechanism.  This is not
-a hidden assumption: the repository contains a compact \code{\#print axioms}
-report for the public theorem.  We discuss this point in
-Section~\ref{sec:formalization}.
+The finitely many explicit computations --- enumerations, exact rational
+checks, and interval certificates --- are discharged by Lean's
+\code{native\_decide}, which verifies a finite claim by compiling it to a
+program and running it.  This makes the compiler part of what one trusts for
+those steps, in exchange for being able to check millions of cases.  The trade
+is recorded openly: Lean's \code{\#print axioms} command lists exactly which
+axioms a given theorem rests on, and for our final theorem that list is the
+standard logical axioms of Mathlib together with two named
+native-evaluation axioms and nothing else.  Section~\ref{sec:formalization}
+gives the precise trust boundary; the rest of the proof is checked by Lean's
+small logical kernel in the usual way.
 
 \section{The partition-free majorant}\label{sec:majorant}
 
@@ -979,156 +1008,230 @@ completion & combines all ranges into the unconditional public theorem\\
 
 \subsection{Trust boundary}
 
-Most of the argument is checked by ordinary kernel reduction.  The large
-finite certificates use \code{native\_decide}, which executes verified
-Boolean checkers using compiled code.  Lean records this dependence in the
-axiom report rather than concealing it.  According to the Lean reference
-manual~\cite{LeanAxioms}, native evaluation extends the trust boundary from
-the small kernel to the compiler for those computations; each invocation is
-represented by a theorem-specific native-evaluation axiom.  The repository's
-public audit prints the transitive axiom dependencies of the series bridge,
-majorant, final negativity theorem, and non-vanishing corollary.  At the
-time of this draft, the completed proof state is tagged
-\code{codex-closed-coefficient-negativity-20260620}
-(commit \code{37624108247aa29f18c5aab37b0f46ffe37fa968}), and the compact
-public facade is tagged \code{codex-public-facade-20260620}
-(commit \code{726584caa055964c344aa7a9fe5133aaf908f3f4}).
+Almost all of the argument is checked by Lean's small logical kernel, the same
+trusted core that underlies every Mathlib proof.  The exception is the family of
+large finite computations --- the enumerations and the exact and interval
+certificates --- which are run by \code{native\_decide}: Lean compiles the
+finite Boolean check to machine code, executes it, and accepts the result.
+This is faster by orders of magnitude than kernel reduction and is what makes
+the millions of certificate cases feasible, but it widens the trusted base to
+include the compiler for those steps.  Following the Lean reference
+manual~\cite{LeanAxioms}, each such use is recorded by a named axiom, and for
+the present development the complete list of extra-logical assumptions is
+exactly two: \code{Lean.ofReduceBool} and \code{Lean.trustCompiler}.  Nothing
+else --- in particular no \code{sorry}, no project-specific axiom, and no
+floating-point assumption --- enters the final theorem.
 
-The release retains both the compact public axiom report
-\code{scripts/PublicAxiomsReport.lean} and the exact commands required for a
-clean build:
+This is verifiable in one command.  The repository ships a short audit script
+that prints, for the series bridge, the majorant inequality, the final
+negativity theorem, and the non-vanishing corollary, the full list of axioms
+each depends on; a reader can reproduce it from a clean checkout with
 \begin{lstlisting}
-lake exe cache get
-lake build
-lake env lean scripts/PublicAxiomsReport.lean
+lake exe cache get   # download the prebuilt Mathlib
+lake build           # check every proof, including the certificates
+lake env lean scripts/PublicAxiomsReport.lean   # print the axiom lists
 \end{lstlisting}
-A stronger independent audit may additionally replay the generated object
-files through Lean's standalone checker.
+The completed proof and the compact public facade are preserved as tagged
+releases in the repository. A stronger independent audit may additionally
+replay the compiled certificate objects through Lean's standalone checker.
 
 \section{Background and use of generative artificial intelligence}
 \label{sec:ai}
 
-The project began after Hannah Larson's 10 June 2026 talk
-\emph{Tautological classes on the strata of differentials} in the Algebraic
-Geometry and Moduli seminar at ETH Zurich, which mentioned the conjecture of
-Chen and Larson.  The author, who was in the audience, decided to investigate
-the problem using AI tools.  In the following they designed and iterated
-prompts, maintained the computational and formal-verification harness,
-organized the resulting artifacts, and made editorial and release decisions.
-The proof search, draft writing, code generation, and much of the
-formalization were carried out with substantial assistance from generative AI
-systems and are described explicitly here.
+This project was carried out almost entirely through generative AI systems, and
+the way they were used is part of what the paper reports.  It began after Hannah
+Larson's talk \emph{Tautological classes on the strata of differentials} in the
+Algebraic Geometry and Moduli seminar at ETH Zurich on 10~June~2026, which
+described the conjecture of Chen and Larson.  The author was in the audience and
+decided to attack the resulting power-series problem with general-purpose AI
+tools.  The human role throughout was to choose the problem, design and refine
+the prompts, run and maintain the computational and Lean harness, supply
+mathematical judgment at the points where the automated search stalled, and take
+final responsibility for this text.  The proof search, much of the formal
+development, and parts of this write-up were produced with substantial AI
+assistance; no step was accepted as correct until it had been either translated
+into a Lean theorem or independently checked as mathematics.
 
-The following disclosure is organized partly in the spirit of the
-``human-AI interaction cards'' proposed by Feng et al.~\cite{FengAletheia},
-who suggest recording both the degree of AI autonomy and the mathematical
-significance of AI-assisted results.
+We document this as a chronological sequence of \emph{human--AI interaction
+cards}, following the format proposed by Feng et al.~\cite{FengAletheia}.  Each
+card states the task, the model, the essential prompt, a one-line summary of the
+reply, and the human action it led to; the card title links to the public
+conversation where one exists.  The prompts are reproduced verbatim or in close
+paraphrase, because the prompting strategy is the part of the method most likely
+to transfer to other problems; the AI replies are only summarized, with the most
+relevant exchanges also archived alongside the source.  In the taxonomy
+of~\cite{FengAletheia}, the development is close to ``essentially autonomous'' in
+execution (autonomy Level~A), but with essential human mathematical supervision
+at the two points (Cards~6 and~7) where the autonomous search went wrong; the
+significance is at the publication-grade boundary of Levels~1--2.  As with any
+result, it is the Lean proof, not its provenance, that certifies the theorem.
 
-\begin{center}
-\small
-\begin{tabular}{p{0.24\textwidth}p{0.66\textwidth}}
-\toprule
-field & disclosure\\
-\midrule
-human author & Johannes Schmitt is the sole human author.  The human
-contribution was problem selection, prompting, harness design, repository
-organization, editorial judgment, and final responsibility for this text.\\
-AI autonomy level & Self-assessed as fully autonomous, corresponding to
-Level A, ``essentially autonomous'', in the taxonomy
-of~\cite{FengAletheia}: the core mathematical attack and Lean formalization
-were generated by AI systems without an essential human mathematical proof
-contribution.\\
-mathematical significance level & Self-assessed as between Level 1 and
-Level 2 in the same taxonomy: more than a routine or negligible observation,
-but with final ``publication grade'' status depending on ordinary community
-review.  Informally, the result is classified here as A1--A2.\\
-verification & The final theorem is checked by Lean~4 and Mathlib.  The
-finite certificates using \code{native\_decide} additionally trust Lean's
-native-evaluation mechanism, as recorded by the public axiom report.\\
-artifacts & Public conversation links are given below, and local copies of
-selected prompts and replies are archived in
-\code{docs/ai-correspondence/}.\\
-\bottomrule
-\end{tabular}
-\end{center}
+The development had a simple shape, worth stating before the details.  A single
+ChatGPT~5.5 Pro conversation (Card~1) was the central strand in which the
+mathematics was worked out and successively written up as \LaTeX{} and Python.
+Into that strand the author repeatedly fed two distinct kinds of input from
+separate conversations --- adversarial \emph{audits} to surface errors (Card~2)
+and strategic \emph{guidance} from a second model to suggest pivots (Card~3) ---
+interleaved with simple requests to continue, producing ten drafts before
+formalization began.  The formalization then moved into Lean, first broadly
+(Card~4) and then under a long-horizon autonomous goal (Card~5), with two
+moments of essential human supervision (Cards~6 and~7) at which the autonomous
+search had to be redirected.
 
-The initial mathematical attack was prompted to ChatGPT 5.5 Pro with a
-request to study Conjecture~1.4 of Chen--Larson and its explicit
-Proposition~5.1 reformulation, and to make a sustained high-effort research
-attempt on the relevant power series.  The public conversation is archived at
-\url{https://chatgpt.com/share/6a3661c0-131c-83ed-961d-1f82a69bfa0a}.
-Intermediate feedback on early drafts was generated by Claude Fable 5
-(\url{https://claude.ai/share/0ae838c7-7794-4868-9403-844c3e4db750}) and by
-further ChatGPT 5.5 Pro audits.  The recurring audit prompt asked the model
-to read the appended note paragraph by paragraph and report every possible
-mathematical error, gap, handwaving step, misapplication of known results, or
-miscitation that could affect validity.  Additional implementation advice was
-generated by Claude Fable 5 in Claude Code.  This process led to a tenth
-revision of the informal proof judged mature enough to begin formalization.
+\begin{haicard}[https://chatgpt.com/share/6a3661c0-131c-83ed-961d-1f82a69bfa0a]{Card 1: Central investigation strand}{ChatGPT 5.5 Pro}
+\haifield{Task} Attack the Chen--Larson coefficient problem from scratch and
+develop a candidate proof.\par
+\haifield{Prompt} \haiprompt{Can you have a look at Conjecture 1.4 of
+\textup{arXiv:2603.23850} (and its explicit reformulation Proposition 5.1) and
+make a serious, sustained, high-effort research attack at trying to crack it?
+This is an open problem, but in similar conversations you already managed to
+crack several such problems, and you might have a perspective on this power
+series that is not available easily to the authors. Would be really curious if
+you can make progress here!}
+\haifield{Reply (summary)} Proposed the coefficientwise majorization that
+removes the partition, the normalized coefficients $X_r,Y_r$, and the strategy
+of a negative leading term against small positive corrections.\par
+\haifield{Continuation} This single conversation became the central strand: in
+later turns it produced the \LaTeX{} write-up and Python verification scripts,
+and carried the mathematics through ten successive drafts, fed by the audits and
+guidance of Cards~2 and~3.\par
+\end{haicard}
 
-The first formalization push was carried out by Claude Fable 5 through
-Claude Code; the extent of that phase is visible in the git history.  The
-completion drive was carried out with OpenAI Codex CLI.  Codex proposed proof
-decompositions, searched Mathlib, implemented and refactored Lean code,
-generated finite certificate wrappers, profiled slow proof-producing
-computations, and maintained the repository.  The systems were not treated as
-mathematical or logical oracles.  Proposed claims were accepted only after
-they had been translated into Lean theorems or independently audited as
-mathematics.
+\begin{haicard}[https://chatgpt.com/share/6a36838a-3fa4-83ed-a43c-a3a5a1f1cde8]{Card 2: Adversarial mathematical audit}{ChatGPT 5.5 Pro}
+\haifield{Task} Surface every defect in a draft package (notes and code) before
+trusting it.\par
+\haifield{Prompt} \haiprompt{Consider the appended zip file. Please read the
+contained mathematical notes in detail and inspect all relevant code files, then
+proceed with a full mathematical audit, going paragraph by paragraph to identify
+any mathematical errors, gaps in arguments, hand-waving, misapplications of known
+results, or mis-cited theorems --- anything that could affect the validity of the
+presented arguments. Then give me a full report.}
+\haifield{Reply (summary)} Returned concrete defects --- a far-tail constant
+valid only in a smaller range, a positive-part bound vacuous at $a=401$, a
+single-edge scan that missed the worst value of~$N$ --- each then repaired.\par
+\haifield{Human action} Fed each reported defect back into the central strand for
+repair, and re-ran the audit on the next draft.\par
+\haifield{Technique} A fresh conversation used purely adversarially: an
+exhaustive, paragraph-level audit of notes \emph{and} code, repeated each
+revision.\par
+\end{haicard}
 
-A practically important feature was the use of a persistent long-horizon goal.
-The exact instruction was:
-\begin{lstlisting}
-/goal Please continue working on the lean formalization of the argument,
-until it is either finished or until you hit a serious obstacle which requires
-either mathematical input or technical assistance beyond the standard
-difficulties and problem solving of the formalization process
-\end{lstlisting}
-Before this mechanism was used, the human operator generally had to confirm or
-prompt continuation every twenty to thirty minutes.  The persistent goal made
-it possible for the worker to preserve the completion criterion across many
-cycles of inspection, coding, compilation, benchmarking, and repair.  This
-matches the intended role of Codex Goal mode: the goal text acts both as a
-starting instruction and as a completion condition that remains attached to
-the thread~\cite{OpenAIGoals}.
+\begin{haicard}[https://claude.ai/share/0ae838c7-7794-4868-9403-844c3e4db750]{Card 3: Strategic guidance}{Claude Fable 5}
+\haifield{Task} Get higher-level direction, not line edits, when a draft stalled.\par
+\haifield{Prompt} \haiprompt{I wanted to ask for advice about the appended pure
+mathematics research note. For the theorem it tries to prove it shows some partial
+progress, but gaps remain. Please look through it carefully, think hard, do your
+own explorations or search for sources, and then give me a report focused on the
+most helpful advice possible for a second AI which will be tasked to continue
+pushing for a solution --- concrete pointers to results, obstructions, a
+higher-level pivot, anything that could help crack the problem.}
+\haifield{Reply (summary)} Returned strategic guidance --- which
+effective-constant program to pursue, the worst-case regimes to target, and
+higher-level pivots --- phrased as instructions the authoring model could act
+on.\par
+\haifield{Human action} Forwarded the guidance into the central strand to shape
+the next revision.\par
+\haifield{Technique} A second model used not to find errors but to suggest
+direction, with the prompt explicitly asking for advice aimed at the next AI in
+the loop.\par
+\end{haicard}
 
-The development also illustrates why long-horizon autonomy still requires
-mathematical supervision.  One attempted formal route bounded separate exact
-upper-edge factors and then multiplied them.  At the first large-tail cell
-$(a,k)=(3000,4)$, that target was false by roughly $3.26\cdot10^{557}$: the
-coarse split lost the dyadic cancellation and left an uncancelled factor
-$2^{a-k}$.  This does not invalidate the dyadic-factor estimates stated in
-Section~\ref{sec:saddle}; the false statement was a coarser intermediate
-formalization target that had dropped the compensating factor.  The worker
-had made real local progress around a globally false interface.  Feedback
-from ChatGPT 5.5 Pro identified the obstruction and suggested the route that
-ultimately unstuck the proof: keep the product together, use finite
-exponential prefixes, prove prefix convolution inequalities, and normalize
-only at the last step.  The resulting Lean proof is the combined-product
-finite-prefix saddle method of Section~\ref{sec:saddle}.  This episode is
-worth retaining in the research record: formal verification prevented a
-plausible but invalid analytic architecture from being mistaken for a
-theorem.
+\begin{haicard}{Card 4: First formalization push}{Claude Fable 5 (Claude Code)}
+\haifield{Task} Begin the Lean development: the statement layer, the series
+bridge, the partition-free majorant, the finite certificates, and the
+sign lock.\par
+\haifield{Prompt (excerpt)} \haiprompt{Following your advice, the author put a
+tenth revision package together\dots{} this could be the basis of a first push
+towards a formalization by you. Take the time to review any changes, then if you
+think the basis is solid enough please go ahead and start developing the Lean
+code here.\dots{} The goal would be to isolate the desired end theorem in a file
+with as few imports, notation etc.\ as possible, with a clear certificate that
+the proof is \textup{sorry}- and axiom-free.}
+\haifield{Reply (summary)} Produced the bridge identifying $\C$ with
+$\exp(\sum c_r t^r)$, the majorant inequality, the exact and dyadic-interval
+finite certificates, and the rational toolkit underlying the sign lock.\par
+\haifield{Human action} Reviewed and integrated the layers, then handed the
+remaining analytic tail to a dedicated completion run.\par
+\end{haicard}
 
-The formalization was unstuck by a later ChatGPT 5.5 Pro review of the proof
-and Lean repository
-(\url{https://chatgpt.com/share/6a36609a-3c80-83eb-91b8-209cd08f40ac}).
-That prompt asked whether the proof strategy contained mathematical
-obstructions, whether two days of Codex work-time represented useful
-necessary exploration or a dead end, and what advice should be forwarded to
-the worker.  A follow-up prompt relayed questions generated by the Codex
-worker; the reply diagnosed the failed split-product architecture and
-recommended the finite-prefix direct-saddle path described above.  After the
-proof closed, further AI reviews were used to guide cleanup, presentation,
-and the present article draft.  Local copies of the most relevant prompts and
-answers are kept under \code{docs/ai-correspondence/}.
+\begin{haicard}{Card 5: Long-horizon completion drive}{OpenAI Codex CLI}
+\haifield{Task} Drive the formalization to completion with minimal supervision.\par
+\haifield{Prompt} \haiprompt{/goal Please continue working on the Lean
+formalization of the argument, until it is either finished or until you hit a
+serious obstacle which requires either mathematical input or technical
+assistance beyond the standard difficulties and problem solving of the
+formalization process.}
+\haifield{Reply (summary)} Over many cycles of inspection, coding, compilation,
+benchmarking, and repair, the worker proposed proof decompositions, searched
+Mathlib, refactored, generated finite-certificate checkers, and profiled slow
+computations.\par
+\haifield{Human action} Monitored progress, spot-checked the Lean state, and
+intervened only at the obstacle the goal itself anticipated (Card~6).\par
+\haifield{Technique} A persistent goal that doubles as a completion
+\emph{condition} attached to the thread~\cite{OpenAIGoals}; before this,
+continuation had to be re-prompted every twenty to thirty minutes.\par
+\end{haicard}
 
-The final completion phase recorded roughly sixty-four hours of tool-tracked
-work in the development log.  This number should be interpreted as elapsed
-agent/tool time, not as a measure of independent human labor or as a benchmark
-that will transfer unchanged to another project.  The software environment
-for the formal proof is Lean~4.27.0 and Mathlib~4.27.0, with Mathlib pinned
-in \code{lake-manifest.json}.
+\begin{haicard}[https://chatgpt.com/share/6a36609a-3c80-83eb-91b8-209cd08f40ac]{Card 6: ``Is the worker stuck?'' --- a review of the process}{ChatGPT 5.5 Pro; Claude Opus 4.8}
+\haifield{Task} Decide whether the multi-day Codex run was healthy exploration
+or a dead end, and how to finish.\par
+\haifield{Prompt (excerpt)} \haiprompt{Please review both the proof and the
+formalization files in detail. (i)~Do you see any mathematical errors or
+obstructions in the strategy, and are they fixable? (ii)~The formalization has
+run with a Codex worker for about two days; is this the expected process of
+investigation and optimization, or is the worker stuck in a local minimum or
+dead end? (iii)~Any advice on how to finish, which could be forwarded to the
+worker.}
+\haifield{Reply (summary)} Run in parallel in both systems; both concurred that
+the mathematics was sound but the worker was genuinely stuck --- reshaping one
+product-tail reduction rather than proving it --- and advised proving a single
+combined-product inequality directly instead.\par
+\haifield{Human action} Forwarded the advice to the worker and gathered the
+worker's own specific blocking questions for the deeper review of Card~7.\par
+\haifield{Technique} Reviewing the \emph{process}, not only the mathematics, and
+running the same review in two independent systems.\par
+\end{haicard}
+
+\begin{haicard}[https://chatgpt.com/share/6a36609a-3c80-83eb-91b8-209cd08f40ac]{Card 7: The correction that unstuck the proof}{ChatGPT 5.5 Pro; Claude Opus 4.8}
+\haifield{Task} Resolve the worker's blocking questions about the large-tail
+product estimate.\par
+\haifield{Prompt (relayed, excerpt)} \haiprompt{[Relaying the worker's own
+questions:] What is the most direct analytic proof of the sharp large-tail
+product target, preferably by modifying the existing split rather than
+introducing a large generated table?}
+\haifield{Reply (summary)} The forwarded answer showed that the attempted route
+--- bounding the two factors separately and multiplying --- is not merely
+expensive but \emph{false} at the first large-tail cell $(a,k)=(3000,4)$, off by
+about $3.26\cdot10^{557}$ because the split discards a factor $2^{a-k}$; it
+prescribed the fix used in Section~\ref{sec:saddle}: keep the product together,
+bound it with finite exponential prefixes, prove the prefix-convolution
+inequality, and normalize only at the last step.\par
+\haifield{Human action} Relayed the corrected route to the worker, which
+implemented it as the direct-saddle method; the proof closed shortly
+afterward.\par
+\haifield{Technique} Escalating the worker's \emph{own} questions to a fresh,
+stronger review, and letting a provably false target redirect the
+architecture.\par
+\end{haicard}
+
+\paragraph{What the two interventions show.}
+The episode in Cards~6 and~7 is worth keeping in the record.  The autonomous
+worker had made genuine local progress around an interface that was globally
+false: separating the two factors and multiplying them loses the dyadic
+cancellation, and no amount of finite refinement could have repaired it.  What
+exposed this was not a sharper estimate but the formal target itself, which
+refused to close.  Formal verification thus did more than confirm a known proof;
+it prevented a plausible but invalid analytic architecture from being mistaken
+for a theorem, and it located precisely where human mathematical input was
+required.  This is the sense in which the result is autonomous in execution yet
+genuinely supervised: the two moments that mattered were human decisions about
+when the machine was wrong.
+
+For the record, the final completion phase logged roughly sixty-four hours of
+tool-tracked work.  This should be read as elapsed agent and tool time, not as a
+measure of human labor or as a benchmark that transfers unchanged to another
+problem.  The formal proof was checked under Lean~4.27.0 and a Mathlib revision
+pinned in the package manifest.
 
 \section{Reproducibility and repository organization}\label{sec:repro}
 
@@ -1144,12 +1247,11 @@ strict-negativity and non-vanishing theorems.  The root file
 The proof backend remains more historical.  In the current release,
 \code{Completion.lean} imports \code{OpenGoals.lean}, which contains both the
 live direct-saddle assembly and older certificate interfaces retained for
-audit and development history.  This does not affect the public theorem or
-its axiom report, but a future presentation-only refactor can split the live
-direct-saddle construction into a small \code{Assembly.lean} and leave the
-historical interfaces under a legacy namespace or archive.  The tag
-\code{codex-public-facade-20260620} preserves the state before the present
-paper and release-hygiene edits.
+audit and development history.  This does not affect the public theorem or its
+axiom report, but a future presentation-only refactor can split the live
+direct-saddle construction into a small \code{Assembly.lean} and move the
+historical interfaces to a legacy namespace.  Tagged releases in the repository
+preserve both the completed proof state and the public-facade state.
 
 The release records the Lean toolchain, Mathlib revision, generated
 certificate provenance, and build commands.  Continuous integration is set to
