@@ -78,18 +78,19 @@ jobs:
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
             --emit-single-chunk-manifest --manifest-shard-count 2 | grep '"index": 4'
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
-            --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
-            --extra-import Prop51.Generated.CIAtoms | grep 'Shard 2 of 2'
-          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
-            --emit-single-chunk-shard --shard-index 1 --shard-count 2 \
-            --extra-import Prop51.Generated.CIAtoms | \
-            grep 'import Prop51.Generated.CIAtoms'
+            --emit-single-chunk-shard --shard-index 1 --shard-count 2 | grep 'Shard 2 of 2'
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
             --emit-final --final-tail-bounds-parts | \
             grep 'PositiveSaddleLargeTailBoundsPartsAuditCertificate'
           python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
             --emit-final --final-tail-atomic-bounds | \
             grep 'PositiveSaddleLargeTailAtomicBoundsAuditCertificate'
+          # --extra-import injects an import only into the assembled (--emit-final)
+          # output, which is what it is for; verify it there.
+          python3 scripts/positive_saddle_fixed_finite_template.py "${common[@]}" \
+            --emit-final --final-tail-atomic-bounds \
+            --extra-import Prop51.Generated.CIAtoms | \
+            grep 'import Prop51.Generated.CIAtoms'
 
   # Build the LaTeX paper so the source cannot silently become uncompilable.
   # Fails on any LaTeX error; runs latexmk (two passes for refs). This does NOT
