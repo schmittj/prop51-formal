@@ -126,8 +126,19 @@ single coefficient of the series
   \C(t)=\sum_{r\ge0}\frac{(6r)!}{(3r)!(2r)!}
                    \left(\frac{t}{72}\right)^r.
 \end{equation}
-The geometric proposition only requires this coefficient to be nonzero.  The
-main result below gives a uniform sign.
+For a positive partition $\mu=(m_1,\ldots,m_n)$ of $2g-2$ --- a tuple of
+integers $m_i\ge1$ summing to $2g-2$ --- let $\mathcal P(\mu)$ denote the
+projectivized stratum of holomorphic abelian differentials whose zero orders
+are $m_1,\ldots,m_n$, and let $\eta$ denote its tautological line-bundle class,
+in the convention of Chen--Larson.  Their Conjecture~1.4 predicts a nontrivial
+tautological relation in the first degree not excluded by their independence
+theorem, namely $a=\floor{g/3}+1$; for $g\equiv0,2\pmod3$, Proposition~5.1
+reduces the geometric vanishing $\eta^a=0$ to the nonvanishing of the single
+coefficient in~\eqref{eq:CL-series-intro}.  The complementary class
+$g\equiv1\pmod3$ is governed by their Proposition~5.2, which uses a different,
+derivative-corrected series, and is not addressed here.  The geometric statement
+requires only that this coefficient be nonzero; our main result gives a uniform
+sign.
 
 \begin{theorem}[Main theorem]\label{thm:main}
 Let $g\ge2$ satisfy $g\equiv0$ or $2\pmod 3$, and set
@@ -141,6 +152,9 @@ For every positive partition $\mu=(m_1,\ldots,m_n)$ of $2g-2$,
 \end{equation}
 In particular, the coefficient in Chen--Larson Proposition~5.1 is nonzero.
 \end{theorem}
+
+The strict negativity is stronger than the nonvanishing needed geometrically; we
+attach no geometric meaning to the sign itself.
 
 \begin{corollary}\label{cor:geometric}
 In the setting of Chen--Larson Proposition~5.1, the class $\eta^a$ vanishes
@@ -157,12 +171,13 @@ After the geometric reduction, the statement is no longer one of algebraic
 geometry: it is a uniform claim about a single coefficient of a quotient of
 power series.  Two features make it hard.  The quotient depends on an
 arbitrary partition \(\mu=(m_1,\dots,m_n)\) of \(2g-2\), and the same strict
-sign is required for every genus and every such partition.  The proof meets
-these in turn: first it removes the partition, leaving an expression in two
-integer parameters; then it proves the sign for that expression uniformly,
-without ever expanding the coefficient as a number.  This subsection describes
-the argument in words; every object named here is defined precisely in the
-sections that follow.
+sign is required for every genus in the two residue classes under consideration
+and for every such partition.  The proof meets these in turn: first it removes
+the partition, leaving an expression in two integer parameters; then it proves
+the sign for that expression uniformly --- in the large-\(a\) argument, without
+expanding the coefficients themselves (in the finite range they are computed
+exactly).  This subsection describes the argument in words; every object named
+here is defined precisely in the sections that follow.
 
 \paragraph{Removing the partition.}
 The one structural fact we need about \(\C\) is that its logarithm has
@@ -235,13 +250,13 @@ of \(t\), by a finite truncation of an ordinary exponential,
 \]
 Choosing the rescaling well makes this bound sharp; this is the classical
 saddle-point idea, but carried out so that every quantity stays
-rational\footnote{The insistence on staying rational reflects the formal proof
+rational\footnote{This insistence on staying rational reflects the formal proof
 more than the mathematics.  The Lean development works entirely over \(\Q\):
-each transcendental ingredient --- the limiting constant \(1/(2\pi)\) in the
-coefficient bounds, Stirling's estimate for factorials, and evaluations of the
-exponential --- is replaced by an explicit rational surrogate, so that the proof
-checker can verify every inequality by exact arithmetic with no real-analysis
-library.  The slight loss in the constants is absorbed by the large slack in the
+quantities that an informal asymptotic argument might estimate with Stirling's
+formula or the real exponential are instead bounded by finite rational
+inequalities, so the proof checker verifies everything by exact arithmetic with
+no real-analysis library and without formally introducing \(\pi\) or \(e\).  The
+slight loss in the resulting constants is absorbed by the large slack in the
 final budget.} and no limit, contour, or transcendental constant ever enters.
 Two finite exponentials multiply in the same spirit,
 \[
@@ -270,6 +285,21 @@ closed by showing that consecutive terms shrink by a fixed rational ratio, so
 each tail is at most its first term times a geometric series.  The positive
 budget never exceeds \(10^{-8}\), while the negative margin is strictly larger;
 hence \(U_a(N)<0\), and the Chen--Larson coefficient is negative.
+
+In one line, the proof is the chain
+\[
+  \begin{array}{c}
+    \text{Chen--Larson coefficient }b_a(\mu)\\[0.3mm]
+    \big\downarrow\ \text{coefficientwise majorization}\\[0.3mm]
+    \text{partition-free majorant }U_a(N)\\[0.3mm]
+    \big\downarrow\ \text{sign lock: }X_k(N)\le0\text{ for }k>0.9a\\[0.3mm]
+    \text{negative main term }+\text{ small positive corrections}\\[0.3mm]
+    \big\downarrow\ \text{joint finite-prefix saddle bound on }B_kQ_{a-k}\\[0.3mm]
+    \text{explicit rational summand majorant}\\[0.3mm]
+    \big\downarrow\ \text{finite certificates }(a\le2000)\text{ and ratio-controlled tails}\\[0.3mm]
+    U_a(N)<0.
+  \end{array}
+\]
 
 \subsection{Formal verification and scope}
 
@@ -527,14 +557,14 @@ Define
 If $N\le(40/3)m$, then $0\le\zeta\le50/27$.  The recurrence for $X_m$ is
 reorganized into a truncated alternating Poisson-type sum, a controlled
 near-range error, and a far signed tail.  The pure alternating base is
-represented by a twelve-term prefix and paired tail.  The exact rational
-constant
+controlled by a twelve-term prefix together with a paired tail; on
+$0\le\zeta\le50/27$ its final even--odd pair ($r=10,11$) is nonnegative, so the
+first ten terms already supply the convenient uniform lower bound
 \begin{equation}\label{eq:lambda}
  \lambda=
  \sum_{r=0}^{9}\frac{(-50/27)^r}{r!}
- =\frac{678107852315029}{4323713773987629}
+ =\frac{678107852315029}{4323713773987629}.
 \end{equation}
-serves as a uniform lower bound.
 
 The error analysis is organized into seven independent rational budgets:
 \begin{center}
@@ -568,20 +598,39 @@ If $m\ge361$, $N\ge1$, and $N\le(40/3)m$, then
 \end{theorem}
 
 \begin{proof}
-The decomposition described above gives
+Set $\zeta=5N/(36m)$ and $p=m-s$.  Expanding $B_m(N)=[t^m]\C(t)^{-N}$ by the
+$s$-fold contribution of the linear part of $-N\log\C$ and normalizing by
+$Nc_m$ gives the finite sum
+\begin{equation}\label{eq:signlock-decomp}
+ -X_m(N)=\sum_{s=0}^{m}\frac{(-\zeta)^s}{s!}\,\Pi_s\,D_s\,(1+\varepsilon_{m-s}),
+ \qquad
+ \Pi_s=\prod_{i=1}^{s}\frac1{1-i/m},\quad D_s=\frac{d_{m-s}}{d_m},
+\end{equation}
+where $\varepsilon_p=E^-_p(N)/(-Nc_p)-1$ is the normalized nonlinear residual,
+which the envelope of Section~\ref{sec:saddle} bounds by
+$\abs{\varepsilon_{m-s}}\le 66/(5m)$ for $s\le m/3$.  Write $e_1(s)=s(s+1)/2$
+and split each factor as
 \[
- -X_m(N)=\mathcal B_m(N)+\mathcal E_m(N),
+ \Pi_sD_s(1+\varepsilon_{m-s})=1+\frac{e_1(s)}m-\frac{\zeta}m+w_s .
 \]
-where the base satisfies
+The linear part sums in closed form to the base
 \[
- \mathcal B_m(N)\ge\lambda\left(1-\frac2m\right)
+ \mathcal B_m(N):=\sum_{s\ge0}\frac{(-\zeta)^s}{s!}\Big(1+\frac{e_1(s)}m-\frac{\zeta}m\Big)
+ =\e^{-\zeta}\Big(1-\frac{2\zeta-\zeta^2/2}{m}\Big)
+ \ge\e^{-\zeta}\Big(1-\frac2m\Big)\ge\lambda\Big(1-\frac2m\Big),
 \]
-and the total signed error satisfies
+valid for $0\le\zeta\le50/27$, the last step using the ten-term alternating
+lower bound $\e^{-\zeta}\ge\lambda$ of \eqref{eq:lambda}.  The remaining error
 \[
- \abs{\mathcal E_m(N)}\le\frac{2215}{m^2}.
+ \mathcal E_m(N)=\sum_{0\le s\le m/3}\frac{(-\zeta)^s}{s!}\,w_s+(\text{far tail}),
 \]
-The endpoint inequality at $m=361$ is an exact rational check.  Monotonicity
-of $m^2\lambda(1-2/m)$ propagates positivity to every $m\ge361$.
+collects exactly the seven sources tabulated above --- the $\Pi_s$
+gamma-product residual, the $D_s$ drift, the two- and higher-block nonlinear
+terms of $\varepsilon$, their cross terms, and the $s>m/3$ tail.  Each row of
+that table is the corresponding rational bound, and they sum to
+$\abs{\mathcal E_m(N)}\le 2215/m^2$.  Finally $m^2\big(\lambda(1-2/m)\big)>2215$
+at $m=361$ is an exact rational check, and $m^2\lambda(1-2/m)$ is increasing in
+$m$, so \eqref{eq:signlock} holds for every $m\ge361$.
 \end{proof}
 
 Let
@@ -669,7 +718,8 @@ Then
 \begin{equation}\label{eq:u-ratio}
   \frac{u_{n,r+1}}{u_{n,r}}=\frac{34r}{15n}.
 \end{equation}
-Thus the sequence is unimodal.  Every term with $4\le r\le n$ is bounded by
+Thus the sequence decreases and then increases (its consecutive ratio crosses
+$1$ exactly once).  Every term with $4\le r\le n$ is bounded by
 $u_{n,4}+u_{n,n}$.  The low and endpoint estimates formalized in the proof
 are
 \begin{equation}\label{eq:gas-components}
@@ -735,8 +785,10 @@ The gas estimate \eqref{eq:tempered-gas} gives
 The normalization uses the lower bound in \eqref{eq:c-bounds} and the
 factorial inequality
 \begin{equation}\label{eq:factorial-lb}
-  \left(\frac{25r}{68}\right)^r\le r!.
+  \left(\frac{25r}{68}\right)^r\le r!,
 \end{equation}
+proved by induction on $r$ from the rational bound $(1+1/r)^r\le 68/25$, a
+rational replacement for $(1+1/r)^r<\e$.
 The choice \eqref{eq:beta} is adapted to this estimate because
 \[
   \frac{15}{34}\frac{68}{25}=\frac65.
@@ -745,7 +797,7 @@ Consequently the residual powers are absorbed by
 \eqref{eq:oneplus-prefix}.
 
 \begin{theorem}[Direct product bounds]\label{thm:direct-product}
-Let $j=a-k$, $N\le12a$, and $k+j\le a$.
+Let $j=a-k$ (so $k+j=a$) and $N\le12a$, and recall $Q_j(N)\ge0$.
 
 If $s\ge32$, $2\le k\le s$, $N\le s^2$, and $j\ge40$, then
 \begin{equation}\label{eq:small-core}
@@ -783,7 +835,7 @@ because $N\le12a$.  The coefficient of $s$ is
 $1+5/36=41/36$.
 
 For \eqref{eq:tempered-core}, combine \eqref{eq:B-tempered} and
-\eqref{eq:Q-tempered}.  Since $k+j\le a$, both residual powers combine to
+\eqref{eq:Q-tempered}.  Since $k+j=a$, both residual powers combine to
 $(6/5)^a$, which is absorbed into $P_a(a/5)$.  The gas estimates
 \[
  \frac{17N}{54k}+\frac{4N}{25k}
@@ -804,6 +856,7 @@ Let
 \[
   N_-=6a-7,
   \qquad N_+=12a-8,
+  \qquad s_-=\ceil{\sqrt{N_-}},
   \qquad s_+=\ceil{\sqrt{N_+}},
   \qquad j=a-k.
 \]
@@ -823,6 +876,10 @@ For $401\le a\le2000$, define
              \frac{29}{10}\frac aj+2.
  \label{eq:Et}
 \end{align}
+For $401\le a\le2000$ and every retained $k$ one has
+$0\le E_s(a,k),E_t(a,k)<800$, so the truncated bound $\PE_{800}$ of
+\eqref{eq:PE} is applicable (its geometric tail term needs the argument below
+the cutoff).
 The direct product theorem and elementary rational absorptions give
 \begin{align}
  X_k(N)Y_j(N)
@@ -858,16 +915,32 @@ sum of explicit terms
  2^{-j}\PE_{800}(E_t(a,k)).
  \label{eq:Mt}
 \end{align}
-The branch union is important: the small expression is maximized at the
-upper $N$-edge, while the tempered prefactor is maximized at the lower edge.
-In the overlap of the two possible ceiling-square-root regimes, the larger
-of the two bounds is used.
+The branch union must respect the regime conditions: the small bound
+\eqref{eq:XY-small} applies only for $k\le\ceil{\sqrt N}$ and the tempered bound
+\eqref{eq:XY-tempered} only for $k>\ceil{\sqrt N}$, and $\ceil{\sqrt N}$ moves
+with $N$ across $s_-\le\ceil{\sqrt N}\le s_+$.  Outside its regime $M_t$ has no
+content and can be large, so one may not simply take the unconditional maximum.
+The theorem-facing edge term is therefore the regime-aware
+\begin{equation}\label{eq:Medge}
+  M_{\mathrm{edge}}(a,k)=
+  \begin{cases}
+    M_s(a,k), & k\le s_-,\\[1mm]
+    \max\{M_s(a,k),\,M_t(a,k)\}, & s_-<k\le s_+,\\[1mm]
+    M_t(a,k), & s_+<k,
+  \end{cases}
+\end{equation}
+which dominates the retained summand for every admissible $N$: if
+$k\le\ceil{\sqrt N}$ then $k\le s_+$ and the small bound, maximized at the upper
+edge $N=N_+$, applies; if $k>\ceil{\sqrt N}$ then $s_-<k$ and the tempered bound,
+whose prefactor is maximized at the lower edge $N=N_-$, applies; only in the
+overlap $s_-<k\le s_+$ can the applicable branch depend on $N$, and there the
+maximum of the two is taken.
 
 \subsection{The finite strip \texorpdfstring{$401\le a\le2000$}{401<=a<=2000}}
 
 The formal certificate proves
 \begin{equation}\label{eq:finite-edge-budget}
-  \sum_{k\ \mathrm{retained}}\max\{M_s(a,k),M_t(a,k)\}
+  \sum_{k\ \mathrm{retained}}M_{\mathrm{edge}}(a,k)
   \le\frac1{200000000}
 \end{equation}
 for every $401\le a\le2000$.  The calculation is split into sixteen
@@ -914,8 +987,24 @@ $130$ and $192$.  The reciprocal binomial factor is controlled by
 and by a rational entropy-shadow inequality derived from the maximal weighted
 binomial term.  The retained range is divided into a small branch and lower,
 middle, and upper tempered bands.  Within each band, adjacent-term quotients
-are bounded by explicit rational numbers below one.  The first or last term
-of each band is then multiplied by a geometric reserve.
+are bounded by explicit rational numbers below one, and the first or last term
+of the band is multiplied by the corresponding geometric reserve $1/(1-\varrho)$.
+The concrete constants built into the formal tail are the following.
+\begin{center}
+\begin{tabular}{lccl}
+\toprule
+band & direction & adjacent-term ratio $\varrho$ & boundary term initialized\\
+\midrule
+small ($k\le\ceil{\sqrt N}$) & forward & $\le\tfrac12$ & first term ($k=1$)\\
+tempered, lower/middle & forward & $\le\dfrac{4a-1}{4a}$ & first term of the band\\
+tempered, upper & reverse & $\le\dfrac{4a-1}{4a}$ & last term ($k=\floor{0.9a}$)\\
+\bottomrule
+\end{tabular}
+\end{center}
+The tempered range is split at the natural-number threshold $k=\floor{a/3}+10$,
+and each band's geometric reserve is allocated inside the half-budget
+$\tfrac1{2}\cdot10^{-8}$.  The solo term is separately bounded through a
+$(10/7)^a$ envelope, as described below.
 
 The lower-tempered prefix $2001\le a<3000$ is represented by generated
 quotient and raw-budget chunks; from $a=3000$ onward, a symbolic sharp
@@ -1032,8 +1121,13 @@ lake build           # check every proof, including the certificates
 lake env lean scripts/PublicAxiomsReport.lean   # print the axiom lists
 \end{lstlisting}
 The completed proof and the compact public facade are preserved as tagged
-releases in the repository. A stronger independent audit may additionally
-replay the compiled certificate objects through Lean's standalone checker.
+releases in the repository.  As an additional audit, the external checker
+\code{lean4checker} can replay the ordinary (non-native) proof objects and can
+detect certain bugs involving import state or declaration processing.  It does
+not, however, remove the compiler trust attached to the native-evaluation
+certificates: proofs that depend on \code{Lean.trustCompiler} cannot at present
+be validated by an external proof checker without first replacing those
+computations by kernel-checkable certificates~\cite{LeanAxioms}.
 
 \section{Background and use of generative artificial intelligence}
 \label{sec:ai}
@@ -1044,13 +1138,16 @@ Larson's talk \emph{Tautological classes on the strata of differentials} in the
 Algebraic Geometry and Moduli seminar at ETH Zurich on 10~June~2026, which
 described the conjecture of Chen and Larson.  The author was in the audience and
 decided to attack the resulting power-series problem with general-purpose AI
-tools.  The human role throughout was to choose the problem, design and refine
-the prompts, run and maintain the computational and Lean harness, supply
-mathematical judgment at the points where the automated search stalled, and take
-final responsibility for this text.  The proof search, much of the formal
-development, and parts of this write-up were produced with substantial AI
-assistance; no step was accepted as correct until it had been either translated
-into a Lean theorem or independently checked as mathematics.
+tools.  The human role throughout was orchestration rather than mathematics:
+choosing the problem, designing and relaying prompts, running and maintaining
+the computational and Lean environment, deciding from high-level signals when an
+autonomous run had stalled and an outside review should be solicited, and taking
+final responsibility for this text.  The author did not at any point analyze or
+contribute to the mathematical substance of the proof.  The proof search, much
+of the formal development, and parts of this write-up were produced with
+substantial AI assistance; no theorem-level step in the final argument was
+accepted until it had been formalized in Lean or independently checked as
+mathematics.
 
 We document this as a chronological sequence of \emph{human--AI interaction
 cards}, following the format proposed by Feng et al.~\cite{FengAletheia}.  Each
@@ -1059,12 +1156,25 @@ reply, and the human action it led to; the card title links to the public
 conversation where one exists.  The prompts are reproduced verbatim or in close
 paraphrase, because the prompting strategy is the part of the method most likely
 to transfer to other problems; the AI replies are only summarized, with the most
-relevant exchanges also archived alongside the source.  In the taxonomy
-of~\cite{FengAletheia}, the development is close to ``essentially autonomous'' in
-execution (autonomy Level~A), but with essential human mathematical supervision
-at the two points (Cards~6 and~7) where the autonomous search went wrong; the
-significance is at the publication-grade boundary of Levels~1--2.  As with any
-result, it is the Lean proof, not its provenance, that certifies the theorem.
+relevant exchanges also archived alongside the source.
+
+In the taxonomy of~\cite{FengAletheia} we classify the project as
+\textbf{Level~A}, essentially autonomous.  The core mathematical content --- the
+proof strategy, the analytic estimates, the entire Lean formalization, and the
+two diagnoses that redirected the search --- was generated by AI systems, with
+no essential human mathematical contribution.  The two interventions recorded in
+Cards~6 and~7 are not exceptions to this: each was a diagnosis produced by a
+\emph{separate} AI model, which the author solicited on the basis of a
+high-level signal (an autonomous run that had continued for two days without
+converging) and relayed to the worker, without examining the mathematics
+himself.  This is precisely what separates Level~A from the collaborative
+Level~C: the orchestration was human, but the mathematics was not.  As to
+significance, the theorem settles the coefficient nonvanishing that Chen and
+Larson isolate as their Proposition~5.1 --- a step toward their Conjecture~1.4
+that they, and colleagues with whom they discussed it, had left without a known
+route --- which the author calibrates around Levels~1--2 of~\cite{FengAletheia},
+offered for and not in place of expert review.  In every case it is the Lean
+proof, not its provenance, that certifies the theorem.
 
 The development had a simple shape, worth stating before the details.  A single
 ChatGPT~5.5 Pro conversation (Card~1) was the central strand in which the
@@ -1074,9 +1184,10 @@ separate conversations --- adversarial \emph{audits} to surface errors (Card~2)
 and strategic \emph{guidance} from a second model to suggest pivots (Card~3) ---
 interleaved with simple requests to continue, producing ten drafts before
 formalization began.  The formalization then moved into Lean, first broadly
-(Card~4) and then under a long-horizon autonomous goal (Card~5), with two
-moments of essential human supervision (Cards~6 and~7) at which the autonomous
-search had to be redirected.
+(Card~4) and then under a long-horizon autonomous goal (Card~5), with two moments
+(Cards~6 and~7) at which the author, prompted by a high-level signal rather than
+by the mathematics, solicited an outside AI review and relayed its diagnosis to
+redirect the search.
 
 \begin{haicard}[https://chatgpt.com/share/6a3661c0-131c-83ed-961d-1f82a69bfa0a]{Card 1: Central investigation strand}{ChatGPT 5.5 Pro}
 \haifield{Task} Attack the Chen--Larson coefficient problem from scratch and
@@ -1220,18 +1331,55 @@ worker had made genuine local progress around an interface that was globally
 false: separating the two factors and multiplying them loses the dyadic
 cancellation, and no amount of finite refinement could have repaired it.  What
 exposed this was not a sharper estimate but the formal target itself, which
-refused to close.  Formal verification thus did more than confirm a known proof;
+refused to close.  Formal verification thus did more than confirm a known proof:
 it prevented a plausible but invalid analytic architecture from being mistaken
-for a theorem, and it located precisely where human mathematical input was
-required.  This is the sense in which the result is autonomous in execution yet
-genuinely supervised: the two moments that mattered were human decisions about
-when the machine was wrong.
+for a theorem, and it marked exactly the moment at which the autonomous worker
+needed an outside perspective.  That perspective, too, came from an AI model; the
+author's part was the orchestration --- reading a high-level signal that the run
+had stalled and routing the question to a fresh review --- not any judgement
+about the mathematics.  The result is autonomous in execution, and the decisions
+that mattered were about \emph{when} the worker was stuck, not how to fix it.
 
-For the record, the final completion phase logged roughly sixty-four hours of
-tool-tracked work.  This should be read as elapsed agent and tool time, not as a
-measure of human labor or as a benchmark that transfers unchanged to another
-problem.  The formal proof was checked under Lean~4.27.0 and a Mathlib revision
+\paragraph{Scope of this record.}
+The seven cards are a curated, not exhaustive, account: they record the
+interactions that materially shaped the proof and omit many routine continuation
+prompts and unproductive sessions.  The mathematical exposition of this paper was
+first drafted by the central authoring strand (Card~1) and then revised; the
+final prose, the citations, and the correspondence between the informal
+statement and the formal theorem were checked by the author with further AI
+review.  Acceptance of each mathematical claim ultimately rested on its Lean
+formalization, not on any model's assurance.
+
+\paragraph{Quantitative notes.}
+The ``roughly sixty-four hours'' attributed to the completion phase is the
+elapsed wall-clock time recorded in the Codex goal log for that thread; it is not
+active compute time, is not summed over parallel workers, and includes waiting
+and compilation.  Human active time was not separately measured, and token
+counts and monetary cost were not retained.  The figure is given only to convey
+scale.  The formal proof was checked under Lean~4.27.0 and a Mathlib revision
 pinned in the package manifest.
+
+\paragraph{On the persistent goal.}
+The \texttt{/goal} prompt of Card~5 is reproduced as it was actually used.  By
+later best-practice standards~\cite{OpenAIGoals} it is deliberately minimal: it
+states the desired outcome and the condition under which to stop and ask for
+help, but not the verification command, the permitted files, or an iteration
+policy.  In practice the evolving Lean goal state, successful compilation, and
+the axiom reports served as the implicit evidence surface; a reproduction attempt
+should make those conditions explicit.
+
+\paragraph{Limitations.}
+Formal verification establishes the formal theorem relative to the trust boundary
+of Section~\ref{sec:formalization}.  It does not by itself establish novelty or
+significance, the correctness of bibliographic claims, or the faithfulness of
+every sentence of the informal paper to the formal definitions; those remain
+matters of human and community judgement.  The development also illustrates
+characteristic failure modes of AI-assisted research, which this record
+deliberately preserves: plausible but false intermediate estimates, a
+proliferation of proof interfaces, and convincing local progress on a globally
+false target.  The most relevant review exchanges are archived under
+\code{docs/ai-correspondence/}, and the card titles link to the primary public
+conversations, so that the provenance can be inspected directly.
 
 \section{Reproducibility and repository organization}\label{sec:repro}
 
@@ -1264,9 +1412,12 @@ root.
 
 \section{Public Lean statement}\label{app:lean-statement}
 
-The following is a lightly formatted transcription of the public facade.  It
-is included to make the correspondence between the paper and formal theorem
-immediate.
+The following is a Lean-style rendering of the public facade, lightly edited for
+readability (e.g.\ \code{Q[[X]]} for the rational power-series type and ASCII
+\code{<=}, \code{!=} for the order and disequality); it is not literal source.
+The exact, machine-checked file is \code{Prop51/Theorem.lean} in the repository.
+It is reproduced to make the correspondence between the paper and the formal
+theorem immediate.
 
 \begin{lstlisting}
 import Prop51.BCoeffSeries
