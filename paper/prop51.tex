@@ -295,21 +295,6 @@ each tail is at most its first term times a geometric series.  The positive
 budget never exceeds \(10^{-8}\), while the negative margin is strictly larger;
 hence \(U_a(N)<0\), and the Chen--Larson coefficient is negative.
 
-In one line, the proof is the chain
-\[
-  \begin{array}{c}
-    \text{Chen--Larson coefficient }b_a(\mu)\\[0.3mm]
-    \big\downarrow\ \text{coefficientwise majorization}\\[0.3mm]
-    \text{partition-free majorant }U_a(N)\\[0.3mm]
-    \big\downarrow\ \text{sign lock: }X_k(N)\le0\text{ for }k>0.9a\\[0.3mm]
-    \text{negative main term }+\text{ small positive corrections}\\[0.3mm]
-    \big\downarrow\ \text{joint finite-prefix saddle bound on }B_kQ_{a-k}\\[0.3mm]
-    \text{explicit rational summand majorant}\\[0.3mm]
-    \big\downarrow\ \text{finite certificates }(a\le2000)\text{ and ratio-controlled tails}\\[0.3mm]
-    U_a(N)<0.
-  \end{array}
-\]
-
 \subsection{Formal verification and scope}
 
 The theorem is formalized over $\Q$ in \Lean{} 4 and Mathlib.  The public
@@ -1246,9 +1231,9 @@ and strategic \emph{guidance} from a second model to suggest pivots (Card~3) ---
 interleaved with simple requests to continue, producing ten drafts before
 formalization began.  The formalization then moved into Lean, first broadly
 (Card~4) and then under a long-horizon autonomous goal (Card~5), with two moments
-(Cards~6 and~7) at which the author, prompted by a high-level signal rather than
-by the mathematics, solicited an outside AI review and relayed its diagnosis to
-redirect the search.
+(Cards~6 and~7) at which the author, prompted by the apparent stalling of the
+formalization attempt, solicited an outside AI review and relayed its diagnosis
+to redirect the search.
 
 \begin{haicard}[https://chatgpt.com/share/6a3661c0-131c-83ed-961d-1f82a69bfa0a]{Card 1: Central investigation strand}{ChatGPT 5.5 Pro}
 \haifield{Task} Attack the Chen--Larson coefficient problem from scratch and
@@ -2134,6 +2119,7 @@ solo scalar budget &
 \end{tabular}
 \end{center}
 
+\clearpage
 \section{Public Lean statement}\label{app:lean-statement}
 
 The following is a Lean-style rendering of the public facade, lightly edited for
