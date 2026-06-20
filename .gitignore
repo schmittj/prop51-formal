@@ -7,5 +7,6 @@ paper/*.fdb_latexmk
 paper/*.fls
 paper/*.log
 paper/*.out
-paper/*.pdf
 paper/*.toc
+
+# The compiled paper is intentionally tracked (paper/prop51.pdf).

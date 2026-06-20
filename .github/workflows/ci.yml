@@ -7,6 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A from-scratch build compiles the heavy native_decide certificates and can
+    # run long on a 2-4 core runner; lean-action caches .lake so later pushes are
+    # incremental. If the parallel certificate builds run out of memory, pass a
+    # smaller job count to lake (e.g. build-args: '-j2') or use a larger runner.
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - name: Build Lean project (lake build + mathlib cache)
