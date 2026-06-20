@@ -125,64 +125,127 @@ for every positive holomorphic partition when $g\equiv0,2\pmod3$.
 Combine Theorem~\ref{thm:main} with Chen--Larson Proposition~5.1.
 \end{proof}
 
-\subsection{Outline of the proof}
+\subsection{Reader-level outline of the proof}
 
-The proof has four main reductions.
+After Chen and Larson's geometric reduction, the problem is no longer a
+problem in algebraic geometry.  It is a uniform statement about one
+coefficient in a quotient of power series.  The difficulty is that the
+quotient depends on an arbitrary partition
+\(\mu=(m_1,\ldots,m_n)\), and the theorem asks for the same sign for every
+genus and every such partition.  The proof is therefore organized around two
+questions:
+\begin{enumerate}[leftmargin=2em]
+  \item How can we remove the dependence on the individual parts of \(\mu\)?
+  \item Once only a few numerical parameters remain, how can we prove a
+  strict negative sign uniformly rather than by expanding more and more
+  coefficients?
+\end{enumerate}
 
-First, write
+\paragraph{Removing the partition.}
+Write
 \[
   \log \C(t)=\sum_{r\ge1}c_rt^r.
 \]
-The coefficients $c_r$ are positive.  If $q_i=m_i+1$ and
-$N=\sum_iq_i=2g-2+n$, coefficientwise positivity gives
+The coefficients \(c_r\) are positive.  This positivity is the basic reason
+the arbitrary partition can be replaced by a worst-case expression.  If
+\(q_i=m_i+1\), then every \(q_i\) is at least \(2\), and
 \[
-  \prod_i\C(t/q_i)\preceq \C(t/2)^{N/2}.
+  N=\sum_iq_i=2g-2+n.
 \]
-This removes the partition from the problem and leaves a two-parameter
-majorant $U_a(N)$ on the rectangle
+The numerator \(\prod_i\C(t/q_i)\) is then coefficientwise no larger than
+\(\C(t/2)^{N/2}\).  Intuitively, among all allowed \(q_i\)'s, replacing the
+individual denominators by the smallest possible denominator \(2\), with the
+correct total weight \(N\), gives an upper bound for the positive numerator.
+Thus the proof no longer has to know the partition itself.  It only has to
+control an expression depending on the two integers \(a\) and \(N\), where
 \[
   6a-7\le N\le12a-8.
 \]
+Below, this upper-bound expression is denoted \(U_a(N)\).  The word
+``majorant'' means only this: \(U_a(N)\) is a partition-independent upper
+bound for the original coefficient.
 
-Second, normalize the coefficients of $\C(t)^{-N}$ and
-$\C(t/2)^{N/2}$.  The normalized negative coefficient $X_a(N)$ supplies the
-main negative term.  A rational sign-lock theorem proves that
-$X_k(N)\le0$ whenever $k>\floor{0.9a}$ in the rectangle.  Thus only the
-retained range $1\le k\le\floor{0.9a}$ can contribute positively.
-
-Third, bound the retained products by a direct finite saddle argument.  For
+\paragraph{Separating the negative main term from the possible positive
+terms.}
+The quotient has a denominator \(\C(t)^N\).  Its coefficients, after a
+normalization, are denoted \(X_r(N)\).  The coefficient of
+\(\C(t/2)^{N/2}\), again normalized, is denoted \(Y_r(N)\).  With this
+notation the majorant has the shape
 \[
-  P_m(x)=\sum_{r=0}^m\frac{x^r}{r!},
+  \frac{U_a(N)}{Nc_a}
+  =\hbox{one negative candidate }X_a(N)
+   +\hbox{positive correction terms}.
 \]
-the formalized proof establishes a finite saddle inequality and the
-convolution estimate
+The whole proof is a comparison between these two sides.  We prove that
+\(X_a(N)\) is bounded above by a negative number, with an explicit margin,
+and then show that all possible positive corrections are smaller than that
+margin.
+
+The correction terms are indexed by splittings \(a=k+j\).  A key point is
+that most of these splittings cannot contribute positively.  The proof shows
+that once \(k\) is larger than \(0.9a\), the coefficient \(X_k(N)\) has
+already become nonpositive throughout the whole rectangle for \(N\).  This is
+the ``sign lock'': after a certain point, the relevant family of coefficients
+is locked into the negative sign, so those terms may be discarded from an
+upper bound.  What remains is the range
+\[
+  1\le k\le\floor{0.9a}.
+\]
+
+\paragraph{Bounding coefficients without expanding them.}
+The remaining positive terms still involve products of coefficients, and
+direct expansion would be infeasible for large \(a\).  The proof bounds them
+using finite Taylor polynomials
+\[
+  P_m(x)=\sum_{r=0}^m\frac{x^r}{r!}.
+\]
+The guiding idea is elementary.  If a power series is an exponential of a
+series with nonnegative coefficients, then the coefficient of \(t^m\) can be
+bounded by first scaling \(t\) by a positive number and then bounding all
+ways of obtaining total degree \(m\) by the total mass of the scaled series.
+This is why the argument resembles a saddle-point estimate, but it avoids
+complex analysis and avoids real transcendental estimates at the theorem
+level.  Everything is reduced to rational inequalities involving finite
+Taylor polynomials.
+
+The second elementary ingredient is that two finite Taylor polynomials can be
+combined:
 \[
   P_m(x)P_n(y)\le P_{m+n}(x+y)\qquad(x,y\ge0).
 \]
-A rational radius $\beta=34/15$ and two factorial-gas estimates yield the
-central product inequalities
-\begin{align*}
-  2\,2^j B_k(N)Q_j(N)
-  &\le \frac{2592}{25}kjc_kc_j
-   P_{2a}\left(\frac{41}{36}s+\frac j5+
-      \frac{29}{10}\frac aj+\frac15\right),\\
-  2\,2^j B_k(N)Q_j(N)
-  &\le \frac{2592}{25}kjc_kc_j
-   P_{2a}\left(\frac a5+\frac{57}{10}\frac ak+
-      \frac{29}{10}\frac aj\right),
-\end{align*}
-where $j=a-k$ and $s=\ceil{\sqrt N}$.  The first is used for $k\le s$ and
-the second for $k>s$.
+This is just the binomial theorem after enlarging a rectangle of summation
+indices to a triangle.  It is important because the first failed approach to
+the formal proof tried to bound two factors separately and then multiply the
+bounds.  That separated route lost a large dyadic factor.  The final proof
+keeps the product together and only combines the finite Taylor bounds at the
+last possible moment.
 
-Finally, the proof separates finite and asymptotic verification.  Positive
-partitions are enumerated for $a\le8$; the majorant is checked exactly for
-$9\le a\le60$ and by verified dyadic intervals for $61\le a\le400$.  For
-$401\le a\le2000$, the direct saddle inequalities reduce the remaining sum
-to a fixed-point certificate over $16$ blocks of $100$ consecutive values of
-$a$.  The strip $2001\le a<3000$ and the tail $a\ge3000$ are handled by the
-same direct product bounds together with symbolic adjacent-ratio and reserve
-inequalities.  These pieces leave a total positive budget at most $10^{-8}$,
-strictly smaller than the rational sign-lock margin.
+The estimates in Section~\ref{sec:saddle} use two regimes.  When \(k\) is
+small compared with \(N\), the relevant scale is \(s=\ceil{\sqrt N}\).  When
+\(k\) is larger, the scale is \(k\) itself.  The factorial expressions that
+arise from the logarithmic coefficients are controlled by short rational
+estimates.  Later sections call these estimates ``factorial-gas'' bounds;
+for the reader, this means only that a finite sum of factorial terms is
+bounded by a simple rational expression.
+
+\paragraph{Finite verification and the infinite tail.}
+The proof is deliberately split between finite checking and general
+inequalities.  For \(a\le8\), every partition is enumerated and the exact
+rational coefficient is checked directly.  For \(9\le a\le60\), the
+partition-free upper bound \(U_a(N)\) is checked exactly over the relevant
+rectangle.  For \(61\le a\le400\), the same statement is checked by a small
+verified dyadic interval kernel whose soundness is proved in Lean.
+
+For \(a\ge401\), the sign lock gives the explicit negative margin, and the
+positive side is reduced to a small budget.  The finite strip
+\(401\le a\le2000\) is checked by rational certificate chunks.  The strip
+\(2001\le a<3000\) and the infinite range \(a\ge3000\) are handled by the
+same product estimates plus ratio bounds: within each band, the proof shows
+that consecutive terms decrease by a fixed rational factor, so a whole tail
+is bounded by its first term times a geometric reserve.  The final positive
+budget is at most \(10^{-8}\), while the negative margin from the sign lock
+is strictly larger.  This proves \(U_a(N)<0\), hence the original
+Chen--Larson coefficient is negative.
 
 \subsection{Formal verification and scope}
 
@@ -948,13 +1011,46 @@ files through Lean's standalone checker.
 The project began after Hannah Larson's 10 June 2026 talk
 \emph{Tautological classes on the strata of differentials} in the Algebraic
 Geometry and Moduli seminar at ETH Zurich, which mentioned the conjecture of
-Chen and Larson.  Johannes Schmitt is the sole human author of this article.
-His role was to select the problem after that talk, design and iterate
-prompts, maintain the computational and formal-verification harness, organize
-the resulting artifacts, and make editorial and release decisions.  The proof
-search, draft writing, code generation, and much of the formalization were
-carried out with substantial assistance from generative AI systems and are
-described explicitly here.
+Chen and Larson.  The author, who was in the audience, decided to investigate
+the problem using AI tools.  In the following they designed and iterated
+prompts, maintained the computational and formal-verification harness,
+organized the resulting artifacts, and made editorial and release decisions.
+The proof search, draft writing, code generation, and much of the
+formalization were carried out with substantial assistance from generative AI
+systems and are described explicitly here.
+
+The following disclosure is organized partly in the spirit of the
+``human-AI interaction cards'' proposed by Feng et al.~\cite{FengAletheia},
+who suggest recording both the degree of AI autonomy and the mathematical
+significance of AI-assisted results.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.24\textwidth}p{0.66\textwidth}}
+\toprule
+field & disclosure\\
+\midrule
+human author & Johannes Schmitt is the sole human author.  The human
+contribution was problem selection, prompting, harness design, repository
+organization, editorial judgment, and final responsibility for this text.\\
+AI autonomy level & Self-assessed as fully autonomous, corresponding to
+Level A, ``essentially autonomous'', in the taxonomy
+of~\cite{FengAletheia}: the core mathematical attack and Lean formalization
+were generated by AI systems without an essential human mathematical proof
+contribution.\\
+mathematical significance level & Self-assessed as between Level 1 and
+Level 2 in the same taxonomy: more than a routine or negligible observation,
+but with final ``publication grade'' status depending on ordinary community
+review.  Informally, the result is classified here as A1--A2.\\
+verification & The final theorem is checked by Lean~4 and Mathlib.  The
+finite certificates using \code{native\_decide} additionally trust Lean's
+native-evaluation mechanism, as recorded by the public axiom report.\\
+artifacts & Public conversation links are given below, and local copies of
+selected prompts and replies are archived in
+\code{docs/ai-correspondence/}.\\
+\bottomrule
+\end{tabular}
+\end{center}
 
 The initial mathematical attack was prompted to ChatGPT 5.5 Pro with a
 request to study Conjecture~1.4 of Chen--Larson and its explicit
@@ -1071,7 +1167,20 @@ is included to make the correspondence between the paper and formal theorem
 immediate.
 
 \begin{lstlisting}
+import Prop51.BCoeffSeries
+import Prop51.Completion
+
+namespace Prop51
+
+open PowerSeries
+
 noncomputable abbrev chenLarsonC : Q[[X]] := Cseries
+
+theorem coeff_chenLarsonC (k : Nat) :
+    coeff k chenLarsonC =
+      (Nat.factorial (6*k) : Q) /
+        ((Nat.factorial (3*k) : Q) *
+          (Nat.factorial (2*k) : Q) * 72^k)
 
 noncomputable abbrev chenLarsonSeries (mu : List Nat) : Q[[X]] :=
   bSeries mu
@@ -1091,6 +1200,8 @@ theorem chenLarsonCoefficient_ne_zero
     {g : Nat} (hg : 2 <= g) (hmod : g % 3 != 1)
     {mu : List Nat} (hmu : IsPartitionOf mu (2 * g - 2)) :
     coeff (g / 3 + 1) (chenLarsonSeries mu) != 0
+
+end Prop51
 \end{lstlisting}
 
 \section{Paper-to-Lean correspondence}\label{app:map}
@@ -1171,6 +1282,11 @@ The Lean development team,
 The Mathlib community,
 \emph{Mathlib: the mathematical library for Lean 4},
 \url{https://github.com/leanprover-community/mathlib4}.
+
+\bibitem{FengAletheia}
+T.~Feng et al.,
+\emph{Towards Autonomous Mathematics Research},
+arXiv:2602.10177, 2026.
 
 \bibitem{OpenAIGoals}
 R.~Pathak and S.~Fabbri,
