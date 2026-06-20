@@ -1,5 +1,10 @@
 # Formalization roadmap
 
+**Status (20 June 2026): COMPLETE.**  The canonical theorem
+`Prop51.coefficientNegativity` is closed in `Prop51/Completion.lean`; the
+public theorem surface is `Prop51/Theorem.lean`.  This roadmap is retained as
+development history and proof-architecture provenance.
+
 Goal: a sorry-free proof of `Prop51.CoefficientNegativity` (`Prop51/Main.lean`),
 with the axiom footprint documented by `scripts/AxiomsReport.lean`.
 
@@ -203,7 +208,7 @@ Status:
       `m = 361` scalar prefix uniformly for `0 ≤ z ≤ 50/27`; both
       one-variable checks are now certified by explicit rational Bernstein
       coefficient lists, giving the unconditional `Xnorm` sign-lock theorem.
-- [ ] positive part §6: rational saddle bounds (`ρ` chosen rational),
+- [x] positive part §6: rational saddle bounds (`ρ` chosen rational),
       two regimes + `native_decide` window scan `401 ≤ a ≤ 2000`,
       entropy tail for `a > 2000`.  The corrected two-edge rectangle
       bookkeeping and the retained range `1 ≤ k ≤ floor(0.9a)` are now

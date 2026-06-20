@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 
 jobs:
@@ -15,11 +15,12 @@ jobs:
           use-mathlib-cache: true
       - name: Axiom report
         run: |
+          ~/.elan/bin/lake env lean scripts/PublicAxiomsReport.lean | tee public_axioms.txt
           ~/.elan/bin/lake env lean scripts/AxiomsReport.lean | tee axioms.txt
           # No sorries anywhere:
-          ! grep -rn "sorryAx" axioms.txt
+          ! grep -rn "sorryAx" public_axioms.txt axioms.txt
           # Only the documented axioms may occur:
-          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|Lean.trustCompiler|depends on axioms|^$" axioms.txt | grep -q "axiom"
+          ! grep -vE "propext|Classical.choice|Quot.sound|Lean.ofReduceBool|Lean.trustCompiler|depends on axioms|^$" public_axioms.txt axioms.txt | grep -q "axiom"
       - name: Python certificate scripts (fast layer)
         run: |
           python3 scripts/positive_saddle_scan.py --quick

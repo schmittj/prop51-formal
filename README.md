@@ -15,7 +15,8 @@ Let `C(t) = Σ_k (6k)!/((3k)!(2k)!) (t/72)^k` and, for a positive partition
 b_a(μ) = [t^a]  Π_i C(t/(m_i+1)) / C(t)^(2g-2+n),    a = ⌊g/3⌋ + 1 .
 ```
 
-**Target** (`Prop51.CoefficientNegativity` in `Prop51/Main.lean`): for every
+**Target** (`Prop51.CoefficientNegativity` in `Prop51/Statement.lean`,
+exposed publicly through `Prop51/Theorem.lean`): for every
 `g ≥ 2` with `g ≡ 0, 2 (mod 3)` and every positive partition `μ` of `2g-2`,
 `b_a(μ) < 0`.  In particular the coefficient is nonzero, which is the
 hypothesis of Chen–Larson Proposition 5.1; via their geometric reduction it

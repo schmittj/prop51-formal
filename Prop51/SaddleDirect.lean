@@ -1834,7 +1834,7 @@ theorem expPrefix_mul_four_le {x y z w : ℚ}
           expPrefix (z + w) (p + q) := hprod
     _ ≤ expPrefix ((x + y) + (z + w)) ((m + n) + (p + q)) := hconv
     _ ≤ expPrefix ((x + y) + (z + w)) M := hidx
-    _ = expPrefix (x + y + z + w) M := by ring
+    _ = expPrefix (x + y + z + w) M := by ring_nf
 
 /-- Small-branch product core before replacing the actual `Q` gas by an
 `a/j` envelope.  This is the direct replacement for the retired exact

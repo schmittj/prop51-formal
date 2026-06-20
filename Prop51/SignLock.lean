@@ -1508,7 +1508,7 @@ private theorem cube_eq_falling_add (s : Nat) :
               norm_num
           | succ s =>
               simp
-              ring
+              ring_nf
 
 private theorem fourth_eq_falling_add (s : Nat) :
     (s : ℚ)^4 =
@@ -1967,7 +1967,7 @@ theorem real_log_PiFactor_le_piLogUpperBound
         Real.log (PiFactor m (s+1) : ℝ)
             = Real.log ((PiFactor m s : ℝ) * ((m : ℝ) / (((m-s-1 : Nat) : ℝ)))) := by
               rw [hsuccR]
-              ring
+              ring_nf
         _ = Real.log (PiFactor m s : ℝ)
               + Real.log ((m : ℝ) / (((m-s-1 : Nat) : ℝ))) := by
               rw [Real.log_mul hPi_pos.ne' hfac_pos.ne']
