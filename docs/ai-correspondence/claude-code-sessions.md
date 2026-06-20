@@ -11,7 +11,7 @@ tool) are retained.
 
 ---
 
-## Session 1 — 2026-06-12 · Claude Fable 5 · Claude Code (CLI)
+## Session 1 — 2026-06-10/12 · Claude Fable 5 · Claude Code (CLI)
 
 First formalization push: adversarial audits of successive proof drafts, standing up a working
 mathlib, and building the Lean development layer by layer (A → B → start of C).
@@ -148,7 +148,7 @@ Outcome: Delivered the H-power machinery (`Prop51/HPow.lean`, standard axioms, b
 
 ---
 
-## Session 2 — 2026-06-20 · Claude Opus 4.8 · Claude Code (CLI)
+## Session 2 — 2026-06-19/20 · Claude Opus 4.8 · Claude Code (CLI)
 
 A "is the worker stuck?" review of an in-progress Codex-driven formalization, followed by
 confirmation that the proof was finished, then a deep writing/revision pass on the accompanying
