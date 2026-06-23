@@ -857,6 +857,25 @@ theorem printedTailEAbsCoeff_le_WAbsCoeff (μ : List Nat) (a s : Nat) :
     exact abs_nonneg _
   linarith
 
+theorem printedTailWAbsCoeff_nonneg (μ : List Nat) (a s : Nat) :
+    0 ≤ printedTailWAbsCoeff μ a s := by
+  exact (printedTailEAbsCoeff_nonneg μ a s).trans
+    (printedTailEAbsCoeff_le_WAbsCoeff μ a s)
+
+def printedTailX2 (a : Nat) : ℚ :=
+  2 / (3 * (a : ℚ))
+
+/-- Certificate-facing finite point bound for the positive majorant
+`\widehat W` at `x_2 = 2/(3a)`.  Since the coefficient to be extracted is
+degree `a`, it suffices to bound the finite prefix through degree `a`; the
+printed proof obtains this from the stronger analytic estimate
+`\widehat W(x_2) < 920`. -/
+def PrintedTailWPointBoundX2 : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      (∑ s ∈ Finset.range (a + 1),
+        printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) ≤ 920
+
 /-- Majorant moment estimates for `exp(|L|)*(1+|J|)`.
 These are the coefficientwise-positive moment bounds that correspond most
 directly to `\widehat W` in the printed proof; `\widehat E` is then dominated
@@ -1749,6 +1768,72 @@ def PrintedTailOmegaCoeffMajorant : Prop :=
   ∀ a : Nat, 150 ≤ a →
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       |printedTailOmegaCoeff μ a a| ≤ printedTailOmegaCoeffBudget a
+
+private theorem printedTailOmegaCoeffBudget_eq_x2 (a : Nat) (ha : 150 ≤ a) :
+    920 / (printedTailX2 a)^a = printedTailOmegaCoeffBudget a := by
+  let x : ℚ := printedTailX2 a
+  let y : ℚ := (3 * (a : ℚ)) / 2
+  have ha_pos : (0 : ℚ) < a := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hxpos : 0 < x := by
+    dsimp [x, printedTailX2]
+    positivity
+  have hxy : x * y = 1 := by
+    dsimp [x, y, printedTailX2]
+    field_simp [(by positivity : (3 * (a : ℚ)) ≠ 0)]
+  have hxypow : x^a * y^a = 1 := by
+    rw [← mul_pow, hxy, one_pow]
+  have hxpow_ne : x^a ≠ 0 := pow_ne_zero _ hxpos.ne'
+  have hy : y^a = 1 / x^a := by
+    calc
+      y^a = (x^a * y^a) / x^a := by field_simp [hxpow_ne]
+      _ = 1 / x^a := by rw [hxypow]
+  dsimp [x, y, printedTailX2] at hy ⊢
+  unfold printedTailOmegaCoeffBudget
+  rw [hy]
+  ring
+
+theorem printedTailOmegaCoeffMajorant_of_wPointBoundX2
+    (hpoint : PrintedTailWPointBoundX2) :
+    PrintedTailOmegaCoeffMajorant := by
+  intro a ha μ hμ
+  have hx2pos : 0 < printedTailX2 a := by
+    unfold printedTailX2
+    have ha_pos : (0 : ℚ) < a := by
+      exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+    positivity
+  have hx2pow_nonneg : 0 ≤ (printedTailX2 a)^a :=
+    pow_nonneg hx2pos.le a
+  have hx2pow_pos : 0 < (printedTailX2 a)^a := pow_pos hx2pos a
+  have hterm_le_sum :
+      printedTailWAbsCoeff μ a a * (printedTailX2 a)^a ≤
+        ∑ s ∈ Finset.range (a + 1),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s := by
+    refine Finset.single_le_sum
+      (s := Finset.range (a + 1))
+      (f := fun s : Nat =>
+        printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+      ?hf ?hmem
+    · intro s _hs
+      exact mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+        (pow_nonneg hx2pos.le s)
+    · simp
+  have homega_x2 :
+      |printedTailOmegaCoeff μ a a| * (printedTailX2 a)^a ≤ 920 := by
+    calc
+      |printedTailOmegaCoeff μ a a| * (printedTailX2 a)^a
+          ≤ printedTailWAbsCoeff μ a a * (printedTailX2 a)^a :=
+            mul_le_mul_of_nonneg_right
+              (abs_printedTailOmegaCoeff_le_WAbsCoeff μ a a) hx2pow_nonneg
+      _ ≤ ∑ s ∈ Finset.range (a + 1),
+            printedTailWAbsCoeff μ a s * (printedTailX2 a)^s := hterm_le_sum
+      _ ≤ 920 := hpoint a ha μ hμ
+  have hcoeff_le_div :
+      |printedTailOmegaCoeff μ a a| ≤ 920 / (printedTailX2 a)^a := by
+    rw [le_div_iff₀ hx2pow_pos]
+    exact homega_x2
+  rw [printedTailOmegaCoeffBudget_eq_x2 a ha] at hcoeff_le_div
+  exact hcoeff_le_div
 
 def printedTailOmegaExpBudgetRhs (a : Nat) : ℚ :=
   (1656 / 5 : ℚ) * (19 / 25 : ℚ)^(a - 1)

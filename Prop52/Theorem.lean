@@ -208,6 +208,19 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_omegaCoeff
     hmid hmain hmaj
     (printedTailOmegaErrorBound_of_coeffMajorant homegaCoeff)
 
+/-- Final assembly using the majorant moment bounds and the finite
+`\widehat W(x_2) <= 920` point-bound certificate.  This is the current closest
+public tail interface to the printed proof's majorant layer. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_wPointX2
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hmaj : PrintedTailMajorantMomentBounds)
+    (hpoint : PrintedTailWPointBoundX2) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_omegaCoeff
+    hmid hmain hmaj
+    (printedTailOmegaCoeffMajorant_of_wPointBoundX2 hpoint)
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
