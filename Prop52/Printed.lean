@@ -13,6 +13,7 @@ import Prop52.Recurrence
 import Prop51.Majorant
 import Prop51.DNorm
 import Prop51.ExpBounds
+import Prop51.HPow
 import Mathlib.Tactic
 
 namespace Prop52
@@ -1354,6 +1355,388 @@ theorem printedTailWAbsCoeff_nonneg (μ : List Nat) (a s : Nat) :
     0 ≤ printedTailWAbsCoeff μ a s := by
   exact (printedTailEAbsCoeff_nonneg μ a s).trans
     (printedTailEAbsCoeff_le_WAbsCoeff μ a s)
+
+private theorem coeff_pow_nonneg_of_nonneg {L : Nat → ℚ}
+    (hL : ∀ r, 0 ≤ L r) :
+    ∀ q s : Nat, 0 ≤ coeff s ((PowerSeries.mk L : ℚ⟦X⟧)^q)
+  | 0, s => by
+      by_cases hs : s = 0
+      · subst s
+        simp
+      · simp [hs]
+  | q + 1, s => by
+      rw [pow_succ, coeff_mul,
+        Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+      refine Finset.sum_nonneg fun t _ => ?_
+      exact mul_nonneg (coeff_pow_nonneg_of_nonneg hL q t)
+        (by simpa using hL (s - t))
+
+private def printedTailTrianglePairs (m : Nat) : Finset (Nat × Nat) :=
+  (Finset.range (m + 1)).biUnion fun t => Finset.antidiagonal t
+
+private theorem mem_printedTailTrianglePairs {m : Nat} {ij : Nat × Nat} :
+    ij ∈ printedTailTrianglePairs m ↔ ij.1 + ij.2 ≤ m := by
+  unfold printedTailTrianglePairs
+  rw [Finset.mem_biUnion]
+  constructor
+  · rintro ⟨t, ht, hij⟩
+    have ht' := Finset.mem_range.mp ht
+    have hij' := Finset.mem_antidiagonal.mp hij
+    omega
+  · intro hsum
+    refine ⟨ij.1 + ij.2, Finset.mem_range.mpr (by omega), ?_⟩
+    exact Finset.mem_antidiagonal.mpr rfl
+
+private theorem printedTail_antidiagonal_pairwiseDisjoint (m : Nat) :
+    Set.PairwiseDisjoint (↑(Finset.range (m + 1)) : Set Nat)
+      (fun t => Finset.antidiagonal t) := by
+  intro a _ha b _hb hab
+  exact Finset.disjoint_left.mpr (by
+    intro ij hia hib
+    have hia' := Finset.mem_antidiagonal.mp hia
+    have hib' := Finset.mem_antidiagonal.mp hib
+    exact hab (by omega))
+
+private theorem coeff_mul_prefix_sum_le
+    {F G : ℚ⟦X⟧} (hF : ∀ s, 0 ≤ coeff s F)
+    (hG : ∀ s, 0 ≤ coeff s G) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1), coeff s (F * G))
+      ≤ (∑ i ∈ Finset.range (m + 1), coeff i F) *
+          (∑ j ∈ Finset.range (m + 1), coeff j G) := by
+  have hleft :
+      (∑ s ∈ Finset.range (m + 1), coeff s (F * G)) =
+        ∑ ij ∈ printedTailTrianglePairs m, coeff ij.1 F * coeff ij.2 G := by
+    unfold printedTailTrianglePairs
+    calc
+      (∑ s ∈ Finset.range (m + 1), coeff s (F * G))
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          ∑ ij ∈ Finset.antidiagonal s, coeff ij.1 F * coeff ij.2 G := by
+            refine Finset.sum_congr rfl fun s _ => ?_
+            rw [coeff_mul]
+      _ = ∑ ij ∈ (Finset.range (m + 1)).biUnion
+            (fun t => Finset.antidiagonal t),
+          coeff ij.1 F * coeff ij.2 G := by
+            rw [Finset.sum_biUnion (printedTail_antidiagonal_pairwiseDisjoint m)]
+  rw [hleft]
+  have hsubset :
+      printedTailTrianglePairs m ⊆
+        (Finset.range (m + 1)).product (Finset.range (m + 1)) := by
+    intro ij hij
+    have hsum := (mem_printedTailTrianglePairs (m := m)).mp hij
+    exact (Finset.mem_product).mpr
+      ⟨Finset.mem_range.mpr (by omega),
+        Finset.mem_range.mpr (by omega)⟩
+  calc
+    (∑ ij ∈ printedTailTrianglePairs m, coeff ij.1 F * coeff ij.2 G)
+        ≤ ∑ ij ∈ (Finset.range (m + 1)).product (Finset.range (m + 1)),
+            coeff ij.1 F * coeff ij.2 G :=
+          Finset.sum_le_sum_of_subset_of_nonneg hsubset
+            (fun ij _ _ => mul_nonneg (hF ij.1) (hG ij.2))
+    _ = (∑ i ∈ Finset.range (m + 1), coeff i F) *
+          (∑ j ∈ Finset.range (m + 1), coeff j G) := by
+          change
+            (∑ ij ∈ Finset.range (m + 1) ×ˢ Finset.range (m + 1),
+              coeff ij.1 F * coeff ij.2 G) =
+              (∑ i ∈ Finset.range (m + 1), coeff i F) *
+                (∑ j ∈ Finset.range (m + 1), coeff j G)
+          rw [Finset.sum_product]
+          symm
+          rw [Finset.sum_mul]
+          refine Finset.sum_congr rfl fun i _ => ?_
+          rw [Finset.mul_sum]
+
+private theorem coeff_pow_prefix_sum_le_total_pow {L : Nat → ℚ}
+    (hL : ∀ r, 0 ≤ L r) (m q : Nat) :
+    (∑ s ∈ Finset.range (m + 1),
+        coeff s ((PowerSeries.mk L : ℚ⟦X⟧)^q))
+      ≤ (∑ r ∈ Finset.range (m + 1), L r)^q := by
+  induction q with
+  | zero =>
+      have hsum :
+          (∑ s ∈ Finset.range (m + 1),
+              coeff s ((PowerSeries.mk L : ℚ⟦X⟧)^0)) = 1 := by
+        rw [pow_zero]
+        rw [Finset.sum_eq_single (0 : Nat)]
+        · simp
+        · intro b _hb hb0
+          simp [hb0]
+        · intro h0
+          simp at h0
+      rw [hsum]
+      simp
+  | succ q ih =>
+      let T : ℚ := ∑ r ∈ Finset.range (m + 1), L r
+      have hT : 0 ≤ T := by
+        dsimp [T]
+        exact Finset.sum_nonneg fun r _ => hL r
+      have hprod := coeff_mul_prefix_sum_le
+        (F := (PowerSeries.mk L : ℚ⟦X⟧)^q)
+        (G := PowerSeries.mk L)
+        (fun s => coeff_pow_nonneg_of_nonneg hL q s)
+        (fun s => by simpa using hL s) m
+      calc
+        (∑ s ∈ Finset.range (m + 1),
+            coeff s ((PowerSeries.mk L : ℚ⟦X⟧)^(q + 1)))
+            =
+          ∑ s ∈ Finset.range (m + 1),
+            coeff s (((PowerSeries.mk L : ℚ⟦X⟧)^q) *
+              PowerSeries.mk L) := by
+              rw [pow_succ]
+        _ ≤ (∑ i ∈ Finset.range (m + 1),
+              coeff i ((PowerSeries.mk L : ℚ⟦X⟧)^q)) *
+              (∑ j ∈ Finset.range (m + 1), coeff j (PowerSeries.mk L : ℚ⟦X⟧)) :=
+            hprod
+        _ = (∑ i ∈ Finset.range (m + 1),
+              coeff i ((PowerSeries.mk L : ℚ⟦X⟧)^q)) *
+              (∑ j ∈ Finset.range (m + 1), L j) := by
+            congr 1
+            refine Finset.sum_congr rfl fun j _ => ?_
+            simp
+        _ ≤ T^q * T :=
+            mul_le_mul_of_nonneg_right ih hT
+        _ = T^(q + 1) := by
+            rw [pow_succ]
+
+private theorem expCoeff_scale_local (rho : ℚ) (L : Nat → ℚ) :
+    ∀ m : Nat,
+      Prop51.expCoeff (fun r => rho^r * L r) m =
+        rho^m * Prop51.expCoeff L m := by
+  intro m
+  induction m using Nat.strong_induction_on with
+  | _ m ih =>
+      cases m with
+      | zero =>
+          simp
+      | succ n =>
+          have hscaled := Prop51.expCoeff_succ_mul
+            (fun r => rho^r * L r) n
+          have hbase := Prop51.expCoeff_succ_mul L n
+          have hsum :
+              (∑ t ∈ Finset.range (n + 1),
+                ((t + 1 : Nat) : ℚ) * (rho^(t + 1) * L (t + 1)) *
+                  Prop51.expCoeff (fun r => rho^r * L r) (n - t))
+                =
+              rho^(n + 1) *
+                ∑ t ∈ Finset.range (n + 1),
+                  ((t + 1 : Nat) : ℚ) * L (t + 1) *
+                    Prop51.expCoeff L (n - t) := by
+            rw [Finset.mul_sum]
+            refine Finset.sum_congr rfl fun t ht => ?_
+            have ht_le : t ≤ n := by
+              have ht' := Finset.mem_range.mp ht
+              omega
+            have hpow : rho^(t + 1) * rho^(n - t) = rho^(n + 1) := by
+              rw [← pow_add]
+              congr 1
+              omega
+            rw [ih (n - t) (by omega)]
+            calc
+              ((t + 1 : Nat) : ℚ) * (rho^(t + 1) * L (t + 1)) *
+                  (rho^(n - t) * Prop51.expCoeff L (n - t))
+                  = rho^(t + 1) * rho^(n - t) *
+                      (((t + 1 : Nat) : ℚ) * L (t + 1) *
+                        Prop51.expCoeff L (n - t)) := by
+                    ring
+              _ = rho^(n + 1) *
+                      (((t + 1 : Nat) : ℚ) * L (t + 1) *
+                        Prop51.expCoeff L (n - t)) := by
+                    rw [hpow]
+          have hmul :
+              ((n + 1 : Nat) : ℚ) *
+                  Prop51.expCoeff (fun r => rho^r * L r) (n + 1)
+                =
+              ((n + 1 : Nat) : ℚ) *
+                  (rho^(n + 1) * Prop51.expCoeff L (n + 1)) := by
+            rw [hscaled, hsum, ← hbase]
+            ring
+          exact mul_left_cancel₀ (by positivity : ((n + 1 : Nat) : ℚ) ≠ 0) hmul
+
+private def printedTailExpPrefix (y : ℚ) (m : Nat) : ℚ :=
+  ∑ q ∈ Finset.range (m + 1), y^q / (q.factorial : ℚ)
+
+private theorem printedTailExpPrefix_mono_arg {x y : ℚ}
+    (hx : 0 ≤ x) (hxy : x ≤ y) (m : Nat) :
+    printedTailExpPrefix x m ≤ printedTailExpPrefix y m := by
+  unfold printedTailExpPrefix
+  refine Finset.sum_le_sum fun q _ => ?_
+  exact div_le_div_of_nonneg_right
+    (pow_le_pow_left₀ hx hxy q) (by positivity)
+
+private theorem printedTailExpPrefix_le_203_50 {y : ℚ}
+    (hy0 : 0 ≤ y) (hy : y ≤ 7 / 5) (m : Nat) :
+    printedTailExpPrefix y m ≤ 203 / 50 := by
+  have hmono := printedTailExpPrefix_mono_arg hy0 hy m
+  have hupper := Prop51.sum_exp_le (7 / 5 : ℚ) 5
+    (by norm_num) (by norm_num) (m + 1)
+  have hconst :
+      (∑ t ∈ Finset.range 5, (7 / 5 : ℚ)^t / (t.factorial : ℚ)) +
+          ((7 / 5 : ℚ)^5 / (Nat.factorial 5 : ℚ)) *
+            (1 / (1 - (7 / 5 : ℚ) / (5 : ℚ))) ≤ 203 / 50 := by
+    norm_num
+  exact hmono.trans (hupper.trans hconst)
+
+private theorem printedTailExpPrefix_le_182 {y : ℚ}
+    (hy0 : 0 ≤ y) (hy : y ≤ 26 / 5) (m : Nat) :
+    printedTailExpPrefix y m ≤ 182 := by
+  have hmono := printedTailExpPrefix_mono_arg hy0 hy m
+  have hupper := Prop51.sum_exp_le (26 / 5 : ℚ) 11
+    (by norm_num) (by norm_num) (m + 1)
+  have hconst :
+      (∑ t ∈ Finset.range 11, (26 / 5 : ℚ)^t / (t.factorial : ℚ)) +
+          ((26 / 5 : ℚ)^11 / (Nat.factorial 11 : ℚ)) *
+            (1 / (1 - (26 / 5 : ℚ) / (11 : ℚ))) ≤ 182 := by
+    norm_num
+  exact hmono.trans (hupper.trans hconst)
+
+private theorem expCoeff_point_sum_le_expPrefix {L : Nat → ℚ}
+    (hL0 : L 0 = 0) (hL : ∀ r, 0 ≤ L r)
+    {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1), Prop51.expCoeff L s * x^s)
+      ≤ printedTailExpPrefix
+          (∑ r ∈ Finset.range (m + 1), x^r * L r) m := by
+  let Lx : Nat → ℚ := fun r => x^r * L r
+  have hLx0 : Lx 0 = 0 := by
+    dsimp [Lx]
+    simp [hL0]
+  have hLx_nonneg : ∀ r, 0 ≤ Lx r := by
+    intro r
+    dsimp [Lx]
+    exact mul_nonneg (pow_nonneg hx r) (hL r)
+  have hscale :
+      (∑ s ∈ Finset.range (m + 1), Prop51.expCoeff L s * x^s)
+        =
+      ∑ s ∈ Finset.range (m + 1), Prop51.expCoeff Lx s := by
+    refine Finset.sum_congr rfl fun s _ => ?_
+    rw [expCoeff_scale_local x L s]
+    ring
+  rw [hscale]
+  unfold printedTailExpPrefix
+  calc
+    (∑ s ∈ Finset.range (m + 1), Prop51.expCoeff Lx s)
+        =
+      ∑ s ∈ Finset.range (m + 1),
+        ∑ q ∈ Finset.range (s + 1),
+          coeff s ((PowerSeries.mk Lx : ℚ⟦X⟧)^q) /
+            (q.factorial : ℚ) := by
+          refine Finset.sum_congr rfl fun s _ => ?_
+          rw [Prop51.expCoeff_eq_sum_pow Lx hLx0 s]
+    _ ≤ ∑ s ∈ Finset.range (m + 1),
+        ∑ q ∈ Finset.range (m + 1),
+          coeff s ((PowerSeries.mk Lx : ℚ⟦X⟧)^q) /
+            (q.factorial : ℚ) := by
+          refine Finset.sum_le_sum fun s hs => ?_
+          have hs_le : s ≤ m := by
+            have hs' := Finset.mem_range.mp hs
+            omega
+          exact Finset.sum_le_sum_of_subset_of_nonneg
+            (fun q hq => by
+              exact Finset.mem_range.mpr (by
+                have hq' := Finset.mem_range.mp hq
+                omega))
+            (fun q _ _ => by
+              exact div_nonneg
+                (coeff_pow_nonneg_of_nonneg hLx_nonneg q s)
+                (by positivity))
+    _ = ∑ q ∈ Finset.range (m + 1),
+        (∑ s ∈ Finset.range (m + 1),
+          coeff s ((PowerSeries.mk Lx : ℚ⟦X⟧)^q)) /
+            (q.factorial : ℚ) := by
+          rw [Finset.sum_comm]
+          refine Finset.sum_congr rfl fun q _ => ?_
+          rw [← Finset.sum_div]
+    _ ≤ ∑ q ∈ Finset.range (m + 1),
+        (∑ r ∈ Finset.range (m + 1), x^r * L r)^q /
+          (q.factorial : ℚ) := by
+          refine Finset.sum_le_sum fun q _ => ?_
+          exact div_le_div_of_nonneg_right
+            (coeff_pow_prefix_sum_le_total_pow hLx_nonneg m q)
+            (by positivity)
+
+private theorem expCoeff_deriv_point_sum_le_expPrefix {L : Nat → ℚ}
+    (hL0 : L 0 = 0) (hL : ∀ r, 0 ≤ L r)
+    {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * Prop51.expCoeff L s * x^s)
+      ≤ (∑ r ∈ Finset.range (m + 1),
+          (r : ℚ) * (x^r * L r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1), x^r * L r) m := by
+  let Lx : Nat → ℚ := fun r => x^r * L r
+  let U : ℚ⟦X⟧ := PowerSeries.mk fun r => (r : ℚ) * Lx r
+  let E : ℚ⟦X⟧ := Prop51.expSeries Lx
+  have hLx0 : Lx 0 = 0 := by
+    dsimp [Lx]
+    simp [hL0]
+  have hLx_nonneg : ∀ r, 0 ≤ Lx r := by
+    intro r
+    dsimp [Lx]
+    exact mul_nonneg (pow_nonneg hx r) (hL r)
+  have hscale :
+      (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * Prop51.expCoeff L s * x^s)
+        =
+      ∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * Prop51.expCoeff Lx s := by
+    refine Finset.sum_congr rfl fun s _ => ?_
+    rw [expCoeff_scale_local x L s]
+    ring
+  have hcoeff :
+      ∀ s : Nat, (s : ℚ) * Prop51.expCoeff Lx s = coeff s (U * E) := by
+    intro s
+    have h := congrArg (fun F : ℚ⟦X⟧ => coeff s F)
+      (Prop51.theta_expSeries Lx)
+    change coeff s (Prop51.theta (Prop51.expSeries Lx)) =
+      coeff s ((PowerSeries.mk fun r => (r : ℚ) * Lx r) *
+        Prop51.expSeries Lx) at h
+    rw [Prop51.coeff_theta, Prop51.coeff_expSeries] at h
+    simpa [U, E] using h
+  have hEpoint :
+      (∑ s ∈ Finset.range (m + 1), Prop51.expCoeff Lx s)
+        ≤ printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1), x^r * L r) m := by
+    have h := expCoeff_point_sum_le_expPrefix hLx0 hLx_nonneg
+      (x := (1 : ℚ)) (by norm_num) m
+    simpa [Lx] using h
+  have hU_nonneg :
+      0 ≤ ∑ r ∈ Finset.range (m + 1), (r : ℚ) * (x^r * L r) := by
+    exact Finset.sum_nonneg fun r _ => by
+      exact mul_nonneg (by positivity) (mul_nonneg (pow_nonneg hx r) (hL r))
+  rw [hscale]
+  calc
+    (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * Prop51.expCoeff Lx s)
+        = ∑ s ∈ Finset.range (m + 1), coeff s (U * E) := by
+          refine Finset.sum_congr rfl fun s _ => hcoeff s
+    _ ≤ (∑ r ∈ Finset.range (m + 1), coeff r U) *
+          (∑ s ∈ Finset.range (m + 1), coeff s E) :=
+        coeff_mul_prefix_sum_le
+          (F := U) (G := E)
+          (fun r => by
+            dsimp [U]
+            simp
+            exact mul_nonneg (by positivity) (hLx_nonneg r))
+          (fun s => by
+            dsimp [E]
+            simpa using Prop51.expCoeff_nonneg hLx_nonneg s)
+          m
+    _ = (∑ r ∈ Finset.range (m + 1), (r : ℚ) * (x^r * L r)) *
+          (∑ s ∈ Finset.range (m + 1), Prop51.expCoeff Lx s) := by
+          have hUsum :
+              (∑ r ∈ Finset.range (m + 1), coeff r U) =
+                ∑ r ∈ Finset.range (m + 1), (r : ℚ) * (x^r * L r) := by
+            refine Finset.sum_congr rfl fun r _ => ?_
+            simp [U, Lx]
+          have hEsum :
+              (∑ s ∈ Finset.range (m + 1), coeff s E) =
+                ∑ s ∈ Finset.range (m + 1), Prop51.expCoeff Lx s := by
+            refine Finset.sum_congr rfl fun s _ => ?_
+            simp [E]
+          rw [hUsum, hEsum]
+    _ ≤ (∑ r ∈ Finset.range (m + 1), (r : ℚ) * (x^r * L r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1), x^r * L r) m :=
+          mul_le_mul_of_nonneg_left hEpoint hU_nonneg
 
 def printedTailX2 (a : Nat) : ℚ :=
   2 / (3 * (a : ℚ))
