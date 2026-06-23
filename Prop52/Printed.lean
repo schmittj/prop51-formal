@@ -830,18 +830,33 @@ theorem abs_printedTailOmegaCoeff_le_WAbsCoeff
         exact add_le_add
           (abs_printedTailECoeff_le_EAbsCoeff μ a s) hconv
 
-/-- Majorant moment estimates for `exp(|L|)*(1+|J|)` and `exp(|L|)`.
+/-- The `W` majorant coefficientwise dominates the `E` majorant. -/
+theorem printedTailEAbsCoeff_le_WAbsCoeff (μ : List Nat) (a s : Nat) :
+    printedTailEAbsCoeff μ a s ≤ printedTailWAbsCoeff μ a s := by
+  unfold printedTailWAbsCoeff
+  have hsum_nonneg :
+      0 ≤ ((List.range s).map fun j : Nat =>
+        let r := j + 1
+        |if r ≤ printedTailP a then
+          kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+        else 0|).sum := by
+    refine List.sum_nonneg fun x hx => ?_
+    simp only [List.mem_map] at hx
+    obtain ⟨j, _hj, rfl⟩ := hx
+    exact abs_nonneg _
+  linarith
+
+/-- Majorant moment estimates for `exp(|L|)*(1+|J|)`.
 These are the coefficientwise-positive moment bounds that correspond most
-directly to `\widehat W` and `\widehat E` in the printed proof. -/
+directly to `\widehat W` in the printed proof; `\widehat E` is then dominated
+coefficientwise by `\widehat W`. -/
 def PrintedTailMajorantMomentBounds : Prop :=
   ∀ a : Nat, 150 ≤ a →
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       (∑ s ∈ Finset.range (printedTailR0 a + 1),
           gammaWeight a s * printedTailWAbsCoeff μ a s ≤ 9) ∧
       (∑ s ∈ Finset.range (printedTailR0 a + 1),
-          (s : ℚ) * gammaWeight a s * printedTailWAbsCoeff μ a s ≤ 18) ∧
-      (∑ s ∈ Finset.range (printedTailR0 a + 1),
-          gammaWeight a s * printedTailEAbsCoeff μ a s ≤ 9)
+          (s : ℚ) * gammaWeight a s * printedTailWAbsCoeff μ a s ≤ 18)
 
 /-- The two absolute-moment estimates from the printed proof:
 `sum gamma_s |omega_s| <= 9` and
@@ -902,7 +917,7 @@ theorem printedTailAbsoluteMomentBounds_of_majorant
     PrintedTailAbsoluteMomentBounds := by
   intro a ha μ hμ
   have hmajW0 := (hmaj a ha μ hμ).1
-  have hmajW1 := (hmaj a ha μ hμ).2.1
+  have hmajW1 := (hmaj a ha μ hμ).2
   constructor
   · calc
       ∑ s ∈ Finset.range (printedTailR0 a + 1),
@@ -1349,7 +1364,7 @@ theorem printedTailEAbsoluteMomentBound_of_majorant
     (hmaj : PrintedTailMajorantMomentBounds) :
     PrintedTailEAbsoluteMomentBound := by
   intro a ha μ hμ
-  have hmajE := (hmaj a ha μ hμ).2.2
+  have hmajW0 := (hmaj a ha μ hμ).1
   calc
     ∑ s ∈ Finset.range (printedTailR0 a + 1),
         gammaWeight a s * |printedTailECoeff μ a s|
@@ -1361,7 +1376,15 @@ theorem printedTailEAbsoluteMomentBound_of_majorant
         exact mul_le_mul_of_nonneg_left
           (abs_printedTailECoeff_le_EAbsCoeff μ a s)
           (gammaWeight_nonneg hslt)
-    _ ≤ 9 := hmajE
+    _ ≤
+      ∑ s ∈ Finset.range (printedTailR0 a + 1),
+        gammaWeight a s * printedTailWAbsCoeff μ a s := by
+        refine Finset.sum_le_sum fun s hs => ?_
+        have hslt := printedTail_range_lt_a (a := a) (s := s) ha hs
+        exact mul_le_mul_of_nonneg_left
+          (printedTailEAbsCoeff_le_WAbsCoeff μ a s)
+          (gammaWeight_nonneg hslt)
+    _ ≤ 9 := hmajW0
 
 def printedTailKPowBudgetRhs (a : Nat) : ℚ :=
   9 / (2 : ℚ)^(printedTailP a)
