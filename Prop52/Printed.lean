@@ -3426,6 +3426,338 @@ private theorem factorialGasBase2_weighted_tail_term_le
     _ = (48 * (r : ℚ)^5 * (3 / 8 : ℚ)^r) / (a : ℚ)^4 := by
           ring
 
+private def factorialGasTailBase4Term (r : Nat) : ℚ :=
+  48 * (r : ℚ)^4 * (3 / 4 : ℚ)^r
+
+private def factorialGasTailBase4WeightedTerm (r : Nat) : ℚ :=
+  48 * (r : ℚ)^5 * (3 / 4 : ℚ)^r
+
+private def factorialGasTailBase2Term (r : Nat) : ℚ :=
+  48 * (r : ℚ)^4 * (3 / 8 : ℚ)^r
+
+private def factorialGasTailBase2WeightedTerm (r : Nat) : ℚ :=
+  48 * (r : ℚ)^5 * (3 / 8 : ℚ)^r
+
+private theorem factorialGasTailBase4Term_nonneg (r : Nat) :
+    0 ≤ factorialGasTailBase4Term r := by
+  unfold factorialGasTailBase4Term
+  positivity
+
+private theorem factorialGasTailBase4WeightedTerm_nonneg (r : Nat) :
+    0 ≤ factorialGasTailBase4WeightedTerm r := by
+  unfold factorialGasTailBase4WeightedTerm
+  positivity
+
+private theorem factorialGasTailBase2Term_nonneg (r : Nat) :
+    0 ≤ factorialGasTailBase2Term r := by
+  unfold factorialGasTailBase2Term
+  positivity
+
+private theorem factorialGasTailBase2WeightedTerm_nonneg (r : Nat) :
+    0 ≤ factorialGasTailBase2WeightedTerm r := by
+  unfold factorialGasTailBase2WeightedTerm
+  positivity
+
+private theorem factorialGasTailBase4Term_succ_le
+    (r : Nat) (hr : 76 ≤ r) :
+    factorialGasTailBase4Term (r + 1) ≤
+      factorialGasTailBase4Term r * (4 / 5 : ℚ) := by
+  have hrpos : (0 : ℚ) < (r : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hfrac :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ)) ≤ (77 / 76 : ℚ) := by
+    rw [div_le_iff₀ hrpos]
+    have hrQ : (76 : ℚ) ≤ r := by exact_mod_cast hr
+    norm_num
+    nlinarith
+  have hpow :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ))^4 ≤ (77 / 76 : ℚ)^4 :=
+    pow_le_pow_left₀ (by positivity) hfrac 4
+  have hratio_bound :
+      (3 / 4 : ℚ) *
+          ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4) ≤ 4 / 5 := by
+    calc
+      (3 / 4 : ℚ) * ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4)
+          ≤ (3 / 4 : ℚ) * (77 / 76 : ℚ)^4 :=
+            mul_le_mul_of_nonneg_left hpow (by norm_num)
+      _ = (((3 * 77^4 : Nat) : ℚ) / ((4 * 76^4 : Nat) : ℚ)) := by
+            norm_num
+      _ ≤ 4 / 5 := le_of_lt factorialGas_tail_base4_ratio
+  have hsucc :
+      factorialGasTailBase4Term (r + 1) =
+        factorialGasTailBase4Term r *
+          ((3 / 4 : ℚ) *
+            ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4)) := by
+    unfold factorialGasTailBase4Term
+    rw [pow_succ]
+    field_simp [hrpos.ne']
+    ring
+  rw [hsucc]
+  exact mul_le_mul_of_nonneg_left hratio_bound
+    (factorialGasTailBase4Term_nonneg r)
+
+private theorem factorialGasTailBase4WeightedTerm_succ_le
+    (r : Nat) (hr : 76 ≤ r) :
+    factorialGasTailBase4WeightedTerm (r + 1) ≤
+      factorialGasTailBase4WeightedTerm r * (13 / 16 : ℚ) := by
+  have hrpos : (0 : ℚ) < (r : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hfrac :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ)) ≤ (77 / 76 : ℚ) := by
+    rw [div_le_iff₀ hrpos]
+    have hrQ : (76 : ℚ) ≤ r := by exact_mod_cast hr
+    norm_num
+    nlinarith
+  have hpow :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ))^5 ≤ (77 / 76 : ℚ)^5 :=
+    pow_le_pow_left₀ (by positivity) hfrac 5
+  have hratio_bound :
+      (3 / 4 : ℚ) *
+          ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5) ≤ 13 / 16 := by
+    calc
+      (3 / 4 : ℚ) * ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5)
+          ≤ (3 / 4 : ℚ) * (77 / 76 : ℚ)^5 :=
+            mul_le_mul_of_nonneg_left hpow (by norm_num)
+      _ = (((3 * 77^5 : Nat) : ℚ) / ((4 * 76^5 : Nat) : ℚ)) := by
+            norm_num
+      _ ≤ 13 / 16 := le_of_lt factorialGas_tail_base4_weighted_ratio
+  have hsucc :
+      factorialGasTailBase4WeightedTerm (r + 1) =
+        factorialGasTailBase4WeightedTerm r *
+          ((3 / 4 : ℚ) *
+            ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5)) := by
+    unfold factorialGasTailBase4WeightedTerm
+    rw [pow_succ]
+    field_simp [hrpos.ne']
+    ring
+  rw [hsucc]
+  exact mul_le_mul_of_nonneg_left hratio_bound
+    (factorialGasTailBase4WeightedTerm_nonneg r)
+
+private theorem factorialGasTailBase2Term_succ_le
+    (r : Nat) (hr : 76 ≤ r) :
+    factorialGasTailBase2Term (r + 1) ≤
+      factorialGasTailBase2Term r * (1 / 2 : ℚ) := by
+  have hrpos : (0 : ℚ) < (r : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hfrac :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ)) ≤ (77 / 76 : ℚ) := by
+    rw [div_le_iff₀ hrpos]
+    have hrQ : (76 : ℚ) ≤ r := by exact_mod_cast hr
+    norm_num
+    nlinarith
+  have hpow :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ))^4 ≤ (77 / 76 : ℚ)^4 :=
+    pow_le_pow_left₀ (by positivity) hfrac 4
+  have hratio_bound :
+      (3 / 8 : ℚ) *
+          ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4) ≤ 1 / 2 := by
+    calc
+      (3 / 8 : ℚ) * ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4)
+          ≤ (3 / 8 : ℚ) * (77 / 76 : ℚ)^4 :=
+            mul_le_mul_of_nonneg_left hpow (by norm_num)
+      _ = (((3 * 77^4 : Nat) : ℚ) / ((8 * 76^4 : Nat) : ℚ)) := by
+            norm_num
+      _ ≤ 1 / 2 := le_of_lt factorialGas_tail_base2_ratio
+  have hsucc :
+      factorialGasTailBase2Term (r + 1) =
+        factorialGasTailBase2Term r *
+          ((3 / 8 : ℚ) *
+            ((((r + 1 : Nat) : ℚ) / (r : ℚ))^4)) := by
+    unfold factorialGasTailBase2Term
+    rw [pow_succ]
+    field_simp [hrpos.ne']
+    ring
+  rw [hsucc]
+  exact mul_le_mul_of_nonneg_left hratio_bound
+    (factorialGasTailBase2Term_nonneg r)
+
+private theorem factorialGasTailBase2WeightedTerm_succ_le
+    (r : Nat) (hr : 76 ≤ r) :
+    factorialGasTailBase2WeightedTerm (r + 1) ≤
+      factorialGasTailBase2WeightedTerm r * (1 / 2 : ℚ) := by
+  have hrpos : (0 : ℚ) < (r : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  have hfrac :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ)) ≤ (77 / 76 : ℚ) := by
+    rw [div_le_iff₀ hrpos]
+    have hrQ : (76 : ℚ) ≤ r := by exact_mod_cast hr
+    norm_num
+    nlinarith
+  have hpow :
+      (((r + 1 : Nat) : ℚ) / (r : ℚ))^5 ≤ (77 / 76 : ℚ)^5 :=
+    pow_le_pow_left₀ (by positivity) hfrac 5
+  have hratio_bound :
+      (3 / 8 : ℚ) *
+          ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5) ≤ 1 / 2 := by
+    calc
+      (3 / 8 : ℚ) * ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5)
+          ≤ (3 / 8 : ℚ) * (77 / 76 : ℚ)^5 :=
+            mul_le_mul_of_nonneg_left hpow (by norm_num)
+      _ = (((3 * 77^5 : Nat) : ℚ) / ((8 * 76^5 : Nat) : ℚ)) := by
+            norm_num
+      _ ≤ 1 / 2 := le_of_lt factorialGas_tail_base2_weighted_ratio
+  have hsucc :
+      factorialGasTailBase2WeightedTerm (r + 1) =
+        factorialGasTailBase2WeightedTerm r *
+          ((3 / 8 : ℚ) *
+            ((((r + 1 : Nat) : ℚ) / (r : ℚ))^5)) := by
+    unfold factorialGasTailBase2WeightedTerm
+    rw [pow_succ]
+    field_simp [hrpos.ne']
+    ring
+  rw [hsucc]
+  exact mul_le_mul_of_nonneg_left hratio_bound
+    (factorialGasTailBase2WeightedTerm_nonneg r)
+
+private theorem factorialGas_geom_chain_bound_from
+    (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat}
+    (hstep : ∀ j, j + 1 < K → F (a + j + 1) ≤ F (a + j) * q) :
+    ∀ j, j < K → F (a + j) ≤ F a * q^j := by
+  intro j hj
+  induction j with
+  | zero =>
+      simp
+  | succ j ih =>
+      calc
+        F (a + (j + 1)) = F (a + j + 1) := by rw [Nat.add_assoc]
+        _ ≤ F (a + j) * q := hstep j hj
+        _ ≤ (F a * q^j) * q := by
+            exact mul_le_mul_of_nonneg_right (ih (Nat.lt_of_succ_lt hj)) hq0
+        _ = F a * q^(j + 1) := by
+            rw [pow_succ]
+            ring
+
+private theorem factorialGas_geom_chain_sum_from_le
+    (F : Nat → ℚ) {q : ℚ} (hq0 : 0 ≤ q)
+    {a K : Nat}
+    (hstep : ∀ j, j + 1 < K → F (a + j + 1) ≤ F (a + j) * q) :
+    ∑ j ∈ Finset.range K, F (a + j)
+      ≤ F a * ∑ j ∈ Finset.range K, q^j := by
+  calc
+    ∑ j ∈ Finset.range K, F (a + j)
+        ≤ ∑ j ∈ Finset.range K, F a * q^j := by
+          refine Finset.sum_le_sum fun j hj => ?_
+          exact factorialGas_geom_chain_bound_from F hq0 hstep j
+            (Finset.mem_range.mp hj)
+    _ = F a * ∑ j ∈ Finset.range K, q^j := by
+          rw [Finset.mul_sum]
+
+private theorem factorialGasTailBase4_sum_le (p : Nat) :
+    (∑ r ∈ Finset.Ico 76 (p + 1), factorialGasTailBase4Term r) ≤ 3 := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  have hfirst : factorialGasTailBase4Term 76 < 3 / 5 := by
+    native_decide
+  have hgeom :
+      (∑ j ∈ Finset.range (p + 1 - 76), factorialGasTailBase4Term (76 + j))
+        ≤ factorialGasTailBase4Term 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (4 / 5 : ℚ)^j := by
+    refine factorialGas_geom_chain_sum_from_le
+      (fun r => factorialGasTailBase4Term r)
+      (by norm_num : (0 : ℚ) ≤ 4 / 5) ?_
+    intro j hj
+    exact factorialGasTailBase4Term_succ_le (76 + j) (by omega)
+  calc
+    (∑ j ∈ Finset.range (p + 1 - 76), factorialGasTailBase4Term (76 + j))
+        ≤ factorialGasTailBase4Term 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (4 / 5 : ℚ)^j := hgeom
+    _ ≤ (3 / 5 : ℚ) * (1 / (1 - (4 / 5 : ℚ))) := by
+          exact mul_le_mul
+            (le_of_lt hfirst)
+            (Prop51.geom_sum_le_inv_one_sub (4 / 5 : ℚ)
+              (by norm_num) (by norm_num) _)
+            (by positivity)
+            (by norm_num)
+    _ = 3 := by norm_num
+
+private theorem factorialGasTailBase4Weighted_sum_le (p : Nat) :
+    (∑ r ∈ Finset.Ico 76 (p + 1), factorialGasTailBase4WeightedTerm r) ≤
+      208 := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  have hfirst : factorialGasTailBase4WeightedTerm 76 < 39 := by
+    native_decide
+  have hgeom :
+      (∑ j ∈ Finset.range (p + 1 - 76),
+          factorialGasTailBase4WeightedTerm (76 + j))
+        ≤ factorialGasTailBase4WeightedTerm 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (13 / 16 : ℚ)^j := by
+    refine factorialGas_geom_chain_sum_from_le
+      (fun r => factorialGasTailBase4WeightedTerm r)
+      (by norm_num : (0 : ℚ) ≤ 13 / 16) ?_
+    intro j hj
+    exact factorialGasTailBase4WeightedTerm_succ_le (76 + j) (by omega)
+  calc
+    (∑ j ∈ Finset.range (p + 1 - 76),
+        factorialGasTailBase4WeightedTerm (76 + j))
+        ≤ factorialGasTailBase4WeightedTerm 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (13 / 16 : ℚ)^j := hgeom
+    _ ≤ (39 : ℚ) * (1 / (1 - (13 / 16 : ℚ))) := by
+          exact mul_le_mul
+            (le_of_lt hfirst)
+            (Prop51.geom_sum_le_inv_one_sub (13 / 16 : ℚ)
+              (by norm_num) (by norm_num) _)
+            (by positivity)
+            (by norm_num)
+    _ = 208 := by norm_num
+
+private theorem factorialGasTailBase2_sum_le (p : Nat) :
+    (∑ r ∈ Finset.Ico 76 (p + 1), factorialGasTailBase2Term r) ≤ 1 := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  have hfirst : factorialGasTailBase2Term 76 < 1 / 2 := by
+    native_decide
+  have hgeom :
+      (∑ j ∈ Finset.range (p + 1 - 76), factorialGasTailBase2Term (76 + j))
+        ≤ factorialGasTailBase2Term 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (1 / 2 : ℚ)^j := by
+    refine factorialGas_geom_chain_sum_from_le
+      (fun r => factorialGasTailBase2Term r)
+      (by norm_num : (0 : ℚ) ≤ 1 / 2) ?_
+    intro j hj
+    exact factorialGasTailBase2Term_succ_le (76 + j) (by omega)
+  calc
+    (∑ j ∈ Finset.range (p + 1 - 76), factorialGasTailBase2Term (76 + j))
+        ≤ factorialGasTailBase2Term 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (1 / 2 : ℚ)^j := hgeom
+    _ ≤ (1 / 2 : ℚ) * (1 / (1 - (1 / 2 : ℚ))) := by
+          exact mul_le_mul
+            (le_of_lt hfirst)
+            (Prop51.geom_sum_le_inv_one_sub (1 / 2 : ℚ)
+              (by norm_num) (by norm_num) _)
+            (by positivity)
+            (by norm_num)
+    _ = 1 := by norm_num
+
+private theorem factorialGasTailBase2Weighted_sum_le (p : Nat) :
+    (∑ r ∈ Finset.Ico 76 (p + 1), factorialGasTailBase2WeightedTerm r) ≤
+      1 := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  have hfirst : factorialGasTailBase2WeightedTerm 76 < 1 / 2 := by
+    native_decide
+  have hgeom :
+      (∑ j ∈ Finset.range (p + 1 - 76),
+          factorialGasTailBase2WeightedTerm (76 + j))
+        ≤ factorialGasTailBase2WeightedTerm 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (1 / 2 : ℚ)^j := by
+    refine factorialGas_geom_chain_sum_from_le
+      (fun r => factorialGasTailBase2WeightedTerm r)
+      (by norm_num : (0 : ℚ) ≤ 1 / 2) ?_
+    intro j hj
+    exact factorialGasTailBase2WeightedTerm_succ_le (76 + j) (by omega)
+  calc
+    (∑ j ∈ Finset.range (p + 1 - 76),
+        factorialGasTailBase2WeightedTerm (76 + j))
+        ≤ factorialGasTailBase2WeightedTerm 76 *
+            ∑ j ∈ Finset.range (p + 1 - 76), (1 / 2 : ℚ)^j := hgeom
+    _ ≤ (1 / 2 : ℚ) * (1 / (1 - (1 / 2 : ℚ))) := by
+          exact mul_le_mul
+            (le_of_lt hfirst)
+            (Prop51.geom_sum_le_inv_one_sub (1 / 2 : ℚ)
+              (by norm_num) (by norm_num) _)
+            (by positivity)
+            (by norm_num)
+    _ = 1 := by norm_num
+
 /-! ## Taylor--Gamma truncation arithmetic -/
 
 def truncationResidueRhs (a : Nat) : ℚ :=
