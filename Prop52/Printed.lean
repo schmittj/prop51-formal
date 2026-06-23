@@ -154,6 +154,54 @@ theorem printedCoeffNegativityLarge_of_mid_normalizedTail
   printedCoeffNegativityLarge_of_mid_tail hmid
     (printedCoeffNegativityTail_of_normalizedLowerBound htail)
 
+/-! ## The printed coefficient as a power-series coefficient -/
+
+noncomputable def printedFullFSeries (μ : List Nat) : ℚ⟦X⟧ :=
+  Prop51.expSeries (fun r => -hCoeff μ r)
+
+noncomputable def printedFullKSeries (μ : List Nat) : ℚ⟦X⟧ :=
+  mk (kCoeff μ)
+
+theorem coeff_printedFullFSeries (μ : List Nat) (a : Nat) :
+    coeff a (printedFullFSeries μ) = fCoeff μ a := by
+  simp [printedFullFSeries, fCoeff]
+
+theorem coeff_printedFullKSeries (μ : List Nat) (r : Nat) :
+    coeff r (printedFullKSeries μ) = kCoeff μ r := by
+  simp [printedFullKSeries]
+
+theorem coeff_printedFullFSeries_mul_KSeries (μ : List Nat) (a : Nat) :
+    coeff a (printedFullFSeries μ * printedFullKSeries μ) =
+      ((List.range a).map fun j : Nat =>
+        kCoeff μ (j + 1) * fCoeff μ (a - (j + 1))).sum := by
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedFullFSeries, coeff_printedFullKSeries]
+  rw [Finset.sum_range_succ]
+  rw [Nat.sub_self]
+  change (∑ x ∈ Finset.range a, fCoeff μ x * kCoeff μ (a - x)) +
+      fCoeff μ a * kCoeff μ 0 =
+    ∑ i ∈ Finset.range a, kCoeff μ (i + 1) * fCoeff μ (a - (i + 1))
+  rw [show kCoeff μ 0 = 0 by rfl, mul_zero, add_zero]
+  rw [← Finset.sum_range_reflect (fun x : Nat =>
+    fCoeff μ x * kCoeff μ (a - x)) a]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  have hjlt : j < a := Finset.mem_range.mp hj
+  have hsub : a - (a - 1 - j) = j + 1 := by omega
+  have hsub' : a - (j + 1) = a - 1 - j := by omega
+  rw [hsub, hsub']
+  ring
+
+theorem coeff_printedFullSeries_eq_printedCoeff (μ : List Nat) (a : Nat) :
+    coeff a (printedFullFSeries μ * (1 - printedFullKSeries μ)) =
+      printedCoeff μ a := by
+  unfold printedCoeff markedConvolution
+  rw [mul_sub, mul_one, map_sub, coeff_printedFullFSeries,
+    coeff_printedFullFSeries_mul_KSeries]
+  rw [← bCoeff_eq_fCoeff μ a]
+  congr 1
+  refine congrArg List.sum (List.map_congr_left fun k _hk => ?_)
+  rw [kCoeff_eq_markedCoeff, ← bCoeff_eq_fCoeff μ (a - (k + 1))]
+
 /-! ## Low/high split interface for the printed large tail
 
 The human proof expands the printed coefficient using

@@ -98,6 +98,9 @@ import Prop52.Printed
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_tail
 #print axioms Prop52.printedCoeffNegativityTail_of_normalizedLowerBound
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_normalizedTail
+#print axioms Prop52.coeff_printedFullFSeries
+#print axioms Prop52.coeff_printedFullFSeries_mul_KSeries
+#print axioms Prop52.coeff_printedFullSeries_eq_printedCoeff
 #print axioms Prop52.printedTailNormalizedLowerBound_of_split_errorBounds
 #print axioms Prop52.printedCoeffNegativityTail_of_split_errorBounds
 #print axioms Prop52.coeff_printedTailESeries
