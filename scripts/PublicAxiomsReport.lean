@@ -37,6 +37,11 @@ import Prop51
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_12_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_13_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_9_13_generated
+#print axioms Prop52.RatGood_iff_not_dvd
+#print axioms Prop52.RatGood_mul
+#print axioms Prop52.RatGood_add
+#print axioms Prop52.RatGood_sub
+#print axioms Prop52.RatGood_list_sum
 #print axioms Prop52.ratCast_mul_of_good
 #print axioms Prop52.ratCast_add_of_good
 #print axioms Prop52.ratCast_sub_of_good

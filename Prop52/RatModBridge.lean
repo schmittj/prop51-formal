@@ -20,6 +20,58 @@ certificate prime. -/
 def RatGood (q : ℚ) : Prop :=
   ((q.den : Nat) : ZMod finitePrime1) ≠ 0
 
+theorem RatGood_iff_not_dvd (q : ℚ) :
+    RatGood q ↔ ¬ finitePrime1 ∣ q.den := by
+  unfold RatGood
+  exact not_congr (ZMod.natCast_eq_zero_iff q.den finitePrime1)
+
+theorem RatGood_of_den_dvd {q : ℚ} {d : Nat}
+    (hdvd : q.den ∣ d) (hd : ¬ finitePrime1 ∣ d) : RatGood q := by
+  rw [RatGood_iff_not_dvd]
+  intro hp
+  exact hd (hp.trans hdvd)
+
+theorem RatGood_mul {x y : ℚ} (hx : RatGood x) (hy : RatGood y) :
+    RatGood (x * y) := by
+  rw [RatGood_iff_not_dvd] at hx hy
+  exact RatGood_of_den_dvd (Rat.mul_den_dvd x y) (by
+    intro hdiv
+    have hprime : finitePrime1.Prime := by native_decide
+    rcases hprime.dvd_mul.mp hdiv with hxdiv | hydiv
+    · exact hx hxdiv
+    · exact hy hydiv)
+
+theorem RatGood_add {x y : ℚ} (hx : RatGood x) (hy : RatGood y) :
+    RatGood (x + y) := by
+  rw [RatGood_iff_not_dvd] at hx hy
+  exact RatGood_of_den_dvd (Rat.add_den_dvd x y) (by
+    intro hdiv
+    have hprime : finitePrime1.Prime := by native_decide
+    rcases hprime.dvd_mul.mp hdiv with hxdiv | hydiv
+    · exact hx hxdiv
+    · exact hy hydiv)
+
+theorem RatGood_sub {x y : ℚ} (hx : RatGood x) (hy : RatGood y) :
+    RatGood (x - y) := by
+  rw [RatGood_iff_not_dvd] at hx hy
+  exact RatGood_of_den_dvd (Rat.sub_den_dvd x y) (by
+    intro hdiv
+    have hprime : finitePrime1.Prime := by native_decide
+    rcases hprime.dvd_mul.mp hdiv with hxdiv | hydiv
+    · exact hx hxdiv
+    · exact hy hydiv)
+
+theorem RatGood_list_sum (xs : List ℚ) (hxs : ∀ x ∈ xs, RatGood x) :
+    RatGood xs.sum := by
+  induction xs with
+  | nil =>
+      unfold RatGood
+      simp
+  | cons x xs ih =>
+      simp only [List.sum_cons]
+      exact RatGood_add (hxs x (by simp))
+        (ih (fun y hy => hxs y (by simp [hy])))
+
 theorem RatGood_natCast (n : Nat) : RatGood (n : ℚ) := by
   unfold RatGood
   simp
