@@ -151,6 +151,43 @@ theorem printedCoeffNegativityLarge_of_mid_normalizedTail
   printedCoeffNegativityLarge_of_mid_tail hmid
     (printedCoeffNegativityTail_of_normalizedLowerBound htail)
 
+/-! ## Gamma-margin arithmetic -/
+
+def gammaExponentBound (a : Nat) : ℚ :=
+  5 / 4 + 5 / (2 * ((a : ℚ) - 3)) +
+    96 * (a : ℚ)^2 / (25 * ((a : ℚ) - 5)^3)
+
+private theorem gammaExponentBound_poly_pos (a : Nat) (ha : 150 ≤ a) :
+    0 < 100 * (a : ℚ)^4 - 14480 * (a : ℚ)^3 + 110040 * (a : ℚ)^2 -
+      410000 * (a : ℚ) + 662500 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+  have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+  have hcube : 0 ≤ ((a : ℚ) - 150)^3 := by positivity
+  have hfour : 0 ≤ ((a : ℚ) - 150)^4 := by positivity
+  have hdecomp :
+      100 * (a : ℚ)^4 - 14480 * (a : ℚ)^3 + 110040 * (a : ℚ)^2 -
+          410000 * (a : ℚ) + 662500 =
+        100 * ((a : ℚ) - 150)^4 + 45520 * ((a : ℚ) - 150)^3 +
+          7094040 * ((a : ℚ) - 150)^2 + 405202000 * ((a : ℚ) - 150) +
+          4170062500 := by
+    ring
+  rw [hdecomp]
+  nlinarith
+
+/-- The rational endpoint in the Gamma-margin proof is uniformly below
+`13/10` for all `a >= 150`. -/
+theorem gammaExponentBound_lt (a : Nat) (ha : 150 ≤ a) :
+    gammaExponentBound a < 13 / 10 := by
+  unfold gammaExponentBound
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have h3 : (0 : ℚ) < (a : ℚ) - 3 := by nlinarith
+  have h5 : (0 : ℚ) < (a : ℚ) - 5 := by nlinarith
+  have hpoly := gammaExponentBound_poly_pos a ha
+  field_simp [h3.ne', h5.ne']
+  ring_nf
+  nlinarith
+
 /-! ## Exact factorial-gas constants
 
 The following declarations mirror the first block of
@@ -662,6 +699,21 @@ theorem printedTailX2Bound4_lt (a : Nat) (ha : 150 ≤ a) :
   field_simp [ha_pos.ne']
   ring_nf
   nlinarith
+
+/-- Final rational arithmetic for the first absolute-moment budget:
+`exp(7/5) < 203/50` and `exp(26/5) < 182` reduce the displayed bound below
+`9`. -/
+theorem printedTailAbsoluteMoment0_budget :
+    (203 / 50 : ℚ) * (21 / 10) +
+        (182 : ℚ) * (101 / 20) / (2 : ℚ)^13 < 9 := by
+  norm_num
+
+/-- Final rational arithmetic for the weighted absolute-moment budget,
+reduced below `18`. -/
+theorem printedTailAbsoluteMoment1_budget :
+    (203 / 50 : ℚ) * (17 / 4) +
+        (182 : ℚ) * (255 / 8) / (2 : ℚ)^13 < 18 := by
+  norm_num
 
 /-! ## Endpoint arithmetic for the `x₀` and `x₂` majorants -/
 

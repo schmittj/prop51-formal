@@ -100,6 +100,7 @@ import Prop52.Printed
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_normalizedTail
 #print axioms Prop52.printedLargeMargin_pos
 #print axioms Prop52.printedLargeMargin_pos_150
+#print axioms Prop52.gammaExponentBound_lt
 #print axioms Prop52.factorialGas_prefix_base4
 #print axioms Prop52.factorialGas_prefix_base4_weighted
 #print axioms Prop52.factorialGas_prefix_base2
@@ -126,6 +127,8 @@ import Prop52.Printed
 #print axioms Prop52.printedTailX2Bound2_lt
 #print axioms Prop52.printedTailX2Bound3_lt
 #print axioms Prop52.printedTailX2Bound4_lt
+#print axioms Prop52.printedTailAbsoluteMoment0_budget
+#print axioms Prop52.printedTailAbsoluteMoment1_budget
 #print axioms Prop52.x0Endpoint1_lt
 #print axioms Prop52.x0Endpoint2_lt
 #print axioms Prop52.x0Endpoint3_lt
