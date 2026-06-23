@@ -23,6 +23,7 @@ import Prop51
 #print axioms Prop52.checkGeneratedModNat_9_prime1
 #print axioms Prop52.checkGeneratedModNat_10_prime1
 #print axioms Prop52.checkGeneratedModNat_11_prime1_chunks
+#print axioms Prop52.checkGeneratedModNat_12_prime1_firstParts
 #print axioms Prop52.finitePrime1_expListModNat_cast
 #print axioms Prop52.finitePrime1_hCoeffModNat_cast
 #print axioms Prop52.finitePrime1_kCoeffModNat_cast
@@ -32,6 +33,7 @@ import Prop51
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_9_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_10_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_11_generated
+#print axioms Prop52.finitePrime1_correctedCoeffMod_ne_12_generated
 #print axioms Prop52.ratCast_mul_of_good
 #print axioms Prop52.ratCast_add_of_good
 #print axioms Prop52.ratCast_sub_of_good

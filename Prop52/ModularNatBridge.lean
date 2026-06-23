@@ -9,6 +9,22 @@ residues denote the corresponding `ZMod finitePrime1` computations.
 -/
 
 import Prop52.ModularNat11
+import Prop52.ModularNat12High
+import Prop52.ModularNat12Low
+import Prop52.ModularNat12LowerHigh
+import Prop52.ModularNat12LowerMid
+import Prop52.ModularNat12LowerMidLow
+import Prop52.ModularNat12LowHigh
+import Prop52.ModularNat12LowMid
+import Prop52.ModularNat12LowMidHigh
+import Prop52.ModularNat12Mid
+import Prop52.ModularNat12MidHigh
+import Prop52.ModularNat12MidLow
+import Prop52.ModularNat12Min
+import Prop52.ModularNat12Upper
+import Prop52.ModularNat12VeryLow
+import Prop52.ModularNat12VeryLowHigh
+import Prop52.ModularNat12VeryLowMid
 import Prop51.PartitionsComplete
 import Mathlib.Data.Bool.AllAny
 import Mathlib.Data.List.TakeDrop
@@ -723,5 +739,65 @@ theorem finitePrime1_correctedCoeffMod_ne_11_generated :
   exact finitePrime1_correctedCoeffMod_ne_of_checkGeneratedChunks
     11 50000 20 μ (by decide) (by norm_num)
     partitions_M11_length_le_20_chunks checkGeneratedModNat_11_prime1_chunks hmem
+
+theorem checkGeneratedModNat_12_prime1_firstParts
+    (first : Nat) (hlo : 1 ≤ first) (hhi : first ≤ M 12) :
+    checkGeneratedModNatFirstPart finitePrime1 12 first = true := by
+  have hhi66 : first ≤ 66 := by
+    simpa [M] using hhi
+  by_cases h3 : first < 3
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 1 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_1_2 hlo (by omega)
+  by_cases h5 : first < 5
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 3 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_3_2 (by omega) (by omega)
+  by_cases h8 : first < 8
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 5 3 first
+      checkGeneratedModNat_12_prime1_firstPartRange_5_3 (by omega) (by omega)
+  by_cases h10 : first < 10
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 8 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_8_2 (by omega) (by omega)
+  by_cases h12 : first < 12
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 10 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_10_2 (by omega) (by omega)
+  by_cases h14 : first < 14
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 12 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_12_2 (by omega) (by omega)
+  by_cases h16 : first < 16
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 14 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_14_2 (by omega) (by omega)
+  by_cases h18 : first < 18
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 16 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_16_2 (by omega) (by omega)
+  by_cases h20 : first < 20
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 18 2 first
+      checkGeneratedModNat_12_prime1_firstPartRange_18_2 (by omega) (by omega)
+  by_cases h23 : first < 23
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 20 3 first
+      checkGeneratedModNat_12_prime1_firstPartRange_20_3 (by omega) (by omega)
+  by_cases h27 : first < 27
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 23 4 first
+      checkGeneratedModNat_12_prime1_firstPartRange_23_4 (by omega) (by omega)
+  by_cases h30 : first < 30
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 27 3 first
+      checkGeneratedModNat_12_prime1_firstPartRange_27_3 (by omega) (by omega)
+  by_cases h34 : first < 34
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 30 4 first
+      checkGeneratedModNat_12_prime1_firstPartRange_30_4 (by omega) (by omega)
+  by_cases h45 : first < 45
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 34 11 first
+      checkGeneratedModNat_12_prime1_firstPartRange_34_11 (by omega) (by omega)
+  by_cases h56 : first < 56
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 45 11 first
+      checkGeneratedModNat_12_prime1_firstPartRange_45_11 (by omega) (by omega)
+  · exact checkGeneratedModNatFirstPartRange_get finitePrime1 12 56 11 first
+      checkGeneratedModNat_12_prime1_firstPartRange_56_11 (by omega) (by omega)
+
+theorem finitePrime1_correctedCoeffMod_ne_12_generated :
+    ∀ μ ∈ Prop51.partitions (M 12), correctedCoeffMod finitePrime1 12 μ ≠ 0 := by
+  intro μ hmem
+  exact finitePrime1_correctedCoeffMod_ne_of_checkGeneratedFirstParts
+    12 μ (by decide) (by norm_num [M])
+    checkGeneratedModNat_12_prime1_firstParts hmem
 
 end Prop52
