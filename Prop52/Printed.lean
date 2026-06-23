@@ -3323,6 +3323,934 @@ theorem printedTailX0Bound4_lt (a : Nat) (ha : 150 ≤ a) :
   field_simp [hn_pos.ne']
   nlinarith
 
+/-! ## Low-polynomial point bounds at `x₀`
+
+The printed proof bounds `L(x₀)`, `x₀L'(x₀)`, `J(x₀)`, and `x₀J'(x₀)`.
+The constants below are slightly coarser than the displayed rational
+`printedTailX0Bound*` constants, but they still imply the same endpoint
+thresholds used by the `\widehat W` moment argument.
+-/
+
+def printedTailLPointSum (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
+  ∑ r ∈ Finset.range (printedTailP a + 1), hCoeff μ r * x^r
+
+def printedTailLDerivPointSum (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
+  ∑ r ∈ Finset.range (printedTailP a + 1),
+    (r : ℚ) * hCoeff μ r * x^r
+
+def printedTailJPointSum (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
+  ∑ r ∈ Finset.range (printedTailP a + 1), kCoeff μ r * x^r
+
+def printedTailJDerivPointSum (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
+  ∑ r ∈ Finset.range (printedTailP a + 1),
+    (r : ℚ) * kCoeff μ r * x^r
+
+private theorem factorial_pred_le_pow_of_le (p : Nat) :
+    ∀ r : Nat, 2 ≤ r → r ≤ p → (r - 1).factorial ≤ p^(r - 2)
+  | 0, hr, _ => by omega
+  | 1, hr, _ => by omega
+  | 2, _hr, _hrp => by simp
+  | r + 3, _hr, hrp => by
+      have ih := factorial_pred_le_pow_of_le p (r + 2) (by omega) (by omega)
+      rw [show r + 3 - 1 = r + 2 by omega,
+        show r + 3 - 2 = r + 1 by omega, Nat.factorial_succ,
+        pow_succ']
+      exact Nat.mul_le_mul (by omega : r + 2 ≤ p) ih
+
+private theorem factorial_le_two_mul_pow_of_le (p : Nat) :
+    ∀ r : Nat, 2 ≤ r → r ≤ p → r.factorial ≤ 2 * p^(r - 2)
+  | 0, hr, _ => by omega
+  | 1, hr, _ => by omega
+  | 2, _hr, _hrp => by simp
+  | r + 3, _hr, hrp => by
+      have ih := factorial_le_two_mul_pow_of_le p (r + 2) (by omega) (by omega)
+      rw [show r + 3 - 2 = r + 1 by omega, Nat.factorial_succ,
+        pow_succ']
+      calc
+        (r + 3) * (r + 2).factorial
+            ≤ p * (2 * p^r) := Nat.mul_le_mul (by omega : r + 3 ≤ p) ih
+        _ = 2 * (p * p^r) := by ring
+
+private theorem printedTailP_div_x0Den_le_three_fifths
+    (a : Nat) (ha : 150 ≤ a) :
+    ((printedTailP a : ℚ) / ((a : ℚ) - 12)) ≤ 3 / 5 := by
+  unfold printedTailP
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hden : (0 : ℚ) < (a : ℚ) - 12 := by nlinarith
+  have hdiv_nat : a / 2 * 2 ≤ a := Nat.div_mul_le_self a 2
+  have hdiv : ((a / 2 : Nat) : ℚ) * 2 ≤ (a : ℚ) := by exact_mod_cast hdiv_nat
+  rw [div_le_iff₀ hden]
+  nlinarith
+
+private theorem printedTailP_div_two_x0Den_le_three_tenths
+    (a : Nat) (ha : 150 ≤ a) :
+    ((printedTailP a : ℚ) / (2 * ((a : ℚ) - 12))) ≤ 3 / 10 := by
+  have h := printedTailP_div_x0Den_le_three_fifths a ha
+  have hden : (0 : ℚ) < (a : ℚ) - 12 := by
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  calc
+    ((printedTailP a : ℚ) / (2 * ((a : ℚ) - 12)))
+        = (1 / 2 : ℚ) * ((printedTailP a : ℚ) / ((a : ℚ) - 12)) := by
+          field_simp [hden.ne']
+    _ ≤ (1 / 2 : ℚ) * (3 / 5) :=
+          mul_le_mul_of_nonneg_left h (by norm_num)
+    _ = 3 / 10 := by norm_num
+
+private theorem factorial_pred_x0_tail_term_le
+    {a r : Nat} (ha : 150 ≤ a) (hr2 : 2 ≤ r)
+    (hrp : r ≤ printedTailP a) :
+    (((r - 1).factorial : Nat) : ℚ) / (((a : ℚ) - 12)^r)
+      ≤ (1 / ((a : ℚ) - 12)^2) * (3 / 5 : ℚ)^(r - 2) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hfacNat :=
+    factorial_pred_le_pow_of_le (printedTailP a) r hr2 hrp
+  have hfac :
+      (((r - 1).factorial : Nat) : ℚ) ≤
+        ((printedTailP a : Nat) : ℚ)^(r - 2) := by
+    exact_mod_cast hfacNat
+  have hpA := printedTailP_div_x0Den_le_three_fifths a ha
+  have hpA_nonneg : 0 ≤ ((printedTailP a : ℚ) / A) := by
+    positivity
+  calc
+    (((r - 1).factorial : Nat) : ℚ) / A^r
+        ≤ ((printedTailP a : ℚ)^(r - 2)) / A^r :=
+          div_le_div_of_nonneg_right hfac (pow_nonneg hApos.le r)
+    _ = (1 / A^2) * (((printedTailP a : ℚ) / A)^(r - 2)) := by
+          rw [show r = (r - 2) + 2 by omega, pow_add, div_pow]
+          field_simp [hApos.ne', pow_ne_zero (r - 2) hApos.ne']
+          rw [show r - 2 + 2 - 2 = r - 2 by omega]
+    _ ≤ (1 / A^2) * (3 / 5 : ℚ)^(r - 2) :=
+          mul_le_mul_of_nonneg_left
+            (pow_le_pow_left₀ hpA_nonneg hpA (r - 2)) (by positivity)
+
+private theorem factorial_x0_tail_term_le
+    {a r : Nat} (ha : 150 ≤ a) (hr2 : 2 ≤ r)
+    (hrp : r ≤ printedTailP a) :
+    ((r.factorial : Nat) : ℚ) / (((a : ℚ) - 12)^r)
+      ≤ (2 / ((a : ℚ) - 12)^2) * (3 / 5 : ℚ)^(r - 2) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hfacNat :=
+    factorial_le_two_mul_pow_of_le (printedTailP a) r hr2 hrp
+  have hfac :
+      ((r.factorial : Nat) : ℚ) ≤
+        2 * ((printedTailP a : Nat) : ℚ)^(r - 2) := by
+    exact_mod_cast hfacNat
+  have hpA := printedTailP_div_x0Den_le_three_fifths a ha
+  have hpA_nonneg : 0 ≤ ((printedTailP a : ℚ) / A) := by
+    positivity
+  calc
+    ((r.factorial : Nat) : ℚ) / A^r
+        ≤ (2 * (printedTailP a : ℚ)^(r - 2)) / A^r :=
+          div_le_div_of_nonneg_right hfac (pow_nonneg hApos.le r)
+    _ = (2 / A^2) * (((printedTailP a : ℚ) / A)^(r - 2)) := by
+          rw [show r = (r - 2) + 2 by omega, pow_add, div_pow]
+          field_simp [hApos.ne', pow_ne_zero (r - 2) hApos.ne']
+          rw [show r - 2 + 2 - 2 = r - 2 by omega]
+    _ ≤ (2 / A^2) * (3 / 5 : ℚ)^(r - 2) :=
+          mul_le_mul_of_nonneg_left
+            (pow_le_pow_left₀ hpA_nonneg hpA (r - 2)) (by positivity)
+
+private theorem factorial_pred_x0_halved_tail_term_le
+    {a r : Nat} (ha : 150 ≤ a) (hr2 : 2 ≤ r)
+    (hrp : r ≤ printedTailP a) :
+    (((r - 1).factorial : Nat) : ℚ) /
+        ((2 : ℚ)^r * ((a : ℚ) - 12)^r)
+      ≤ (1 / (4 * ((a : ℚ) - 12)^2)) *
+          (3 / 10 : ℚ)^(r - 2) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hbase := factorial_pred_x0_tail_term_le
+    (a := a) (r := r) ha hr2 hrp
+  have hscale : 0 ≤ (1 / (2 : ℚ)^r) := by positivity
+  calc
+    (((r - 1).factorial : Nat) : ℚ) / ((2 : ℚ)^r * A^r)
+        = (1 / (2 : ℚ)^r) *
+            ((((r - 1).factorial : Nat) : ℚ) / A^r) := by
+          field_simp [pow_ne_zero r (by norm_num : (2 : ℚ) ≠ 0)]
+    _ ≤ (1 / (2 : ℚ)^r) *
+          ((1 / A^2) * (3 / 5 : ℚ)^(r - 2)) :=
+          mul_le_mul_of_nonneg_left hbase hscale
+    _ = (1 / (4 * A^2)) * (3 / 10 : ℚ)^(r - 2) := by
+          have hpow :
+              (3 / 5 : ℚ)^(r - 2) =
+                (2 : ℚ)^(r - 2) * (3 / 10 : ℚ)^(r - 2) := by
+            rw [← mul_pow]
+            norm_num
+          rw [show r = (r - 2) + 2 by omega, pow_add]
+          field_simp [hApos.ne', pow_ne_zero (r - 2)
+            (by norm_num : (2 : ℚ) ≠ 0)]
+          rw [show r - 2 + 2 - 2 = r - 2 by omega, hpow]
+          norm_num
+          ring
+
+private theorem factorial_x0_halved_tail_term_le
+    {a r : Nat} (ha : 150 ≤ a) (hr2 : 2 ≤ r)
+    (hrp : r ≤ printedTailP a) :
+    ((r.factorial : Nat) : ℚ) /
+        ((2 : ℚ)^r * ((a : ℚ) - 12)^r)
+      ≤ (1 / (2 * ((a : ℚ) - 12)^2)) *
+          (3 / 10 : ℚ)^(r - 2) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hbase := factorial_x0_tail_term_le
+    (a := a) (r := r) ha hr2 hrp
+  have hscale : 0 ≤ (1 / (2 : ℚ)^r) := by positivity
+  calc
+    ((r.factorial : Nat) : ℚ) / ((2 : ℚ)^r * A^r)
+        = (1 / (2 : ℚ)^r) * (((r.factorial : Nat) : ℚ) / A^r) := by
+          field_simp [pow_ne_zero r (by norm_num : (2 : ℚ) ≠ 0)]
+    _ ≤ (1 / (2 : ℚ)^r) *
+          ((2 / A^2) * (3 / 5 : ℚ)^(r - 2)) :=
+          mul_le_mul_of_nonneg_left hbase hscale
+    _ = (1 / (2 * A^2)) * (3 / 10 : ℚ)^(r - 2) := by
+          have hpow :
+              (3 / 5 : ℚ)^(r - 2) =
+                (2 : ℚ)^(r - 2) * (3 / 10 : ℚ)^(r - 2) := by
+            rw [← mul_pow]
+            norm_num
+          rw [show r = (r - 2) + 2 by omega, pow_add]
+          field_simp [hApos.ne', pow_ne_zero (r - 2)
+            (by norm_num : (2 : ℚ) ≠ 0)]
+          rw [show r - 2 + 2 - 2 = r - 2 by omega, hpow]
+
+private theorem factorial_pred_x0_tail_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) / (((a : ℚ) - 12)^r))
+      ≤ (5 / (2 * ((a : ℚ) - 12)^2) : ℚ) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  calc
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) / A^r)
+        ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+            (1 / A^2) * (3 / 5 : ℚ)^(r - 2) := by
+          refine Finset.sum_le_sum fun r hr => ?_
+          have hmem := Finset.mem_Ico.mp hr
+          exact factorial_pred_x0_tail_term_le (a := a) (r := r)
+            ha hmem.1 (by omega)
+    _ = (1 / A^2) *
+          ∑ j ∈ Finset.range (printedTailP a + 1 - 2),
+            (3 / 5 : ℚ)^j := by
+          rw [Finset.sum_Ico_eq_sum_range]
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun j hj => ?_
+          simp
+    _ ≤ (1 / A^2) * (1 / (1 - (3 / 5 : ℚ))) :=
+          mul_le_mul_of_nonneg_left
+            (Prop51.geom_sum_le_inv_one_sub (3 / 5 : ℚ)
+              (by norm_num) (by norm_num) _) (by positivity)
+    _ = 5 / (2 * A^2) := by ring_nf
+
+private theorem factorial_x0_tail_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      ((r.factorial : Nat) : ℚ) / (((a : ℚ) - 12)^r))
+      ≤ (5 / ((a : ℚ) - 12)^2 : ℚ) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  calc
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      ((r.factorial : Nat) : ℚ) / A^r)
+        ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+            (2 / A^2) * (3 / 5 : ℚ)^(r - 2) := by
+          refine Finset.sum_le_sum fun r hr => ?_
+          have hmem := Finset.mem_Ico.mp hr
+          exact factorial_x0_tail_term_le (a := a) (r := r)
+            ha hmem.1 (by omega)
+    _ = (2 / A^2) *
+          ∑ j ∈ Finset.range (printedTailP a + 1 - 2),
+            (3 / 5 : ℚ)^j := by
+          rw [Finset.sum_Ico_eq_sum_range]
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun j hj => ?_
+          simp
+    _ ≤ (2 / A^2) * (1 / (1 - (3 / 5 : ℚ))) :=
+          mul_le_mul_of_nonneg_left
+            (Prop51.geom_sum_le_inv_one_sub (3 / 5 : ℚ)
+              (by norm_num) (by norm_num) _) (by positivity)
+    _ = 5 / A^2 := by ring_nf
+
+private theorem factorial_pred_x0_halved_tail_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) /
+        ((2 : ℚ)^r * ((a : ℚ) - 12)^r))
+      ≤ (5 / (14 * ((a : ℚ) - 12)^2) : ℚ) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  calc
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) / ((2 : ℚ)^r * A^r))
+        ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+            (1 / (4 * A^2)) * (3 / 10 : ℚ)^(r - 2) := by
+          refine Finset.sum_le_sum fun r hr => ?_
+          have hmem := Finset.mem_Ico.mp hr
+          exact factorial_pred_x0_halved_tail_term_le
+            (a := a) (r := r) ha hmem.1 (by omega)
+    _ = (1 / (4 * A^2)) *
+          ∑ j ∈ Finset.range (printedTailP a + 1 - 2),
+            (3 / 10 : ℚ)^j := by
+          rw [Finset.sum_Ico_eq_sum_range]
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun j hj => ?_
+          simp
+    _ ≤ (1 / (4 * A^2)) * (1 / (1 - (3 / 10 : ℚ))) :=
+          mul_le_mul_of_nonneg_left
+            (Prop51.geom_sum_le_inv_one_sub (3 / 10 : ℚ)
+              (by norm_num) (by norm_num) _) (by positivity)
+    _ = 5 / (14 * A^2) := by ring_nf
+
+private theorem factorial_x0_halved_tail_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      ((r.factorial : Nat) : ℚ) /
+        ((2 : ℚ)^r * ((a : ℚ) - 12)^r))
+      ≤ (5 / (7 * ((a : ℚ) - 12)^2) : ℚ) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  calc
+    (∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+      ((r.factorial : Nat) : ℚ) / ((2 : ℚ)^r * A^r))
+        ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+            (1 / (2 * A^2)) * (3 / 10 : ℚ)^(r - 2) := by
+          refine Finset.sum_le_sum fun r hr => ?_
+          have hmem := Finset.mem_Ico.mp hr
+          exact factorial_x0_halved_tail_term_le
+            (a := a) (r := r) ha hmem.1 (by omega)
+    _ = (1 / (2 * A^2)) *
+          ∑ j ∈ Finset.range (printedTailP a + 1 - 2),
+            (3 / 10 : ℚ)^j := by
+          rw [Finset.sum_Ico_eq_sum_range]
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun j hj => ?_
+          simp
+    _ ≤ (1 / (2 * A^2)) * (1 / (1 - (3 / 10 : ℚ))) :=
+          mul_le_mul_of_nonneg_left
+            (Prop51.geom_sum_le_inv_one_sub (3 / 10 : ℚ)
+              (by norm_num) (by norm_num) _) (by positivity)
+    _ = 5 / (7 * A^2) := by ring_nf
+
+private theorem sum_range_eq_zero_one_add_Ico
+    (F : Nat → ℚ) {p : Nat} (hp : 1 ≤ p) :
+    ∑ r ∈ Finset.range (p + 1), F r =
+      F 0 + F 1 + ∑ r ∈ Finset.Ico 2 (p + 1), F r := by
+  have hsplit := (Finset.sum_range_add_sum_Ico F (by omega : 2 ≤ p + 1)).symm
+  rw [hsplit]
+  norm_num [Finset.sum_range_succ]
+
+private theorem hCoeff_x0_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    hCoeff μ r * (printedTailX0 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) / (((a : ℚ) - 12)^r)) := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hMnonneg : 0 ≤ (M a : ℚ) := by positivity
+  have hx0_nonneg : 0 ≤ printedTailX0 a := by
+    unfold printedTailX0
+    positivity
+  have hcoeff := hCoeff_le_M_two_sub_twopow_c_of_partition
+    (a := a) (μ := μ) hμ r
+  have hfactor_nonneg :
+      0 ≤ (M a : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+    have hpow_ge_one : (1 : ℚ) ≤ (2 : ℚ)^r :=
+      one_le_pow₀ (by norm_num : (1 : ℚ) ≤ 2)
+    have hinv_le_one : 1 / (2 : ℚ)^r ≤ 1 := by
+      simpa using one_div_le_one_div_of_le (by norm_num : (0 : ℚ) < 1) hpow_ge_one
+    nlinarith
+  have hfactor_le :
+      (M a : ℚ) * (2 - 1 / (2 : ℚ)^r) ≤ (M a : ℚ) * 2 := by
+    have hinv_nonneg : 0 ≤ 1 / (2 : ℚ)^r := by positivity
+    nlinarith
+  have hcub := Prop51.c_ub r (by omega : 1 ≤ r)
+  have hc_nonneg := Prop51.c_nonneg r
+  have hright_nonneg :
+      0 ≤ (4 / 25 : ℚ) *
+        ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)) := by
+    positivity
+  have hprod :
+      ((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r
+        ≤ ((M a : ℚ) * 2) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ))) :=
+    mul_le_mul hfactor_le hcub hc_nonneg
+      (mul_nonneg hMnonneg (by norm_num))
+  calc
+    hCoeff μ r * (printedTailX0 a)^r
+        ≤ (((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r) *
+            (printedTailX0 a)^r :=
+          mul_le_mul_of_nonneg_right hcoeff (pow_nonneg hx0_nonneg r)
+    _ ≤ (((M a : ℚ) * 2) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)))) *
+            (printedTailX0 a)^r :=
+          mul_le_mul_of_nonneg_right hprod (pow_nonneg hx0_nonneg r)
+    _ = (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) / A^r) := by
+          change (((M a : ℚ) * 2) *
+              ((4 / 25 : ℚ) *
+                ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)))) *
+              (1 / (6 * A))^r =
+            (8 * (M a : ℚ) / 25) *
+              ((((r - 1).factorial : Nat) : ℚ) / A^r)
+          dsimp [A]
+          rw [one_div_pow, mul_pow]
+          field_simp [hApos.ne', pow_ne_zero r hApos.ne',
+            pow_ne_zero r (by norm_num : (6 : ℚ) ≠ 0)]
+          ring_nf
+
+private theorem kCoeff_x0_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    kCoeff μ r * (printedTailX0 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) /
+            ((2 : ℚ)^r * ((a : ℚ) - 12)^r)) := by
+  let A : ℚ := (a : ℚ) - 12
+  rcases r with _ | r'
+  · omega
+  rcases r' with _ | n
+  · omega
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hx0_nonneg : 0 ≤ printedTailX0 a := by
+    unfold printedTailX0
+    positivity
+  have hmw := markedWeight_le_M_div_two_pow_of_partition
+    (a := a) (μ := μ) hμ (n + 2)
+  have hmw_nonneg := markedWeight_nonneg_of_coeffs μ (n + 2)
+  have hpref_nonneg :
+      0 ≤ 12 * ((n : ℚ) + 1) * Prop51.c (n + 1) := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (by positivity))
+      (Prop51.c_nonneg (n + 1))
+  have hcub := Prop51.c_ub (n + 1) (by omega : 1 ≤ n + 1)
+  have hright_nonneg :
+      0 ≤ (4 / 25 : ℚ) *
+        ((6 : ℚ)^(n + 1) * (((n + 1 - 1).factorial : Nat) : ℚ)) := by
+    positivity
+  have hpref :
+      12 * ((n : ℚ) + 1) * Prop51.c (n + 1)
+        ≤ 12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ))) := by
+    exact mul_le_mul_of_nonneg_left hcub
+      (mul_nonneg (by norm_num) (by positivity))
+  have hcoeff :
+      kCoeff μ (n + 2)
+        ≤ (12 * ((n : ℚ) + 1) * Prop51.c (n + 1)) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2)) := by
+    simpa [kCoeff, Nat.cast_add, Nat.cast_one] using
+      mul_le_mul_of_nonneg_left hmw hpref_nonneg
+  have hcoeff' :
+      kCoeff μ (n + 2)
+        ≤ (12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ)))) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2)) := by
+    exact hcoeff.trans
+      (mul_le_mul_of_nonneg_right hpref
+        (div_nonneg (by positivity) (pow_nonneg (by norm_num) _)))
+  calc
+    kCoeff μ (n + 2) * (printedTailX0 a)^(n + 2)
+        ≤ ((12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ)))) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2))) *
+            (printedTailX0 a)^(n + 2) :=
+          mul_le_mul_of_nonneg_right hcoeff'
+            (pow_nonneg hx0_nonneg (n + 2))
+    _ = (8 * (M a : ℚ) / 25) *
+          ((((n + 2 - 1).factorial : Nat) : ℚ) /
+            ((2 : ℚ)^(n + 2) * A^(n + 2))) := by
+          rw [show n + 1 - 1 = n by omega,
+            show n + 2 - 1 = n + 1 by omega, Nat.factorial_succ]
+          change ((12 * ((n : ℚ) + 1) *
+              ((4 / 25 : ℚ) *
+                ((6 : ℚ)^(n + 1) * ((n.factorial : Nat) : ℚ)))) *
+              ((M a : ℚ) / (2 : ℚ)^(n + 2))) *
+              (1 / (6 * A))^(n + 2) =
+            (8 * (M a : ℚ) / 25) *
+              (((((n + 1).factorial : Nat) : ℚ)) /
+                ((2 : ℚ)^(n + 2) * A^(n + 2)))
+          dsimp [A]
+          rw [one_div_pow, mul_pow]
+          field_simp [hApos.ne', pow_ne_zero (n + 2) hApos.ne',
+            pow_ne_zero (n + 2) (by norm_num : (6 : ℚ) ≠ 0),
+            pow_ne_zero (n + 2) (by norm_num : (2 : ℚ) ≠ 0)]
+          have hfacCast :
+              (((n + 1).factorial : Nat) : ℚ) =
+                ((n : ℚ) + 1) * (((n.factorial : Nat) : ℚ)) := by
+            exact_mod_cast (Nat.factorial_succ n)
+          rw [hfacCast]
+          ring_nf
+
+private theorem printedTailLPoint_x0_budget (a : Nat) (ha : 150 ≤ a) :
+    5 * (M a : ℚ) / (24 * ((a : ℚ) - 12)) +
+        (8 * (M a : ℚ) / 25) * (5 / (2 * ((a : ℚ) - 12)^2)) ≤
+      7 / 5 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hApos : 0 < (a : ℚ) - 12 := by nlinarith
+  have hdenpos : 0 < 120 * ((a : ℚ) - 12)^2 := by positivity
+  have hpoly :
+      0 ≤ 18 * (a : ℚ)^2 - 2658 * (a : ℚ) + 22968 := by
+    have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+    have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+    have hdecomp :
+        18 * (a : ℚ)^2 - 2658 * (a : ℚ) + 22968 =
+          18 * ((a : ℚ) - 150)^2 +
+            2742 * ((a : ℚ) - 150) + 29268 := by ring
+    rw [hdecomp]
+    nlinarith
+  apply sub_nonneg.mp
+  have hdiff :
+      7 / 5 -
+          (5 * (M a : ℚ) / (24 * ((a : ℚ) - 12)) +
+            (8 * (M a : ℚ) / 25) * (5 / (2 * ((a : ℚ) - 12)^2))) =
+        (18 * (a : ℚ)^2 - 2658 * (a : ℚ) + 22968) /
+          (120 * ((a : ℚ) - 12)^2) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    field_simp [hApos.ne', pow_ne_zero 2 hApos.ne']
+    ring
+  rw [hdiff]
+  exact div_nonneg hpoly hdenpos.le
+
+private theorem printedTailLDeriv_x0_budget (a : Nat) (ha : 150 ≤ a) :
+    5 * (M a : ℚ) / (24 * ((a : ℚ) - 12)) +
+        (8 * (M a : ℚ) / 25) * (5 / ((a : ℚ) - 12)^2) ≤
+      3 / 2 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hApos : 0 < (a : ℚ) - 12 := by nlinarith
+  have hdenpos : 0 < 120 * ((a : ℚ) - 12)^2 := by positivity
+  have hpoly :
+      0 ≤ 30 * (a : ℚ)^2 - 3522 * (a : ℚ) + 25272 := by
+    have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+    have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+    have hdecomp :
+        30 * (a : ℚ)^2 - 3522 * (a : ℚ) + 25272 =
+          30 * ((a : ℚ) - 150)^2 +
+            5478 * ((a : ℚ) - 150) + 171972 := by ring
+    rw [hdecomp]
+    nlinarith
+  apply sub_nonneg.mp
+  have hdiff :
+      3 / 2 -
+          (5 * (M a : ℚ) / (24 * ((a : ℚ) - 12)) +
+            (8 * (M a : ℚ) / 25) * (5 / ((a : ℚ) - 12)^2)) =
+        (30 * (a : ℚ)^2 - 3522 * (a : ℚ) + 25272) /
+          (120 * ((a : ℚ) - 12)^2) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    field_simp [hApos.ne', pow_ne_zero 2 hApos.ne']
+    ring
+  rw [hdiff]
+  exact div_nonneg hpoly hdenpos.le
+
+private theorem printedTailJPoint_x0_budget (a : Nat) (ha : 150 ≤ a) :
+    (M a : ℚ) / (6 * ((a : ℚ) - 12)) +
+        (8 * (M a : ℚ) / 25) * (5 / (14 * ((a : ℚ) - 12)^2)) ≤
+      11 / 10 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hApos : 0 < (a : ℚ) - 12 := by nlinarith
+  have hdenpos : 0 < 210 * ((a : ℚ) - 12)^2 := by positivity
+  have hpoly :
+      0 ≤ 21 * (a : ℚ)^2 - 2958 * (a : ℚ) + 30888 := by
+    have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+    have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+    have hdecomp :
+        21 * (a : ℚ)^2 - 2958 * (a : ℚ) + 30888 =
+          21 * ((a : ℚ) - 150)^2 +
+            3342 * ((a : ℚ) - 150) + 59688 := by ring
+    rw [hdecomp]
+    nlinarith
+  apply sub_nonneg.mp
+  have hdiff :
+      11 / 10 -
+          ((M a : ℚ) / (6 * ((a : ℚ) - 12)) +
+            (8 * (M a : ℚ) / 25) *
+              (5 / (14 * ((a : ℚ) - 12)^2))) =
+        (21 * (a : ℚ)^2 - 2958 * (a : ℚ) + 30888) /
+          (210 * ((a : ℚ) - 12)^2) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    field_simp [hApos.ne', pow_ne_zero 2 hApos.ne']
+    ring
+  rw [hdiff]
+  exact div_nonneg hpoly hdenpos.le
+
+private theorem printedTailJDeriv_x0_budget (a : Nat) (ha : 150 ≤ a) :
+    (M a : ℚ) / (6 * ((a : ℚ) - 12)) +
+        (8 * (M a : ℚ) / 25) * (5 / (7 * ((a : ℚ) - 12)^2)) ≤
+      11 / 10 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hApos : 0 < (a : ℚ) - 12 := by nlinarith
+  have hdenpos : 0 < 210 * ((a : ℚ) - 12)^2 := by positivity
+  have hpoly :
+      0 ≤ 21 * (a : ℚ)^2 - 3102 * (a : ℚ) + 31032 := by
+    have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+    have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+    have hdecomp :
+        21 * (a : ℚ)^2 - 3102 * (a : ℚ) + 31032 =
+          21 * ((a : ℚ) - 150)^2 +
+            3198 * ((a : ℚ) - 150) + 38232 := by ring
+    rw [hdecomp]
+    nlinarith
+  apply sub_nonneg.mp
+  have hdiff :
+      11 / 10 -
+          ((M a : ℚ) / (6 * ((a : ℚ) - 12)) +
+            (8 * (M a : ℚ) / 25) *
+              (5 / (7 * ((a : ℚ) - 12)^2))) =
+        (21 * (a : ℚ)^2 - 3102 * (a : ℚ) + 31032) /
+          (210 * ((a : ℚ) - 12)^2) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    field_simp [hApos.ne', pow_ne_zero 2 hApos.ne']
+    ring
+  rw [hdiff]
+  exact div_nonneg hpoly hdenpos.le
+
+theorem printedTailLPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailLPointSum μ a (printedTailX0 a) ≤ 7 / 5 := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  let F : Nat → ℚ := fun r => hCoeff μ r * (printedTailX0 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F, hCoeff]
+  have hone : F 1 ≤ 5 * (M a : ℚ) / (24 * A) := by
+    have hcoeff := hCoeff_le_M_two_sub_twopow_c_of_partition
+      (a := a) (μ := μ) hμ 1
+    have hx0_nonneg : 0 ≤ printedTailX0 a := by
+      unfold printedTailX0
+      positivity
+    calc
+      F 1 ≤ (((M a : ℚ) * (2 - 1 / (2 : ℚ)^1)) * Prop51.c 1) *
+          printedTailX0 a := by
+            dsimp [F]
+            simpa using mul_le_mul_of_nonneg_right hcoeff hx0_nonneg
+      _ = 5 * (M a : ℚ) / (24 * A) := by
+            unfold printedTailX0
+            rw [Prop51.c_one]
+            dsimp [A]
+            field_simp [hApos.ne']
+            ring_nf
+  have htail :
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (5 / (2 * A^2)) := by
+    calc
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((((r - 1).factorial : Nat) : ℚ) / A^r) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            exact hCoeff_x0_tail_term_le (a := a) (μ := μ)
+              ha hμ hmem.1
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (((r - 1).factorial : Nat) : ℚ) / A^r := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (5 / (2 * A^2)) :=
+            mul_le_mul_of_nonneg_left
+              (factorial_pred_x0_tail_sum_le a ha) (by positivity)
+  rw [printedTailLPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r
+        ≤ 0 + 5 * (M a : ℚ) / (24 * A) +
+            (8 * (M a : ℚ) / 25) * (5 / (2 * A^2)) := by
+          nlinarith
+    _ ≤ 7 / 5 := by
+          simpa [A] using printedTailLPoint_x0_budget a ha
+
+theorem printedTailLDerivPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailLDerivPointSum μ a (printedTailX0 a) ≤ 3 / 2 := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  let F : Nat → ℚ := fun r =>
+    (r : ℚ) * hCoeff μ r * (printedTailX0 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F]
+  have hone : F 1 ≤ 5 * (M a : ℚ) / (24 * A) := by
+    have hcoeff := hCoeff_le_M_two_sub_twopow_c_of_partition
+      (a := a) (μ := μ) hμ 1
+    have hx0_nonneg : 0 ≤ printedTailX0 a := by
+      unfold printedTailX0
+      positivity
+    calc
+      F 1 ≤ (((M a : ℚ) * (2 - 1 / (2 : ℚ)^1)) * Prop51.c 1) *
+          printedTailX0 a := by
+            dsimp [F]
+            simpa using mul_le_mul_of_nonneg_right hcoeff hx0_nonneg
+      _ = 5 * (M a : ℚ) / (24 * A) := by
+            unfold printedTailX0
+            rw [Prop51.c_one]
+            dsimp [A]
+            field_simp [hApos.ne']
+            ring_nf
+  have htail :
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (5 / A^2) := by
+    calc
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                (((r.factorial : Nat) : ℚ) / A^r) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hbase := hCoeff_x0_tail_term_le (a := a) (μ := μ)
+              ha hμ hmem.1
+            have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+            have hrewrite :
+                (r : ℚ) *
+                    ((8 * (M a : ℚ) / 25) *
+                      ((((r - 1).factorial : Nat) : ℚ) / A^r))
+                  =
+                (8 * (M a : ℚ) / 25) *
+                  (((r.factorial : Nat) : ℚ) / A^r) := by
+              have hfac :
+                  ((r.factorial : Nat) : ℚ) =
+                    (r : ℚ) * (((r - 1).factorial : Nat) : ℚ) := by
+                exact_mod_cast (Nat.mul_factorial_pred (by omega : r ≠ 0)).symm
+              rw [hfac]
+              ring
+            calc
+              F r = (r : ℚ) * (hCoeff μ r * (printedTailX0 a)^r) := by
+                dsimp [F]
+                ring
+              _ ≤ (r : ℚ) *
+                    ((8 * (M a : ℚ) / 25) *
+                      ((((r - 1).factorial : Nat) : ℚ) / A^r)) :=
+                    mul_le_mul_of_nonneg_left hbase hr_nonneg
+              _ = (8 * (M a : ℚ) / 25) *
+                    (((r.factorial : Nat) : ℚ) / A^r) := hrewrite
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              ((r.factorial : Nat) : ℚ) / A^r := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (5 / A^2) :=
+            mul_le_mul_of_nonneg_left
+              (factorial_x0_tail_sum_le a ha) (by positivity)
+  rw [printedTailLDerivPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r
+        ≤ 0 + 5 * (M a : ℚ) / (24 * A) +
+            (8 * (M a : ℚ) / 25) * (5 / A^2) := by
+          nlinarith
+    _ ≤ 3 / 2 := by
+          simpa [A] using printedTailLDeriv_x0_budget a ha
+
+theorem printedTailJPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailJPointSum μ a (printedTailX0 a) ≤ 11 / 10 := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  let F : Nat → ℚ := fun r => kCoeff μ r * (printedTailX0 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F, kCoeff]
+  have hone : F 1 ≤ (M a : ℚ) / (6 * A) := by
+    have hcoeff := kCoeff_le_partition_marked_bound
+      (a := a) (μ := μ) hμ 1
+    have hcoeff' : kCoeff μ 1 ≤ (M a : ℚ) := by
+      have hcoeff0 : kCoeff μ 1 ≤ 2 * ((M a : ℚ) / 2) := by
+        simpa using hcoeff
+      linarith
+    have hx0_nonneg : 0 ≤ printedTailX0 a := by
+      unfold printedTailX0
+      positivity
+    calc
+      F 1 ≤ (M a : ℚ) * printedTailX0 a := by
+            dsimp [F]
+            simpa using mul_le_mul_of_nonneg_right hcoeff' hx0_nonneg
+      _ = (M a : ℚ) / (6 * A) := by
+            unfold printedTailX0
+            dsimp [A]
+            field_simp [hApos.ne']
+  have htail :
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (5 / (14 * A^2)) := by
+    calc
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((((r - 1).factorial : Nat) : ℚ) /
+                  ((2 : ℚ)^r * A^r)) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            exact kCoeff_x0_tail_term_le (a := a) (μ := μ)
+              ha hμ hmem.1
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (((r - 1).factorial : Nat) : ℚ) /
+                ((2 : ℚ)^r * A^r) := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (5 / (14 * A^2)) :=
+            mul_le_mul_of_nonneg_left
+              (factorial_pred_x0_halved_tail_sum_le a ha) (by positivity)
+  rw [printedTailJPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r
+        ≤ 0 + (M a : ℚ) / (6 * A) +
+            (8 * (M a : ℚ) / 25) * (5 / (14 * A^2)) := by
+          nlinarith
+    _ ≤ 11 / 10 := by
+          simpa [A] using printedTailJPoint_x0_budget a ha
+
+theorem printedTailJDerivPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailJDerivPointSum μ a (printedTailX0 a) ≤ 11 / 10 := by
+  let A : ℚ := (a : ℚ) - 12
+  have hApos : 0 < A := by
+    dsimp [A]
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  let F : Nat → ℚ := fun r =>
+    (r : ℚ) * kCoeff μ r * (printedTailX0 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F]
+  have hone : F 1 ≤ (M a : ℚ) / (6 * A) := by
+    have hcoeff := kCoeff_le_partition_marked_bound
+      (a := a) (μ := μ) hμ 1
+    have hcoeff' : kCoeff μ 1 ≤ (M a : ℚ) := by
+      have hcoeff0 : kCoeff μ 1 ≤ 2 * ((M a : ℚ) / 2) := by
+        simpa using hcoeff
+      linarith
+    have hx0_nonneg : 0 ≤ printedTailX0 a := by
+      unfold printedTailX0
+      positivity
+    calc
+      F 1 ≤ (M a : ℚ) * printedTailX0 a := by
+            dsimp [F]
+            simpa using mul_le_mul_of_nonneg_right hcoeff' hx0_nonneg
+      _ = (M a : ℚ) / (6 * A) := by
+            unfold printedTailX0
+            dsimp [A]
+            field_simp [hApos.ne']
+  have htail :
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (5 / (7 * A^2)) := by
+    calc
+      (∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                (((r.factorial : Nat) : ℚ) /
+                  ((2 : ℚ)^r * A^r)) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hbase := kCoeff_x0_tail_term_le (a := a) (μ := μ)
+              ha hμ hmem.1
+            have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+            have hrewrite :
+                (r : ℚ) *
+                    ((8 * (M a : ℚ) / 25) *
+                      ((((r - 1).factorial : Nat) : ℚ) /
+                        ((2 : ℚ)^r * A^r)))
+                  =
+                (8 * (M a : ℚ) / 25) *
+                  (((r.factorial : Nat) : ℚ) /
+                    ((2 : ℚ)^r * A^r)) := by
+              have hfac :
+                  ((r.factorial : Nat) : ℚ) =
+                    (r : ℚ) * (((r - 1).factorial : Nat) : ℚ) := by
+                exact_mod_cast (Nat.mul_factorial_pred (by omega : r ≠ 0)).symm
+              rw [hfac]
+              ring
+            calc
+              F r = (r : ℚ) * (kCoeff μ r * (printedTailX0 a)^r) := by
+                dsimp [F]
+                ring
+              _ ≤ (r : ℚ) *
+                    ((8 * (M a : ℚ) / 25) *
+                      ((((r - 1).factorial : Nat) : ℚ) /
+                        ((2 : ℚ)^r * A^r))) :=
+                    mul_le_mul_of_nonneg_left hbase hr_nonneg
+              _ = (8 * (M a : ℚ) / 25) *
+                    (((r.factorial : Nat) : ℚ) /
+                      ((2 : ℚ)^r * A^r)) := hrewrite
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico 2 (printedTailP a + 1),
+              ((r.factorial : Nat) : ℚ) / ((2 : ℚ)^r * A^r) := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (5 / (7 * A^2)) :=
+            mul_le_mul_of_nonneg_left
+              (factorial_x0_halved_tail_sum_le a ha) (by positivity)
+  rw [printedTailJDerivPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico 2 (printedTailP a + 1), F r
+        ≤ 0 + (M a : ℚ) / (6 * A) +
+            (8 * (M a : ℚ) / 25) * (5 / (7 * A^2)) := by
+          nlinarith
+    _ ≤ 11 / 10 := by
+          simpa [A] using printedTailJDeriv_x0_budget a ha
+
 def printedTailX2Bound1 (a : Nat) : ℚ :=
   5 * ((a : ℚ) - 1) / (a : ℚ) +
     (8 * printedTailMrat a / 25) *
