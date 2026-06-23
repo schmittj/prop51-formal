@@ -11,6 +11,7 @@ yet formalized here; the final rational margin used to close the proof is.
 import Prop52.Statement
 import Prop52.Recurrence
 import Prop51.Majorant
+import Prop51.DNorm
 import Mathlib.Tactic
 
 namespace Prop52
@@ -723,6 +724,461 @@ def PrintedTailHErrorBound : Prop :=
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       |printedTailHNormSum μ a - printedTailMainSum μ a| ≤
         printedTailHErrorBudget a
+
+/-- The two absolute-moment estimates from the printed proof:
+`sum gamma_s |omega_s| <= 9` and
+`sum s gamma_s |omega_s| <= 18`.
+
+This is intentionally stated in the same finite `s <= r_0` language as the
+tail split above.  The following theorem proves that these two moments imply
+the displayed `h`-replacement error, using only the already-formalized
+`d`-ratio estimate and elementary partition bounds. -/
+def PrintedTailAbsoluteMomentBounds : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s| ≤ 9) ∧
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+          (s : ℚ) * gammaWeight a s * |printedTailOmegaCoeff μ a s| ≤ 18)
+
+private theorem gammaWeight_nonneg {a s : Nat} (_hs : s < a) :
+    0 ≤ gammaWeight a s := by
+  unfold gammaWeight
+  positivity
+
+private theorem gammaWeight_pos {a s : Nat} (_hs : s < a) :
+    0 < gammaWeight a s := by
+  unfold gammaWeight
+  positivity
+
+private theorem printedTail_range_lt_a {a s : Nat} (ha : 150 ≤ a)
+    (hs : s ∈ Finset.range (printedTailR0 a + 1)) : s < a := by
+  have hsle : s ≤ printedTailR0 a := by
+    have := Finset.mem_range.mp hs
+    omega
+  unfold printedTailR0 printedTailP at hsle
+  omega
+
+private theorem printedTail_range_p_succ_le {a s : Nat} (ha : 150 ≤ a)
+    (hs : s ∈ Finset.range (printedTailR0 a + 1)) :
+    printedTailP a + 1 ≤ a - s := by
+  have hp_lt_a : printedTailP a < a := by
+    unfold printedTailP
+    omega
+  have hlen : printedTailR0 a + 1 = a - printedTailP a := by
+    unfold printedTailR0
+    omega
+  have hslt : s < a - printedTailP a := by
+    simpa [hlen] using Finset.mem_range.mp hs
+  omega
+
+private theorem printedTail_two_mul_sub_ge {a s : Nat} (ha : 150 ≤ a)
+    (hs : s ∈ Finset.range (printedTailR0 a + 1)) :
+    a ≤ 2 * (a - s) := by
+  have hp := printedTail_range_p_succ_le (a := a) (s := s) ha hs
+  unfold printedTailP at hp
+  omega
+
+private theorem inv_q_pow_le_q_over_two_pow_succ {mi r : Nat}
+    (hmi : 1 ≤ mi) :
+    1 / (((mi + 1 : Nat) : ℚ)^r) ≤
+      (((mi + 1 : Nat) : ℚ)) / (2 : ℚ)^(r + 1) := by
+  let q : ℚ := ((mi + 1 : Nat) : ℚ)
+  have hq2 : (2 : ℚ) ≤ q := by
+    dsimp [q]
+    exact_mod_cast (by omega : 2 ≤ mi + 1)
+  have hqpos : 0 < q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_pos mi
+  have hden1 : 0 < q^r := pow_pos hqpos r
+  have hden2 : 0 < (2 : ℚ)^(r + 1) := by positivity
+  have hpow : (2 : ℚ)^(r + 1) ≤ q^(r + 1) :=
+    pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 2) hq2 (r + 1)
+  rw [div_le_div_iff₀ hden1 hden2]
+  calc
+    (1 : ℚ) * (2 : ℚ)^(r + 1) ≤ q^(r + 1) := by simpa using hpow
+    _ = q * q^r := by rw [pow_succ']
+
+private theorem sum_q_div_const (μ : List Nat) {D : ℚ} :
+    (μ.map fun mi : Nat => (((mi + 1 : Nat) : ℚ)) / D).sum =
+      (((μ.map (· + 1)).sum : Nat) : ℚ) / D := by
+  induction μ with
+  | nil => simp
+  | cons mi μ ih =>
+      simp only [List.map_cons, List.sum_cons]
+      rw [ih]
+      push_cast
+      ring
+
+private theorem sPower_nonneg (μ : List Nat) (r : Nat) :
+    0 ≤ sPower μ r := by
+  unfold sPower
+  refine List.sum_nonneg fun x hx => ?_
+  simp only [List.mem_map] at hx
+  obtain ⟨mi, _hmi, rfl⟩ := hx
+  positivity
+
+private theorem sPower_le_N_over_two_pow_succ
+    {μ : List Nat} (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) :
+    sPower μ r ≤ (N μ : ℚ) / (2 : ℚ)^(r + 1) := by
+  unfold sPower N
+  calc
+    (μ.map fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)).sum
+        ≤ (μ.map fun mi : Nat =>
+            (((mi + 1 : Nat) : ℚ)) / (2 : ℚ)^(r + 1)).sum := by
+          refine List.sum_le_sum fun mi hmi => ?_
+          exact inv_q_pow_le_q_over_two_pow_succ (hpos mi hmi)
+    _ = (((μ.map (· + 1)).sum : Nat) : ℚ) / (2 : ℚ)^(r + 1) :=
+          sum_q_div_const μ
+
+private theorem sPower_div_N_le_two_pow_succ
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    sPower μ r / (N μ : ℚ) ≤ 1 / (2 : ℚ)^(r + 1) := by
+  have hμ_copy := hμ
+  obtain ⟨_hsum, hpos⟩ := hμ
+  have hNpos : (0 : ℚ) < (N μ : ℚ) := by
+    have hNnat : 0 < N μ := printedTail_N_pos (a := a) (μ := μ) ha hμ_copy
+    exact_mod_cast hNnat
+  have hmain := sPower_le_N_over_two_pow_succ (μ := μ) hpos r
+  rw [div_le_iff₀ hNpos]
+  calc
+    sPower μ r ≤ (N μ : ℚ) / (2 : ℚ)^(r + 1) := hmain
+    _ = (1 / (2 : ℚ)^(r + 1)) * (N μ : ℚ) := by ring
+
+private theorem one_div_two_pow_mono {u v : Nat} (hvu : v ≤ u) :
+    1 / (2 : ℚ)^u ≤ 1 / (2 : ℚ)^v := by
+  have hpow : (2 : ℚ)^v ≤ (2 : ℚ)^u :=
+    pow_le_pow_right₀ (by norm_num : (0 : ℚ) ≤ 2) hvu
+  exact one_div_le_one_div_of_le (by positivity) hpow
+
+def printedTailPowBudgetRhs (a : Nat) : ℚ :=
+  9 / (2 : ℚ)^(printedTailP a + 2)
+
+def printedTailPowBudgetScaled (a : Nat) : ℚ :=
+  (a : ℚ)^2 * printedTailPowBudgetRhs a
+
+private theorem printedTailPowBudgetScaled_step8 (a : Nat) (ha : 150 ≤ a) :
+    printedTailPowBudgetScaled (a + 8) ≤ printedTailPowBudgetScaled a := by
+  unfold printedTailPowBudgetScaled printedTailPowBudgetRhs printedTailP
+  have hdiv : (a + 8) / 2 = a / 2 + 4 := by
+    simpa [show 8 = 4 * 2 by norm_num] using
+      Nat.add_mul_div_right a 4 (by decide : 0 < 2)
+  rw [hdiv]
+  rw [show a / 2 + 4 + 2 = a / 2 + 2 + 4 by omega, pow_add]
+  norm_num
+  have hpoly : (((a + 8 : Nat) : ℚ)^2 / 16 ≤ (a : ℚ)^2) := by
+    push_cast
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg : 0 ≤ 9 / (2 : ℚ) ^ (a / 2 + 2) := by positivity
+  calc
+    ((a : ℚ) + 8) ^ 2 *
+        (9 / ((2 : ℚ) ^ (a / 2 + 2) * 16))
+        = (((a + 8 : Nat) : ℚ)^2 / 16) *
+            (9 / (2 : ℚ) ^ (a / 2 + 2)) := by
+            push_cast
+            ring
+    _ ≤ (a : ℚ)^2 * (9 / (2 : ℚ) ^ (a / 2 + 2)) :=
+        mul_le_mul_of_nonneg_right hpoly hnonneg
+
+private theorem printedTailPowBudgetScaled_150 :
+    printedTailPowBudgetScaled 150 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_151 :
+    printedTailPowBudgetScaled 151 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_152 :
+    printedTailPowBudgetScaled 152 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_153 :
+    printedTailPowBudgetScaled 153 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_154 :
+    printedTailPowBudgetScaled 154 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_155 :
+    printedTailPowBudgetScaled 155 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_156 :
+    printedTailPowBudgetScaled 156 < 1 := by native_decide
+private theorem printedTailPowBudgetScaled_157 :
+    printedTailPowBudgetScaled 157 < 1 := by native_decide
+
+theorem printedTailPowBudget_bound (a : Nat) (ha : 150 ≤ a) :
+    printedTailPowBudgetRhs a ≤ 1 / (a : ℚ)^2 := by
+  have hscaled : printedTailPowBudgetScaled a < 1 := by
+    refine Nat.strong_induction_on a ?_ ha
+    intro a ih ha
+    by_cases hle : a ≤ 157
+    · interval_cases a <;> first
+        | exact printedTailPowBudgetScaled_150
+        | exact printedTailPowBudgetScaled_151
+        | exact printedTailPowBudgetScaled_152
+        | exact printedTailPowBudgetScaled_153
+        | exact printedTailPowBudgetScaled_154
+        | exact printedTailPowBudgetScaled_155
+        | exact printedTailPowBudgetScaled_156
+        | exact printedTailPowBudgetScaled_157
+    · have hprev_ge : 150 ≤ a - 8 := by omega
+      have hprev_lt : a - 8 < a := by omega
+      have hprev : printedTailPowBudgetScaled (a - 8) < 1 :=
+        ih (a - 8) hprev_lt hprev_ge
+      have hstep :
+          printedTailPowBudgetScaled ((a - 8) + 8) ≤
+            printedTailPowBudgetScaled (a - 8) :=
+        printedTailPowBudgetScaled_step8 (a - 8) hprev_ge
+      have hadd : (a - 8) + 8 = a := by omega
+      rw [hadd] at hstep
+      exact lt_of_le_of_lt hstep hprev
+  unfold printedTailPowBudgetScaled at hscaled
+  have ha_sq_pos : (0 : ℚ) < (a : ℚ)^2 := by
+    have ha_pos : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+    positivity
+  rw [le_div_iff₀ ha_sq_pos]
+  nlinarith
+
+private theorem hCoeff_div_den_eq_gammaWeight_mul
+    {a s : Nat} {μ : List Nat} (hs : s < a) (hN : N μ ≠ 0) :
+    hCoeff μ (a - s) / printedTailDen μ a =
+      gammaWeight a s * (Prop51.d (a - s) / Prop51.d a) *
+        (1 - sPower μ (a - s) / (N μ : ℚ)) := by
+  have ha1 : 1 ≤ a := by omega
+  have has1 : 1 ≤ a - s := by omega
+  have hNq : ((N μ : Nat) : ℚ) ≠ 0 := by exact_mod_cast hN
+  have hda : Prop51.d a ≠ 0 := (Prop51.d_pos a ha1).ne'
+  have hdas : Prop51.d (a - s) ≠ 0 := (Prop51.d_pos (a - s) has1).ne'
+  have hfac_a : (((a - 1).factorial : Nat) : ℚ) ≠ 0 := by positivity
+  have hfac_as : ((((a - s - 1).factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  have hpow6 : (6 : ℚ)^a = (6 : ℚ)^(a - s) * (6 : ℚ)^s := by
+    nth_rewrite 1 [show a = (a - s) + s by omega]
+    rw [pow_add]
+  unfold hCoeff printedTailDen gammaWeight
+  rw [Prop51.c_eq_d (a - s), Prop51.c_eq_d a, hpow6]
+  field_simp [hNq, hda, hdas, hfac_a, hfac_as]
+
+private theorem hCoeff_div_den_sub_gammaWeight_abs_le
+    {a s : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hs : s ∈ Finset.range (printedTailR0 a + 1)) :
+    |hCoeff μ (a - s) / printedTailDen μ a - gammaWeight a s| ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+          ((s : ℚ) * gammaWeight a s) +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) * gammaWeight a s := by
+  have hslt : s < a := printedTail_range_lt_a (a := a) (s := s) ha hs
+  have hNpos_nat : 0 < N μ := printedTail_N_pos (a := a) (μ := μ) ha hμ
+  have hNqpos : (0 : ℚ) < (N μ : ℚ) := by exact_mod_cast hNpos_nat
+  have hgamma_nonneg : 0 ≤ gammaWeight a s := gammaWeight_nonneg hslt
+  have hdpos_a : 0 < Prop51.d a := Prop51.d_pos a (by omega)
+  have hdpos_as : 0 < Prop51.d (a - s) := Prop51.d_pos (a - s) (by omega)
+  set R : ℚ := Prop51.d (a - s) / Prop51.d a with hR
+  set x : ℚ := sPower μ (a - s) / (N μ : ℚ) with hx
+  have hR_nonneg : 0 ≤ R := by
+    rw [hR]
+    exact div_nonneg hdpos_as.le hdpos_a.le
+  have hR_le_one : R ≤ 1 := by
+    rw [hR]
+    rw [div_le_one₀ hdpos_a]
+    exact Prop51.d_mono (Nat.sub_le a s)
+  have hx_nonneg : 0 ≤ x := by
+    rw [hx]
+    exact div_nonneg (sPower_nonneg μ (a - s)) hNqpos.le
+  have hrepr := hCoeff_div_den_eq_gammaWeight_mul
+    (a := a) (s := s) (μ := μ) hslt (ne_of_gt hNpos_nat)
+  rw [hrepr]
+  change |gammaWeight a s * R * (1 - x) - gammaWeight a s| ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+          ((s : ℚ) * gammaWeight a s) +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) * gammaWeight a s
+  rw [show gammaWeight a s * R * (1 - x) - gammaWeight a s =
+        gammaWeight a s * (R * (1 - x) - 1) by ring]
+  rw [abs_mul, abs_of_nonneg hgamma_nonneg]
+  have hmain_nonpos :
+      R * (1 - x) - 1 ≤ 0 := by
+    have : R * (1 - x) ≤ 1 := by
+      calc
+        R * (1 - x) ≤ R * 1 := by
+          exact mul_le_mul_of_nonneg_left (by linarith : 1 - x ≤ 1) hR_nonneg
+        _ ≤ 1 := by simpa using hR_le_one
+    exact sub_nonpos.mpr this
+  rw [abs_of_nonpos hmain_nonpos]
+  have hdiff_decomp :
+      -(R * (1 - x) - 1) = (1 - R) + R * x := by
+    ring
+  rw [hdiff_decomp]
+  have hratio := Prop51.d_ratio_lb a s hslt
+  have hR_drift :
+      1 - R ≤
+        (2304 / 3125 : ℚ) *
+          ((s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ))) := by
+    rw [hR]
+    linarith
+  have hsub_cast : ((a - s : Nat) : ℚ) = (a : ℚ) - (s : ℚ) := by
+    rw [Nat.cast_sub hslt.le]
+  have hfrac :
+      (s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ))
+        ≤ 2 * (s : ℚ) / (a : ℚ)^2 := by
+    rw [hsub_cast]
+    have haQ : (0 : ℚ) < a := by exact_mod_cast (by omega : 0 < a)
+    have hsubQ : (0 : ℚ) < (a : ℚ) - (s : ℚ) := by
+      rw [← hsub_cast]
+      exact_mod_cast (by omega : 0 < a - s)
+    have hs_nonneg : (0 : ℚ) ≤ s := by positivity
+    have htwice : (a : ℚ) ≤ 2 * ((a : ℚ) - (s : ℚ)) := by
+      have hnat := printedTail_two_mul_sub_ge (a := a) (s := s) ha hs
+      rw [← hsub_cast]
+      exact_mod_cast hnat
+    have hrecip :
+        1 / ((a : ℚ) * ((a : ℚ) - (s : ℚ)))
+          ≤ 2 / (a : ℚ)^2 := by
+      field_simp [haQ.ne', hsubQ.ne']
+      nlinarith
+    calc
+      (s : ℚ) / ((a : ℚ) * ((a : ℚ) - (s : ℚ)))
+          = (s : ℚ) * (1 / ((a : ℚ) * ((a : ℚ) - (s : ℚ)))) := by ring
+      _ ≤ (s : ℚ) * (2 / (a : ℚ)^2) :=
+          mul_le_mul_of_nonneg_left hrecip hs_nonneg
+      _ = 2 * (s : ℚ) / (a : ℚ)^2 := by ring
+  have hpow_succ :
+      1 / (2 : ℚ)^(a - s + 1) ≤
+        1 / (2 : ℚ)^(printedTailP a + 2) := by
+    have hp := printedTail_range_p_succ_le (a := a) (s := s) ha hs
+    exact one_div_two_pow_mono (by omega : printedTailP a + 2 ≤ a - s + 1)
+  have hx_le :
+      x ≤ 1 / (2 : ℚ)^(printedTailP a + 2) := by
+    rw [hx]
+    exact (sPower_div_N_le_two_pow_succ
+      (a := a) (μ := μ) ha hμ (a - s)).trans hpow_succ
+  calc
+    gammaWeight a s * ((1 - R) + R * x)
+        ≤ gammaWeight a s *
+            (((2304 / 3125 : ℚ) *
+                ((s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ)))) + x) := by
+          have hRx_le_x : R * x ≤ x := by
+            nlinarith [hR_nonneg, hR_le_one, hx_nonneg]
+          have hsum :
+              (1 - R) + R * x ≤
+                ((2304 / 3125 : ℚ) *
+                  ((s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ)))) + x := by
+            nlinarith [hR_drift, hRx_le_x]
+          exact mul_le_mul_of_nonneg_left hsum hgamma_nonneg
+    _ ≤ gammaWeight a s *
+            (((2304 / 3125 : ℚ) * (2 * (s : ℚ) / (a : ℚ)^2)) +
+              1 / (2 : ℚ)^(printedTailP a + 2)) := by
+          have hdrift :
+              (2304 / 3125 : ℚ) *
+                  ((s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ))) ≤
+                (2304 / 3125 : ℚ) * (2 * (s : ℚ) / (a : ℚ)^2) :=
+            mul_le_mul_of_nonneg_left hfrac (by norm_num)
+          have hsum :
+              ((2304 / 3125 : ℚ) *
+                  ((s : ℚ) / ((a : ℚ) * ((a - s : Nat) : ℚ)))) + x ≤
+                ((2304 / 3125 : ℚ) * (2 * (s : ℚ) / (a : ℚ)^2)) +
+                  1 / (2 : ℚ)^(printedTailP a + 2) := by
+            linarith
+          exact mul_le_mul_of_nonneg_left hsum hgamma_nonneg
+    _ =
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+          ((s : ℚ) * gammaWeight a s) +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) * gammaWeight a s := by ring
+
+theorem printedTailHErrorBound_of_absoluteMoments
+    (hmom : PrintedTailAbsoluteMomentBounds) :
+    PrintedTailHErrorBound := by
+  intro a ha μ hμ
+  have hmom0 := (hmom a ha μ hμ).1
+  have hmom1 := (hmom a ha μ hμ).2
+  have hpowBudget := printedTailPowBudget_bound a ha
+  unfold printedTailHNormSum printedTailMainSum
+  rw [Prop51.list_range_map_sum, Prop51.list_range_map_sum]
+  rw [← Finset.sum_sub_distrib]
+  refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
+  have hterm :
+      ∑ x ∈ Finset.range (printedTailR0 a + 1),
+          |hCoeff μ (a - x) * printedTailOmegaCoeff μ a x /
+              printedTailDen μ a -
+            gammaWeight a x * printedTailOmegaCoeff μ a x|
+        ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+          (∑ x ∈ Finset.range (printedTailR0 a + 1),
+            (x : ℚ) * gammaWeight a x * |printedTailOmegaCoeff μ a x|) +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) *
+          (∑ x ∈ Finset.range (printedTailR0 a + 1),
+            gammaWeight a x * |printedTailOmegaCoeff μ a x|) := by
+    calc
+      ∑ x ∈ Finset.range (printedTailR0 a + 1),
+          |hCoeff μ (a - x) * printedTailOmegaCoeff μ a x /
+              printedTailDen μ a -
+            gammaWeight a x * printedTailOmegaCoeff μ a x|
+          =
+        ∑ x ∈ Finset.range (printedTailR0 a + 1),
+          |(hCoeff μ (a - x) / printedTailDen μ a -
+              gammaWeight a x) * printedTailOmegaCoeff μ a x| := by
+            refine Finset.sum_congr rfl fun x hx => ?_
+            congr 1
+            ring
+      _ ≤
+        ∑ x ∈ Finset.range (printedTailR0 a + 1),
+          ((2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+              ((x : ℚ) * gammaWeight a x) +
+            (1 / (2 : ℚ)^(printedTailP a + 2)) * gammaWeight a x) *
+              |printedTailOmegaCoeff μ a x| := by
+            refine Finset.sum_le_sum fun x hx => ?_
+            rw [abs_mul]
+            exact mul_le_mul_of_nonneg_right
+              (hCoeff_div_den_sub_gammaWeight_abs_le
+                (a := a) (s := x) (μ := μ) ha hμ hx)
+              (abs_nonneg _)
+      _ =
+        (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+            (∑ x ∈ Finset.range (printedTailR0 a + 1),
+              (x : ℚ) * gammaWeight a x * |printedTailOmegaCoeff μ a x|) +
+          (1 / (2 : ℚ)^(printedTailP a + 2)) *
+            (∑ x ∈ Finset.range (printedTailR0 a + 1),
+              gammaWeight a x * |printedTailOmegaCoeff μ a x|) := by
+            calc
+              ∑ x ∈ Finset.range (printedTailR0 a + 1),
+                  ((2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+                      ((x : ℚ) * gammaWeight a x) +
+                    (1 / (2 : ℚ)^(printedTailP a + 2)) * gammaWeight a x) *
+                    |printedTailOmegaCoeff μ a x|
+                  =
+                ∑ x ∈ Finset.range (printedTailR0 a + 1),
+                  ((2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+                      ((x : ℚ) * gammaWeight a x *
+                        |printedTailOmegaCoeff μ a x|) +
+                    (1 / (2 : ℚ)^(printedTailP a + 2)) *
+                      (gammaWeight a x *
+                        |printedTailOmegaCoeff μ a x|)) := by
+                    refine Finset.sum_congr rfl fun x hx => ?_
+                    ring
+              _ = _ := by
+                    rw [Finset.sum_add_distrib, ← Finset.mul_sum,
+                      ← Finset.mul_sum]
+  calc
+    ∑ x ∈ Finset.range (printedTailR0 a + 1),
+        |hCoeff μ (a - x) * printedTailOmegaCoeff μ a x /
+            printedTailDen μ a -
+          gammaWeight a x * printedTailOmegaCoeff μ a x|
+        ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) *
+          (∑ x ∈ Finset.range (printedTailR0 a + 1),
+            (x : ℚ) * gammaWeight a x * |printedTailOmegaCoeff μ a x|) +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) *
+          (∑ x ∈ Finset.range (printedTailR0 a + 1),
+            gammaWeight a x * |printedTailOmegaCoeff μ a x|) := hterm
+    _ ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) * 18 +
+        (1 / (2 : ℚ)^(printedTailP a + 2)) * 9 := by
+          gcongr
+    _ ≤
+      (2 * (2304 / 3125 : ℚ) / (a : ℚ)^2) * 18 +
+        1 / (a : ℚ)^2 := by
+          have hpow9 :
+              (1 / (2 : ℚ)^(printedTailP a + 2)) * 9
+                ≤ 1 / (a : ℚ)^2 := by
+            unfold printedTailPowBudgetRhs at hpowBudget
+            convert hpowBudget using 1
+            ring
+          linarith
+    _ = printedTailHErrorBudget a := by
+          unfold printedTailHErrorBudget
+          ring
 
 def PrintedTailKErrorBound : Prop :=
   ∀ a : Nat, 150 ≤ a →

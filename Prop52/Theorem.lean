@@ -155,6 +155,18 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_errorBounds
   correctedCoeff_nonvanishing_of_printed_mid_tail hmid
     (printedCoeffNegativityTail_of_errorBounds hmain hh hk homega)
 
+/-- Final assembly after replacing the `h`-error estimate by the two
+absolute-moment bounds used in the printed proof. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_moments_errorBounds
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hmom : PrintedTailAbsoluteMomentBounds)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_errorBounds hmid hmain
+    (printedTailHErrorBound_of_absoluteMoments hmom) hk homega
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
