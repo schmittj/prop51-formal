@@ -9,6 +9,7 @@ yet formalized here; the final rational margin used to close the proof is.
 -/
 
 import Prop52.Statement
+import Prop51.Majorant
 import Mathlib.Tactic
 
 namespace Prop52
@@ -82,6 +83,73 @@ theorem printedLargeMargin_pos (a : Nat) (ha : 150 ≤ a) :
 theorem printedLargeMargin_pos_150 :
     printedLargeMargin 150 = 3389201 / 20812500000 := by
   norm_num [printedLargeMargin]
+
+/-! ## Normalized large-tail assembly
+
+The printed proof of the range `a >= 150` proves a normalized lower bound
+
+`printedLargeMargin a <= -T_a(μ)/(N(μ) c_a)`,
+
+where `T_a(μ)` is `printedCoeff μ a`.  The declarations in this section
+separate that remaining analytic inequality from the final sign extraction.
+-/
+
+/-- The remaining normalized analytic target for the printed large-tail range.
+
+This is the exact final inequality in the human proof after the
+Gamma/truncation/error estimates have been assembled. -/
+def PrintedTailNormalizedLowerBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      printedLargeMargin a ≤
+        (-printedCoeff μ a) / (((N μ : Nat) : ℚ) * Prop51.c a)
+
+private theorem printedTail_N_pos {a : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    0 < N μ := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  have hN : N μ = M a + μ.length := by
+    unfold N
+    rw [Prop51.sum_map_add_one, hsum]
+  have hM : 0 < M a := by
+    unfold M
+    omega
+  omega
+
+private theorem printedTail_den_pos {a : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    0 < (((N μ : Nat) : ℚ) * Prop51.c a) := by
+  have hN : (0 : ℚ) < ((N μ : Nat) : ℚ) := by
+    exact_mod_cast printedTail_N_pos (a := a) (μ := μ) ha hμ
+  have hc : 0 < Prop51.c a := Prop51.c_pos a (by omega)
+  exact mul_pos hN hc
+
+/-- Closing the printed large-tail sign from the normalized lower bound. -/
+theorem printedCoeffNegativityTail_of_normalizedLowerBound
+    (hbound : PrintedTailNormalizedLowerBound) :
+    PrintedCoeffNegativityTail := by
+  intro a ha μ hμ
+  have hmargin_pos : 0 < printedLargeMargin a := printedLargeMargin_pos a ha
+  have hnorm :
+      0 < (-printedCoeff μ a) / (((N μ : Nat) : ℚ) * Prop51.c a) :=
+    lt_of_lt_of_le hmargin_pos (hbound a ha μ hμ)
+  have hden_pos :
+      0 < (((N μ : Nat) : ℚ) * Prop51.c a) :=
+    printedTail_den_pos (a := a) (μ := μ) ha hμ
+  have hneg_pos : 0 < -printedCoeff μ a := by
+    have hmul :
+        0 < ((-printedCoeff μ a) / (((N μ : Nat) : ℚ) * Prop51.c a)) *
+          (((N μ : Nat) : ℚ) * Prop51.c a) :=
+      mul_pos hnorm hden_pos
+    rwa [div_mul_cancel₀ _ hden_pos.ne'] at hmul
+  linarith
+
+theorem printedCoeffNegativityLarge_of_mid_normalizedTail
+    (hmid : PrintedCoeffNegativityMid)
+    (htail : PrintedTailNormalizedLowerBound) :
+    PrintedCoeffNegativityLarge :=
+  printedCoeffNegativityLarge_of_mid_tail hmid
+    (printedCoeffNegativityTail_of_normalizedLowerBound htail)
 
 /-! ## Exact factorial-gas constants
 
@@ -196,6 +264,219 @@ theorem truncationResidue_156 :
 
 theorem truncationResidue_157 :
     truncationResidueRhs 157 < 1 / (157 : ℚ)^2 := by native_decide
+
+def truncationResidueScaled (a : Nat) : ℚ :=
+  (a : ℚ)^2 * truncationResidueRhs a
+
+private def truncationResidueScaledTerm1 (a : Nat) : ℚ :=
+  (a : ℚ)^2 * (920 / (2 : ℚ)^(a - a/2))
+
+private def truncationResidueScaledTerm2 (a : Nat) : ℚ :=
+  (a : ℚ)^2 * (2 * (5/6 : ℚ)^a)
+
+private def truncationResidueScaledTerm3 (a : Nat) : ℚ :=
+  (a : ℚ)^2 * (9 * (9/10 : ℚ)^(a - a/8))
+
+private def truncationResidueScaledTerm4 (a : Nat) : ℚ :=
+  (a : ℚ)^2 * (920 * (a : ℚ) * (3/10 : ℚ)^(a/8 + 1))
+
+private theorem truncationResidueScaled_eq_terms (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaled a =
+      truncationResidueScaledTerm1 a +
+      truncationResidueScaledTerm2 a +
+      truncationResidueScaledTerm3 a +
+      truncationResidueScaledTerm4 a := by
+  unfold truncationResidueScaled truncationResidueRhs
+    truncationResidueScaledTerm1 truncationResidueScaledTerm2
+    truncationResidueScaledTerm3 truncationResidueScaledTerm4
+  dsimp only
+  have hr0 : a - a / 2 - 1 + 1 = a - a / 2 := by omega
+  rw [hr0]
+  ring_nf
+
+private theorem truncationResidueScaledTerm1_step8 (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaledTerm1 (a + 8) ≤ truncationResidueScaledTerm1 a := by
+  unfold truncationResidueScaledTerm1
+  have hdiv : (a + 8) / 2 = a / 2 + 4 := by
+    simpa [show 8 = 4 * 2 by norm_num] using
+      Nat.add_mul_div_right a 4 (by decide : 0 < 2)
+  have hexp : a + 8 - (a + 8) / 2 = (a - a/2) + 4 := by
+    rw [hdiv]
+    omega
+  rw [hexp, pow_add]
+  norm_num
+  have hpoly : (((a + 8 : Nat) : ℚ)^2 / 16 ≤ (a : ℚ)^2) := by
+    push_cast
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg : 0 ≤ 920 / (2 : ℚ) ^ (a - a / 2) := by positivity
+  calc
+    ((a : ℚ) + 8) ^ 2 * (920 / ((2 : ℚ) ^ (a - a / 2) * 16))
+        = (((a + 8 : Nat) : ℚ)^2 / 16) *
+            (920 / (2 : ℚ) ^ (a - a / 2)) := by
+            push_cast
+            ring
+    _ ≤ (a : ℚ)^2 * (920 / (2 : ℚ) ^ (a - a / 2)) :=
+      mul_le_mul_of_nonneg_right hpoly hnonneg
+
+private theorem truncationResidueScaledTerm2_step8 (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaledTerm2 (a + 8) ≤ truncationResidueScaledTerm2 a := by
+  unfold truncationResidueScaledTerm2
+  rw [pow_add]
+  norm_num
+  have hpoly :
+      (((a + 8 : Nat) : ℚ)^2 * (390625 / 839808 : ℚ) ≤ (a : ℚ)^2 * 2) := by
+    push_cast
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg : 0 ≤ (5 / 6 : ℚ) ^ a := by positivity
+  calc
+    ((a : ℚ) + 8) ^ 2 * (2 * ((5 / 6 : ℚ) ^ a * (390625 / 1679616)))
+        = (((a + 8 : Nat) : ℚ)^2 * (390625 / 839808 : ℚ)) *
+            (5 / 6 : ℚ) ^ a := by
+            push_cast
+            ring
+    _ ≤ ((a : ℚ)^2 * 2) * (5 / 6 : ℚ) ^ a :=
+      mul_le_mul_of_nonneg_right hpoly hnonneg
+    _ = (a : ℚ)^2 * (2 * (5 / 6 : ℚ) ^ a) := by ring
+
+private theorem truncationResidueScaledTerm3_step8 (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaledTerm3 (a + 8) ≤ truncationResidueScaledTerm3 a := by
+  unfold truncationResidueScaledTerm3
+  have hdiv : (a + 8) / 8 = a / 8 + 1 := by
+    simpa only [one_mul] using Nat.add_mul_div_right a 1 (by decide : 0 < 8)
+  have hexp : a + 8 - (a + 8) / 8 = (a - a/8) + 7 := by
+    rw [hdiv]
+    omega
+  rw [hexp, pow_add]
+  norm_num
+  have hpoly : (((a + 8 : Nat) : ℚ)^2 * ((9/10 : ℚ)^7) ≤ (a : ℚ)^2) := by
+    norm_num
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg : 0 ≤ 9 * (9 / 10 : ℚ) ^ (a - a / 8) := by positivity
+  calc
+    ((a : ℚ) + 8) ^ 2 *
+        (9 * ((9 / 10 : ℚ) ^ (a - a / 8) * (4782969 / 10000000)))
+        = (((a + 8 : Nat) : ℚ)^2 * ((9/10 : ℚ)^7)) *
+            (9 * (9 / 10 : ℚ) ^ (a - a / 8)) := by
+            push_cast
+            norm_num
+            ring
+    _ ≤ (a : ℚ)^2 * (9 * (9 / 10 : ℚ) ^ (a - a / 8)) :=
+      mul_le_mul_of_nonneg_right hpoly hnonneg
+
+private theorem truncationResidueScaledTerm4_step8 (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaledTerm4 (a + 8) ≤ truncationResidueScaledTerm4 a := by
+  unfold truncationResidueScaledTerm4
+  have hdiv : (a + 8) / 8 = a / 8 + 1 := by
+    simpa only [one_mul] using Nat.add_mul_div_right a 1 (by decide : 0 < 8)
+  rw [hdiv]
+  rw [show a / 8 + 1 + 1 = a / 8 + 2 by omega, pow_succ]
+  ring_nf
+  have hpoly : (((a + 8 : Nat) : ℚ)^3 * (3/10 : ℚ) ≤ (a : ℚ)^3) := by
+    push_cast
+    ring_nf
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg : 0 ≤ 276 * (3 / 10 : ℚ) ^ (a / 8) := by positivity
+  calc
+    ((8 + a : Nat) : ℚ) ^ 3 * (3 / 10 : ℚ) ^ (a / 8) * (414 / 5)
+        = (((a + 8 : Nat) : ℚ)^3 * (3 / 10 : ℚ)) *
+            (276 * (3 / 10 : ℚ) ^ (a / 8)) := by
+            push_cast
+            ring
+    _ ≤ (a : ℚ)^3 * (276 * (3 / 10 : ℚ) ^ (a / 8)) :=
+      mul_le_mul_of_nonneg_right hpoly hnonneg
+    _ = (a : ℚ)^3 * (3 / 10 : ℚ) ^ (a / 8) * 276 := by ring
+
+/-- The scaled truncation residue decreases when `a` is increased by eight.
+
+This is the formal version of the paper's parity/mod-eight monotonicity
+argument for the four exponential tail terms. -/
+theorem truncationResidueScaled_step8 (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueScaled (a + 8) ≤ truncationResidueScaled a := by
+  rw [truncationResidueScaled_eq_terms (a + 8) (by omega),
+    truncationResidueScaled_eq_terms a ha]
+  nlinarith [truncationResidueScaledTerm1_step8 a ha,
+    truncationResidueScaledTerm2_step8 a ha,
+    truncationResidueScaledTerm3_step8 a ha,
+    truncationResidueScaledTerm4_step8 a ha]
+
+private theorem truncationResidueScaled_150 : truncationResidueScaled 150 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_150]
+
+private theorem truncationResidueScaled_151 : truncationResidueScaled 151 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_151]
+
+private theorem truncationResidueScaled_152 : truncationResidueScaled 152 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_152]
+
+private theorem truncationResidueScaled_153 : truncationResidueScaled 153 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_153]
+
+private theorem truncationResidueScaled_154 : truncationResidueScaled 154 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_154]
+
+private theorem truncationResidueScaled_155 : truncationResidueScaled 155 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_155]
+
+private theorem truncationResidueScaled_156 : truncationResidueScaled 156 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_156]
+
+private theorem truncationResidueScaled_157 : truncationResidueScaled 157 < 1 := by
+  unfold truncationResidueScaled
+  norm_num
+  nlinarith [truncationResidue_157]
+
+/-- Uniform truncation-residue bound for every `a >= 150`, assembled from the
+eight endpoint checks and the mod-eight monotonicity step. -/
+theorem truncationResidue_bound (a : Nat) (ha : 150 ≤ a) :
+    truncationResidueRhs a < 1 / (a : ℚ)^2 := by
+  have hscaled : truncationResidueScaled a < 1 := by
+    refine Nat.strong_induction_on a ?_ ha
+    intro a ih ha
+    by_cases hle : a ≤ 157
+    · interval_cases a <;> first
+        | exact truncationResidueScaled_150
+        | exact truncationResidueScaled_151
+        | exact truncationResidueScaled_152
+        | exact truncationResidueScaled_153
+        | exact truncationResidueScaled_154
+        | exact truncationResidueScaled_155
+        | exact truncationResidueScaled_156
+        | exact truncationResidueScaled_157
+    · have hprev_ge : 150 ≤ a - 8 := by omega
+      have hprev_lt : a - 8 < a := by omega
+      have hprev : truncationResidueScaled (a - 8) < 1 :=
+        ih (a - 8) hprev_lt hprev_ge
+      have hstep :
+          truncationResidueScaled ((a - 8) + 8) ≤ truncationResidueScaled (a - 8) :=
+        truncationResidueScaled_step8 (a - 8) hprev_ge
+      have hadd : (a - 8) + 8 = a := by omega
+      rw [hadd] at hstep
+      exact lt_of_le_of_lt hstep hprev
+  unfold truncationResidueScaled at hscaled
+  have ha_sq_pos : (0 : ℚ) < (a : ℚ)^2 := by
+    have ha_pos : (0 : ℚ) < (a : ℚ) := by
+      exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+    positivity
+  rw [lt_div_iff₀ ha_sq_pos]
+  nlinarith
 
 /-! ## Endpoint arithmetic for the `x₀` and `x₂` majorants -/
 

@@ -119,6 +119,15 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_tail
   correctedCoeff_nonvanishing_of_printed
     (printedCoeffNegativityLarge_of_mid_tail hmid htail)
 
+/-- Final assembly when the large-tail printed proof is supplied in the
+normalized form used by the Gamma/truncation/error argument. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_normalizedTail
+    (hmid : PrintedCoeffNegativityMid)
+    (htail : PrintedTailNormalizedLowerBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed
+    (printedCoeffNegativityLarge_of_mid_normalizedTail hmid htail)
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records

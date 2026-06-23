@@ -96,6 +96,8 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_ne_2_13
 #print axioms Prop52.correctedCoeff_finite_nonvanishing
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_tail
+#print axioms Prop52.printedCoeffNegativityTail_of_normalizedLowerBound
+#print axioms Prop52.printedCoeffNegativityLarge_of_mid_normalizedTail
 #print axioms Prop52.printedLargeMargin_pos
 #print axioms Prop52.printedLargeMargin_pos_150
 #print axioms Prop52.factorialGas_prefix_base4
@@ -114,6 +116,8 @@ import Prop52.Printed
 #print axioms Prop52.truncationResidue_155
 #print axioms Prop52.truncationResidue_156
 #print axioms Prop52.truncationResidue_157
+#print axioms Prop52.truncationResidueScaled_step8
+#print axioms Prop52.truncationResidue_bound
 #print axioms Prop52.x0Endpoint1_lt
 #print axioms Prop52.x0Endpoint2_lt
 #print axioms Prop52.x0Endpoint3_lt
@@ -124,3 +128,4 @@ import Prop52.Printed
 #print axioms Prop52.x2Endpoint4_lt
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_tail
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_normalizedTail
