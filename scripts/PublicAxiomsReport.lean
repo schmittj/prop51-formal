@@ -9,6 +9,8 @@ The final theorem is expected to use the standard axioms plus
 `native_decide` certificates.
 -/
 import Prop51
+import Prop52.Theorem
+import Prop52.Printed
 
 #print axioms Prop51.Cseries_eq_expSeries_c
 #print axioms Prop51.bSeries_official
@@ -93,4 +95,8 @@ import Prop51
 #print axioms Prop52.correctedCoeff_ne_9_13
 #print axioms Prop52.correctedCoeff_ne_2_13
 #print axioms Prop52.correctedCoeff_finite_nonvanishing
+#print axioms Prop52.printedCoeffNegativityLarge_of_mid_tail
+#print axioms Prop52.printedLargeMargin_pos
+#print axioms Prop52.printedLargeMargin_pos_150
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_tail

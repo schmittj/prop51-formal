@@ -13,6 +13,7 @@ Proposition 5.1 rectangle theorem.
 import Prop52.Statement
 import Prop51.Rectangle
 import Prop52.Finite
+import Prop52.Printed
 
 namespace Prop52
 
@@ -107,6 +108,16 @@ theorem correctedCoeff_nonvanishing_of_printed
     CorrectedCoeffNonvanishing :=
   correctedCoeff_nonvanishing_of_finite_and_printed
     correctedCoeff_finite_nonvanishing hprinted
+
+/-- Final assembly after the remaining printed-sign proof has been split into
+the interval-certificate range `14 <= a <= 149` and the large-tail range
+`a >= 150`. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_tail
+    (hmid : PrintedCoeffNegativityMid)
+    (htail : PrintedCoeffNegativityTail) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed
+    (printedCoeffNegativityLarge_of_mid_tail hmid htail)
 
 /-! ## Executable checks for the smallest corrected example
 
