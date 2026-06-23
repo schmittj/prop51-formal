@@ -142,6 +142,19 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_split_errorBounds
     (printedCoeffNegativityTail_of_split_errorBounds
       hsplit hmain hh hk homega)
 
+/-- Final assembly after the exact low/high split has been closed in Lean.
+The remaining large-tail inputs are precisely the main Gamma lower bound and
+the three normalized error estimates. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_errorBounds
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_tail hmid
+    (printedCoeffNegativityTail_of_errorBounds hmain hh hk homega)
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records

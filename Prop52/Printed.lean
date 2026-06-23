@@ -338,6 +338,22 @@ theorem coeff_printedTailHighESeries_eq_neg_hCoeff_of_gt_p_le_a
     unfold printedTailHighExpInput
     rw [if_neg (by omega)]
 
+theorem coeff_printedTailHighESeries_piecewise
+    (μ : List Nat) (a s : Nat) (hsa : s ≤ a) :
+    coeff s (printedTailHighESeries μ a) =
+      if s = 0 then 1 else if printedTailP a < s then -hCoeff μ s else 0 := by
+  by_cases hs0 : s = 0
+  · subst hs0
+    simp [printedTailHighESeries]
+  · rw [if_neg hs0]
+    by_cases hsp : printedTailP a < s
+    · rw [if_pos hsp,
+        coeff_printedTailHighESeries_eq_neg_hCoeff_of_gt_p_le_a μ a s hsp hsa]
+    · have hspos : 1 ≤ s := by omega
+      have hsle : s ≤ printedTailP a := by omega
+      rw [if_neg hsp,
+        coeff_printedTailHighESeries_eq_zero_of_le_p μ a s hspos hsle]
+
 theorem coeff_printedTailLowJSeries (μ : List Nat) (a r : Nat) :
     coeff r (printedTailLowJSeries μ a) =
       if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0 := by
@@ -431,12 +447,217 @@ theorem coeff_printedTailWSeries (μ : List Nat) (a s : Nat) :
   rw [mul_sub, mul_one, map_sub, coeff_printedTailESeries,
     coeff_printedTailESeries_mul_lowJSeries]
 
+theorem coeff_printedTailHighESeries_mul_W_eq_piecewiseSum
+    (μ : List Nat) (a : Nat) :
+    coeff a (printedTailHighESeries μ a * printedTailWSeries μ a) =
+      ∑ x ∈ Finset.range (a + 1),
+        (if x = 0 then printedTailOmegaCoeff μ a a
+         else if printedTailP a < x then
+           -hCoeff μ x * printedTailOmegaCoeff μ a (a - x)
+         else 0) := by
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedTailWSeries]
+  refine Finset.sum_congr rfl fun x hx => ?_
+  have hxle : x ≤ a := by
+    have := Finset.mem_range.mp hx
+    omega
+  rw [coeff_printedTailHighESeries_piecewise μ a x hxle]
+  by_cases hx0 : x = 0
+  · subst hx0
+    simp
+  · rw [if_neg hx0]
+    by_cases hpx : printedTailP a < x
+    · rw [if_pos hpx]
+      simp [hx0, hpx]
+    · rw [if_neg hpx]
+      simp [hx0, hpx]
+
+theorem coeff_printedTailHighESeries_mul_highKSeries_eq_piecewise
+    (μ : List Nat) (a s : Nat) (hsa : s ≤ a) :
+    coeff s (printedTailHighESeries μ a * printedTailHighKSeries μ a) =
+      if printedTailP a < s then kCoeff μ s else 0 := by
+  have hale : a ≤ 2 * printedTailP a + 1 := by
+    unfold printedTailP
+    omega
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  rw [Finset.sum_range_succ']
+  have htail :
+      (∑ x ∈ Finset.range s,
+          coeff (x + 1) (printedTailHighESeries μ a) *
+            coeff (s - (x + 1)) (printedTailHighKSeries μ a)) = 0 := by
+    refine Finset.sum_eq_zero fun x hx => ?_
+    have hxlt : x < s := Finset.mem_range.mp hx
+    by_cases hxlep : x + 1 ≤ printedTailP a
+    · rw [coeff_printedTailHighESeries_eq_zero_of_le_p μ a (x + 1)
+        (by omega) hxlep]
+      simp
+    · have hdeg_le_p : s - (x + 1) ≤ printedTailP a := by omega
+      rw [coeff_printedTailHighKSeries_eq_zero_of_le_p μ a (s - (x + 1))
+        hdeg_le_p]
+      simp
+  rw [htail]
+  simp [printedTailHighESeries, printedTailHighKSeries]
+
+theorem coeff_printedTailE_mul_highE_mul_highK_eq_piecewiseSum
+    (μ : List Nat) (a : Nat) :
+    coeff a
+        (printedTailESeries μ a * printedTailHighESeries μ a *
+          printedTailHighKSeries μ a) =
+      ∑ s ∈ Finset.range (a + 1),
+        (if printedTailP a < a - s then
+          printedTailECoeff μ a s * kCoeff μ (a - s)
+        else 0) := by
+  rw [mul_assoc, coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedTailESeries]
+  refine Finset.sum_congr rfl fun s hs => ?_
+  have hsle : s ≤ a := by
+    have := Finset.mem_range.mp hs
+    omega
+  rw [coeff_printedTailHighESeries_mul_highKSeries_eq_piecewise μ a (a - s)
+    (by omega)]
+  by_cases hsp : printedTailP a < a - s
+  · simp [hsp]
+  · simp [hsp]
+
 /-- Integer-shape Gamma moment `Gamma(a-s)/(6^s Gamma(a))`, expressed as a
 rational factorial ratio.  The large-tail proofs only use this for
 `s <= printedTailR0 a`, where the subtractions do not underflow. -/
 def gammaWeight (a s : Nat) : ℚ :=
   ((Nat.factorial (a - s - 1) : Nat) : ℚ) /
     ((6 : ℚ)^s * ((Nat.factorial (a - 1) : Nat) : ℚ))
+
+def printedTailHRawSum (μ : List Nat) (a : Nat) : ℚ :=
+  ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
+    hCoeff μ (a - s) * printedTailOmegaCoeff μ a s).sum
+
+def printedTailKRawSum (μ : List Nat) (a : Nat) : ℚ :=
+  ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
+    kCoeff μ (a - s) * printedTailECoeff μ a s).sum
+
+private theorem sum_Ico_eq_sum_range_reverse_rat
+    (F : Nat → ℚ) {lo hi : Nat} (hlohi : lo ≤ hi) :
+    ∑ x ∈ Finset.Ico lo (hi + 1), F x =
+      ∑ s ∈ Finset.range (hi + 1 - lo), F (hi - s) := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  let K := hi + 1 - lo
+  rw [← Finset.sum_range_reflect (fun j => F (lo + j)) K]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  have hjK : j < K := Finset.mem_range.mp hj
+  change F (lo + (K - 1 - j)) = F (hi - j)
+  congr 1
+  unfold K
+  omega
+
+theorem coeff_printedTailHighESeries_mul_W_eq_omega_sub_HRaw
+    (μ : List Nat) (a : Nat) (ha : 1 ≤ a) :
+    coeff a (printedTailHighESeries μ a * printedTailWSeries μ a) =
+      printedTailOmegaCoeff μ a a - printedTailHRawSum μ a := by
+  rw [coeff_printedTailHighESeries_mul_W_eq_piecewiseSum]
+  unfold printedTailHRawSum
+  rw [Prop51.list_range_map_sum]
+  have hp_lt_a : printedTailP a < a := by
+    unfold printedTailP
+    omega
+  have hlen : printedTailR0 a + 1 = a - printedTailP a := by
+    unfold printedTailR0
+    omega
+  rw [hlen]
+  let F : Nat → ℚ := fun x =>
+    if x = 0 then printedTailOmegaCoeff μ a a
+    else if printedTailP a < x then
+      -hCoeff μ x * printedTailOmegaCoeff μ a (a - x)
+    else 0
+  change (∑ x ∈ Finset.range (a + 1), F x) =
+    printedTailOmegaCoeff μ a a -
+      ∑ s ∈ Finset.range (a - printedTailP a),
+        hCoeff μ (a - s) * printedTailOmegaCoeff μ a s
+  rw [Finset.range_eq_Ico]
+  rw [← Finset.sum_Ico_consecutive F (by omega : 0 ≤ printedTailP a + 1)
+    (by omega : printedTailP a + 1 ≤ a + 1)]
+  rw [Nat.Ico_zero_eq_range]
+  have hlow :
+      (∑ x ∈ Finset.range (printedTailP a + 1), F x) =
+        printedTailOmegaCoeff μ a a := by
+    rw [Finset.sum_range_succ']
+    have htail :
+        (∑ x ∈ Finset.range (printedTailP a), F (x + 1)) = 0 := by
+      refine Finset.sum_eq_zero fun x hx => ?_
+      have hxlt : x < printedTailP a := Finset.mem_range.mp hx
+      have hx0 : x + 1 ≠ 0 := by omega
+      have hnot : ¬ printedTailP a < x + 1 := by omega
+      simp [F, hnot]
+    rw [htail]
+    simp [F]
+  have hhi :
+      (∑ x ∈ Finset.Ico (printedTailP a + 1) (a + 1), F x) =
+        -∑ s ∈ Finset.range (a - printedTailP a),
+          hCoeff μ (a - s) * printedTailOmegaCoeff μ a s := by
+    rw [sum_Ico_eq_sum_range_reverse_rat F (by omega : printedTailP a + 1 ≤ a)]
+    have hlen' : a + 1 - (printedTailP a + 1) = a - printedTailP a := by omega
+    rw [hlen']
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun s hs => ?_
+    have hslt : s < a - printedTailP a := Finset.mem_range.mp hs
+    have hs_gt : printedTailP a < a - s := by omega
+    have hs_ne : a - s ≠ 0 := by omega
+    have hsub : a - (a - s) = s := by omega
+    simp [F, hs_ne, hs_gt, hsub]
+  rw [hlow, hhi]
+  ring
+
+theorem coeff_printedTailE_mul_highE_mul_highK_eq_KRaw
+    (μ : List Nat) (a : Nat) (ha : 1 ≤ a) :
+    coeff a
+        (printedTailESeries μ a * printedTailHighESeries μ a *
+          printedTailHighKSeries μ a) =
+      printedTailKRawSum μ a := by
+  rw [coeff_printedTailE_mul_highE_mul_highK_eq_piecewiseSum]
+  unfold printedTailKRawSum
+  rw [Prop51.list_range_map_sum]
+  have hp_lt_a : printedTailP a < a := by
+    unfold printedTailP
+    omega
+  have hlen : printedTailR0 a + 1 = a - printedTailP a := by
+    unfold printedTailR0
+    omega
+  rw [hlen]
+  let G : Nat → ℚ := fun s =>
+    if printedTailP a < a - s then
+      printedTailECoeff μ a s * kCoeff μ (a - s)
+    else 0
+  change (∑ s ∈ Finset.range (a + 1), G s) =
+    ∑ s ∈ Finset.range (a - printedTailP a),
+      kCoeff μ (a - s) * printedTailECoeff μ a s
+  rw [Finset.range_eq_Ico]
+  rw [← Finset.sum_Ico_consecutive G (by omega : 0 ≤ a - printedTailP a)
+    (by omega : a - printedTailP a ≤ a + 1)]
+  rw [Nat.Ico_zero_eq_range]
+  have hlow :
+      (∑ s ∈ Finset.range (a - printedTailP a), G s) =
+        ∑ s ∈ Finset.range (a - printedTailP a),
+          kCoeff μ (a - s) * printedTailECoeff μ a s := by
+    refine Finset.sum_congr rfl fun s hs => ?_
+    have hslt : s < a - printedTailP a := Finset.mem_range.mp hs
+    have hactive : printedTailP a < a - s := by omega
+    simp [G, hactive]
+    ring
+  have hhi :
+      (∑ s ∈ Finset.Ico (a - printedTailP a) (a + 1), G s) = 0 := by
+    refine Finset.sum_eq_zero fun s hs => ?_
+    have hslo : a - printedTailP a ≤ s := (Finset.mem_Ico.mp hs).1
+    have hnot : ¬ printedTailP a < a - s := by omega
+    simp [G, hnot]
+  rw [hlow, hhi, add_zero]
+
+theorem printedCoeff_eq_tail_raw_split
+    (μ : List Nat) (a : Nat) (ha : 1 ≤ a) :
+    printedCoeff μ a =
+      printedTailOmegaCoeff μ a a - printedTailHRawSum μ a -
+        printedTailKRawSum μ a := by
+  have hseries := coeff_printedTail_series_split_eq_printedCoeff μ a
+  rw [map_sub, coeff_printedTailHighESeries_mul_W_eq_omega_sub_HRaw μ a ha,
+    coeff_printedTailE_mul_highE_mul_highK_eq_KRaw μ a ha] at hseries
+  exact hseries.symm
 
 def printedTailMainSum (μ : List Nat) (a : Nat) : ℚ :=
   ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
@@ -465,6 +686,24 @@ def PrintedTailExactSplit : Prop :=
   ∀ a : Nat, 150 ≤ a →
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       (-printedCoeff μ a) / printedTailDen μ a = printedTailSplitRhs μ a
+
+theorem printedTailExactSplit_closed : PrintedTailExactSplit := by
+  intro a ha μ _hμ
+  have hraw := printedCoeff_eq_tail_raw_split μ a (by omega)
+  have hHnorm :
+      printedTailHNormSum μ a =
+        printedTailHRawSum μ a / printedTailDen μ a := by
+    unfold printedTailHNormSum printedTailHRawSum
+    rw [Prop51.list_range_map_sum, Prop51.list_range_map_sum]
+    rw [← Finset.sum_div]
+  have hKnorm :
+      printedTailKNormSum μ a =
+        printedTailKRawSum μ a / printedTailDen μ a := by
+    rfl
+  unfold printedTailSplitRhs printedTailOmegaNorm
+  rw [hHnorm, hKnorm]
+  rw [hraw]
+  ring
 
 /-- The Gamma-margin plus truncation step, stated directly for the finite main
 sum `sum gamma_s omega_s`. -/
@@ -532,6 +771,24 @@ theorem printedCoeffNegativityTail_of_split_errorBounds
   printedCoeffNegativityTail_of_normalizedLowerBound
     (printedTailNormalizedLowerBound_of_split_errorBounds
       hsplit hmain hh hk homega)
+
+theorem printedTailNormalizedLowerBound_of_errorBounds
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    PrintedTailNormalizedLowerBound :=
+  printedTailNormalizedLowerBound_of_split_errorBounds
+    printedTailExactSplit_closed hmain hh hk homega
+
+theorem printedCoeffNegativityTail_of_errorBounds
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    PrintedCoeffNegativityTail :=
+  printedCoeffNegativityTail_of_split_errorBounds
+    printedTailExactSplit_closed hmain hh hk homega
 
 /-! ## Gamma-margin arithmetic -/
 

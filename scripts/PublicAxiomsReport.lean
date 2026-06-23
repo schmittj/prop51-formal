@@ -103,12 +103,22 @@ import Prop52.Printed
 #print axioms Prop52.coeff_printedFullSeries_eq_printedCoeff
 #print axioms Prop52.coeff_printedTailHighESeries_eq_zero_of_le_p
 #print axioms Prop52.coeff_printedTailHighESeries_eq_neg_hCoeff_of_gt_p_le_a
+#print axioms Prop52.coeff_printedTailHighESeries_piecewise
 #print axioms Prop52.coeff_printedTailHighKSeries_eq_zero_of_le_p
 #print axioms Prop52.printedFullFSeries_eq_low_mul_high
 #print axioms Prop52.printedFullKSeries_eq_low_add_high
 #print axioms Prop52.coeff_printedTail_series_split_eq_printedCoeff
+#print axioms Prop52.coeff_printedTailHighESeries_mul_W_eq_piecewiseSum
+#print axioms Prop52.coeff_printedTailHighESeries_mul_highKSeries_eq_piecewise
+#print axioms Prop52.coeff_printedTailE_mul_highE_mul_highK_eq_piecewiseSum
+#print axioms Prop52.coeff_printedTailHighESeries_mul_W_eq_omega_sub_HRaw
+#print axioms Prop52.coeff_printedTailE_mul_highE_mul_highK_eq_KRaw
+#print axioms Prop52.printedCoeff_eq_tail_raw_split
+#print axioms Prop52.printedTailExactSplit_closed
 #print axioms Prop52.printedTailNormalizedLowerBound_of_split_errorBounds
 #print axioms Prop52.printedCoeffNegativityTail_of_split_errorBounds
+#print axioms Prop52.printedTailNormalizedLowerBound_of_errorBounds
+#print axioms Prop52.printedCoeffNegativityTail_of_errorBounds
 #print axioms Prop52.coeff_printedTailESeries
 #print axioms Prop52.coeff_printedTailESeries_mul_lowJSeries
 #print axioms Prop52.coeff_printedTailWSeries
@@ -155,3 +165,4 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_tail
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_normalizedTail
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_split_errorBounds
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_errorBounds
