@@ -3758,6 +3758,286 @@ private theorem factorialGasTailBase2Weighted_sum_le (p : Nat) :
             (by norm_num)
     _ = 1 := by norm_num
 
+private theorem factorialGasPrefix_sum_eq (base : Nat) (weighted : Bool) :
+    (∑ r ∈ Finset.Ico (4 : Nat) 76, factorialGasPrefixTerm base r weighted) =
+      factorialGasPrefix base weighted := by
+  unfold factorialGasPrefix
+  rw [Prop51.list_range_map_sum]
+  rw [Finset.sum_Ico_eq_sum_range]
+  norm_num
+  refine Finset.sum_congr rfl fun i _hi => ?_
+  rw [show 4 + i = i + 4 by omega]
+
+private theorem factorialGasBase4_x2_sum_le (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r)
+      ≤ 1730 / (a : ℚ)^4 := by
+  let F : Nat → ℚ := fun r =>
+    (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r
+  let G : Nat → ℚ := fun r => factorialGasTailBase4Term r
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hp76 : 76 ≤ printedTailP a + 1 := by
+    unfold printedTailP
+    omega
+  have hsplit := Finset.sum_Ico_consecutive F
+    (by norm_num : 4 ≤ 76) hp76
+  have hprefix :
+      (∑ r ∈ Finset.Ico 4 76, F r) ≤
+        factorialGasPrefix 4 false / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 4 76, F r)
+          ≤ ∑ r ∈ Finset.Ico 4 76,
+              factorialGasPrefixTerm 4 r false / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            dsimp [F]
+            exact factorialGasPrefix_scale_le
+              (a := a) (base := 4) (r := r) ha hmem.1
+      _ = factorialGasPrefix 4 false / (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+            rw [factorialGasPrefix_sum_eq]
+  have htail :
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r) ≤
+        3 / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 76 (printedTailP a + 1),
+              G r / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hr_le_p : r ≤ printedTailP a := by omega
+            have hra : 2 * r ≤ a := by
+              unfold printedTailP at hr_le_p
+              omega
+            dsimp [F, G]
+            exact factorialGasBase4_tail_term_le
+              (a := a) (r := r) (by omega : 4 ≤ r) hra
+      _ = (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), G r) /
+            (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+      _ ≤ 3 / (a : ℚ)^4 :=
+            div_le_div_of_nonneg_right
+              (factorialGasTailBase4_sum_le (printedTailP a))
+              (pow_nonneg ha_pos.le 4)
+  change (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+    ≤ 1730 / (a : ℚ)^4
+  rw [← hsplit]
+  calc
+    (∑ r ∈ Finset.Ico (4 : Nat) 76, F r) +
+        ∑ r ∈ Finset.Ico (76 : Nat) (printedTailP a + 1), F r
+        ≤ factorialGasPrefix 4 false / (a : ℚ)^4 + 3 / (a : ℚ)^4 :=
+          add_le_add hprefix htail
+    _ = (factorialGasPrefix 4 false + 3) / (a : ℚ)^4 := by ring
+    _ ≤ 1730 / (a : ℚ)^4 :=
+          div_le_div_of_nonneg_right
+            (le_of_lt factorialGas_prefix_tail_base4)
+            (pow_nonneg ha_pos.le 4)
+
+private theorem factorialGasBase4_weighted_x2_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+      (r : ℚ) *
+        ((((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r))
+      ≤ 7340 / (a : ℚ)^4 := by
+  let F : Nat → ℚ := fun r =>
+    (r : ℚ) *
+      ((((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r)
+  let G : Nat → ℚ := fun r => factorialGasTailBase4WeightedTerm r
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hp76 : 76 ≤ printedTailP a + 1 := by
+    unfold printedTailP
+    omega
+  have hsplit := Finset.sum_Ico_consecutive F
+    (by norm_num : 4 ≤ 76) hp76
+  have hprefix :
+      (∑ r ∈ Finset.Ico 4 76, F r) ≤
+        factorialGasPrefix 4 true / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 4 76, F r)
+          ≤ ∑ r ∈ Finset.Ico 4 76,
+              factorialGasPrefixTerm 4 r true / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            dsimp [F]
+            exact factorialGasPrefix_weighted_scale_le
+              (a := a) (base := 4) (r := r) ha hmem.1
+      _ = factorialGasPrefix 4 true / (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+            rw [factorialGasPrefix_sum_eq]
+  have htail :
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r) ≤
+        208 / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 76 (printedTailP a + 1),
+              G r / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hr_le_p : r ≤ printedTailP a := by omega
+            have hra : 2 * r ≤ a := by
+              unfold printedTailP at hr_le_p
+              omega
+            dsimp [F, G]
+            exact factorialGasBase4_weighted_tail_term_le
+              (a := a) (r := r) (by omega : 4 ≤ r) hra
+      _ = (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), G r) /
+            (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+      _ ≤ 208 / (a : ℚ)^4 :=
+            div_le_div_of_nonneg_right
+              (factorialGasTailBase4Weighted_sum_le (printedTailP a))
+              (pow_nonneg ha_pos.le 4)
+  change (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+    ≤ 7340 / (a : ℚ)^4
+  rw [← hsplit]
+  calc
+    (∑ r ∈ Finset.Ico (4 : Nat) 76, F r) +
+        ∑ r ∈ Finset.Ico (76 : Nat) (printedTailP a + 1), F r
+        ≤ factorialGasPrefix 4 true / (a : ℚ)^4 +
+            208 / (a : ℚ)^4 := add_le_add hprefix htail
+    _ = (factorialGasPrefix 4 true + 208) / (a : ℚ)^4 := by ring
+    _ ≤ 7340 / (a : ℚ)^4 :=
+          div_le_div_of_nonneg_right
+            (le_of_lt factorialGas_prefix_tail_base4_weighted)
+            (pow_nonneg ha_pos.le 4)
+
+private theorem factorialGasBase2_x2_sum_le (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+      (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r)
+      ≤ 103 / (a : ℚ)^4 := by
+  let F : Nat → ℚ := fun r =>
+    (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r
+  let G : Nat → ℚ := fun r => factorialGasTailBase2Term r
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hp76 : 76 ≤ printedTailP a + 1 := by
+    unfold printedTailP
+    omega
+  have hsplit := Finset.sum_Ico_consecutive F
+    (by norm_num : 4 ≤ 76) hp76
+  have hprefix :
+      (∑ r ∈ Finset.Ico 4 76, F r) ≤
+        factorialGasPrefix 2 false / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 4 76, F r)
+          ≤ ∑ r ∈ Finset.Ico 4 76,
+              factorialGasPrefixTerm 2 r false / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            dsimp [F]
+            exact factorialGasPrefix_scale_le
+              (a := a) (base := 2) (r := r) ha hmem.1
+      _ = factorialGasPrefix 2 false / (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+            rw [factorialGasPrefix_sum_eq]
+  have htail :
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r) ≤
+        1 / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 76 (printedTailP a + 1),
+              G r / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hr_le_p : r ≤ printedTailP a := by omega
+            have hra : 2 * r ≤ a := by
+              unfold printedTailP at hr_le_p
+              omega
+            dsimp [F, G]
+            exact factorialGasBase2_tail_term_le
+              (a := a) (r := r) (by omega : 4 ≤ r) hra
+      _ = (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), G r) /
+            (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+      _ ≤ 1 / (a : ℚ)^4 :=
+            div_le_div_of_nonneg_right
+              (factorialGasTailBase2_sum_le (printedTailP a))
+              (pow_nonneg ha_pos.le 4)
+  change (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+    ≤ 103 / (a : ℚ)^4
+  rw [← hsplit]
+  calc
+    (∑ r ∈ Finset.Ico (4 : Nat) 76, F r) +
+        ∑ r ∈ Finset.Ico (76 : Nat) (printedTailP a + 1), F r
+        ≤ factorialGasPrefix 2 false / (a : ℚ)^4 + 1 / (a : ℚ)^4 :=
+          add_le_add hprefix htail
+    _ = (factorialGasPrefix 2 false + 1) / (a : ℚ)^4 := by ring
+    _ ≤ 103 / (a : ℚ)^4 :=
+          div_le_div_of_nonneg_right
+            (le_of_lt factorialGas_prefix_tail_base2)
+            (pow_nonneg ha_pos.le 4)
+
+private theorem factorialGasBase2_weighted_x2_sum_le
+    (a : Nat) (ha : 150 ≤ a) :
+    (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+      (r : ℚ) *
+        ((((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r))
+      ≤ 413 / (a : ℚ)^4 := by
+  let F : Nat → ℚ := fun r =>
+    (r : ℚ) *
+      ((((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r)
+  let G : Nat → ℚ := fun r => factorialGasTailBase2WeightedTerm r
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hp76 : 76 ≤ printedTailP a + 1 := by
+    unfold printedTailP
+    omega
+  have hsplit := Finset.sum_Ico_consecutive F
+    (by norm_num : 4 ≤ 76) hp76
+  have hprefix :
+      (∑ r ∈ Finset.Ico 4 76, F r) ≤
+        factorialGasPrefix 2 true / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 4 76, F r)
+          ≤ ∑ r ∈ Finset.Ico 4 76,
+              factorialGasPrefixTerm 2 r true / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            dsimp [F]
+            exact factorialGasPrefix_weighted_scale_le
+              (a := a) (base := 2) (r := r) ha hmem.1
+      _ = factorialGasPrefix 2 true / (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+            rw [factorialGasPrefix_sum_eq]
+  have htail :
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r) ≤
+        1 / (a : ℚ)^4 := by
+    calc
+      (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico 76 (printedTailP a + 1),
+              G r / (a : ℚ)^4 := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            have hr_le_p : r ≤ printedTailP a := by omega
+            have hra : 2 * r ≤ a := by
+              unfold printedTailP at hr_le_p
+              omega
+            dsimp [F, G]
+            exact factorialGasBase2_weighted_tail_term_le
+              (a := a) (r := r) (by omega : 4 ≤ r) hra
+      _ = (∑ r ∈ Finset.Ico 76 (printedTailP a + 1), G r) /
+            (a : ℚ)^4 := by
+            rw [← Finset.sum_div]
+      _ ≤ 1 / (a : ℚ)^4 :=
+            div_le_div_of_nonneg_right
+              (factorialGasTailBase2Weighted_sum_le (printedTailP a))
+              (pow_nonneg ha_pos.le 4)
+  change (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+    ≤ 413 / (a : ℚ)^4
+  rw [← hsplit]
+  calc
+    (∑ r ∈ Finset.Ico (4 : Nat) 76, F r) +
+        ∑ r ∈ Finset.Ico (76 : Nat) (printedTailP a + 1), F r
+        ≤ factorialGasPrefix 2 true / (a : ℚ)^4 +
+            1 / (a : ℚ)^4 := add_le_add hprefix htail
+    _ = (factorialGasPrefix 2 true + 1) / (a : ℚ)^4 := by ring
+    _ ≤ 413 / (a : ℚ)^4 :=
+          div_le_div_of_nonneg_right
+            (le_of_lt factorialGas_prefix_tail_base2_weighted)
+            (pow_nonneg ha_pos.le 4)
+
 /-! ## Taylor--Gamma truncation arithmetic -/
 
 def truncationResidueRhs (a : Nat) : ℚ :=
@@ -4423,6 +4703,20 @@ private theorem sum_range_eq_zero_one_add_Ico
   have hsplit := (Finset.sum_range_add_sum_Ico F (by omega : 2 ≤ p + 1)).symm
   rw [hsplit]
   norm_num [Finset.sum_range_succ]
+
+private theorem sum_Ico_two_three_add_Ico
+    (F : Nat → ℚ) {p : Nat} (hp : 3 ≤ p) :
+    ∑ r ∈ Finset.Ico 2 (p + 1), F r =
+      F 2 + F 3 + ∑ r ∈ Finset.Ico 4 (p + 1), F r := by
+  have hsplit := Finset.sum_Ico_consecutive F
+    (by norm_num : 2 ≤ 4) (by omega : 4 ≤ p + 1)
+  rw [← hsplit]
+  have hsmall : (∑ r ∈ Finset.Ico 2 4, F r) = F 2 + F 3 := by
+    have hIco : Finset.Ico (2 : Nat) 4 = ({2, 3} : Finset Nat) := by
+      decide
+    rw [hIco]
+    simp
+  rw [hsmall]
 
 private theorem hCoeff_x0_tail_term_le {a r : Nat} {μ : List Nat}
     (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
@@ -5231,6 +5525,56 @@ private theorem kCoeff_x2_tail_term_le {a r : Nat} {μ : List Nat}
               (M a : ℚ) * 2^(n + 2) * 3^(n + 2) * 8 *
                 (((n : ℚ) + 1) * ((n.factorial : Nat) : ℚ)) := by ring
 
+private theorem hCoeff_x2_weighted_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    (r : ℚ) * hCoeff μ r * (printedTailX2 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((r : ℚ) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (4 : ℚ)^r / (a : ℚ)^r)) := by
+  have hbase := hCoeff_x2_tail_term_le (a := a) (r := r)
+    (μ := μ) ha hμ hr
+  have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+  calc
+    (r : ℚ) * hCoeff μ r * (printedTailX2 a)^r
+        = (r : ℚ) * (hCoeff μ r * (printedTailX2 a)^r) := by ring
+    _ ≤ (r : ℚ) *
+          ((8 * (M a : ℚ) / 25) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (4 : ℚ)^r / (a : ℚ)^r)) :=
+          mul_le_mul_of_nonneg_left hbase hr_nonneg
+    _ = (8 * (M a : ℚ) / 25) *
+          ((r : ℚ) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (4 : ℚ)^r / (a : ℚ)^r)) := by
+          ring
+
+private theorem kCoeff_x2_weighted_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    (r : ℚ) * kCoeff μ r * (printedTailX2 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((r : ℚ) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (2 : ℚ)^r / (a : ℚ)^r)) := by
+  have hbase := kCoeff_x2_tail_term_le (a := a) (r := r)
+    (μ := μ) ha hμ hr
+  have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+  calc
+    (r : ℚ) * kCoeff μ r * (printedTailX2 a)^r
+        = (r : ℚ) * (kCoeff μ r * (printedTailX2 a)^r) := by ring
+    _ ≤ (r : ℚ) *
+          ((8 * (M a : ℚ) / 25) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (2 : ℚ)^r / (a : ℚ)^r)) :=
+          mul_le_mul_of_nonneg_left hbase hr_nonneg
+    _ = (8 * (M a : ℚ) / 25) *
+          ((r : ℚ) *
+            ((((r - 1).factorial : Nat) : ℚ) *
+              (2 : ℚ)^r / (a : ℚ)^r)) := by
+          ring
+
 def printedTailX2Bound1 (a : Nat) : ℚ :=
   5 * ((a : ℚ) - 1) / (a : ℚ) +
     (8 * printedTailMrat a / 25) *
@@ -5362,6 +5706,386 @@ theorem printedTailX2Bound4_lt (a : Nat) (ha : 150 ≤ a) :
   field_simp [ha_pos.ne']
   ring_nf
   nlinarith
+
+theorem printedTailLPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailLPointSum μ a (printedTailX2 a) ≤ 26 / 5 := by
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hp3 : 3 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hMrat : printedTailMrat a = (M a : ℚ) := by
+    unfold printedTailMrat M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    ring
+  let F : Nat → ℚ := fun r => hCoeff μ r * (printedTailX2 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F, hCoeff]
+  have hone : F 1 ≤ 5 * ((a : ℚ) - 1) / (a : ℚ) := by
+    simpa [F] using hCoeff_one_x2_le (a := a) (μ := μ) ha hμ
+  have htail4 :
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (1730 / (a : ℚ)^4) := by
+    calc
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((((r - 1).factorial : Nat) : ℚ) *
+                  (4 : ℚ)^r / (a : ℚ)^r) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            simpa [F] using hCoeff_x2_tail_term_le (a := a) (r := r)
+              (μ := μ) ha hμ (by omega : 2 ≤ r)
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (((r - 1).factorial : Nat) : ℚ) *
+                (4 : ℚ)^r / (a : ℚ)^r := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (1730 / (a : ℚ)^4) :=
+            mul_le_mul_of_nonneg_left
+              (factorialGasBase4_x2_sum_le a ha) (by positivity)
+  have h2 : F 2 ≤ (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^2) := by
+    calc
+      F 2
+          ≤ (8 * (M a : ℚ) / 25) *
+              ((((2 - 1).factorial : Nat) : ℚ) *
+                (4 : ℚ)^2 / (a : ℚ)^2) := by
+            simpa [F] using hCoeff_x2_tail_term_le (a := a) (r := 2)
+              (μ := μ) ha hμ (by norm_num : 2 ≤ 2)
+      _ = (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^2) := by
+            norm_num
+  have h3 : F 3 ≤ (8 * (M a : ℚ) / 25) * (128 / (a : ℚ)^3) := by
+    calc
+      F 3
+          ≤ (8 * (M a : ℚ) / 25) *
+              ((((3 - 1).factorial : Nat) : ℚ) *
+                (4 : ℚ)^3 / (a : ℚ)^3) := by
+            simpa [F] using hCoeff_x2_tail_term_le (a := a) (r := 3)
+              (μ := μ) ha hμ (by norm_num : 2 ≤ 3)
+      _ = (8 * (M a : ℚ) / 25) * (128 / (a : ℚ)^3) := by
+            norm_num
+  have htail :
+      (∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) *
+            (16 / (a : ℚ)^2 + 128 / (a : ℚ)^3 +
+              1730 / (a : ℚ)^4) := by
+    have hsplit_tail :=
+      sum_Ico_two_three_add_Ico F (p := printedTailP a) hp3
+    rw [hsplit_tail]
+    calc
+      F 2 + F 3 + ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r
+          ≤ (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^2) +
+              (8 * (M a : ℚ) / 25) * (128 / (a : ℚ)^3) +
+              (8 * (M a : ℚ) / 25) * (1730 / (a : ℚ)^4) := by
+            nlinarith
+      _ = (8 * (M a : ℚ) / 25) *
+            (16 / (a : ℚ)^2 + 128 / (a : ℚ)^3 +
+              1730 / (a : ℚ)^4) := by
+            ring
+  rw [printedTailLPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r
+        ≤ 0 + 5 * ((a : ℚ) - 1) / (a : ℚ) +
+            (8 * (M a : ℚ) / 25) *
+              (16 / (a : ℚ)^2 + 128 / (a : ℚ)^3 +
+                1730 / (a : ℚ)^4) := by
+          nlinarith
+    _ = printedTailX2Bound1 a := by
+          unfold printedTailX2Bound1
+          rw [hMrat]
+          ring
+    _ ≤ 26 / 5 := le_of_lt (printedTailX2Bound1_lt a ha)
+
+theorem printedTailLDerivPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailLDerivPointSum μ a (printedTailX2 a) ≤ 11 / 2 := by
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hp3 : 3 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hMrat : printedTailMrat a = (M a : ℚ) := by
+    unfold printedTailMrat M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    ring
+  let F : Nat → ℚ := fun r => (r : ℚ) * hCoeff μ r * (printedTailX2 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F]
+  have hone : F 1 ≤ 5 * ((a : ℚ) - 1) / (a : ℚ) := by
+    simpa [F] using hCoeff_one_x2_le (a := a) (μ := μ) ha hμ
+  have htail4 :
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (7340 / (a : ℚ)^4) := by
+    calc
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((r : ℚ) *
+                  ((((r - 1).factorial : Nat) : ℚ) *
+                    (4 : ℚ)^r / (a : ℚ)^r)) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            simpa [F] using hCoeff_x2_weighted_tail_term_le (a := a)
+              (r := r) (μ := μ) ha hμ (by omega : 2 ≤ r)
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (r : ℚ) *
+                ((((r - 1).factorial : Nat) : ℚ) *
+                  (4 : ℚ)^r / (a : ℚ)^r) := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (7340 / (a : ℚ)^4) :=
+            mul_le_mul_of_nonneg_left
+              (factorialGasBase4_weighted_x2_sum_le a ha) (by positivity)
+  have h2 : F 2 ≤ (8 * (M a : ℚ) / 25) * (32 / (a : ℚ)^2) := by
+    calc
+      F 2
+          ≤ (8 * (M a : ℚ) / 25) *
+            ((2 : ℚ) *
+              ((((2 - 1).factorial : Nat) : ℚ) *
+                (4 : ℚ)^2 / (a : ℚ)^2)) := by
+            simpa [F] using hCoeff_x2_weighted_tail_term_le (a := a)
+              (r := 2) (μ := μ) ha hμ (by norm_num : 2 ≤ 2)
+      _ = (8 * (M a : ℚ) / 25) * (32 / (a : ℚ)^2) := by
+            ring
+  have h3 : F 3 ≤ (8 * (M a : ℚ) / 25) * (384 / (a : ℚ)^3) := by
+    calc
+      F 3
+          ≤ (8 * (M a : ℚ) / 25) *
+            ((3 : ℚ) *
+              ((((3 - 1).factorial : Nat) : ℚ) *
+                (4 : ℚ)^3 / (a : ℚ)^3)) := by
+            simpa [F] using hCoeff_x2_weighted_tail_term_le (a := a)
+              (r := 3) (μ := μ) ha hμ (by norm_num : 2 ≤ 3)
+      _ = (8 * (M a : ℚ) / 25) * (384 / (a : ℚ)^3) := by
+            ring
+  have htail :
+      (∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) *
+            (32 / (a : ℚ)^2 + 384 / (a : ℚ)^3 +
+              7340 / (a : ℚ)^4) := by
+    have hsplit_tail :=
+      sum_Ico_two_three_add_Ico F (p := printedTailP a) hp3
+    rw [hsplit_tail]
+    calc
+      F 2 + F 3 + ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r
+          ≤ (8 * (M a : ℚ) / 25) * (32 / (a : ℚ)^2) +
+              (8 * (M a : ℚ) / 25) * (384 / (a : ℚ)^3) +
+              (8 * (M a : ℚ) / 25) * (7340 / (a : ℚ)^4) := by
+            nlinarith
+      _ = (8 * (M a : ℚ) / 25) *
+            (32 / (a : ℚ)^2 + 384 / (a : ℚ)^3 +
+              7340 / (a : ℚ)^4) := by
+            ring
+  rw [printedTailLDerivPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r
+        ≤ 0 + 5 * ((a : ℚ) - 1) / (a : ℚ) +
+            (8 * (M a : ℚ) / 25) *
+              (32 / (a : ℚ)^2 + 384 / (a : ℚ)^3 +
+                7340 / (a : ℚ)^4) := by
+          nlinarith
+    _ = printedTailX2Bound2 a := by
+          unfold printedTailX2Bound2
+          rw [hMrat]
+          ring
+    _ ≤ 11 / 2 := le_of_lt (printedTailX2Bound2_lt a ha)
+
+theorem printedTailJPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailJPointSum μ a (printedTailX2 a) ≤ 81 / 20 := by
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hp3 : 3 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hMrat : printedTailMrat a = (M a : ℚ) := by
+    unfold printedTailMrat M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    ring
+  let F : Nat → ℚ := fun r => kCoeff μ r * (printedTailX2 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F, kCoeff]
+  have hone : F 1 ≤ 4 * ((a : ℚ) - 1) / (a : ℚ) := by
+    simpa [F] using kCoeff_one_x2_le (a := a) (μ := μ) ha hμ
+  have htail4 :
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (103 / (a : ℚ)^4) := by
+    calc
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((((r - 1).factorial : Nat) : ℚ) *
+                  (2 : ℚ)^r / (a : ℚ)^r) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            simpa [F] using kCoeff_x2_tail_term_le (a := a) (r := r)
+              (μ := μ) ha hμ (by omega : 2 ≤ r)
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (((r - 1).factorial : Nat) : ℚ) *
+                (2 : ℚ)^r / (a : ℚ)^r := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (103 / (a : ℚ)^4) :=
+            mul_le_mul_of_nonneg_left
+              (factorialGasBase2_x2_sum_le a ha) (by positivity)
+  have h2 : F 2 ≤ (8 * (M a : ℚ) / 25) * (4 / (a : ℚ)^2) := by
+    calc
+      F 2
+          ≤ (8 * (M a : ℚ) / 25) *
+              ((((2 - 1).factorial : Nat) : ℚ) *
+                (2 : ℚ)^2 / (a : ℚ)^2) := by
+            simpa [F] using kCoeff_x2_tail_term_le (a := a) (r := 2)
+              (μ := μ) ha hμ (by norm_num : 2 ≤ 2)
+      _ = (8 * (M a : ℚ) / 25) * (4 / (a : ℚ)^2) := by
+            norm_num
+  have h3 : F 3 ≤ (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^3) := by
+    calc
+      F 3
+          ≤ (8 * (M a : ℚ) / 25) *
+              ((((3 - 1).factorial : Nat) : ℚ) *
+                (2 : ℚ)^3 / (a : ℚ)^3) := by
+            simpa [F] using kCoeff_x2_tail_term_le (a := a) (r := 3)
+              (μ := μ) ha hμ (by norm_num : 2 ≤ 3)
+      _ = (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^3) := by
+            norm_num
+  have htail :
+      (∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) *
+            (4 / (a : ℚ)^2 + 16 / (a : ℚ)^3 +
+              103 / (a : ℚ)^4) := by
+    have hsplit_tail :=
+      sum_Ico_two_three_add_Ico F (p := printedTailP a) hp3
+    rw [hsplit_tail]
+    calc
+      F 2 + F 3 + ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r
+          ≤ (8 * (M a : ℚ) / 25) * (4 / (a : ℚ)^2) +
+              (8 * (M a : ℚ) / 25) * (16 / (a : ℚ)^3) +
+              (8 * (M a : ℚ) / 25) * (103 / (a : ℚ)^4) := by
+            nlinarith
+      _ = (8 * (M a : ℚ) / 25) *
+            (4 / (a : ℚ)^2 + 16 / (a : ℚ)^3 +
+              103 / (a : ℚ)^4) := by
+            ring
+  rw [printedTailJPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r
+        ≤ 0 + 4 * ((a : ℚ) - 1) / (a : ℚ) +
+            (8 * (M a : ℚ) / 25) *
+              (4 / (a : ℚ)^2 + 16 / (a : ℚ)^3 +
+                103 / (a : ℚ)^4) := by
+          nlinarith
+    _ = printedTailX2Bound3 a := by
+          unfold printedTailX2Bound3
+          rw [hMrat]
+          ring
+    _ ≤ 81 / 20 := le_of_lt (printedTailX2Bound3_lt a ha)
+
+theorem printedTailJDerivPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailJDerivPointSum μ a (printedTailX2 a) ≤ 41 / 10 := by
+  have hp : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hp3 : 3 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hMrat : printedTailMrat a = (M a : ℚ) := by
+    unfold printedTailMrat M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+    ring
+  let F : Nat → ℚ := fun r => (r : ℚ) * kCoeff μ r * (printedTailX2 a)^r
+  have hsplit := sum_range_eq_zero_one_add_Ico F (p := printedTailP a) hp
+  have hzero : F 0 = 0 := by
+    simp [F]
+  have hone : F 1 ≤ 4 * ((a : ℚ) - 1) / (a : ℚ) := by
+    simpa [F] using kCoeff_one_x2_le (a := a) (μ := μ) ha hμ
+  have htail4 :
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) * (413 / (a : ℚ)^4) := by
+    calc
+      (∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r)
+          ≤ ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (8 * (M a : ℚ) / 25) *
+                ((r : ℚ) *
+                  ((((r - 1).factorial : Nat) : ℚ) *
+                    (2 : ℚ)^r / (a : ℚ)^r)) := by
+            refine Finset.sum_le_sum fun r hr => ?_
+            have hmem := Finset.mem_Ico.mp hr
+            simpa [F] using kCoeff_x2_weighted_tail_term_le (a := a)
+              (r := r) (μ := μ) ha hμ (by omega : 2 ≤ r)
+      _ = (8 * (M a : ℚ) / 25) *
+            ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1),
+              (r : ℚ) *
+                ((((r - 1).factorial : Nat) : ℚ) *
+                  (2 : ℚ)^r / (a : ℚ)^r) := by
+            rw [Finset.mul_sum]
+      _ ≤ (8 * (M a : ℚ) / 25) * (413 / (a : ℚ)^4) :=
+            mul_le_mul_of_nonneg_left
+              (factorialGasBase2_weighted_x2_sum_le a ha) (by positivity)
+  have h2 : F 2 ≤ (8 * (M a : ℚ) / 25) * (8 / (a : ℚ)^2) := by
+    calc
+      F 2
+          ≤ (8 * (M a : ℚ) / 25) *
+            ((2 : ℚ) *
+              ((((2 - 1).factorial : Nat) : ℚ) *
+                (2 : ℚ)^2 / (a : ℚ)^2)) := by
+            simpa [F] using kCoeff_x2_weighted_tail_term_le (a := a)
+              (r := 2) (μ := μ) ha hμ (by norm_num : 2 ≤ 2)
+      _ = (8 * (M a : ℚ) / 25) * (8 / (a : ℚ)^2) := by
+            ring
+  have h3 : F 3 ≤ (8 * (M a : ℚ) / 25) * (48 / (a : ℚ)^3) := by
+    calc
+      F 3
+          ≤ (8 * (M a : ℚ) / 25) *
+            ((3 : ℚ) *
+              ((((3 - 1).factorial : Nat) : ℚ) *
+                (2 : ℚ)^3 / (a : ℚ)^3)) := by
+            simpa [F] using kCoeff_x2_weighted_tail_term_le (a := a)
+              (r := 3) (μ := μ) ha hμ (by norm_num : 2 ≤ 3)
+      _ = (8 * (M a : ℚ) / 25) * (48 / (a : ℚ)^3) := by
+            ring
+  have htail :
+      (∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r)
+        ≤ (8 * (M a : ℚ) / 25) *
+            (8 / (a : ℚ)^2 + 48 / (a : ℚ)^3 +
+              413 / (a : ℚ)^4) := by
+    have hsplit_tail :=
+      sum_Ico_two_three_add_Ico F (p := printedTailP a) hp3
+    rw [hsplit_tail]
+    calc
+      F 2 + F 3 + ∑ r ∈ Finset.Ico (4 : Nat) (printedTailP a + 1), F r
+          ≤ (8 * (M a : ℚ) / 25) * (8 / (a : ℚ)^2) +
+              (8 * (M a : ℚ) / 25) * (48 / (a : ℚ)^3) +
+              (8 * (M a : ℚ) / 25) * (413 / (a : ℚ)^4) := by
+            nlinarith
+      _ = (8 * (M a : ℚ) / 25) *
+            (8 / (a : ℚ)^2 + 48 / (a : ℚ)^3 +
+              413 / (a : ℚ)^4) := by
+            ring
+  rw [printedTailJDerivPointSum, hsplit]
+  calc
+    F 0 + F 1 + ∑ r ∈ Finset.Ico (2 : Nat) (printedTailP a + 1), F r
+        ≤ 0 + 4 * ((a : ℚ) - 1) / (a : ℚ) +
+            (8 * (M a : ℚ) / 25) *
+              (8 / (a : ℚ)^2 + 48 / (a : ℚ)^3 +
+                413 / (a : ℚ)^4) := by
+          nlinarith
+    _ = printedTailX2Bound4 a := by
+          unfold printedTailX2Bound4
+          rw [hMrat]
+          ring
+    _ ≤ 41 / 10 := le_of_lt (printedTailX2Bound4_lt a ha)
 
 /-- Final rational arithmetic for the first absolute-moment budget:
 `exp(7/5) < 203/50` and `exp(26/5) < 182` reduce the displayed bound below
