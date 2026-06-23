@@ -1446,6 +1446,107 @@ private theorem coeff_mul_prefix_sum_le
           refine Finset.sum_congr rfl fun i _ => ?_
           rw [Finset.mul_sum]
 
+private theorem coeff_mul_weighted_prefix_sum_le
+    {F G : ℚ⟦X⟧} (hF : ∀ s, 0 ≤ coeff s F)
+    (hG : ∀ s, 0 ≤ coeff s G) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s (F * G))
+      ≤ (∑ i ∈ Finset.range (m + 1), (i : ℚ) * coeff i F) *
+          (∑ j ∈ Finset.range (m + 1), coeff j G) +
+        (∑ i ∈ Finset.range (m + 1), coeff i F) *
+          (∑ j ∈ Finset.range (m + 1), (j : ℚ) * coeff j G) := by
+  have hleft :
+      (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s (F * G))
+        =
+        ∑ ij ∈ printedTailTrianglePairs m,
+          (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+            (coeff ij.1 F * coeff ij.2 G) := by
+    unfold printedTailTrianglePairs
+    calc
+      (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s (F * G))
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          ∑ ij ∈ Finset.antidiagonal s,
+            (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+              (coeff ij.1 F * coeff ij.2 G) := by
+            refine Finset.sum_congr rfl fun s _ => ?_
+            rw [coeff_mul, Finset.mul_sum]
+            refine Finset.sum_congr rfl fun ij hij => ?_
+            have hs : ij.1 + ij.2 = s := Finset.mem_antidiagonal.mp hij
+            have hsQ : ((s : Nat) : ℚ) =
+                ((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ) := by
+              rw [← hs, Nat.cast_add]
+            rw [hsQ]
+      _ = ∑ ij ∈ (Finset.range (m + 1)).biUnion
+            (fun t => Finset.antidiagonal t),
+          (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+            (coeff ij.1 F * coeff ij.2 G) := by
+            rw [Finset.sum_biUnion (printedTail_antidiagonal_pairwiseDisjoint m)]
+  rw [hleft]
+  have hsubset :
+      printedTailTrianglePairs m ⊆
+        (Finset.range (m + 1)).product (Finset.range (m + 1)) := by
+    intro ij hij
+    have hsum := (mem_printedTailTrianglePairs (m := m)).mp hij
+    exact (Finset.mem_product).mpr
+      ⟨Finset.mem_range.mpr (by omega),
+        Finset.mem_range.mpr (by omega)⟩
+  calc
+    (∑ ij ∈ printedTailTrianglePairs m,
+        (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+          (coeff ij.1 F * coeff ij.2 G))
+        ≤ ∑ ij ∈ (Finset.range (m + 1)).product (Finset.range (m + 1)),
+            (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+              (coeff ij.1 F * coeff ij.2 G) :=
+          Finset.sum_le_sum_of_subset_of_nonneg hsubset
+            (fun ij _ _ => by
+              exact mul_nonneg (add_nonneg (by positivity) (by positivity))
+                (mul_nonneg (hF ij.1) (hG ij.2)))
+    _ =
+        (∑ i ∈ Finset.range (m + 1), (i : ℚ) * coeff i F) *
+            (∑ j ∈ Finset.range (m + 1), coeff j G) +
+          (∑ i ∈ Finset.range (m + 1), coeff i F) *
+            (∑ j ∈ Finset.range (m + 1), (j : ℚ) * coeff j G) := by
+          change
+            (∑ ij ∈ Finset.range (m + 1) ×ˢ Finset.range (m + 1),
+              (((ij.1 : Nat) : ℚ) + ((ij.2 : Nat) : ℚ)) *
+                (coeff ij.1 F * coeff ij.2 G)) =
+              (∑ i ∈ Finset.range (m + 1), (i : ℚ) * coeff i F) *
+                  (∑ j ∈ Finset.range (m + 1), coeff j G) +
+                (∑ i ∈ Finset.range (m + 1), coeff i F) *
+                  (∑ j ∈ Finset.range (m + 1), (j : ℚ) * coeff j G)
+          rw [Finset.sum_product]
+          calc
+            (∑ x ∈ Finset.range (m + 1),
+              ∑ x_1 ∈ Finset.range (m + 1),
+                (((x : Nat) : ℚ) + ((x_1 : Nat) : ℚ)) *
+                  (coeff x F * coeff x_1 G))
+                =
+              (∑ x ∈ Finset.range (m + 1),
+                ∑ x_1 ∈ Finset.range (m + 1),
+                  ((x : ℚ) * coeff x F) * coeff x_1 G) +
+              (∑ x ∈ Finset.range (m + 1),
+                ∑ x_1 ∈ Finset.range (m + 1),
+                  coeff x F * ((x_1 : ℚ) * coeff x_1 G)) := by
+                rw [← Finset.sum_add_distrib]
+                refine Finset.sum_congr rfl fun i _ => ?_
+                rw [← Finset.sum_add_distrib]
+                refine Finset.sum_congr rfl fun j _ => ?_
+                ring
+            _ =
+              (∑ i ∈ Finset.range (m + 1), (i : ℚ) * coeff i F) *
+                  (∑ j ∈ Finset.range (m + 1), coeff j G) +
+                (∑ i ∈ Finset.range (m + 1), coeff i F) *
+                  (∑ j ∈ Finset.range (m + 1), (j : ℚ) * coeff j G) := by
+                congr 1
+                · symm
+                  rw [Finset.sum_mul]
+                  refine Finset.sum_congr rfl fun i _ => ?_
+                  rw [Finset.mul_sum]
+                · symm
+                  rw [Finset.sum_mul]
+                  refine Finset.sum_congr rfl fun i _ => ?_
+                  rw [Finset.mul_sum]
+
 private theorem coeff_pow_prefix_sum_le_total_pow {L : Nat → ℚ}
     (hL : ∀ r, 0 ≤ L r) (m q : Nat) :
     (∑ s ∈ Finset.range (m + 1),
@@ -1737,6 +1838,293 @@ private theorem expCoeff_deriv_point_sum_le_expPrefix {L : Nat → ℚ}
           printedTailExpPrefix
             (∑ r ∈ Finset.range (m + 1), x^r * L r) m :=
           mul_le_mul_of_nonneg_left hEpoint hU_nonneg
+
+private def printedTailLowAbsInput (μ : List Nat) (a r : Nat) : ℚ :=
+  |printedTailLowExpInput μ a r|
+
+private noncomputable def printedTailEAbsPointSeries
+    (μ : List Nat) (a : Nat) (x : ℚ) : ℚ⟦X⟧ :=
+  mk fun s => printedTailEAbsCoeff μ a s * x^s
+
+private def printedTailJAbsCoeff (μ : List Nat) (a r : Nat) : ℚ :=
+  if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0
+
+private noncomputable def printedTailJAbsPointSeries
+    (μ : List Nat) (a : Nat) (x : ℚ) : ℚ⟦X⟧ :=
+  mk fun r => printedTailJAbsCoeff μ a r * x^r
+
+private theorem coeff_printedTailEAbsPointSeries
+    (μ : List Nat) (a : Nat) (x : ℚ) (s : Nat) :
+    coeff s (printedTailEAbsPointSeries μ a x) =
+      printedTailEAbsCoeff μ a s * x^s := by
+  simp [printedTailEAbsPointSeries]
+
+private theorem coeff_printedTailJAbsPointSeries
+    (μ : List Nat) (a : Nat) (x : ℚ) (r : Nat) :
+    coeff r (printedTailJAbsPointSeries μ a x) =
+      printedTailJAbsCoeff μ a r * x^r := by
+  simp [printedTailJAbsPointSeries]
+
+private theorem printedTailLowAbsInput_zero
+    (μ : List Nat) (a : Nat) :
+    printedTailLowAbsInput μ a 0 = 0 := by
+  simp [printedTailLowAbsInput, printedTailLowExpInput, hCoeff]
+
+private theorem printedTailLowAbsInput_nonneg
+    (μ : List Nat) (a r : Nat) :
+    0 ≤ printedTailLowAbsInput μ a r := by
+  unfold printedTailLowAbsInput
+  exact abs_nonneg _
+
+private theorem printedTailJAbsCoeff_nonneg
+    (μ : List Nat) (a r : Nat) :
+    0 ≤ printedTailJAbsCoeff μ a r := by
+  unfold printedTailJAbsCoeff
+  by_cases hr : 1 ≤ r ∧ r ≤ printedTailP a
+  · simp [hr, kCoeff_nonneg μ r]
+  · simp [hr]
+
+private theorem coeff_printedTailEAbsPointSeries_mul_JAbsPointSeries
+    (μ : List Nat) (a : Nat) (x : ℚ) (s : Nat) :
+    coeff s (printedTailEAbsPointSeries μ a x *
+        printedTailJAbsPointSeries μ a x) =
+      ((List.range s).map fun j : Nat =>
+        let r := j + 1
+        (if r ≤ printedTailP a then
+          kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+        else 0) * x^s).sum := by
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedTailEAbsPointSeries,
+    coeff_printedTailJAbsPointSeries, printedTailJAbsCoeff]
+  rw [Finset.sum_range_succ]
+  simp
+  rw [Prop51.list_range_map_sum]
+  rw [← Finset.sum_range_reflect (fun y : Nat =>
+    if 1 ≤ s - y ∧ s ≤ printedTailP a + y then
+      (printedTailEAbsCoeff μ a y * x^y) *
+        (kCoeff μ (s - y) * x^(s - y))
+    else 0) s]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  have hjlt : j < s := Finset.mem_range.mp hj
+  have hs_sub : s - (s - 1 - j) = j + 1 := by omega
+  have hs_sub' : s - (j + 1) = s - 1 - j := by omega
+  have hpow : x^(s - 1 - j) * x^(j + 1) = x^s := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have hcond :
+      (1 ≤ s - (s - 1 - j) ∧ s ≤ printedTailP a + (s - 1 - j)) ↔
+        j < printedTailP a := by
+    constructor <;> intro h
+    · omega
+    · constructor <;> omega
+  rw [hs_sub']
+  by_cases hp : j < printedTailP a
+  · have hc : 1 ≤ s - (s - 1 - j) ∧
+        s ≤ printedTailP a + (s - 1 - j) := hcond.mpr hp
+    rw [if_pos hc, if_pos hp, hs_sub]
+    calc
+      (printedTailEAbsCoeff μ a (s - 1 - j) * x^(s - 1 - j)) *
+          (kCoeff μ (j + 1) * x^(j + 1))
+          =
+        (kCoeff μ (j + 1) * printedTailEAbsCoeff μ a (s - 1 - j)) *
+          (x^(s - 1 - j) * x^(j + 1)) := by ring
+      _ =
+        (kCoeff μ (j + 1) * printedTailEAbsCoeff μ a (s - 1 - j)) *
+          x^s := by rw [hpow]
+  · have hc : ¬(1 ≤ s - (s - 1 - j) ∧
+        s ≤ printedTailP a + (s - 1 - j)) :=
+      fun hc => hp (hcond.mp hc)
+    rw [if_neg hc, if_neg hp]
+
+private theorem printedTailWAbsCoeff_point_eq_coeff
+    (μ : List Nat) (a : Nat) (x : ℚ) (s : Nat) :
+    printedTailWAbsCoeff μ a s * x^s =
+      coeff s (printedTailEAbsPointSeries μ a x +
+        printedTailEAbsPointSeries μ a x *
+          printedTailJAbsPointSeries μ a x) := by
+  have hconv :
+      ((List.range s).map fun j : Nat =>
+        let r := j + 1
+        |if r ≤ printedTailP a then
+          kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+        else 0|).sum * x^s =
+      ((List.range s).map fun j : Nat =>
+        let r := j + 1
+        (if r ≤ printedTailP a then
+          kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+        else 0) * x^s).sum := by
+    rw [Prop51.list_range_map_sum, Prop51.list_range_map_sum, Finset.sum_mul]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    dsimp only
+    by_cases hr : j + 1 ≤ printedTailP a
+    · simp [hr, abs_of_nonneg
+        (mul_nonneg (kCoeff_nonneg μ (j + 1))
+          (printedTailEAbsCoeff_nonneg μ a (s - (j + 1))))]
+    · simp [hr]
+  calc
+    printedTailWAbsCoeff μ a s * x^s
+        =
+      printedTailEAbsCoeff μ a s * x^s +
+        ((List.range s).map fun j : Nat =>
+          let r := j + 1
+          |if r ≤ printedTailP a then
+            kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+          else 0|).sum * x^s := by
+          unfold printedTailWAbsCoeff
+          ring
+    _ =
+      printedTailEAbsCoeff μ a s * x^s +
+        ((List.range s).map fun j : Nat =>
+          let r := j + 1
+          (if r ≤ printedTailP a then
+            kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+          else 0) * x^s).sum := by
+          rw [hconv]
+    _ =
+      coeff s (printedTailEAbsPointSeries μ a x +
+        printedTailEAbsPointSeries μ a x *
+          printedTailJAbsPointSeries μ a x) := by
+          rw [map_add, coeff_printedTailEAbsPointSeries,
+            coeff_printedTailEAbsPointSeries_mul_JAbsPointSeries]
+
+private theorem printedTailW_point_sum_le_product
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1),
+        printedTailWAbsCoeff μ a s * x^s)
+      ≤ (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x^s) *
+        (1 + ∑ r ∈ Finset.range (m + 1),
+          printedTailJAbsCoeff μ a r * x^r) := by
+  let E := printedTailEAbsPointSeries μ a x
+  let J := printedTailJAbsPointSeries μ a x
+  have hE_nonneg : ∀ s : Nat, 0 ≤ coeff s E := by
+    intro s
+    dsimp [E]
+    rw [coeff_printedTailEAbsPointSeries]
+    exact mul_nonneg (printedTailEAbsCoeff_nonneg μ a s)
+      (pow_nonneg hx s)
+  have hJ_nonneg : ∀ r : Nat, 0 ≤ coeff r J := by
+    intro r
+    dsimp [J]
+    rw [coeff_printedTailJAbsPointSeries]
+    exact mul_nonneg (printedTailJAbsCoeff_nonneg μ a r)
+      (pow_nonneg hx r)
+  have hprod := coeff_mul_prefix_sum_le
+    (F := E) (G := J) hE_nonneg hJ_nonneg m
+  calc
+    (∑ s ∈ Finset.range (m + 1),
+        printedTailWAbsCoeff μ a s * x^s)
+        =
+      ∑ s ∈ Finset.range (m + 1), coeff s (E + E * J) := by
+        refine Finset.sum_congr rfl fun s _ => ?_
+        exact printedTailWAbsCoeff_point_eq_coeff μ a x s
+    _ =
+      (∑ s ∈ Finset.range (m + 1), coeff s E) +
+        ∑ s ∈ Finset.range (m + 1), coeff s (E * J) := by
+        simp [map_add, Finset.sum_add_distrib]
+    _ ≤
+      (∑ s ∈ Finset.range (m + 1), coeff s E) +
+        (∑ s ∈ Finset.range (m + 1), coeff s E) *
+          (∑ r ∈ Finset.range (m + 1), coeff r J) := by
+        linarith [hprod]
+    _ =
+      (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x^s) *
+        (1 + ∑ r ∈ Finset.range (m + 1),
+          printedTailJAbsCoeff μ a r * x^r) := by
+        simp [E, J, coeff_printedTailEAbsPointSeries,
+          coeff_printedTailJAbsPointSeries]
+        ring
+
+private theorem printedTailW_deriv_point_sum_le_product
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailWAbsCoeff μ a s * x^s)
+      ≤ (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x^s) *
+          (1 + ∑ r ∈ Finset.range (m + 1),
+            printedTailJAbsCoeff μ a r * x^r) +
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x^s) *
+          (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * printedTailJAbsCoeff μ a r * x^r) := by
+  let E := printedTailEAbsPointSeries μ a x
+  let J := printedTailJAbsPointSeries μ a x
+  have hE_nonneg : ∀ s : Nat, 0 ≤ coeff s E := by
+    intro s
+    dsimp [E]
+    rw [coeff_printedTailEAbsPointSeries]
+    exact mul_nonneg (printedTailEAbsCoeff_nonneg μ a s)
+      (pow_nonneg hx s)
+  have hJ_nonneg : ∀ r : Nat, 0 ≤ coeff r J := by
+    intro r
+    dsimp [J]
+    rw [coeff_printedTailJAbsPointSeries]
+    exact mul_nonneg (printedTailJAbsCoeff_nonneg μ a r)
+      (pow_nonneg hx r)
+  have hprod := coeff_mul_weighted_prefix_sum_le
+    (F := E) (G := J) hE_nonneg hJ_nonneg m
+  calc
+    (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailWAbsCoeff μ a s * x^s)
+        =
+      ∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * coeff s (E + E * J) := by
+        refine Finset.sum_congr rfl fun s _ => ?_
+        rw [← printedTailWAbsCoeff_point_eq_coeff μ a x s]
+        ring
+    _ =
+      (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s E) +
+        ∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s (E * J) := by
+        rw [← Finset.sum_add_distrib]
+        refine Finset.sum_congr rfl fun s _ => ?_
+        rw [map_add]
+        ring
+    _ ≤
+      (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s E) +
+        ((∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s E) *
+            (∑ r ∈ Finset.range (m + 1), coeff r J) +
+          (∑ s ∈ Finset.range (m + 1), coeff s E) *
+            (∑ r ∈ Finset.range (m + 1), (r : ℚ) * coeff r J)) := by
+        linarith [hprod]
+    _ =
+      (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x^s) *
+          (1 + ∑ r ∈ Finset.range (m + 1),
+            printedTailJAbsCoeff μ a r * x^r) +
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x^s) *
+          (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * printedTailJAbsCoeff μ a r * x^r) := by
+        have hEw :
+            (∑ s ∈ Finset.range (m + 1), (s : ℚ) * coeff s E) =
+              ∑ s ∈ Finset.range (m + 1),
+                (s : ℚ) * printedTailEAbsCoeff μ a s * x^s := by
+          refine Finset.sum_congr rfl fun s _ => ?_
+          simp [E, coeff_printedTailEAbsPointSeries]
+          ring
+        have hJw :
+            (∑ r ∈ Finset.range (m + 1), (r : ℚ) * coeff r J) =
+              ∑ r ∈ Finset.range (m + 1),
+                (r : ℚ) * printedTailJAbsCoeff μ a r * x^r := by
+          refine Finset.sum_congr rfl fun r _ => ?_
+          simp [J, coeff_printedTailJAbsPointSeries]
+          ring
+        have hEp :
+            (∑ s ∈ Finset.range (m + 1), coeff s E) =
+              ∑ s ∈ Finset.range (m + 1),
+                printedTailEAbsCoeff μ a s * x^s := by
+          refine Finset.sum_congr rfl fun s _ => ?_
+          simp [E, coeff_printedTailEAbsPointSeries]
+        have hJp :
+            (∑ r ∈ Finset.range (m + 1), coeff r J) =
+              ∑ r ∈ Finset.range (m + 1),
+                printedTailJAbsCoeff μ a r * x^r := by
+          refine Finset.sum_congr rfl fun r _ => ?_
+          simp [J, coeff_printedTailJAbsPointSeries]
+        rw [hEw, hJw, hEp, hJp]
+        ring
 
 def printedTailX2 (a : Nat) : ℚ :=
   2 / (3 * (a : ℚ))
