@@ -550,6 +550,68 @@ theorem finitePrime1_correctedCoeffMod_ne_of_checkGenerated
     exact (Prop51.mem_partitions_iff.mp hmem).1
   exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne a μ ha hsum hnat
 
+theorem mem_chunk_of_mem_length_le
+    {α : Type} [BEq α] [LawfulBEq α]
+    {xs : List α} {x : α} {chunks chunk : Nat}
+    (hchunk : 0 < chunk)
+    (hlen : xs.length ≤ chunks * chunk)
+    (hx : x ∈ xs) :
+    ∃ j : Nat, j < chunks ∧ x ∈ (xs.drop (j * chunk)).take chunk := by
+  let i := xs.idxOf x
+  have hi : i < xs.length := by
+    simpa [i] using (List.idxOf_lt_length_of_mem (l := xs) hx)
+  let j := i / chunk
+  have hstart : j * chunk ≤ i := by
+    simpa [j, Nat.mul_comm] using Nat.div_mul_le_self i chunk
+  have hwithin0 : i < chunk * (i / chunk + 1) :=
+    Nat.lt_mul_div_succ i hchunk
+  have hwithin : i < j * chunk + chunk := by
+    simpa [j, Nat.mul_add, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hwithin0
+  have hj : j < chunks := by
+    change i / chunk < chunks
+    rw [Nat.div_lt_iff_lt_mul hchunk]
+    exact lt_of_lt_of_le hi hlen
+  refine ⟨j, hj, ?_⟩
+  rw [List.mem_iff_getElem]
+  refine ⟨i - j * chunk, ?_, ?_⟩
+  · simp [List.length_take, List.length_drop]
+    omega
+  · have hget : xs[i] = x := by
+      have hopt := (List.getElem?_idxOf (a := x) (l := xs) hx)
+      rw [List.getElem?_eq_getElem hi] at hopt
+      exact Option.some.inj hopt
+    have hidx : j * chunk + (i - j * chunk) = i := by
+      omega
+    rw [List.getElem_take, List.getElem_drop]
+    simpa [hidx] using hget
+
+theorem finitePrime1_correctedCoeffMod_ne_of_checkGeneratedChunks
+    (a chunk chunks : Nat) (μ : List Nat)
+    (ha : a ≤ 13)
+    (hchunk : 0 < chunk)
+    (hlen : (Prop51.partitions (M a)).length ≤ chunks * chunk)
+    (hchunks : ∀ j : Nat, j < chunks →
+      checkGeneratedModNatChunk finitePrime1 a (j * chunk) chunk = true)
+    (hmem : μ ∈ Prop51.partitions (M a)) :
+    correctedCoeffMod finitePrime1 a μ ≠ 0 := by
+  obtain ⟨j, hj, hmemChunk⟩ :=
+    mem_chunk_of_mem_length_le
+      (xs := Prop51.partitions (M a)) (x := μ) hchunk hlen hmem
+  have hchunkCert := hchunks j hj
+  have hall :
+      ∀ ν : List Nat, ν ∈ ((Prop51.partitions (M a)).drop (j * chunk)).take chunk →
+        (correctedCoeffModNatWith finitePrime1 a
+          (cListModNat finitePrime1 a).toArray
+          (invIntTable finitePrime1 a)
+          (invPowTable finitePrime1 a (M a + 1)) ν != 0) = true := by
+    simpa [checkGeneratedModNatChunk, List.all_eq_true] using hchunkCert
+  have hnatWith := hall μ hmemChunk
+  have hnat : (correctedCoeffModNat finitePrime1 a μ != 0) = true := by
+    simpa [correctedCoeffModNat] using hnatWith
+  have hsum : μ.sum = M a :=
+    (Prop51.mem_partitions_iff.mp hmem).1
+  exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne a μ ha hsum hnat
+
 theorem finitePrime1_correctedCoeffMod_ne_9_generated :
     ∀ μ ∈ Prop51.partitions (M 9), correctedCoeffMod finitePrime1 9 μ ≠ 0 := by
   intro μ hmem
@@ -570,57 +632,15 @@ theorem mem_partitions_M11_chunk_of_mem
     {μ : List Nat} (hmem : μ ∈ Prop51.partitions (M 11)) :
     ∃ j : Nat, j < 20 ∧
       μ ∈ ((Prop51.partitions (M 11)).drop (j * 50000)).take 50000 := by
-  let L := Prop51.partitions (M 11)
-  let i := L.idxOf μ
-  have hi : i < L.length := by
-    simpa [L, i] using (List.idxOf_lt_length_of_mem (l := L) hmem)
-  let j := i / 50000
-  have hstart : j * 50000 ≤ i := by
-    simpa [j, Nat.mul_comm] using Nat.div_mul_le_self i 50000
-  have hwithin0 : i < 50000 * (i / 50000 + 1) :=
-    Nat.lt_mul_div_succ i (by norm_num : 0 < 50000)
-  have hwithin : i < j * 50000 + 50000 := by
-    simpa [j, Nat.mul_add, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hwithin0
-  have hlen : L.length ≤ 20 * 50000 := by
-    simpa [L] using partitions_M11_length_le_20_chunks
-  have hj : j < 20 := by
-    change i / 50000 < 20
-    rw [Nat.div_lt_iff_lt_mul (by norm_num : 0 < 50000)]
-    exact lt_of_lt_of_le hi hlen
-  refine ⟨j, hj, ?_⟩
-  have hmemChunkL : μ ∈ (L.drop (j * 50000)).take 50000 := by
-    rw [List.mem_iff_getElem]
-    refine ⟨i - j * 50000, ?_, ?_⟩
-    · simp [List.length_take, List.length_drop]
-      omega
-    · have hget : L[i] = μ := by
-        have hopt := (List.getElem?_idxOf (a := μ) (l := L) hmem)
-        rw [List.getElem?_eq_getElem hi] at hopt
-        exact Option.some.inj hopt
-      have hidx : j * 50000 + (i - j * 50000) = i := by
-        omega
-      rw [List.getElem_take, List.getElem_drop]
-      simpa [L, hidx] using hget
-  simpa [L] using hmemChunkL
+  exact mem_chunk_of_mem_length_le
+    (xs := Prop51.partitions (M 11)) (x := μ)
+    (by norm_num : 0 < 50000) partitions_M11_length_le_20_chunks hmem
 
 theorem finitePrime1_correctedCoeffMod_ne_11_generated :
     ∀ μ ∈ Prop51.partitions (M 11), correctedCoeffMod finitePrime1 11 μ ≠ 0 := by
   intro μ hmem
-  obtain ⟨j, hj, hmemChunk⟩ := mem_partitions_M11_chunk_of_mem hmem
-  have hchunk := checkGeneratedModNat_11_prime1_chunks j hj
-  have hall :
-      ∀ ν : List Nat, ν ∈ ((Prop51.partitions (M 11)).drop (j * 50000)).take 50000 →
-        (correctedCoeffModNatWith finitePrime1 11
-          (cListModNat finitePrime1 11).toArray
-          (invIntTable finitePrime1 11)
-          (invPowTable finitePrime1 11 (M 11 + 1)) ν != 0) = true := by
-    simpa [checkGeneratedModNatChunk, List.all_eq_true] using hchunk
-  have hnatWith := hall μ hmemChunk
-  have hnat : (correctedCoeffModNat finitePrime1 11 μ != 0) = true := by
-    simpa [correctedCoeffModNat] using hnatWith
-  have hsum : μ.sum = M 11 :=
-    (Prop51.mem_partitions_iff.mp hmem).1
-  exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne 11 μ
-    (by decide) hsum hnat
+  exact finitePrime1_correctedCoeffMod_ne_of_checkGeneratedChunks
+    11 50000 20 μ (by decide) (by norm_num)
+    partitions_M11_length_le_20_chunks checkGeneratedModNat_11_prime1_chunks hmem
 
 end Prop52

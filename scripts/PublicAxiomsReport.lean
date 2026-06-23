@@ -27,6 +27,7 @@ import Prop51
 #print axioms Prop52.finitePrime1_hCoeffModNat_cast
 #print axioms Prop52.finitePrime1_kCoeffModNat_cast
 #print axioms Prop52.finitePrime1_correctedCoeffModNat_cast
+#print axioms Prop52.finitePrime1_correctedCoeffMod_ne_of_checkGeneratedChunks
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_9_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_10_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_11_generated
