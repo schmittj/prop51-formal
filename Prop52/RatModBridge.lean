@@ -11,6 +11,7 @@ denominator side condition.
 -/
 
 import Prop52.ModularNatBridge
+import Prop51.ExpSeries
 import Mathlib.Data.List.Infix
 
 namespace Prop52
@@ -71,6 +72,27 @@ theorem RatGood_list_sum (xs : List ℚ) (hxs : ∀ x ∈ xs, RatGood x) :
       simp only [List.sum_cons]
       exact RatGood_add (hxs x (by simp))
         (ih (fun y hy => hxs y (by simp [hy])))
+
+theorem RatGood_list_sum_of_sublist {xs ys : List ℚ}
+    (hxs : ∀ x ∈ xs, RatGood x) (hys : ys.Sublist xs) :
+    RatGood ys.sum :=
+  RatGood_list_sum ys (fun y hy => hxs y (hys.subset hy))
+
+theorem RatGood_list_sum_of_suffix {xs ys : List ℚ}
+    (hxs : ∀ x ∈ xs, RatGood x) (hys : List.IsSuffix ys xs) :
+    RatGood ys.sum :=
+  RatGood_list_sum_of_sublist hxs hys.sublist
+
+theorem RatGood_getD (xs : List ℚ) (i : Nat)
+    (hxs : ∀ x ∈ xs, RatGood x) :
+    RatGood (xs.getD i 0) := by
+  by_cases hi : i < xs.length
+  · rw [List.getD_eq_getElem (l := xs) (d := 0) hi]
+    exact hxs xs[i] (List.getElem_mem hi)
+  · have hle : xs.length ≤ i := Nat.le_of_not_gt hi
+    rw [List.getD_eq_default (l := xs) (d := 0) hle]
+    unfold RatGood
+    simp
 
 theorem RatGood_natCast (n : Nat) : RatGood (n : ℚ) := by
   unfold RatGood
@@ -191,6 +213,42 @@ theorem finitePrime1_ratCast_divNat_of_RatGood
     simpa [div_eq_mul_inv] using
       RatGood_mul hx (finitePrime1_RatGood_invNat n hpos hle))
 
+theorem finitePrime1_RatGood_expList_of_good
+    (n : Nat) (LQ : Nat → ℚ) (hn : n ≤ 13)
+    (hLGood : ∀ r : Nat, r ≤ n → RatGood (LQ r)) :
+    ∀ x ∈ Prop51.expList LQ n, RatGood x := by
+  induction n with
+  | zero =>
+      intro x hx
+      simp [Prop51.expList] at hx
+      subst x
+      exact RatGood_natCast 1
+  | succ n ih =>
+      have ihGood : ∀ x ∈ Prop51.expList LQ n, RatGood x :=
+        ih (by omega) (fun r hr => hLGood r (by omega))
+      intro x hx
+      dsimp [Prop51.expList] at hx
+      rw [List.mem_append] at hx
+      rcases hx with hx | hx
+      · exact ihGood x hx
+      · simp only [List.mem_singleton] at hx
+        subst x
+        let terms : List ℚ := (List.range (n + 1)).map fun t : Nat =>
+          ((t + 1 : Nat) : ℚ) * LQ (t + 1) *
+            (Prop51.expList LQ n).getD (n - t) 0
+        have hterms : ∀ z ∈ terms, RatGood z := by
+          intro z hz
+          rcases List.mem_map.mp hz with ⟨t, ht, rfl⟩
+          have htlt : t < n + 1 := List.mem_range.mp ht
+          exact RatGood_mul
+            (RatGood_mul (RatGood_natCast (t + 1)) (hLGood (t + 1) (by omega)))
+            (RatGood_getD (Prop51.expList LQ n) (n - t) ihGood)
+        have hsumGood : RatGood terms.sum := RatGood_list_sum terms hterms
+        have hdivGood : RatGood (terms.sum / ((n + 1 : Nat) : ℚ)) := by
+          simpa [div_eq_mul_inv] using RatGood_mul hsumGood
+            (finitePrime1_RatGood_invNat (n + 1) (by omega) (by omega))
+        simpa [terms] using hdivGood
+
 theorem RatGood_list_sum_of_pairwise
     (xs : List ℚ)
     (hgood : ∀ ys : List ℚ, List.Sublist ys xs → RatGood ys.sum) :
@@ -242,6 +300,122 @@ theorem ratCast_list_sum_of_suffix_good
       rw [ratCast_add_of_good x xs.sum hx hsum_xs hsum_all,
         ih hterm_tail hsuffix_tail]
       rfl
+
+theorem finitePrime1_ratCast_expList_of_RatGood
+    (n : Nat) (LQ : Nat → ℚ) (LMod : Nat → ZMod finitePrime1)
+    (hn : n ≤ 13)
+    (hLCast : ∀ r : Nat, r ≤ n → (((LQ r : ℚ) : ZMod finitePrime1) = LMod r))
+    (hLGood : ∀ r : Nat, r ≤ n → RatGood (LQ r)) :
+    List.map (fun x : ℚ => (x : ZMod finitePrime1)) (Prop51.expList LQ n) =
+      expListMod finitePrime1 LMod n := by
+  induction n with
+  | zero =>
+      simp [Prop51.expList, expListMod]
+  | succ n ih =>
+      have ih' :
+          List.map (fun x : ℚ => (x : ZMod finitePrime1)) (Prop51.expList LQ n) =
+            expListMod finitePrime1 LMod n :=
+        ih (by omega)
+          (fun r hr => hLCast r (by omega))
+          (fun r hr => hLGood r (by omega))
+      have ihGood : ∀ x ∈ Prop51.expList LQ n, RatGood x :=
+        finitePrime1_RatGood_expList_of_good n LQ (by omega)
+          (fun r hr => hLGood r (by omega))
+      dsimp [Prop51.expList, expListMod]
+      rw [List.map_append, ih', List.map_singleton]
+      congr 1
+      let termsQ : List ℚ := (List.range (n + 1)).map fun t : Nat =>
+        ((t + 1 : Nat) : ℚ) * LQ (t + 1) *
+          (Prop51.expList LQ n).getD (n - t) 0
+      let termsZ : List (ZMod finitePrime1) := (List.range (n + 1)).map fun t : Nat =>
+        ((t + 1 : Nat) : ZMod finitePrime1) * LMod (t + 1) *
+          (expListMod finitePrime1 LMod n).getD (n - t) 0
+      have htermsGood : ∀ z ∈ termsQ, RatGood z := by
+        intro z hz
+        rcases List.mem_map.mp hz with ⟨t, ht, rfl⟩
+        have htlt : t < n + 1 := List.mem_range.mp ht
+        exact RatGood_mul
+          (RatGood_mul (RatGood_natCast (t + 1)) (hLGood (t + 1) (by omega)))
+          (RatGood_getD (Prop51.expList LQ n) (n - t) ihGood)
+      have hsum :
+          (((termsQ.sum : ℚ) : ZMod finitePrime1) = termsZ.sum) := by
+        rw [ratCast_list_sum_of_suffix_good]
+        · refine congrArg (fun xs : List (ZMod finitePrime1) => xs.sum) ?_
+          have hmap :
+              termsQ.map (fun x : ℚ => (x : ZMod finitePrime1)) = termsZ := by
+            have hmapBase :
+                (List.range (n + 1)).map (fun t : Nat =>
+                  ((((t + 1 : Nat) : ℚ) * LQ (t + 1) *
+                    (Prop51.expList LQ n).getD (n - t) 0 : ℚ) :
+                    ZMod finitePrime1)) =
+                  (List.range (n + 1)).map fun t : Nat =>
+                    ((t + 1 : Nat) : ZMod finitePrime1) * LMod (t + 1) *
+                      (expListMod finitePrime1 LMod n).getD (n - t) 0 := by
+              refine List.map_congr_left fun t ht => ?_
+              have htlt : t < n + 1 := List.mem_range.mp ht
+              have htle : t + 1 ≤ n + 1 := by omega
+              have hgetGood :
+                  RatGood ((Prop51.expList LQ n).getD (n - t) 0) :=
+                RatGood_getD (Prop51.expList LQ n) (n - t) ihGood
+              have hget :
+                  (((Prop51.expList LQ n).getD (n - t) 0 : ℚ) :
+                      ZMod finitePrime1) =
+                    (expListMod finitePrime1 LMod n).getD (n - t) 0 := by
+                have h := congrArg
+                  (fun xs : List (ZMod finitePrime1) =>
+                    xs.getD (n - t) ((0 : ℚ) : ZMod finitePrime1)) ih'
+                change (List.map (fun x : ℚ => (x : ZMod finitePrime1))
+                    (Prop51.expList LQ n)).getD
+                      (n - t) ((0 : ℚ) : ZMod finitePrime1) =
+                    (expListMod finitePrime1 LMod n).getD
+                      (n - t) ((0 : ℚ) : ZMod finitePrime1) at h
+                rw [List.getD_map] at h
+                exact h
+              have hNatCast :
+                  ((((t + 1 : Nat) : ℚ) : ZMod finitePrime1) =
+                    ((t + 1 : Nat) : ZMod finitePrime1)) := by
+                simpa using (Rat.cast_natCast (α := ZMod finitePrime1) (t + 1))
+              rw [ratCast_mul_of_RatGood
+                  (((t + 1 : Nat) : ℚ) * LQ (t + 1))
+                  ((Prop51.expList LQ n).getD (n - t) 0)
+                  (RatGood_mul (RatGood_natCast (t + 1)) (hLGood (t + 1) (by omega)))
+                  hgetGood,
+                ratCast_mul_of_RatGood ((t + 1 : Nat) : ℚ) (LQ (t + 1))
+                  (RatGood_natCast (t + 1)) (hLGood (t + 1) (by omega)),
+                hNatCast, hLCast (t + 1) (by omega), hget]
+            simpa [termsQ, termsZ, List.map_map] using hmapBase
+          simpa [termsQ, termsZ, List.map_eq_flatMap, List.flatMap_assoc] using hmap
+        · exact htermsGood
+        · intro ys hys
+          exact RatGood_list_sum_of_suffix htermsGood hys
+      rw [finitePrime1_ratCast_divNat_of_RatGood termsQ.sum (n + 1)
+        (by omega) (by omega) (RatGood_list_sum termsQ htermsGood), hsum]
+
+theorem finitePrime1_RatGood_expCoeff_of_good
+    (n : Nat) (LQ : Nat → ℚ) (hn : n ≤ 13)
+    (hLGood : ∀ r : Nat, r ≤ n → RatGood (LQ r)) :
+    RatGood (Prop51.expCoeff LQ n) := by
+  unfold Prop51.expCoeff
+  exact RatGood_getD (Prop51.expList LQ n) n
+    (finitePrime1_RatGood_expList_of_good n LQ hn hLGood)
+
+theorem finitePrime1_ratCast_expCoeff_of_RatGood
+    (n : Nat) (LQ : Nat → ℚ) (LMod : Nat → ZMod finitePrime1)
+    (hn : n ≤ 13)
+    (hLCast : ∀ r : Nat, r ≤ n → (((LQ r : ℚ) : ZMod finitePrime1) = LMod r))
+    (hLGood : ∀ r : Nat, r ≤ n → RatGood (LQ r)) :
+    (((Prop51.expCoeff LQ n : ℚ) : ZMod finitePrime1) =
+      expCoeffMod finitePrime1 LMod n) := by
+  unfold Prop51.expCoeff expCoeffMod
+  have hlist := finitePrime1_ratCast_expList_of_RatGood n LQ LMod hn hLCast hLGood
+  have h := congrArg
+    (fun xs : List (ZMod finitePrime1) => xs.getD n ((0 : ℚ) : ZMod finitePrime1))
+    hlist
+  change (List.map (fun x : ℚ => (x : ZMod finitePrime1)) (Prop51.expList LQ n)).getD
+      n ((0 : ℚ) : ZMod finitePrime1) =
+    (expListMod finitePrime1 LMod n).getD n ((0 : ℚ) : ZMod finitePrime1) at h
+  rw [List.getD_map] at h
+  exact h
 
 /-! ## Finite-range denominator certificates -/
 

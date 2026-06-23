@@ -42,6 +42,9 @@ import Prop51
 #print axioms Prop52.RatGood_add
 #print axioms Prop52.RatGood_sub
 #print axioms Prop52.RatGood_list_sum
+#print axioms Prop52.RatGood_list_sum_of_sublist
+#print axioms Prop52.RatGood_list_sum_of_suffix
+#print axioms Prop52.RatGood_getD
 #print axioms Prop52.ratCast_mul_of_good
 #print axioms Prop52.ratCast_add_of_good
 #print axioms Prop52.ratCast_sub_of_good
@@ -49,6 +52,10 @@ import Prop51
 #print axioms Prop52.ratCast_add_of_RatGood
 #print axioms Prop52.ratCast_sub_of_RatGood
 #print axioms Prop52.ratCast_list_sum_of_suffix_good
+#print axioms Prop52.finitePrime1_RatGood_expList_of_good
+#print axioms Prop52.finitePrime1_ratCast_expList_of_RatGood
+#print axioms Prop52.finitePrime1_RatGood_expCoeff_of_good
+#print axioms Prop52.finitePrime1_ratCast_expCoeff_of_RatGood
 #print axioms Prop52.finitePrime1_ratCast_sPower_of_good
 #print axioms Prop52.finitePrime1_ratCast_sPower_of_suffix_good
 #print axioms Prop52.finitePrime1_RatGood_sPower_of_suffix_good
