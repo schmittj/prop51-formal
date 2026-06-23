@@ -19,3 +19,4 @@ import Prop51
 #print axioms Prop51.bCoeff_neg_of_rectangle
 #print axioms Prop52.correctedCoeff_eq_printedCoeff_add
 #print axioms Prop52.correctedCoeff_neg_large_of_printed
+#print axioms Prop52.correctedCoeff_ne_2_8

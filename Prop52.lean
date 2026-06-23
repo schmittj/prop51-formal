@@ -5,3 +5,4 @@ Root module for the corrected Chen--Larson Proposition 5.2 formalization.
 -/
 
 import Prop52.Theorem
+import Prop52.Finite
