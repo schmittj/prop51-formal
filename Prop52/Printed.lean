@@ -281,6 +281,41 @@ private theorem expCoeff_eq_zero_of_input_eq_zero_le (L : Nat → ℚ) :
       rw [hsum] at hrec
       exact (mul_eq_zero.mp hrec).resolve_left hne
 
+private theorem expCoeff_eq_input_of_gap (L : Nat → ℚ) (p n : Nat)
+    (hpn : p < n) (hnp : n ≤ 2 * p + 1)
+    (hzero : ∀ r : Nat, 1 ≤ r → r ≤ p → L r = 0) :
+    Prop51.expCoeff L n = L n := by
+  rcases n with _ | n
+  · omega
+  have hrec := Prop51.expCoeff_succ_mul L n
+  have hsum :
+      (∑ t ∈ Finset.range (n + 1),
+          ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)) =
+        ((n + 1 : Nat) : ℚ) * L (n + 1) := by
+    rw [Finset.sum_range_succ]
+    have hprefix :
+        (∑ t ∈ Finset.range n,
+            ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)) =
+          0 := by
+      refine Finset.sum_eq_zero fun t ht => ?_
+      have htlt : t < n := Finset.mem_range.mp ht
+      by_cases htp : t + 1 ≤ p
+      · have hz : L (t + 1) = 0 := hzero (t + 1) (by omega) htp
+        simp [hz]
+      · have hdeg_pos : 1 ≤ n - t := by omega
+        have hdeg_le_p : n - t ≤ p := by omega
+        have hE :
+            Prop51.expCoeff L (n - t) = 0 :=
+          expCoeff_eq_zero_of_input_eq_zero_le L (n - t) hdeg_pos
+            (fun r hr1 hrle => hzero r hr1 (by omega))
+        simp [hE]
+    rw [hprefix]
+    simp
+  rw [hsum] at hrec
+  have hne : (((n + 1 : Nat) : ℚ) ≠ 0) := by
+    exact_mod_cast Nat.succ_ne_zero n
+  exact mul_left_cancel₀ hne hrec
+
 theorem coeff_printedTailHighESeries_eq_zero_of_le_p
     (μ : List Nat) (a s : Nat) (hs : 1 ≤ s) (hsp : s ≤ printedTailP a) :
     coeff s (printedTailHighESeries μ a) = 0 := by
@@ -290,6 +325,18 @@ theorem coeff_printedTailHighESeries_eq_zero_of_le_p
   intro r hr1 hrs
   unfold printedTailHighExpInput
   rw [if_neg (by omega)]
+
+theorem coeff_printedTailHighESeries_eq_neg_hCoeff_of_gt_p_le_a
+    (μ : List Nat) (a s : Nat) (hsp : printedTailP a < s) (hsa : s ≤ a) :
+    coeff s (printedTailHighESeries μ a) = -hCoeff μ s := by
+  rw [printedTailHighESeries, Prop51.coeff_expSeries]
+  rw [expCoeff_eq_input_of_gap (printedTailHighExpInput μ a) (printedTailP a) s
+    hsp (by unfold printedTailP at *; omega) ?_]
+  · unfold printedTailHighExpInput
+    rw [if_pos hsp]
+  · intro r _hr1 hrp
+    unfold printedTailHighExpInput
+    rw [if_neg (by omega)]
 
 theorem coeff_printedTailLowJSeries (μ : List Nat) (a r : Nat) :
     coeff r (printedTailLowJSeries μ a) =
@@ -326,6 +373,20 @@ theorem printedFullKSeries_eq_low_add_high (μ : List Nat) (a : Nat) :
       ring
     · rw [if_neg (fun h => hr h.2), if_pos (by omega)]
       ring
+
+theorem coeff_printedTail_series_split_eq_printedCoeff
+    (μ : List Nat) (a : Nat) :
+    coeff a
+        (printedTailHighESeries μ a * printedTailWSeries μ a -
+          printedTailESeries μ a * printedTailHighESeries μ a *
+            printedTailHighKSeries μ a) =
+      printedCoeff μ a := by
+  rw [← coeff_printedFullSeries_eq_printedCoeff μ a]
+  congr 1
+  rw [printedFullFSeries_eq_low_mul_high,
+    printedFullKSeries_eq_low_add_high]
+  unfold printedTailWSeries
+  ring
 
 theorem coeff_printedTailESeries_mul_lowJSeries
     (μ : List Nat) (a s : Nat) :
