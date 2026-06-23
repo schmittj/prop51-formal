@@ -916,4 +916,15 @@ theorem finitePrime1_correctedCoeffMod_ne_13_generated :
     13 μ (by decide) (by norm_num [M])
     checkGeneratedModNat_13_prime1_firstParts hmem
 
+theorem finitePrime1_correctedCoeffMod_ne_9_13_generated :
+    ∀ a : Nat, 9 ≤ a → a ≤ 13 →
+      ∀ μ ∈ Prop51.partitions (M a), correctedCoeffMod finitePrime1 a μ ≠ 0 := by
+  intro a ha h13
+  interval_cases a
+  · exact finitePrime1_correctedCoeffMod_ne_9_generated
+  · exact finitePrime1_correctedCoeffMod_ne_10_generated
+  · exact finitePrime1_correctedCoeffMod_ne_11_generated
+  · exact finitePrime1_correctedCoeffMod_ne_12_generated
+  · exact finitePrime1_correctedCoeffMod_ne_13_generated
+
 end Prop52
