@@ -12,6 +12,7 @@ import Prop52.Statement
 import Prop52.Recurrence
 import Prop51.Majorant
 import Prop51.DNorm
+import Prop51.ExpBounds
 import Mathlib.Tactic
 
 namespace Prop52
@@ -118,6 +119,16 @@ private theorem printedTail_N_pos {a : Nat} {μ : List Nat}
   have hM : 0 < M a := by
     unfold M
     omega
+  omega
+
+private theorem printedTail_N_ge_five_mul {a : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    5 * a ≤ N μ := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  have hN : N μ = M a + μ.length := by
+    unfold N
+    rw [Prop51.sum_map_add_one, hsum]
+  unfold M at hN
   omega
 
 private theorem printedTail_den_pos {a : Nat} {μ : List Nat}
@@ -1725,10 +1736,238 @@ theorem printedTailKErrorBound_of_eAbsoluteMoment
         ring
     _ ≤ 1 / (a : ℚ)^2 := hbudget
 
+/-- The printed pointwise coefficient budget
+`|\omega_a| <= 920 (3a/2)^a`.  The remaining theorem in this block proves
+that this budget implies the normalized `1/a^2` omega error. -/
+def printedTailOmegaCoeffBudget (a : Nat) : ℚ :=
+  920 * ((3 * (a : ℚ)) / 2)^a
+
+/-- Certificate-facing pointwise omega-coefficient majorant from the printed
+proof.  This is the output expected from the `\widehat W(x_2) < 920` majorant
+evaluation. -/
+def PrintedTailOmegaCoeffMajorant : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      |printedTailOmegaCoeff μ a a| ≤ printedTailOmegaCoeffBudget a
+
+def printedTailOmegaExpBudgetRhs (a : Nat) : ℚ :=
+  (1656 / 5 : ℚ) * (19 / 25 : ℚ)^(a - 1)
+
+def printedTailOmegaExpBudgetScaled (a : Nat) : ℚ :=
+  (a : ℚ)^2 * printedTailOmegaExpBudgetRhs a
+
+private theorem printedTailOmega_den_lower {a : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (5 * (a : ℚ)) *
+        ((5 / 36 : ℚ) * ((6 : ℚ)^a *
+          ((Nat.factorial (a - 1) : Nat) : ℚ))) ≤
+      printedTailDen μ a := by
+  unfold printedTailDen
+  have hN : (5 * (a : ℚ) : ℚ) ≤ (N μ : ℚ) := by
+    have hNnat := printedTail_N_ge_five_mul (a := a) (μ := μ) ha hμ
+    norm_num at hNnat ⊢
+    exact_mod_cast hNnat
+  have hc := Prop51.c_lb a (by omega : 1 ≤ a)
+  have hc_nonneg :
+      0 ≤ (5 / 36 : ℚ) *
+        ((6 : ℚ)^a * ((Nat.factorial (a - 1) : Nat) : ℚ)) := by
+    positivity
+  have hN_nonneg : 0 ≤ (N μ : ℚ) := by positivity
+  exact mul_le_mul hN hc hc_nonneg hN_nonneg
+
+private theorem printedTail_factorial_weaker_lower (a : Nat) (ha : 150 ≤ a) :
+    (((a : ℚ) - 1) / 3)^(a - 1) ≤
+      ((Nat.factorial (a - 1) : Nat) : ℚ) := by
+  have hfac := Prop51.factorial_lb (a - 1)
+  have hsub_cast : ((a - 1 : Nat) : ℚ) = (a : ℚ) - 1 := by
+    norm_num [Nat.cast_sub (by omega : 1 ≤ a)]
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hbase_nonneg : 0 ≤ ((a : ℚ) - 1) / 3 := by nlinarith
+  have hbase_le : ((a : ℚ) - 1) / 3 ≤
+      25 * ((a - 1 : Nat) : ℚ) / 68 := by
+    rw [hsub_cast]
+    nlinarith
+  exact (pow_le_pow_left₀ hbase_nonneg hbase_le (a - 1)).trans hfac
+
+private theorem printedTailOmega_den_weaker_lower {a : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (5 * (a : ℚ)) *
+        ((5 / 36 : ℚ) *
+          ((6 : ℚ)^a * (((a : ℚ) - 1) / 3)^(a - 1))) ≤
+      printedTailDen μ a := by
+  have hfac := printedTail_factorial_weaker_lower a ha
+  have hfacDen :
+      (5 * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a : ℚ) - 1) / 3)^(a - 1))) ≤
+        (5 * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * ((Nat.factorial (a - 1) : Nat) : ℚ))) := by
+    have hnonneg :
+        0 ≤ (5 * (a : ℚ)) * ((5 / 36 : ℚ) * (6 : ℚ)^a) := by
+      positivity
+    calc
+      (5 * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * (((a : ℚ) - 1) / 3)^(a - 1)))
+          = ((5 * (a : ℚ)) * ((5 / 36 : ℚ) * (6 : ℚ)^a)) *
+              (((a : ℚ) - 1) / 3)^(a - 1) := by ring
+      _ ≤ ((5 * (a : ℚ)) * ((5 / 36 : ℚ) * (6 : ℚ)^a)) *
+              ((Nat.factorial (a - 1) : Nat) : ℚ) :=
+          mul_le_mul_of_nonneg_left hfac hnonneg
+      _ =
+        (5 * (a : ℚ)) *
+          ((5 / 36 : ℚ) *
+            ((6 : ℚ)^a * ((Nat.factorial (a - 1) : Nat) : ℚ))) := by
+          ring
+  exact hfacDen.trans (printedTailOmega_den_lower (a := a) (μ := μ) ha hμ)
+
+private theorem printedTailOmegaCoeffBudget_div_denLower_eq
+    (a : Nat) (ha : 150 ≤ a) :
+    printedTailOmegaCoeffBudget a /
+      ((5 * (a : ℚ)) *
+        ((5 / 36 : ℚ) * ((6 : ℚ)^a *
+          (((a : ℚ) - 1) / 3)^(a - 1)))) =
+      (1656 / 5 : ℚ) *
+        ((3 * (a : ℚ)) / (4 * ((a : ℚ) - 1)))^(a - 1) := by
+  unfold printedTailOmegaCoeffBudget
+  have ha_pos : (0 : ℚ) < a := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have ham1_pos : (0 : ℚ) < (a : ℚ) - 1 := by nlinarith
+  have hpow3a2 :
+      ((3 * (a : ℚ)) / 2)^a =
+        ((3 * (a : ℚ)) / 2) * ((3 * (a : ℚ)) / 2)^(a - 1) := by
+    rw [← pow_succ']
+    congr
+    omega
+  have hpow6 : (6 : ℚ)^a = 6 * (6 : ℚ)^(a - 1) := by
+    rw [← pow_succ']
+    congr
+    omega
+  field_simp [ha_pos.ne', ham1_pos.ne']
+  rw [hpow3a2, hpow6]
+  have hprod_base :
+      (6 : ℚ) * (((a : ℚ) - 1) / 3) *
+        ((3 * (a : ℚ)) / (((a : ℚ) - 1) * 4)) =
+          (3 * (a : ℚ)) / 2 := by
+    field_simp [ham1_pos.ne']
+    ring
+  have hprod :
+      (6 : ℚ)^(a - 1) * (((a : ℚ) - 1) / 3)^(a - 1) *
+        ((3 * (a : ℚ)) / (((a : ℚ) - 1) * 4))^(a - 1) =
+          ((3 * (a : ℚ)) / 2)^(a - 1) := by
+    rw [← mul_pow, ← mul_pow, hprod_base]
+  rw [← hprod]
+  ring
+
+private theorem printedTailOmegaExpBudget_base_le (a : Nat) (ha : 150 ≤ a) :
+    (1656 / 5 : ℚ) *
+        ((3 * (a : ℚ)) / (4 * ((a : ℚ) - 1)))^(a - 1) ≤
+      printedTailOmegaExpBudgetRhs a := by
+  unfold printedTailOmegaExpBudgetRhs
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hdenpos : 0 < 4 * ((a : ℚ) - 1) := by nlinarith
+  have hbase_nonneg :
+      0 ≤ (3 * (a : ℚ)) / (4 * ((a : ℚ) - 1)) := by positivity
+  have hbase_le :
+      (3 * (a : ℚ)) / (4 * ((a : ℚ) - 1)) ≤ 19 / 25 := by
+    rw [div_le_iff₀ hdenpos]
+    nlinarith
+  exact mul_le_mul_of_nonneg_left
+    (pow_le_pow_left₀ hbase_nonneg hbase_le (a - 1)) (by norm_num)
+
+private theorem printedTailOmegaExpBudgetScaled_step (a : Nat)
+    (ha : 150 ≤ a) :
+    printedTailOmegaExpBudgetScaled (a + 1) ≤
+      printedTailOmegaExpBudgetScaled a := by
+  unfold printedTailOmegaExpBudgetScaled printedTailOmegaExpBudgetRhs
+  have hpow : (19 / 25 : ℚ) ^ ((a + 1) - 1) =
+      (19 / 25 : ℚ) ^ (a - 1) * (19 / 25 : ℚ) := by
+    have hidx : (a + 1) - 1 = (a - 1) + 1 := by omega
+    rw [hidx, pow_add]
+    ring
+  rw [hpow]
+  have hpoly :
+      (((a + 1 : Nat) : ℚ)^2 * (19 / 25 : ℚ) ≤ (a : ℚ)^2) := by
+    push_cast
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have hnonneg :
+      0 ≤ (1656 / 5 : ℚ) * (19 / 25 : ℚ) ^ (a - 1) := by
+    positivity
+  calc
+    ((a + 1 : Nat) : ℚ)^2 * ((1656 / 5 : ℚ) *
+        ((19 / 25 : ℚ) ^ (a - 1) * (19 / 25 : ℚ)))
+        = (((a + 1 : Nat) : ℚ)^2 * (19 / 25 : ℚ)) *
+            ((1656 / 5 : ℚ) * (19 / 25 : ℚ) ^ (a - 1)) := by
+            ring
+    _ ≤ (a : ℚ)^2 *
+          ((1656 / 5 : ℚ) * (19 / 25 : ℚ) ^ (a - 1)) :=
+        mul_le_mul_of_nonneg_right hpoly hnonneg
+
+private theorem printedTailOmegaExpBudgetScaled_150 :
+    printedTailOmegaExpBudgetScaled 150 < 1 := by native_decide
+
+theorem printedTailOmegaExpBudget_bound (a : Nat) (ha : 150 ≤ a) :
+    printedTailOmegaExpBudgetRhs a ≤ 1 / (a : ℚ)^2 := by
+  have hscaled_lt : printedTailOmegaExpBudgetScaled a < 1 := by
+    exact Nat.le_induction
+      (P := fun n _ => printedTailOmegaExpBudgetScaled n < 1)
+      printedTailOmegaExpBudgetScaled_150
+      (fun n hn ih =>
+        lt_of_le_of_lt (printedTailOmegaExpBudgetScaled_step n hn) ih) a ha
+  have ha_sq_pos : 0 < (a : ℚ)^2 := by positivity
+  rw [le_div_iff₀ ha_sq_pos]
+  unfold printedTailOmegaExpBudgetScaled at hscaled_lt
+  linarith
+
 def PrintedTailOmegaErrorBound : Prop :=
   ∀ a : Nat, 150 ≤ a →
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       |printedTailOmegaNorm μ a| ≤ 1 / (a : ℚ)^2
+
+theorem printedTailOmegaErrorBound_of_coeffMajorant
+    (hcoeffMajorant : PrintedTailOmegaCoeffMajorant) :
+    PrintedTailOmegaErrorBound := by
+  intro a ha μ hμ
+  unfold printedTailOmegaNorm
+  have hdenpos := printedTail_den_pos (a := a) (μ := μ) ha hμ
+  have hdenposDen : 0 < printedTailDen μ a := by
+    unfold printedTailDen
+    exact hdenpos
+  have hdenlower :=
+    printedTailOmega_den_weaker_lower (a := a) (μ := μ) ha hμ
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hbase_pos : 0 < ((a : ℚ) - 1) / 3 := by nlinarith
+  have hdenlower_pos :
+      0 < (5 * (a : ℚ)) *
+        ((5 / 36 : ℚ) *
+          ((6 : ℚ)^a * (((a : ℚ) - 1) / 3)^(a - 1))) := by
+    positivity
+  have hbudget_nonneg : 0 ≤ printedTailOmegaCoeffBudget a := by
+    unfold printedTailOmegaCoeffBudget
+    positivity
+  rw [abs_div, abs_of_pos hdenposDen]
+  have hnorm_le_budget :
+      |printedTailOmegaCoeff μ a a| / printedTailDen μ a ≤
+        printedTailOmegaExpBudgetRhs a := by
+    calc
+      |printedTailOmegaCoeff μ a a| / printedTailDen μ a
+          ≤ printedTailOmegaCoeffBudget a / printedTailDen μ a :=
+            div_le_div_of_nonneg_right (hcoeffMajorant a ha μ hμ) hdenposDen.le
+      _ ≤ printedTailOmegaCoeffBudget a /
+          ((5 * (a : ℚ)) *
+            ((5 / 36 : ℚ) *
+              ((6 : ℚ)^a * (((a : ℚ) - 1) / 3)^(a - 1)))) :=
+            div_le_div_of_nonneg_left hbudget_nonneg hdenlower_pos hdenlower
+      _ =
+        (1656 / 5 : ℚ) *
+          ((3 * (a : ℚ)) / (4 * ((a : ℚ) - 1)))^(a - 1) :=
+            printedTailOmegaCoeffBudget_div_denLower_eq a ha
+      _ ≤ printedTailOmegaExpBudgetRhs a :=
+            printedTailOmegaExpBudget_base_le a ha
+  exact hnorm_le_budget.trans (printedTailOmegaExpBudget_bound a ha)
 
 /-- Final normalized large-tail assembly from the exact split and the three
 finite error estimates. -/

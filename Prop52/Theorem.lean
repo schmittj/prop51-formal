@@ -194,6 +194,20 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_errorBounds
     (printedTailEAbsoluteMomentBound_of_majorant hmaj)
     homega
 
+/-- Final assembly using the printed-proof majorant moment bounds and the
+pointwise top-coefficient estimate `|\omega_a| <= 920 (3a/2)^a`.  The
+normalization of that pointwise estimate to the `1/a^2` omega error is proved
+in `Prop52.Printed`. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_omegaCoeff
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hmaj : PrintedTailMajorantMomentBounds)
+    (homegaCoeff : PrintedTailOmegaCoeffMajorant) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_errorBounds
+    hmid hmain hmaj
+    (printedTailOmegaErrorBound_of_coeffMajorant homegaCoeff)
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
