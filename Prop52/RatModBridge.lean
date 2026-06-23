@@ -145,6 +145,24 @@ theorem ratCast_sub_of_good
   simpa [sub_eq_add_neg, mul_assoc, mul_comm, mul_left_comm,
     add_comm, add_left_comm, add_assoc] using hz
 
+theorem ratCast_mul_of_RatGood
+    (x y : ℚ) (hx : RatGood x) (hy : RatGood y) :
+    (((x * y : ℚ) : ZMod finitePrime1) =
+      (x : ZMod finitePrime1) * (y : ZMod finitePrime1)) :=
+  ratCast_mul_of_good x y hx hy (RatGood_mul hx hy)
+
+theorem ratCast_add_of_RatGood
+    (x y : ℚ) (hx : RatGood x) (hy : RatGood y) :
+    (((x + y : ℚ) : ZMod finitePrime1) =
+      (x : ZMod finitePrime1) + (y : ZMod finitePrime1)) :=
+  ratCast_add_of_good x y hx hy (RatGood_add hx hy)
+
+theorem ratCast_sub_of_RatGood
+    (x y : ℚ) (hx : RatGood x) (hy : RatGood y) :
+    (((x - y : ℚ) : ZMod finitePrime1) =
+      (x : ZMod finitePrime1) - (y : ZMod finitePrime1)) :=
+  ratCast_sub_of_good x y hx hy (RatGood_sub hx hy)
+
 theorem finitePrime1_RatGood_invNat (n : Nat) (hpos : 0 < n) (hle : n ≤ 13) :
     RatGood (1 / (n : ℚ)) := by
   unfold RatGood
@@ -163,6 +181,15 @@ theorem finitePrime1_ratCast_divNat_of_good
     hx (finitePrime1_RatGood_invNat n hpos hle) (by simpa [div_eq_mul_inv] using hdiv)
   rw [finitePrime1_ratCast_invNat n hpos hle] at hmul
   simpa [div_eq_mul_inv, mul_assoc] using hmul
+
+theorem finitePrime1_ratCast_divNat_of_RatGood
+    (x : ℚ) (n : Nat) (hpos : 0 < n) (hle : n ≤ 13)
+    (hx : RatGood x) :
+    (((x / (n : ℚ) : ℚ) : ZMod finitePrime1) =
+      (x : ZMod finitePrime1) / (n : ZMod finitePrime1)) := by
+  exact finitePrime1_ratCast_divNat_of_good x n hpos hle hx (by
+    simpa [div_eq_mul_inv] using
+      RatGood_mul hx (finitePrime1_RatGood_invNat n hpos hle))
 
 theorem RatGood_list_sum_of_pairwise
     (xs : List ℚ)
@@ -367,6 +394,25 @@ theorem finitePrime1_ratCast_markedWeight_of_suffix_good
     exact finitePrime1_RatGood_markedWeight_summand mi r hq (le_trans hr ha)
   · exact hsuffix
 
+theorem finitePrime1_RatGood_sPower_of_suffix_good
+    (μ : List Nat) (r : Nat)
+    (hsuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys (μ.map fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    RatGood (sPower μ r) := by
+  unfold sPower
+  exact hsuffix _ (List.suffix_refl _)
+
+theorem finitePrime1_RatGood_markedWeight_of_suffix_good
+    (μ : List Nat) (r : Nat)
+    (hsuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys
+        (μ.map fun mi : Nat => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    RatGood (markedWeight μ r) := by
+  unfold markedWeight
+  exact hsuffix _ (List.suffix_refl _)
+
 theorem finitePrime1_ratCast_hCoeff_of_good
     (a : Nat) (μ : List Nat) (r : Nat)
     (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
@@ -382,6 +428,36 @@ theorem finitePrime1_ratCast_hCoeff_of_good
   rw [ratCast_sub_of_good (N μ : ℚ) (sPower μ r)
     (RatGood_natCast (N μ)) (RatGood_list_sum_of_pairwise _ hsPowerGood) hDiffGood]
   rw [finitePrime1_ratCast_sPower_of_good a μ r ha hμsum hr hsPowerGood]
+  simp
+
+theorem finitePrime1_RatGood_hCoeff_of_suffix_good
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hr : r ≤ a)
+    (hsPowerSuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys (μ.map fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    RatGood (hCoeff μ r) := by
+  unfold hCoeff
+  exact RatGood_mul (finitePrime1_RatGood_c r (le_trans hr ha))
+    (RatGood_sub (RatGood_natCast (N μ))
+      (finitePrime1_RatGood_sPower_of_suffix_good μ r hsPowerSuffix))
+
+theorem finitePrime1_ratCast_hCoeff_of_suffix_good
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
+    (hsPowerSuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys (μ.map fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    (((hCoeff μ r : ℚ) : ZMod finitePrime1) = hCoeffMod finitePrime1 μ r) := by
+  unfold hCoeff hCoeffMod
+  have hsPowerGood : RatGood (sPower μ r) :=
+    finitePrime1_RatGood_sPower_of_suffix_good μ r hsPowerSuffix
+  rw [ratCast_mul_of_RatGood (Prop51.c r) ((N μ : ℚ) - sPower μ r)
+    (finitePrime1_RatGood_c r (le_trans hr ha))
+    (RatGood_sub (RatGood_natCast (N μ)) hsPowerGood)]
+  rw [ratCast_sub_of_RatGood (N μ : ℚ) (sPower μ r)
+    (RatGood_natCast (N μ)) hsPowerGood]
+  rw [finitePrime1_ratCast_sPower_of_suffix_good a μ r ha hμsum hr hsPowerSuffix]
   simp
 
 theorem finitePrime1_ratCast_expList_of_good
@@ -573,6 +649,46 @@ theorem finitePrime1_ratCast_kCoeff_of_suffix_good
             finitePrime1_ratCast_markedWeight_of_suffix_good a μ (j + 2)
               ha hμsum hj2 hMarkedSuffix]
 
+theorem finitePrime1_RatGood_kCoeff_of_suffix_good
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hr : r ≤ a)
+    (hMarkedSuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys
+        (μ.map fun mi : Nat => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    RatGood (kCoeff μ r) := by
+  cases r with
+  | zero =>
+      simpa [kCoeff] using RatGood_natCast 0
+  | succ r =>
+      cases r with
+      | zero =>
+          have hmwGood : RatGood (markedWeight μ 1) :=
+            finitePrime1_RatGood_markedWeight_of_suffix_good μ 1 hMarkedSuffix
+          simpa [kCoeff] using RatGood_mul (RatGood_natCast 2) hmwGood
+      | succ j =>
+          have hj1 : j + 1 ≤ a := by omega
+          have hj2 : j + 2 ≤ a := by simpa using hr
+          have hprefixGood :
+              RatGood (12 * ((j + 1 : Nat) : ℚ) * Prop51.c (j + 1)) :=
+            RatGood_mul
+              (RatGood_mul (RatGood_natCast 12) (RatGood_natCast (j + 1)))
+              (finitePrime1_RatGood_c (j + 1) (by omega))
+          have hmwGood : RatGood (markedWeight μ (j + 2)) :=
+            finitePrime1_RatGood_markedWeight_of_suffix_good μ (j + 2) hMarkedSuffix
+          simpa [kCoeff, mul_assoc] using RatGood_mul hprefixGood hmwGood
+
+theorem finitePrime1_ratCast_kCoeff_of_suffix_RatGood
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
+    (hMarkedSuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys
+        (μ.map fun mi : Nat => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    (((kCoeff μ r : ℚ) : ZMod finitePrime1) = kCoeffMod finitePrime1 μ r) :=
+  finitePrime1_ratCast_kCoeff_of_suffix_good a μ r ha hμsum hr hMarkedSuffix
+    (finitePrime1_RatGood_kCoeff_of_suffix_good a μ r ha hr hMarkedSuffix)
+
 theorem finitePrime1_ratCast_correctedCoeffFast_of_good
     (a : Nat) (μ : List Nat)
     (_ha : a ≤ 13)
@@ -638,5 +754,38 @@ theorem finitePrime1_ratCast_correctedCoeffFast_of_good
       kCoeff μ (k + 1) * fCoeff μ (a - (k + 1))).sum)
     hMainGood hConvGood hFastGood]
   rw [hMainCast, hConvCast]
+
+theorem finitePrime1_ratCast_correctedCoeffFast_of_suffix_good
+    (a : Nat) (μ : List Nat)
+    (ha : a ≤ 13)
+    (hfCast : ∀ k : Nat, k ≤ a →
+      (((fCoeff μ k : ℚ) : ZMod finitePrime1) = fCoeffMod finitePrime1 μ k))
+    (hkCast : ∀ k : Nat, k ≤ a →
+      (((kCoeff μ k : ℚ) : ZMod finitePrime1) = kCoeffMod finitePrime1 μ k))
+    (hfGood : ∀ k : Nat, k ≤ a → RatGood (fCoeff μ k))
+    (hkGood : ∀ k : Nat, k ≤ a → RatGood (kCoeff μ k))
+    (hConvSuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys
+        ((List.range a).map fun k : Nat =>
+          kCoeff μ (k + 1) * fCoeff μ (a - (k + 1))) →
+      RatGood ys.sum) :
+    (((correctedCoeffFast a μ : ℚ) : ZMod finitePrime1) =
+      correctedCoeffMod finitePrime1 a μ) := by
+  exact finitePrime1_ratCast_correctedCoeffFast_of_good a μ ha hfCast hkCast
+    hfGood hkGood
+    (fun k hk => by
+      have hklt : k < a := List.mem_range.mp hk
+      exact RatGood_mul (hkGood (k + 1) (by omega))
+        (hfGood (a - (k + 1)) (by omega)))
+    hConvSuffix
+    (RatGood_mul (RatGood_natCast (M a)) (hfGood a le_rfl))
+    (by
+      have hMainGood : RatGood ((M a : ℚ) * fCoeff μ a) :=
+        RatGood_mul (RatGood_natCast (M a)) (hfGood a le_rfl)
+      have hConvGood :
+          RatGood (((List.range a).map fun k : Nat =>
+            kCoeff μ (k + 1) * fCoeff μ (a - (k + 1))).sum) :=
+        hConvSuffix _ (List.suffix_refl _)
+      simpa [correctedCoeffFast] using RatGood_sub hMainGood hConvGood)
 
 end Prop52
