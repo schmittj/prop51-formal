@@ -16,3 +16,6 @@ precompileModules = true
 
 [[lean_lib]]
 name = "Prop51"
+
+[[lean_lib]]
+name = "Prop52"

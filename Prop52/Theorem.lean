@@ -1,0 +1,96 @@
+/-
+Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
+
+# Public facade for corrected Chen--Larson Proposition 5.2
+
+This is the intended human-facing file for the corrected Proposition 5.2
+formalization.  At this stage it exposes the corrected coefficient, the exact
+correction identity, executable sanity checks against the `g = 4` example, and
+the large-range reduction to the printed-series sign theorem plus the
+Proposition 5.1 rectangle theorem.
+-/
+
+import Prop52.Statement
+import Prop51.Rectangle
+
+namespace Prop52
+
+/-- The corrected coefficient differs from the printed coefficient by
+`(M-1) * [t^a]F_μ(t)`. -/
+theorem correctedCoeff_eq_printedCoeff_add (a : Nat) (μ : List Nat) :
+    correctedCoeff a μ =
+      printedCoeff μ a + ((M a : ℚ) - 1) * Prop51.bCoeff μ a := by
+  simp [correctedCoeff, printedCoeff]
+  ring
+
+/-- For positive partitions of `M a`, the exponent `N` equals `M a + length`. -/
+theorem N_eq_M_add_length {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    N μ = M a + μ.length := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  unfold N
+  rw [Prop51.sum_map_add_one, hsum]
+
+/-- A positive partition of `M a` is nonempty once `2 <= a`. -/
+theorem one_le_length_of_partition {a : Nat} {μ : List Nat}
+    (ha : 2 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    1 ≤ μ.length := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  rcases μ with - | ⟨m, μ⟩
+  · simp [M] at hsum
+    omega
+  · simp
+
+/-- The Prop52 partition exponent lies in the Prop51 rectangle. -/
+theorem rectangle_bounds_of_partition {a : Nat} {μ : List Nat}
+    (ha : 2 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    6*a - 7 ≤ N μ ∧ N μ ≤ 12*a - 8 := by
+  have hN := N_eq_M_add_length hμ
+  have hlen_pos := one_le_length_of_partition ha hμ
+  obtain ⟨_hsum, hpos⟩ := hμ
+  have hlen_le := Prop51.length_le_sum μ hpos
+  have hsumM : μ.sum = M a := _hsum
+  simp [M] at hN hsumM
+  constructor
+  · omega
+  · omega
+
+/-- Large-range reduction: once the printed-series coefficient is known
+negative, corrected Proposition 5.2 is negative by the correction identity and
+the Proposition 5.1 rectangle theorem. -/
+theorem correctedCoeff_neg_large_of_printed
+    (hprinted : PrintedCoeffNegativityLarge) :
+    CorrectedCoeffNegativityLarge := by
+  intro a ha μ hμ
+  have hpart := hμ
+  obtain ⟨_hsum, hpos⟩ := hμ
+  have hrect := rectangle_bounds_of_partition (a := a) (μ := μ) (by omega) hpart
+  have hb : Prop51.bCoeff μ a < 0 :=
+    Prop51.bCoeff_neg_of_rectangle μ a (N μ)
+      hpos rfl (by omega) hrect.1 hrect.2
+  have hp : printedCoeff μ a < 0 := hprinted a ha μ hpart
+  have hMpos : 0 < ((M a : ℚ) - 1) := by
+    norm_num [M]
+    omega
+  rw [correctedCoeff_eq_printedCoeff_add]
+  nlinarith
+
+/-! ## Executable checks for the smallest corrected example
+
+For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
+
+* `[t^2]F_μ = -195/8`,
+* the printed coefficient is `45/8`,
+* the corrected coefficient is `-465/4`.
+-/
+
+example : Prop51.bCoeff [1, 1, 1, 1, 1, 1] 2 = -195 / 8 := by
+  native_decide
+
+example : printedCoeff [1, 1, 1, 1, 1, 1] 2 = 45 / 8 := by
+  native_decide
+
+example : correctedCoeff 2 [1, 1, 1, 1, 1, 1] = -465 / 4 := by
+  native_decide
+
+end Prop52
