@@ -4251,6 +4251,228 @@ theorem printedTailJDerivPointSum_x0_le
     _ ≤ 11 / 10 := by
           simpa [A] using printedTailJDeriv_x0_budget a ha
 
+/-! ## Low-polynomial term bounds at `x₂`
+
+These are the coefficientwise estimates whose finite sums are controlled by
+the factorial-gas certificates above.  They isolate the algebraic reduction
+from the concrete generated prefix/tail constants.
+-/
+
+private theorem hCoeff_one_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    hCoeff μ 1 * printedTailX2 a ≤ 5 * ((a : ℚ) - 1) / (a : ℚ) := by
+  have hcoeff := hCoeff_le_M_two_sub_twopow_c_of_partition
+    (a := a) (μ := μ) hμ 1
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  calc
+    hCoeff μ 1 * printedTailX2 a
+        ≤ (((M a : ℚ) * (2 - 1 / (2 : ℚ)^1)) * Prop51.c 1) *
+            printedTailX2 a :=
+          mul_le_mul_of_nonneg_right hcoeff hx2_nonneg
+    _ = 5 * ((a : ℚ) - 1) / (a : ℚ) := by
+          unfold printedTailX2 M
+          rw [Prop51.c_one, Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+          field_simp [ha_pos.ne']
+          ring
+
+private theorem kCoeff_one_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    kCoeff μ 1 * printedTailX2 a ≤ 4 * ((a : ℚ) - 1) / (a : ℚ) := by
+  have hcoeff := kCoeff_le_partition_marked_bound
+    (a := a) (μ := μ) hμ 1
+  have hcoeff' : kCoeff μ 1 ≤ (M a : ℚ) := by
+    have hcoeff0 : kCoeff μ 1 ≤ 2 * ((M a : ℚ) / 2) := by
+      simpa using hcoeff
+    linarith
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  calc
+    kCoeff μ 1 * printedTailX2 a
+        ≤ (M a : ℚ) * printedTailX2 a :=
+          mul_le_mul_of_nonneg_right hcoeff' hx2_nonneg
+    _ = 4 * ((a : ℚ) - 1) / (a : ℚ) := by
+          unfold printedTailX2 M
+          rw [Nat.cast_sub (by omega : 6 ≤ 6 * a), Nat.cast_mul]
+          field_simp [ha_pos.ne']
+          ring
+
+private theorem hCoeff_x2_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    hCoeff μ r * (printedTailX2 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r) := by
+  let A : ℚ := (a : ℚ)
+  have hApos : 0 < A := by
+    dsimp [A]
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hMnonneg : 0 ≤ (M a : ℚ) := by positivity
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have hcoeff := hCoeff_le_M_two_sub_twopow_c_of_partition
+    (a := a) (μ := μ) hμ r
+  have hfactor_le :
+      (M a : ℚ) * (2 - 1 / (2 : ℚ)^r) ≤ (M a : ℚ) * 2 := by
+    have hinv_nonneg : 0 ≤ 1 / (2 : ℚ)^r := by positivity
+    nlinarith
+  have hcub := Prop51.c_ub r (by omega : 1 ≤ r)
+  have hc_nonneg := Prop51.c_nonneg r
+  have hprod :
+      ((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r
+        ≤ ((M a : ℚ) * 2) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ))) :=
+    mul_le_mul hfactor_le hcub hc_nonneg
+      (mul_nonneg hMnonneg (by norm_num))
+  calc
+    hCoeff μ r * (printedTailX2 a)^r
+        ≤ (((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r) *
+            (printedTailX2 a)^r :=
+          mul_le_mul_of_nonneg_right hcoeff (pow_nonneg hx2_nonneg r)
+    _ ≤ (((M a : ℚ) * 2) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)))) *
+            (printedTailX2 a)^r :=
+          mul_le_mul_of_nonneg_right hprod (pow_nonneg hx2_nonneg r)
+    _ = (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / A^r) := by
+          change (((M a : ℚ) * 2) *
+              ((4 / 25 : ℚ) *
+                ((6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)))) *
+              (2 / (3 * A))^r =
+            (8 * (M a : ℚ) / 25) *
+              ((((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / A^r)
+          dsimp [A]
+          rw [div_pow, mul_pow]
+          field_simp [hApos.ne', pow_ne_zero r hApos.ne',
+            pow_ne_zero r (by norm_num : (3 : ℚ) ≠ 0)]
+          have hpow : (2 : ℚ)^r * 6^r = 3^r * 4^r := by
+            rw [← mul_pow, ← mul_pow]
+            norm_num
+          have hpow' : (6 : ℚ)^r * 2^r = 3^r * 4^r := by
+            rw [mul_comm, hpow]
+          calc
+            (M a : ℚ) * 2 * 4 * 6^r * 2^r
+                = (M a : ℚ) * 8 * (6^r * 2^r) := by ring
+            _ = (M a : ℚ) * 8 * (3^r * 4^r) := by rw [hpow']
+            _ = (M a : ℚ) * 3^r * 8 * 4^r := by ring
+
+private theorem kCoeff_x2_tail_term_le {a r : Nat} {μ : List Nat}
+    (ha : 150 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : 2 ≤ r) :
+    kCoeff μ r * (printedTailX2 a)^r
+      ≤ (8 * (M a : ℚ) / 25) *
+          ((((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r) := by
+  let A : ℚ := (a : ℚ)
+  rcases r with _ | r'
+  · omega
+  rcases r' with _ | n
+  · omega
+  have hApos : 0 < A := by
+    dsimp [A]
+    exact_mod_cast (lt_of_lt_of_le (by norm_num : 0 < 150) ha)
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have hmw := markedWeight_le_M_div_two_pow_of_partition
+    (a := a) (μ := μ) hμ (n + 2)
+  have hpref_nonneg :
+      0 ≤ 12 * ((n : ℚ) + 1) * Prop51.c (n + 1) := by
+    exact mul_nonneg
+      (mul_nonneg (by norm_num) (by positivity))
+      (Prop51.c_nonneg (n + 1))
+  have hcub := Prop51.c_ub (n + 1) (by omega : 1 ≤ n + 1)
+  have hpref :
+      12 * ((n : ℚ) + 1) * Prop51.c (n + 1)
+        ≤ 12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ))) := by
+    exact mul_le_mul_of_nonneg_left hcub
+      (mul_nonneg (by norm_num) (by positivity))
+  have hcoeff :
+      kCoeff μ (n + 2)
+        ≤ (12 * ((n : ℚ) + 1) * Prop51.c (n + 1)) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2)) := by
+    simpa [kCoeff, Nat.cast_add, Nat.cast_one] using
+      mul_le_mul_of_nonneg_left hmw hpref_nonneg
+  have hcoeff' :
+      kCoeff μ (n + 2)
+        ≤ (12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ)))) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2)) := by
+    exact hcoeff.trans
+      (mul_le_mul_of_nonneg_right hpref
+        (div_nonneg (by positivity) (pow_nonneg (by norm_num) _)))
+  calc
+    kCoeff μ (n + 2) * (printedTailX2 a)^(n + 2)
+        ≤ ((12 * ((n : ℚ) + 1) *
+            ((4 / 25 : ℚ) *
+              ((6 : ℚ)^(n + 1) *
+                (((n + 1 - 1).factorial : Nat) : ℚ)))) *
+            ((M a : ℚ) / (2 : ℚ)^(n + 2))) *
+            (printedTailX2 a)^(n + 2) :=
+          mul_le_mul_of_nonneg_right hcoeff'
+            (pow_nonneg hx2_nonneg (n + 2))
+    _ = (8 * (M a : ℚ) / 25) *
+          ((((n + 2 - 1).factorial : Nat) : ℚ) *
+            (2 : ℚ)^(n + 2) / A^(n + 2)) := by
+          rw [show n + 1 - 1 = n by omega,
+            show n + 2 - 1 = n + 1 by omega, Nat.factorial_succ]
+          change ((12 * ((n : ℚ) + 1) *
+              ((4 / 25 : ℚ) *
+                ((6 : ℚ)^(n + 1) * ((n.factorial : Nat) : ℚ)))) *
+              ((M a : ℚ) / (2 : ℚ)^(n + 2))) *
+              (2 / (3 * A))^(n + 2) =
+            (8 * (M a : ℚ) / 25) *
+              (((((n + 1).factorial : Nat) : ℚ)) *
+                (2 : ℚ)^(n + 2) / A^(n + 2))
+          dsimp [A]
+          rw [div_pow, mul_pow]
+          field_simp [hApos.ne', pow_ne_zero (n + 2) hApos.ne',
+            pow_ne_zero (n + 2) (by norm_num : (2 : ℚ) ≠ 0),
+            pow_ne_zero (n + 2) (by norm_num : (3 : ℚ) ≠ 0)]
+          have hfacCast :
+              (((n + 1).factorial : Nat) : ℚ) =
+                ((n : ℚ) + 1) * (((n.factorial : Nat) : ℚ)) := by
+            exact_mod_cast (Nat.factorial_succ n)
+          rw [hfacCast]
+          have hpow : (2 : ℚ)^(n + 2) * 3^(n + 2) = 6^(n + 2) := by
+            rw [← mul_pow]
+            norm_num
+          have h6 :
+              (6 : ℚ)^(n + 2) = 6^(n + 1) * 6 := by
+            rw [show n + 2 = n + 1 + 1 by omega, pow_succ]
+          calc
+            12 * ((n : ℚ) + 1) * 4 * 6^(n + 1) *
+                  ((n.factorial : Nat) : ℚ) * (M a : ℚ)
+                =
+              (M a : ℚ) * (6^(n + 1) * 6) * 8 *
+                (((n : ℚ) + 1) * ((n.factorial : Nat) : ℚ)) := by ring
+            _ =
+              (M a : ℚ) * 6^(n + 2) * 8 *
+                (((n : ℚ) + 1) * ((n.factorial : Nat) : ℚ)) := by
+                rw [h6]
+            _ =
+              (M a : ℚ) * (2^(n + 2) * 3^(n + 2)) * 8 *
+                (((n : ℚ) + 1) * ((n.factorial : Nat) : ℚ)) := by
+                rw [← hpow]
+            _ =
+              (M a : ℚ) * 2^(n + 2) * 3^(n + 2) * 8 *
+                (((n : ℚ) + 1) * ((n.factorial : Nat) : ℚ)) := by ring
+
 def printedTailX2Bound1 (a : Nat) : ℚ :=
   5 * ((a : ℚ) - 1) / (a : ℚ) +
     (8 * printedTailMrat a / 25) *
