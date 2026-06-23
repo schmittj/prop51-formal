@@ -3000,6 +3000,432 @@ theorem factorialGas_prefix_tail_base2_weighted :
     factorialGasPrefix 2 true + 1 < 413 := by
   native_decide
 
+private theorem choose_three_cast {n : Nat} (hn : 3 ≤ n) :
+    ((n.choose 3 : Nat) : ℚ) =
+      (n : ℚ) * (n - 1 : Nat) * (n - 2 : Nat) / 6 := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_add_of_le hn
+  rw [show 3 + m - 1 = m + 2 by omega,
+    show 3 + m - 2 = m + 1 by omega]
+  have h := Nat.choose_mul_factorial_mul_factorial
+    (n := 3 + m) (k := 3) (by omega : 3 ≤ 3 + m)
+  norm_num at h
+  have hq :
+      (((3 + m).choose 3 * 6 * m.factorial : Nat) : ℚ) =
+        (((3 + m).factorial : Nat) : ℚ) := by
+    exact_mod_cast h
+  have hfac :
+      (((3 + m).factorial : Nat) : ℚ) =
+        ((m : ℚ) + 3) * ((m : ℚ) + 2) * ((m : ℚ) + 1) *
+          ((m.factorial : Nat) : ℚ) := by
+    rw [show 3 + m = (m + 2) + 1 by omega, Nat.factorial_succ]
+    rw [show m + 2 = (m + 1) + 1 by omega, Nat.factorial_succ]
+    rw [show m + 1 = m + 1 by rfl, Nat.factorial_succ]
+    norm_num
+    ring
+  rw [Nat.cast_mul, Nat.cast_mul, hfac] at hq
+  have hfac_ne : (((m.factorial : Nat) : ℚ)) ≠ 0 := by positivity
+  field_simp [hfac_ne] at hq ⊢
+  push_cast
+  ring_nf at hq ⊢
+  exact hq
+
+private theorem eight_thirds_le_one_add_inv_pow_succ
+    (r : Nat) (hr : 1 ≤ r) :
+    (8 / 3 : ℚ) ≤ (1 + 1 / (r : ℚ))^(r + 1) := by
+  rcases Nat.eq_or_lt_of_le hr with rfl | hrgt
+  · norm_num
+  have hrpos : (0 : ℚ) < (r : ℚ) := by
+    exact_mod_cast (by omega : 0 < r)
+  let y : ℚ := 1 / (r : ℚ)
+  let T : Nat → ℚ := fun m =>
+    y^m * 1^(r + 1 - m) * ((r + 1).choose m : ℚ)
+  have hfull :
+      (1 + 1 / (r : ℚ))^(r + 1) =
+        ∑ m ∈ Finset.range (r + 2), T m := by
+    dsimp [T, y]
+    calc
+      (1 + 1 / (r : ℚ))^(r + 1)
+          = (1 / (r : ℚ) + 1)^(r + 1) := by ring_nf
+      _ = ∑ m ∈ Finset.range (r + 1 + 1),
+            (1 / (r : ℚ))^m * 1^(r + 1 - m) *
+              ((r + 1).choose m : ℚ) := by
+            exact add_pow (1 / (r : ℚ)) (1 : ℚ) (r + 1)
+      _ = ∑ m ∈ Finset.range (r + 2),
+            (1 / (r : ℚ))^m * 1^(r + 1 - m) *
+              ((r + 1).choose m : ℚ) := by
+            rw [show r + 1 + 1 = r + 2 by omega]
+  have hprefix_le :
+      (∑ m ∈ Finset.range 4, T m) ≤
+        ∑ m ∈ Finset.range (r + 2), T m := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?hsub ?hnonneg
+    · intro m hm
+      simp only [Finset.mem_range] at hm ⊢
+      omega
+    · intro m _hm _hnot
+      dsimp [T, y]
+      positivity
+  have hprefix :
+      (∑ m ∈ Finset.range 4, T m) =
+        8 / 3 + 3 / (2 * (r : ℚ)) - 1 / (6 * (r : ℚ)^2) := by
+    dsimp [T, y]
+    norm_num [Finset.sum_range_succ, Nat.choose_one_right,
+      Nat.cast_choose_two ℚ, choose_three_cast (by omega : 3 ≤ r + 1)]
+    rw [show r + 1 - 2 = r - 1 by omega]
+    rw [Nat.cast_sub (by omega : 1 ≤ r)]
+    field_simp [hrpos.ne']
+    ring_nf
+  have hprefix_ge : (8 / 3 : ℚ) ≤ ∑ m ∈ Finset.range 4, T m := by
+    rw [hprefix]
+    have hpos :
+        0 ≤ 3 / (2 * (r : ℚ)) - 1 / (6 * (r : ℚ)^2) := by
+      have hnum : 0 ≤ 9 * (r : ℚ) - 1 := by
+        have hrQ : (1 : ℚ) ≤ r := by exact_mod_cast hr
+        nlinarith
+      have hden : 0 < 6 * (r : ℚ)^2 := by positivity
+      have hrepr :
+          3 / (2 * (r : ℚ)) - 1 / (6 * (r : ℚ)^2) =
+            (9 * (r : ℚ) - 1) / (6 * (r : ℚ)^2) := by
+        field_simp [hrpos.ne', pow_ne_zero 2 hrpos.ne']
+        ring
+      rw [hrepr]
+      exact div_nonneg hnum hden.le
+    linarith
+  rw [hfull]
+  exact hprefix_ge.trans hprefix_le
+
+private theorem factorial_pred_le_rational_stirling
+    (r : Nat) (hr : 1 ≤ r) :
+    (((r - 1).factorial : Nat) : ℚ) ≤
+      3 * (r : ℚ)^r * (3 / 8 : ℚ)^r := by
+  induction r, hr using Nat.le_induction with
+  | base => norm_num
+  | succ r hr ih =>
+      have hrpos : (0 : ℚ) < (r : ℚ) := by
+        exact_mod_cast (by omega : 0 < r)
+      have hpowratio0 :
+          (8 / 3 : ℚ) ≤ (1 + 1 / (r : ℚ))^(r + 1) :=
+        eight_thirds_le_one_add_inv_pow_succ r hr
+      have hpowratio :
+          (8 / 3 : ℚ) * (r : ℚ)^(r + 1) ≤
+            ((r + 1 : Nat) : ℚ)^(r + 1) := by
+        have hmul := mul_le_mul_of_nonneg_right hpowratio0
+          (pow_nonneg hrpos.le (r + 1))
+        have hbase :
+            1 + 1 / (r : ℚ) = ((r + 1 : Nat) : ℚ) / (r : ℚ) := by
+          field_simp [hrpos.ne']
+          push_cast
+          ring
+        rw [hbase] at hmul
+        calc
+          (8 / 3 : ℚ) * (r : ℚ)^(r + 1)
+              ≤ (((r + 1 : Nat) : ℚ) / (r : ℚ))^(r + 1) *
+                  (r : ℚ)^(r + 1) := hmul
+          _ = ((r + 1 : Nat) : ℚ)^(r + 1) := by
+              rw [div_pow]
+              field_simp [pow_ne_zero (r + 1) hrpos.ne']
+      have hcore :
+          (r : ℚ)^(r + 1) ≤
+            (3 / 8 : ℚ) * (((r + 1 : Nat) : ℚ)^(r + 1)) := by
+        nlinarith [hpowratio]
+      have hfac :
+          (((r + 1 - 1).factorial : Nat) : ℚ) =
+            (r : ℚ) * (((r - 1).factorial : Nat) : ℚ) := by
+        rw [show r + 1 - 1 = r by omega]
+        rw [show r = (r - 1) + 1 by omega, Nat.factorial_succ]
+        norm_num
+      rw [hfac]
+      calc
+        (r : ℚ) * (((r - 1).factorial : Nat) : ℚ)
+            ≤ (r : ℚ) * (3 * (r : ℚ)^r * (3 / 8 : ℚ)^r) :=
+              mul_le_mul_of_nonneg_left ih hrpos.le
+        _ = 3 * (r : ℚ)^(r + 1) * (3 / 8 : ℚ)^r := by ring
+        _ ≤ 3 * (((r + 1 : Nat) : ℚ)^(r + 1)) *
+              (3 / 8 : ℚ)^(r + 1) := by
+          calc
+            3 * (r : ℚ)^(r + 1) * (3 / 8 : ℚ)^r
+                ≤ 3 * ((3 / 8 : ℚ) *
+                    ((r + 1 : Nat) : ℚ)^(r + 1)) *
+                    (3 / 8 : ℚ)^r :=
+                  mul_le_mul_of_nonneg_right
+                    (mul_le_mul_of_nonneg_left hcore
+                      (by norm_num : (0 : ℚ) ≤ 3))
+                    (pow_nonneg (by norm_num) r)
+            _ = 3 * (((r + 1 : Nat) : ℚ)^(r + 1)) *
+                  (3 / 8 : ℚ)^(r + 1) := by
+                rw [pow_succ]
+                ring
+
+private theorem factorialGasPrefix_scale_le
+    {a base r : Nat} (ha : 150 ≤ a) (hr : 4 ≤ r) :
+    (((r - 1).factorial : Nat) : ℚ) * (base : ℚ)^r / (a : ℚ)^r
+      ≤ factorialGasPrefixTerm base r false / (a : ℚ)^4 := by
+  let A : ℚ := a
+  have hApos : 0 < A := by
+    dsimp [A]
+    exact_mod_cast (by omega : 0 < a)
+  have h150pos : (0 : ℚ) < 150 := by norm_num
+  have hpow150_le : (150 : ℚ)^(r - 4) ≤ A^(r - 4) := by
+    dsimp [A]
+    exact pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 150)
+      (by exact_mod_cast ha) (r - 4)
+  have hinv_le : 1 / A^(r - 4) ≤ 1 / (150 : ℚ)^(r - 4) :=
+    one_div_le_one_div_of_le (pow_pos h150pos (r - 4)) hpow150_le
+  calc
+    (((r - 1).factorial : Nat) : ℚ) * (base : ℚ)^r / (a : ℚ)^r
+        = ((((r - 1).factorial : Nat) : ℚ) * (base : ℚ)^r / A^4) *
+            (1 / A^(r - 4)) := by
+          dsimp [A]
+          rw [show r = 4 + (r - 4) by omega, pow_add]
+          field_simp [hApos.ne', pow_ne_zero 4 hApos.ne',
+            pow_ne_zero (r - 4) hApos.ne']
+          rw [show 4 + (r - 4) - 4 = r - 4 by omega]
+          ring
+    _ ≤ ((((r - 1).factorial : Nat) : ℚ) * (base : ℚ)^r / A^4) *
+          (1 / (150 : ℚ)^(r - 4)) :=
+          mul_le_mul_of_nonneg_left hinv_le (by positivity)
+    _ = factorialGasPrefixTerm base r false / A^4 := by
+          unfold factorialGasPrefixTerm
+          simp
+          rw [show r = 4 + (r - 4) by omega, pow_add]
+          field_simp [hApos.ne', pow_ne_zero 4 h150pos.ne',
+            pow_ne_zero (r - 4) h150pos.ne']
+          norm_num
+          ring
+
+private theorem factorialGasPrefix_weighted_scale_le
+    {a base r : Nat} (ha : 150 ≤ a) (hr : 4 ≤ r) :
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (base : ℚ)^r / (a : ℚ)^r)
+      ≤ factorialGasPrefixTerm base r true / (a : ℚ)^4 := by
+  have hbase := factorialGasPrefix_scale_le
+    (a := a) (base := base) (r := r) ha hr
+  have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+  calc
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (base : ℚ)^r / (a : ℚ)^r)
+        ≤ (r : ℚ) * (factorialGasPrefixTerm base r false / (a : ℚ)^4) :=
+          mul_le_mul_of_nonneg_left hbase hr_nonneg
+    _ = factorialGasPrefixTerm base r true / (a : ℚ)^4 := by
+          unfold factorialGasPrefixTerm
+          simp
+          ring
+
+private theorem factorialGasBase4_tail_term_le
+    {a r : Nat} (hr : 4 ≤ r) (hra : 2 * r ≤ a) :
+    (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r
+      ≤ (48 * (r : ℚ)^4 * (3 / 4 : ℚ)^r) / (a : ℚ)^4 := by
+  let R : ℚ := r
+  let A : ℚ := a
+  have hRpos : 0 < R := by
+    dsimp [R]
+    exact_mod_cast (by omega : 0 < r)
+  have hApos : 0 < A := by
+    dsimp [A]
+    exact_mod_cast (by omega : 0 < a)
+  have hratio : R / A ≤ (1 / 2 : ℚ) := by
+    dsimp [R, A]
+    rw [div_le_iff₀ hApos]
+    have hq : (2 : ℚ) * (r : ℚ) ≤ (a : ℚ) := by exact_mod_cast hra
+    nlinarith
+  have hratio_nonneg : 0 ≤ R / A := by positivity
+  have hpow_ratio :
+      (R / A)^(r - 4) ≤ (1 / 2 : ℚ)^(r - 4) :=
+    pow_le_pow_left₀ hratio_nonneg hratio (r - 4)
+  have hfac := factorial_pred_le_rational_stirling r (by omega : 1 ≤ r)
+  have hbase :
+      (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / A^r
+        ≤ (3 * R^r * (3 / 8 : ℚ)^r) * (4 : ℚ)^r / A^r := by
+    exact div_le_div_of_nonneg_right
+      (mul_le_mul_of_nonneg_right hfac (pow_nonneg (by norm_num) r))
+      (pow_nonneg hApos.le r)
+  have hRpow : R^r = R^4 * R^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have hApow : A^r = A^4 * A^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have h384 : (3 / 8 : ℚ)^r * (4 : ℚ)^r = (3 / 2 : ℚ)^r := by
+    rw [← mul_pow]
+    norm_num
+  have h12_32 :
+      (1 / 2 : ℚ)^(r - 4) * (3 / 2 : ℚ)^(r - 4) =
+        (3 / 4 : ℚ)^(r - 4) := by
+    rw [← mul_pow]
+    norm_num
+  have h34pow :
+      (3 / 4 : ℚ)^r = (3 / 4 : ℚ)^4 * (3 / 4 : ℚ)^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have h32pow :
+      (3 / 2 : ℚ)^r = (3 / 2 : ℚ)^4 * (3 / 2 : ℚ)^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  calc
+    (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / (a : ℚ)^r
+        = (((r - 1).factorial : Nat) : ℚ) * (4 : ℚ)^r / A^r := by rfl
+    _ ≤ (3 * R^r * (3 / 8 : ℚ)^r) * (4 : ℚ)^r / A^r := hbase
+    _ = 3 * (R^4 / A^4) * (R / A)^(r - 4) * (3 / 2 : ℚ)^r := by
+      rw [hRpow, hApow]
+      calc
+        (3 * (R^4 * R^(r - 4)) * (3 / 8 : ℚ)^r) * (4 : ℚ)^r /
+            (A^4 * A^(r - 4))
+            = 3 * (R^4 * R^(r - 4)) *
+                ((3 / 8 : ℚ)^r * (4 : ℚ)^r) /
+                (A^4 * A^(r - 4)) := by ring
+        _ = 3 * (R^4 * R^(r - 4)) * (3 / 2 : ℚ)^r /
+              (A^4 * A^(r - 4)) := by rw [h384]
+        _ = 3 * (R^4 / A^4) * (R^(r - 4) / A^(r - 4)) *
+              (3 / 2 : ℚ)^r := by
+            field_simp [hApos.ne', pow_ne_zero 4 hApos.ne',
+              pow_ne_zero (r - 4) hApos.ne']
+        _ = 3 * (R^4 / A^4) * (R / A)^(r - 4) *
+              (3 / 2 : ℚ)^r := by
+            rw [← div_pow R A (r - 4)]
+    _ ≤ 3 * (R^4 / A^4) * (1 / 2 : ℚ)^(r - 4) *
+          (3 / 2 : ℚ)^r := by
+      have hnonneg : 0 ≤ 3 * (R^4 / A^4) := by positivity
+      exact mul_le_mul_of_nonneg_right
+        (mul_le_mul_of_nonneg_left hpow_ratio hnonneg)
+        (pow_nonneg (by norm_num) r)
+    _ = (48 * R^4 * (3 / 4 : ℚ)^r) / A^4 := by
+      rw [h34pow, h32pow]
+      calc
+        3 * (R^4 / A^4) * (1 / 2 : ℚ)^(r - 4) *
+            ((3 / 2 : ℚ)^4 * (3 / 2 : ℚ)^(r - 4))
+            = 3 * (R^4 / A^4) *
+                ((1 / 2 : ℚ)^(r - 4) * (3 / 2 : ℚ)^(r - 4)) *
+                (3 / 2 : ℚ)^4 := by ring
+        _ = 3 * (R^4 / A^4) * (3 / 4 : ℚ)^(r - 4) *
+              (3 / 2 : ℚ)^4 := by rw [h12_32]
+        _ = (48 * R^4 * ((3 / 4 : ℚ)^4 * (3 / 4 : ℚ)^(r - 4))) /
+              A^4 := by
+            field_simp [hApos.ne', pow_ne_zero 4 hApos.ne']
+            norm_num
+    _ = (48 * (r : ℚ)^4 * (3 / 4 : ℚ)^r) / (a : ℚ)^4 := by rfl
+
+private theorem factorialGasBase2_tail_term_le
+    {a r : Nat} (hr : 4 ≤ r) (hra : 2 * r ≤ a) :
+    (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r
+      ≤ (48 * (r : ℚ)^4 * (3 / 8 : ℚ)^r) / (a : ℚ)^4 := by
+  let R : ℚ := r
+  let A : ℚ := a
+  have hRpos : 0 < R := by
+    dsimp [R]
+    exact_mod_cast (by omega : 0 < r)
+  have hApos : 0 < A := by
+    dsimp [A]
+    exact_mod_cast (by omega : 0 < a)
+  have hratio : R / A ≤ (1 / 2 : ℚ) := by
+    dsimp [R, A]
+    rw [div_le_iff₀ hApos]
+    have hq : (2 : ℚ) * (r : ℚ) ≤ (a : ℚ) := by exact_mod_cast hra
+    nlinarith
+  have hratio_nonneg : 0 ≤ R / A := by positivity
+  have hpow_ratio :
+      (R / A)^(r - 4) ≤ (1 / 2 : ℚ)^(r - 4) :=
+    pow_le_pow_left₀ hratio_nonneg hratio (r - 4)
+  have hfac := factorial_pred_le_rational_stirling r (by omega : 1 ≤ r)
+  have hbase :
+      (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / A^r
+        ≤ (3 * R^r * (3 / 8 : ℚ)^r) * (2 : ℚ)^r / A^r := by
+    exact div_le_div_of_nonneg_right
+      (mul_le_mul_of_nonneg_right hfac (pow_nonneg (by norm_num) r))
+      (pow_nonneg hApos.le r)
+  have hRpow : R^r = R^4 * R^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have hApow : A^r = A^4 * A^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have h382 : (3 / 8 : ℚ)^r * (2 : ℚ)^r = (3 / 4 : ℚ)^r := by
+    rw [← mul_pow]
+    norm_num
+  have h12_34 :
+      (1 / 2 : ℚ)^(r - 4) * (3 / 4 : ℚ)^(r - 4) =
+        (3 / 8 : ℚ)^(r - 4) := by
+    rw [← mul_pow]
+    norm_num
+  have h38pow :
+      (3 / 8 : ℚ)^r = (3 / 8 : ℚ)^4 * (3 / 8 : ℚ)^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  have h34pow :
+      (3 / 4 : ℚ)^r = (3 / 4 : ℚ)^4 * (3 / 4 : ℚ)^(r - 4) := by
+    conv_lhs => rw [show r = 4 + (r - 4) by omega]
+    rw [pow_add]
+  calc
+    (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / (a : ℚ)^r
+        = (((r - 1).factorial : Nat) : ℚ) * (2 : ℚ)^r / A^r := by rfl
+    _ ≤ (3 * R^r * (3 / 8 : ℚ)^r) * (2 : ℚ)^r / A^r := hbase
+    _ = 3 * (R^4 / A^4) * (R / A)^(r - 4) * (3 / 4 : ℚ)^r := by
+      rw [hRpow, hApow]
+      calc
+        (3 * (R^4 * R^(r - 4)) * (3 / 8 : ℚ)^r) * (2 : ℚ)^r /
+            (A^4 * A^(r - 4))
+            = 3 * (R^4 * R^(r - 4)) *
+                ((3 / 8 : ℚ)^r * (2 : ℚ)^r) /
+                (A^4 * A^(r - 4)) := by ring
+        _ = 3 * (R^4 * R^(r - 4)) * (3 / 4 : ℚ)^r /
+              (A^4 * A^(r - 4)) := by rw [h382]
+        _ = 3 * (R^4 / A^4) * (R^(r - 4) / A^(r - 4)) *
+              (3 / 4 : ℚ)^r := by
+            field_simp [hApos.ne', pow_ne_zero 4 hApos.ne',
+              pow_ne_zero (r - 4) hApos.ne']
+        _ = 3 * (R^4 / A^4) * (R / A)^(r - 4) *
+              (3 / 4 : ℚ)^r := by
+            rw [← div_pow R A (r - 4)]
+    _ ≤ 3 * (R^4 / A^4) * (1 / 2 : ℚ)^(r - 4) *
+          (3 / 4 : ℚ)^r := by
+      have hnonneg : 0 ≤ 3 * (R^4 / A^4) := by positivity
+      exact mul_le_mul_of_nonneg_right
+        (mul_le_mul_of_nonneg_left hpow_ratio hnonneg)
+        (pow_nonneg (by norm_num) r)
+    _ = (48 * R^4 * (3 / 8 : ℚ)^r) / A^4 := by
+      rw [h38pow, h34pow]
+      calc
+        3 * (R^4 / A^4) * (1 / 2 : ℚ)^(r - 4) *
+            ((3 / 4 : ℚ)^4 * (3 / 4 : ℚ)^(r - 4))
+            = 3 * (R^4 / A^4) *
+                ((1 / 2 : ℚ)^(r - 4) * (3 / 4 : ℚ)^(r - 4)) *
+                (3 / 4 : ℚ)^4 := by ring
+        _ = 3 * (R^4 / A^4) * (3 / 8 : ℚ)^(r - 4) *
+              (3 / 4 : ℚ)^4 := by rw [h12_34]
+        _ = (48 * R^4 * ((3 / 8 : ℚ)^4 * (3 / 8 : ℚ)^(r - 4))) /
+              A^4 := by
+            field_simp [hApos.ne', pow_ne_zero 4 hApos.ne']
+            norm_num
+    _ = (48 * (r : ℚ)^4 * (3 / 8 : ℚ)^r) / (a : ℚ)^4 := by rfl
+
+private theorem factorialGasBase4_weighted_tail_term_le
+    {a r : Nat} (hr : 4 ≤ r) (hra : 2 * r ≤ a) :
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (4 : ℚ)^r / (a : ℚ)^r)
+      ≤ (48 * (r : ℚ)^5 * (3 / 4 : ℚ)^r) / (a : ℚ)^4 := by
+  have h := factorialGasBase4_tail_term_le (a := a) (r := r) hr hra
+  have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+  calc
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (4 : ℚ)^r / (a : ℚ)^r)
+        ≤ (r : ℚ) * ((48 * (r : ℚ)^4 * (3 / 4 : ℚ)^r) /
+            (a : ℚ)^4) := mul_le_mul_of_nonneg_left h hr_nonneg
+    _ = (48 * (r : ℚ)^5 * (3 / 4 : ℚ)^r) / (a : ℚ)^4 := by
+          ring
+
+private theorem factorialGasBase2_weighted_tail_term_le
+    {a r : Nat} (hr : 4 ≤ r) (hra : 2 * r ≤ a) :
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (2 : ℚ)^r / (a : ℚ)^r)
+      ≤ (48 * (r : ℚ)^5 * (3 / 8 : ℚ)^r) / (a : ℚ)^4 := by
+  have h := factorialGasBase2_tail_term_le (a := a) (r := r) hr hra
+  have hr_nonneg : 0 ≤ (r : ℚ) := by positivity
+  calc
+    (r : ℚ) * ((((r - 1).factorial : Nat) : ℚ) *
+        (2 : ℚ)^r / (a : ℚ)^r)
+        ≤ (r : ℚ) * ((48 * (r : ℚ)^4 * (3 / 8 : ℚ)^r) /
+            (a : ℚ)^4) := mul_le_mul_of_nonneg_left h hr_nonneg
+    _ = (48 * (r : ℚ)^5 * (3 / 8 : ℚ)^r) / (a : ℚ)^4 := by
+          ring
+
 /-! ## Taylor--Gamma truncation arithmetic -/
 
 def truncationResidueRhs (a : Nat) : ℚ :=
