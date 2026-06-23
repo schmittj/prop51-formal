@@ -10,6 +10,8 @@ residues denote the corresponding `ZMod finitePrime1` computations.
 
 import Prop52.ModularNat11
 import Prop51.PartitionsComplete
+import Mathlib.Data.Bool.AllAny
+import Mathlib.Data.List.TakeDrop
 import Mathlib.Tactic.IntervalCases
 
 namespace Prop52
@@ -559,5 +561,66 @@ theorem finitePrime1_correctedCoeffMod_ne_10_generated :
   intro μ hmem
   exact finitePrime1_correctedCoeffMod_ne_of_checkGenerated 10 μ
     (by decide) checkGeneratedModNat_10_prime1 hmem
+
+theorem partitions_M11_length_le_20_chunks :
+    (Prop51.partitions (M 11)).length ≤ 20 * 50000 := by
+  native_decide
+
+theorem mem_partitions_M11_chunk_of_mem
+    {μ : List Nat} (hmem : μ ∈ Prop51.partitions (M 11)) :
+    ∃ j : Nat, j < 20 ∧
+      μ ∈ ((Prop51.partitions (M 11)).drop (j * 50000)).take 50000 := by
+  let L := Prop51.partitions (M 11)
+  let i := L.idxOf μ
+  have hi : i < L.length := by
+    simpa [L, i] using (List.idxOf_lt_length_of_mem (l := L) hmem)
+  let j := i / 50000
+  have hstart : j * 50000 ≤ i := by
+    simpa [j, Nat.mul_comm] using Nat.div_mul_le_self i 50000
+  have hwithin0 : i < 50000 * (i / 50000 + 1) :=
+    Nat.lt_mul_div_succ i (by norm_num : 0 < 50000)
+  have hwithin : i < j * 50000 + 50000 := by
+    simpa [j, Nat.mul_add, Nat.mul_comm, Nat.mul_left_comm, Nat.mul_assoc] using hwithin0
+  have hlen : L.length ≤ 20 * 50000 := by
+    simpa [L] using partitions_M11_length_le_20_chunks
+  have hj : j < 20 := by
+    change i / 50000 < 20
+    rw [Nat.div_lt_iff_lt_mul (by norm_num : 0 < 50000)]
+    exact lt_of_lt_of_le hi hlen
+  refine ⟨j, hj, ?_⟩
+  have hmemChunkL : μ ∈ (L.drop (j * 50000)).take 50000 := by
+    rw [List.mem_iff_getElem]
+    refine ⟨i - j * 50000, ?_, ?_⟩
+    · simp [List.length_take, List.length_drop]
+      omega
+    · have hget : L[i] = μ := by
+        have hopt := (List.getElem?_idxOf (a := μ) (l := L) hmem)
+        rw [List.getElem?_eq_getElem hi] at hopt
+        exact Option.some.inj hopt
+      have hidx : j * 50000 + (i - j * 50000) = i := by
+        omega
+      rw [List.getElem_take, List.getElem_drop]
+      simpa [L, hidx] using hget
+  simpa [L] using hmemChunkL
+
+theorem finitePrime1_correctedCoeffMod_ne_11_generated :
+    ∀ μ ∈ Prop51.partitions (M 11), correctedCoeffMod finitePrime1 11 μ ≠ 0 := by
+  intro μ hmem
+  obtain ⟨j, hj, hmemChunk⟩ := mem_partitions_M11_chunk_of_mem hmem
+  have hchunk := checkGeneratedModNat_11_prime1_chunks j hj
+  have hall :
+      ∀ ν : List Nat, ν ∈ ((Prop51.partitions (M 11)).drop (j * 50000)).take 50000 →
+        (correctedCoeffModNatWith finitePrime1 11
+          (cListModNat finitePrime1 11).toArray
+          (invIntTable finitePrime1 11)
+          (invPowTable finitePrime1 11 (M 11 + 1)) ν != 0) = true := by
+    simpa [checkGeneratedModNatChunk, List.all_eq_true] using hchunk
+  have hnatWith := hall μ hmemChunk
+  have hnat : (correctedCoeffModNat finitePrime1 11 μ != 0) = true := by
+    simpa [correctedCoeffModNat] using hnatWith
+  have hsum : μ.sum = M 11 :=
+    (Prop51.mem_partitions_iff.mp hmem).1
+  exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne 11 μ
+    (by decide) hsum hnat
 
 end Prop52

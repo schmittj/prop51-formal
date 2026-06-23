@@ -29,6 +29,7 @@ import Prop51
 #print axioms Prop52.finitePrime1_correctedCoeffModNat_cast
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_9_generated
 #print axioms Prop52.finitePrime1_correctedCoeffMod_ne_10_generated
+#print axioms Prop52.finitePrime1_correctedCoeffMod_ne_11_generated
 #print axioms Prop52.ratCast_mul_of_good
 #print axioms Prop52.ratCast_add_of_good
 #print axioms Prop52.ratCast_sub_of_good
