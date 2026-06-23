@@ -6,4 +6,5 @@ Root module for the corrected Chen--Larson Proposition 5.2 formalization.
 
 import Prop52.Theorem
 import Prop52.Recurrence
+import Prop52.Modular
 import Prop52.Finite
