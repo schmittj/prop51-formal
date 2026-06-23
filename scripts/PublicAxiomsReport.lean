@@ -26,6 +26,9 @@ import Prop51
 #print axioms Prop52.finitePrime1_expListModNat_cast
 #print axioms Prop52.finitePrime1_hCoeffModNat_cast
 #print axioms Prop52.finitePrime1_kCoeffModNat_cast
+#print axioms Prop52.finitePrime1_correctedCoeffModNat_cast
+#print axioms Prop52.finitePrime1_correctedCoeffMod_ne_9_generated
+#print axioms Prop52.finitePrime1_correctedCoeffMod_ne_10_generated
 #print axioms Prop52.correctedCoeff_neg_large_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_finite_and_printed
 #print axioms Prop52.correctedCoeff_ne_2_8
