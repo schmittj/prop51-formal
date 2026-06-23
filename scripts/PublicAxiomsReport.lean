@@ -153,6 +153,7 @@ import Prop52.Printed
 #print axioms Prop52.printedTailX2Bound4_lt
 #print axioms Prop52.printedTailAbsoluteMoment0_budget
 #print axioms Prop52.printedTailAbsoluteMoment1_budget
+#print axioms Prop52.printedTailMajorantMomentBounds_of_wPointMomentBounds
 #print axioms Prop52.printedTailOmegaCoeffMajorant_of_wPointBoundX2
 #print axioms Prop52.printedTailOmegaExpBudget_bound
 #print axioms Prop52.printedTailOmegaErrorBound_of_coeffMajorant
@@ -174,3 +175,4 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_errorBounds
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_omegaCoeff
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_wPointX2
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_wPointMoments_wPointX2

@@ -221,6 +221,19 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_wPointX2
     hmid hmain hmaj
     (printedTailOmegaCoeffMajorant_of_wPointBoundX2 hpoint)
 
+/-- Final assembly with the printed proof's finite point/derivative majorant
+certificates in place of the abstract majorant-moment assumptions. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_wPointMoments_wPointX2
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hmomPoint : PrintedTailWPointMomentBounds)
+    (hpoint : PrintedTailWPointBoundX2) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_wPointX2
+    hmid hmain
+    (printedTailMajorantMomentBounds_of_wPointMomentBounds hmomPoint)
+    hpoint
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
