@@ -124,6 +124,7 @@ import Prop52.Printed
 #print axioms Prop52.coeff_printedTailWSeries
 #print axioms Prop52.hCoeff_nonneg_of_partition
 #print axioms Prop52.hCoeff_le_twoM_c_of_partition
+#print axioms Prop52.hCoeff_le_M_two_sub_twopow_c_of_partition
 #print axioms Prop52.markedWeight_nonneg_of_coeffs
 #print axioms Prop52.markedWeight_le_M_div_two_pow_of_partition
 #print axioms Prop52.kCoeff_nonneg

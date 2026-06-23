@@ -326,6 +326,112 @@ theorem hCoeff_le_twoM_c_of_partition {a : Nat} {μ : List Nat}
           mul_le_mul_of_nonneg_left hN hc
     _ = (2 * (M a : ℚ)) * Prop51.c r := by ring
 
+private theorem q_sub_inv_pow_le_marked_two_sub (mi r : Nat) (hmi : 1 ≤ mi) :
+    ((mi + 1 : Nat) : ℚ) - 1 / (((mi + 1 : Nat) : ℚ)^r) ≤
+      (mi : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+  by_cases hr0 : r = 0
+  · subst r
+    norm_num
+  by_cases hmi_one : mi = 1
+  · subst mi
+    norm_num
+  let q : ℚ := ((mi + 1 : Nat) : ℚ)
+  have hmi_ge_two : 2 ≤ mi := by omega
+  have hq3 : (3 : ℚ) ≤ q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_le_succ hmi_ge_two
+  have hqpos : (0 : ℚ) < q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_pos mi
+  have hrpos : 1 ≤ r := by omega
+  have hpow_mono : (2 : ℚ)^1 ≤ (2 : ℚ)^r :=
+    pow_le_pow_right₀ (by norm_num : (0 : ℚ) ≤ 2) hrpos
+  have htwo_inv_le_half : 1 / (2 : ℚ)^r ≤ 1 / 2 := by
+    simpa using
+      (one_div_le_one_div_of_le (by norm_num : (0 : ℚ) < (2 : ℚ)^1) hpow_mono)
+  have hfactor_ge : (3 / 2 : ℚ) ≤ 2 - 1 / (2 : ℚ)^r := by
+    linarith
+  have hleft_le_q : q - 1 / q^r ≤ q := by
+    have hinv_nonneg : 0 ≤ 1 / q^r := by positivity
+    linarith
+  have hq_le_rhs : q ≤ (q - 1) * (2 - 1 / (2 : ℚ)^r) := by
+    nlinarith
+  have hq_minus : q - 1 = (mi : ℚ) := by
+    dsimp [q]
+    push_cast
+    ring
+  calc
+    ((mi + 1 : Nat) : ℚ) - 1 / (((mi + 1 : Nat) : ℚ)^r)
+        = q - 1 / q^r := by rfl
+    _ ≤ q := hleft_le_q
+    _ ≤ (q - 1) * (2 - 1 / (2 : ℚ)^r) := hq_le_rhs
+    _ = (mi : ℚ) * (2 - 1 / (2 : ℚ)^r) := by rw [hq_minus]
+
+private theorem N_sub_sPower_le_partition_mass_two_sub
+    {μ : List Nat} (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) :
+    (N μ : ℚ) - sPower μ r ≤ (μ.sum : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+  induction μ with
+  | nil =>
+      simp [N, sPower]
+  | cons mi μ ih =>
+      have hmi : 1 ≤ mi := hpos mi (by simp)
+      have htail : ∀ m ∈ μ, 1 ≤ m := by
+        intro m hm
+        exact hpos m (by simp [hm])
+      have ih_raw := ih htail
+      have ih' :
+          (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (μ.sum : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+        unfold N sPower at ih_raw
+        simpa [Nat.cast_add, Nat.cast_one] using ih_raw
+      unfold N sPower
+      simp only [List.map_cons, List.sum_cons, Nat.cast_add]
+      have hterm := q_sub_inv_pow_le_marked_two_sub mi r hmi
+      have hterm' :
+          (mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)^r ≤
+            (mi : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+        simpa [Nat.cast_add, Nat.cast_one] using hterm
+      change
+        (mi : ℚ) + 1 + (((List.map (fun x => x + 1) μ).sum : Nat) : ℚ) -
+            (1 / ((mi : ℚ) + 1)^r +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum)
+          ≤ ((mi : ℚ) + (μ.sum : ℚ)) * (2 - 1 / (2 : ℚ)^r)
+      calc
+        (mi : ℚ) + 1 + (((List.map (fun x => x + 1) μ).sum : Nat) : ℚ) -
+            (1 / ((mi : ℚ) + 1)^r +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum)
+            =
+          ((mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)^r) +
+            ((((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum) := by
+            ring_nf
+        _ ≤ (mi : ℚ) * (2 - 1 / (2 : ℚ)^r) +
+            (μ.sum : ℚ) * (2 - 1 / (2 : ℚ)^r) :=
+          add_le_add hterm' ih'
+        _ = ((mi : ℚ) + (μ.sum : ℚ)) * (2 - 1 / (2 : ℚ)^r) := by
+          ring
+
+/-- The paper's simple upper bound
+`h_r <= M (2 - 2^{-r}) c_r`, obtained by summing
+`q_i - q_i^{-r} <= (q_i-1)(2-2^{-r})` over the partition. -/
+theorem hCoeff_le_M_two_sub_twopow_c_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    hCoeff μ r ≤
+      ((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r := by
+  unfold hCoeff
+  obtain ⟨hsum, hpos⟩ := hμ
+  have hD :
+      (N μ : ℚ) - sPower μ r ≤ (M a : ℚ) * (2 - 1 / (2 : ℚ)^r) := by
+    simpa [hsum] using
+      N_sub_sPower_le_partition_mass_two_sub (μ := μ) hpos r
+  have hc : 0 ≤ Prop51.c r := Prop51.c_nonneg r
+  calc
+    Prop51.c r * ((N μ : ℚ) - sPower μ r)
+        ≤ Prop51.c r * ((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) :=
+          mul_le_mul_of_nonneg_left hD hc
+    _ = ((M a : ℚ) * (2 - 1 / (2 : ℚ)^r)) * Prop51.c r := by ring
+
 private theorem markedWeight_term_le (mi r : Nat) :
     (mi : ℚ) / ((mi + 1 : Nat) : ℚ)^r ≤ (mi : ℚ) / (2 : ℚ)^r := by
   by_cases hmi : mi = 0
