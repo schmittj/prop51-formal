@@ -46,6 +46,8 @@ import Prop51
 #print axioms Prop52.finitePrime1_ratCast_markedWeight_of_good
 #print axioms Prop52.finitePrime1_ratCast_markedWeight_of_suffix_good
 #print axioms Prop52.finitePrime1_ratCast_hCoeff_of_good
+#print axioms Prop52.finitePrime1_ratCast_kCoeff_of_suffix_good
+#print axioms Prop52.finitePrime1_ratCast_correctedCoeffFast_of_good
 #print axioms Prop52.correctedCoeff_neg_large_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_finite_and_printed
 #print axioms Prop52.correctedCoeff_ne_2_8
