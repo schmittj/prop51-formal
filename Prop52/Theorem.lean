@@ -128,6 +128,20 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_normalizedTail
   correctedCoeff_nonvanishing_of_printed
     (printedCoeffNegativityLarge_of_mid_normalizedTail hmid htail)
 
+/-- Final assembly when the printed large-tail proof is supplied through the
+exact low/high split and the three finite normalized error estimates. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_split_errorBounds
+    (hmid : PrintedCoeffNegativityMid)
+    (hsplit : PrintedTailExactSplit)
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_tail hmid
+    (printedCoeffNegativityTail_of_split_errorBounds
+      hsplit hmain hh hk homega)
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records

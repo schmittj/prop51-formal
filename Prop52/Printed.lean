@@ -9,6 +9,7 @@ yet formalized here; the final rational margin used to close the proof is.
 -/
 
 import Prop52.Statement
+import Prop52.Recurrence
 import Prop51.Majorant
 import Mathlib.Tactic
 
@@ -150,6 +151,146 @@ theorem printedCoeffNegativityLarge_of_mid_normalizedTail
     PrintedCoeffNegativityLarge :=
   printedCoeffNegativityLarge_of_mid_tail hmid
     (printedCoeffNegativityTail_of_normalizedLowerBound htail)
+
+/-! ## Low/high split interface for the printed large tail
+
+The human proof expands the printed coefficient using
+`p = floor(a/2)`, keeps the low polynomials
+
+`L(t) = sum_{r<=p} h_r t^r` and `J(t) = sum_{r<=p} k_r t^r`,
+
+and writes `E = exp(-L)` and `W = E*(1-J)`.  The hard remaining work is to
+prove the exact split and the estimates below from the coefficient
+recurrences.  This section records the precise Lean objects and proves the
+final normalized-error assembly.
+-/
+
+def printedTailP (a : Nat) : Nat :=
+  a / 2
+
+def printedTailR0 (a : Nat) : Nat :=
+  a - printedTailP a - 1
+
+/-- Coefficients of the low polynomial `-L(t)` used to define
+`E(t)=exp(-L(t))`. -/
+def printedTailLowExpInput (μ : List Nat) (a r : Nat) : ℚ :=
+  if r ≤ printedTailP a then -hCoeff μ r else 0
+
+/-- The coefficient `e_s` of `E(t)=exp(-L(t))`. -/
+def printedTailECoeff (μ : List Nat) (a s : Nat) : ℚ :=
+  Prop51.expCoeff (printedTailLowExpInput μ a) s
+
+/-- The coefficient `omega_s` of `W(t)=E(t)(1-J(t))`, written as a finite
+convolution with the low marked numerator `J`. -/
+def printedTailOmegaCoeff (μ : List Nat) (a s : Nat) : ℚ :=
+  printedTailECoeff μ a s -
+    ((List.range s).map fun j : Nat =>
+      let r := j + 1
+      if r ≤ printedTailP a then
+        kCoeff μ r * printedTailECoeff μ a (s - r)
+      else 0).sum
+
+/-- Integer-shape Gamma moment `Gamma(a-s)/(6^s Gamma(a))`, expressed as a
+rational factorial ratio.  The large-tail proofs only use this for
+`s <= printedTailR0 a`, where the subtractions do not underflow. -/
+def gammaWeight (a s : Nat) : ℚ :=
+  ((Nat.factorial (a - s - 1) : Nat) : ℚ) /
+    ((6 : ℚ)^s * ((Nat.factorial (a - 1) : Nat) : ℚ))
+
+def printedTailMainSum (μ : List Nat) (a : Nat) : ℚ :=
+  ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
+    gammaWeight a s * printedTailOmegaCoeff μ a s).sum
+
+def printedTailDen (μ : List Nat) (a : Nat) : ℚ :=
+  ((N μ : Nat) : ℚ) * Prop51.c a
+
+def printedTailHNormSum (μ : List Nat) (a : Nat) : ℚ :=
+  ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
+    hCoeff μ (a - s) * printedTailOmegaCoeff μ a s / printedTailDen μ a).sum
+
+def printedTailKNormSum (μ : List Nat) (a : Nat) : ℚ :=
+  ((List.range (printedTailR0 a + 1)).map fun s : Nat =>
+    kCoeff μ (a - s) * printedTailECoeff μ a s).sum / printedTailDen μ a
+
+def printedTailOmegaNorm (μ : List Nat) (a : Nat) : ℚ :=
+  printedTailOmegaCoeff μ a a / printedTailDen μ a
+
+def printedTailSplitRhs (μ : List Nat) (a : Nat) : ℚ :=
+  printedTailHNormSum μ a + printedTailKNormSum μ a - printedTailOmegaNorm μ a
+
+/-- Exact normalized split target corresponding to equation `(exact-split)` in
+the printed proof. -/
+def PrintedTailExactSplit : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      (-printedCoeff μ a) / printedTailDen μ a = printedTailSplitRhs μ a
+
+/-- The Gamma-margin plus truncation step, stated directly for the finite main
+sum `sum gamma_s omega_s`. -/
+def PrintedTailMainLowerBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      9 / (40 * ((a : ℚ) - 2)) - 1 / (a : ℚ)^2 ≤
+        printedTailMainSum μ a
+
+def printedTailHErrorBudget (a : Nat) : ℚ :=
+  (86069 / 3125 : ℚ) / (a : ℚ)^2
+
+/-- The `h_{a-s}` replacement error:
+`86069/3125 = 36*(2304/3125)+1`. -/
+def PrintedTailHErrorBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      |printedTailHNormSum μ a - printedTailMainSum μ a| ≤
+        printedTailHErrorBudget a
+
+def PrintedTailKErrorBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      |printedTailKNormSum μ a| ≤ 1 / (a : ℚ)^2
+
+def PrintedTailOmegaErrorBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      |printedTailOmegaNorm μ a| ≤ 1 / (a : ℚ)^2
+
+/-- Final normalized large-tail assembly from the exact split and the three
+finite error estimates. -/
+theorem printedTailNormalizedLowerBound_of_split_errorBounds
+    (hsplit : PrintedTailExactSplit)
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    PrintedTailNormalizedLowerBound := by
+  intro a ha μ hμ
+  change printedLargeMargin a ≤ (-printedCoeff μ a) / printedTailDen μ a
+  rw [hsplit a ha μ hμ]
+  have hmain_lb := hmain a ha μ hμ
+  have hh_abs := abs_le.mp (hh a ha μ hμ)
+  have hk_abs := abs_le.mp (hk a ha μ hμ)
+  have homega_abs := abs_le.mp (homega a ha μ hμ)
+  have hmargin_decomp :
+      printedLargeMargin a =
+        9 / (40 * ((a : ℚ) - 2)) - 1 / (a : ℚ)^2 -
+          printedTailHErrorBudget a - 1 / (a : ℚ)^2 -
+          1 / (a : ℚ)^2 := by
+    unfold printedLargeMargin printedTailHErrorBudget
+    ring
+  unfold printedTailSplitRhs
+  rw [hmargin_decomp]
+  nlinarith [hh_abs.1, hk_abs.1, homega_abs.2]
+
+theorem printedCoeffNegativityTail_of_split_errorBounds
+    (hsplit : PrintedTailExactSplit)
+    (hmain : PrintedTailMainLowerBound)
+    (hh : PrintedTailHErrorBound)
+    (hk : PrintedTailKErrorBound)
+    (homega : PrintedTailOmegaErrorBound) :
+    PrintedCoeffNegativityTail :=
+  printedCoeffNegativityTail_of_normalizedLowerBound
+    (printedTailNormalizedLowerBound_of_split_errorBounds
+      hsplit hmain hh hk homega)
 
 /-! ## Gamma-margin arithmetic -/
 

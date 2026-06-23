@@ -98,6 +98,8 @@ import Prop52.Printed
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_tail
 #print axioms Prop52.printedCoeffNegativityTail_of_normalizedLowerBound
 #print axioms Prop52.printedCoeffNegativityLarge_of_mid_normalizedTail
+#print axioms Prop52.printedTailNormalizedLowerBound_of_split_errorBounds
+#print axioms Prop52.printedCoeffNegativityTail_of_split_errorBounds
 #print axioms Prop52.printedLargeMargin_pos
 #print axioms Prop52.printedLargeMargin_pos_150
 #print axioms Prop52.gammaExponentBound_lt
@@ -140,3 +142,4 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_tail
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_normalizedTail
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_split_errorBounds
