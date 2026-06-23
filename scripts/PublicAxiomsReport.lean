@@ -129,6 +129,7 @@ import Prop52.Printed
 #print axioms Prop52.markedWeight_le_M_div_two_pow_of_partition
 #print axioms Prop52.kCoeff_nonneg
 #print axioms Prop52.kCoeff_le_partition_marked_bound
+#print axioms Prop52.kCoeff_le_two_hCoeff_of_partition
 #print axioms Prop52.printedLargeMargin_pos
 #print axioms Prop52.printedLargeMargin_pos_150
 #print axioms Prop52.gammaExponentBound_lt

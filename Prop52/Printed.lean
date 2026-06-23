@@ -528,6 +528,204 @@ theorem kCoeff_le_partition_marked_bound {a : Nat} {μ : List Nat}
       (mul_nonneg (mul_nonneg (by norm_num) (by positivity))
         (Prop51.c_nonneg (r + 1)))
 
+private theorem marked_summand_le_q_sub_inv_pow (mi r : Nat) :
+    (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r) ≤
+      ((mi + 1 : Nat) : ℚ) - 1 / (((mi + 1 : Nat) : ℚ)^r) := by
+  let q : ℚ := ((mi + 1 : Nat) : ℚ)
+  have hqpos : 0 < q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_pos mi
+  have hq_ge_one : (1 : ℚ) ≤ q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_le_succ (Nat.zero_le mi)
+  have hpow : q ≤ q^(r + 1) := by
+    calc
+      q = q^1 := by ring
+      _ ≤ q^(r + 1) := pow_le_pow_right₀ hq_ge_one (by omega : 1 ≤ r + 1)
+  have hnat : (mi : ℚ) ≤ q^(r + 1) - 1 := by
+    have hq_minus : q - 1 = (mi : ℚ) := by
+      dsimp [q]
+      push_cast
+      ring
+    linarith
+  rw [div_le_iff₀ (pow_pos hqpos r)]
+  calc
+    (mi : ℚ) ≤ q^(r + 1) - 1 := hnat
+    _ = (q - 1 / q^r) * q^r := by
+      field_simp [pow_ne_zero r hqpos.ne']
+      ring
+
+private theorem markedWeight_le_N_sub_sPower_of_coeffs
+    (μ : List Nat) (r : Nat) :
+    markedWeight μ r ≤ (N μ : ℚ) - sPower μ r := by
+  induction μ with
+  | nil =>
+      simp [markedWeight, N, sPower]
+  | cons mi μ ih =>
+      unfold markedWeight N sPower at ih ⊢
+      simp only [List.map_cons, List.sum_cons, Nat.cast_add]
+      have hterm := marked_summand_le_q_sub_inv_pow mi r
+      have hterm' :
+          (mi : ℚ) / ((mi : ℚ) + 1)^r ≤
+            (mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)^r := by
+        simpa [Nat.cast_add, Nat.cast_one] using hterm
+      change
+        (mi : ℚ) / ((mi : ℚ) + 1)^r +
+            (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+          ≤
+        (mi : ℚ) + 1 + (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+          (1 / ((mi : ℚ) + 1)^r +
+            (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum)
+      have ih' :
+          (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤
+          (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+            (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum := by
+        simpa [Nat.cast_add, Nat.cast_one] using ih
+      calc
+        (mi : ℚ) / ((mi : ℚ) + 1)^r +
+            (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ ((mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)^r) +
+              ((((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+                (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum) :=
+          add_le_add hterm' ih'
+        _ =
+          (mi : ℚ) + 1 + (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+            (1 / ((mi : ℚ) + 1)^r +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum) := by
+          ring
+
+private theorem marked_summand_one_le_c_one_q_sub_inv (mi : Nat) :
+    (mi : ℚ) / (((mi + 1 : Nat) : ℚ)) ≤
+      Prop51.c 1 * (((mi + 1 : Nat) : ℚ) - 1 / (((mi + 1 : Nat) : ℚ))) := by
+  let q : ℚ := ((mi + 1 : Nat) : ℚ)
+  have hqpos : 0 < q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_pos mi
+  have hq_ge_one : (1 : ℚ) ≤ q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_le_succ (Nat.zero_le mi)
+  by_cases hmi : mi = 0
+  · simp [hmi]
+  · have hmi_pos : 1 ≤ mi := Nat.succ_le_of_lt (Nat.pos_of_ne_zero hmi)
+    rw [Prop51.c_one]
+    have hnorm :
+        (mi : ℚ) / ((mi : ℚ) + 1) ≤
+          (5 / 6 : ℚ) * ((mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)) := by
+      have hden : (0 : ℚ) < (mi : ℚ) + 1 := by positivity
+      field_simp [hden.ne']
+      have hmiQ : (1 : ℚ) ≤ mi := by exact_mod_cast hmi_pos
+      nlinarith
+    simpa [Nat.cast_add, Nat.cast_one] using hnorm
+
+private theorem markedWeight_one_le_c_one_N_sub_sPower
+    (μ : List Nat) :
+    markedWeight μ 1 ≤ Prop51.c 1 * ((N μ : ℚ) - sPower μ 1) := by
+  induction μ with
+  | nil =>
+      simp [markedWeight, N, sPower]
+  | cons mi μ ih =>
+      unfold markedWeight N sPower at ih ⊢
+      simp only [List.map_cons, List.sum_cons, Nat.cast_add, pow_one]
+      have hterm := marked_summand_one_le_c_one_q_sub_inv mi
+      have hterm' :
+          (mi : ℚ) / ((mi : ℚ) + 1) ≤
+            Prop51.c 1 * ((mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)) := by
+        simpa [Nat.cast_add, Nat.cast_one] using hterm
+      have ih' :
+          (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1))) μ).sum
+            ≤ Prop51.c 1 *
+              ((((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+                (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1))) μ).sum) := by
+        simpa [Nat.cast_add, Nat.cast_one] using ih
+      change
+        (mi : ℚ) / ((mi : ℚ) + 1) +
+            (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1))) μ).sum
+          ≤
+        Prop51.c 1 *
+          ((mi : ℚ) + 1 + (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+            (1 / ((mi : ℚ) + 1) +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1))) μ).sum))
+      calc
+        (mi : ℚ) / ((mi : ℚ) + 1) +
+            (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1))) μ).sum
+            ≤ Prop51.c 1 * ((mi : ℚ) + 1 - 1 / ((mi : ℚ) + 1)) +
+              Prop51.c 1 *
+                ((((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+                  (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1))) μ).sum) :=
+          add_le_add hterm' ih'
+        _ =
+          Prop51.c 1 *
+            ((mi : ℚ) + 1 + (((List.map (fun x : Nat => x + 1) μ).sum : Nat) : ℚ) -
+              (1 / ((mi : ℚ) + 1) +
+                (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1))) μ).sum)) := by
+          ring
+
+private theorem kCoeff_prefactor_le_two_c_succ_succ (r : Nat) :
+    12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1) ≤
+      2 * Prop51.c (r + 2) := by
+  have hd := Prop51.d_mono (by omega : r + 1 ≤ r + 2)
+  have hfac :
+      (((r + 1).factorial : Nat) : ℚ) =
+        ((r + 1 : Nat) : ℚ) * ((r.factorial : Nat) : ℚ) := by
+    norm_num [Nat.factorial_succ]
+  have hpow : (6 : ℚ)^(r + 2) = 6 * (6 : ℚ)^(r + 1) := by
+    rw [show r + 2 = (r + 1) + 1 by omega, pow_succ]
+    ring
+  calc
+    12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1)
+        =
+      (2 * ((6 : ℚ)^(r + 2) * (((r + 1).factorial : Nat) : ℚ))) *
+        Prop51.d (r + 1) := by
+        rw [Prop51.c_eq_d (r + 1), show r + 1 - 1 = r by omega, hfac, hpow]
+        ring
+    _ ≤
+      (2 * ((6 : ℚ)^(r + 2) * (((r + 1).factorial : Nat) : ℚ))) *
+        Prop51.d (r + 2) :=
+      mul_le_mul_of_nonneg_left hd (by positivity)
+    _ = 2 * Prop51.c (r + 2) := by
+      rw [Prop51.c_eq_d (r + 2), show r + 2 - 1 = r + 1 by omega]
+      ring
+
+/-- Paper comparison `k_r <= 2 h_r` for the low-series coefficients.  The
+`r = 1` head uses `c_1 = 5/6`; the higher coefficients use monotonicity of
+`d_r = c_r/(6^r(r-1)!)`. -/
+theorem kCoeff_le_two_hCoeff_of_partition {a : Nat} {μ : List Nat}
+    (_hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    kCoeff μ r ≤ 2 * hCoeff μ r := by
+  rcases r with _ | r
+  · simp [kCoeff, hCoeff]
+  rcases r with _ | r
+  · simp [kCoeff, hCoeff]
+    have hhead := markedWeight_one_le_c_one_N_sub_sPower μ
+    rw [Prop51.c_one] at hhead
+    nlinarith
+  · simp [kCoeff, hCoeff, Nat.cast_add, Nat.cast_one]
+    have hpref := kCoeff_prefactor_le_two_c_succ_succ r
+    have hpref' :
+        12 * ((r : ℚ) + 1) * Prop51.c (r + 1) ≤
+          2 * Prop51.c (r + 2) := by
+      simpa [Nat.cast_add, Nat.cast_one] using hpref
+    have hmw := markedWeight_le_N_sub_sPower_of_coeffs μ (r + 2)
+    have hmw_nonneg := markedWeight_nonneg_of_coeffs μ (r + 2)
+    have hD_nonneg : 0 ≤ (N μ : ℚ) - sPower μ (r + 2) := by
+      exact sub_nonneg.mpr (sPower_le_N μ (r + 2))
+    have hpref_nonneg :
+        0 ≤ 12 * ((r : ℚ) + 1) * Prop51.c (r + 1) := by
+      exact mul_nonneg
+        (mul_nonneg (by norm_num) (by positivity))
+        (Prop51.c_nonneg (r + 1))
+    have hc_nonneg : 0 ≤ 2 * Prop51.c (r + 2) := by
+      exact mul_nonneg (by norm_num) (Prop51.c_nonneg (r + 2))
+    calc
+      12 * ((r : ℚ) + 1) * Prop51.c (r + 1) *
+          markedWeight μ (r + 2)
+          ≤ (2 * Prop51.c (r + 2)) *
+              ((N μ : ℚ) - sPower μ (r + 2)) :=
+        mul_le_mul hpref' hmw hmw_nonneg hc_nonneg
+      _ = 2 * (Prop51.c (r + 2) * ((N μ : ℚ) - sPower μ (r + 2))) := by
+        ring
+
 /-- Coefficients of the low polynomial `-L(t)` used to define
 `E(t)=exp(-L(t))`. -/
 def printedTailLowExpInput (μ : List Nat) (a r : Nat) : ℚ :=
