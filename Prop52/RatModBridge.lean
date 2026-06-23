@@ -440,6 +440,36 @@ theorem finitePrime1_ratCast_expCoeff_of_good
   rw [List.getD_map] at h
   exact h
 
+theorem finitePrime1_ratCast_fCoeff_of_good
+    (a : Nat) (μ : List Nat) (k : Nat)
+    (ha : a ≤ 13) (hk : k ≤ a)
+    (hTermCast : ∀ m t : Nat, m < k → t ∈ List.range (m + 1) →
+      ((((t + 1 : Nat) : ℚ) * (-(hCoeff μ (t + 1))) *
+          (Prop51.expList (fun r => -hCoeff μ r) m).getD (m - t) 0 : ℚ) :
+          ZMod finitePrime1) =
+        ((t + 1 : Nat) : ZMod finitePrime1) * (-(hCoeffMod finitePrime1 μ (t + 1))) *
+          (expListMod finitePrime1 (fun r => -hCoeffMod finitePrime1 μ r) m).getD
+            (m - t) 0)
+    (hTermGood : ∀ m t : Nat, m < k → t ∈ List.range (m + 1) →
+      RatGood (((t + 1 : Nat) : ℚ) * (-(hCoeff μ (t + 1))) *
+        (Prop51.expList (fun r => -hCoeff μ r) m).getD (m - t) 0))
+    (hTermSuffix : ∀ m : Nat, m < k → ∀ ys : List ℚ,
+      List.IsSuffix ys
+        ((List.range (m + 1)).map fun t : Nat =>
+          ((t + 1 : Nat) : ℚ) * (-(hCoeff μ (t + 1))) *
+            (Prop51.expList (fun r => -hCoeff μ r) m).getD (m - t) 0) →
+      RatGood ys.sum)
+    (hNewGood : ∀ m : Nat, m < k →
+      RatGood ((((List.range (m + 1)).map fun t : Nat =>
+        ((t + 1 : Nat) : ℚ) * (-(hCoeff μ (t + 1))) *
+          (Prop51.expList (fun r => -hCoeff μ r) m).getD (m - t) 0).sum) /
+            ((m + 1 : Nat) : ℚ))) :
+    (((fCoeff μ k : ℚ) : ZMod finitePrime1) = fCoeffMod finitePrime1 μ k) := by
+  unfold fCoeff fCoeffMod
+  exact finitePrime1_ratCast_expCoeff_of_good k
+    (fun r => -hCoeff μ r) (fun r => -hCoeffMod finitePrime1 μ r)
+    (le_trans hk ha) hTermCast hTermGood hTermSuffix hNewGood
+
 theorem finitePrime1_ratCast_kCoeff_of_suffix_good
     (a : Nat) (μ : List Nat) (r : Nat)
     (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
