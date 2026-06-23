@@ -15,6 +15,8 @@ import Mathlib.Tactic
 
 namespace Prop52
 
+open PowerSeries
+
 /-! ## Printed sign range split -/
 
 /-- The interval-certificate range of the printed coefficient proof. -/
@@ -180,6 +182,15 @@ def printedTailLowExpInput (μ : List Nat) (a r : Nat) : ℚ :=
 def printedTailECoeff (μ : List Nat) (a s : Nat) : ℚ :=
   Prop51.expCoeff (printedTailLowExpInput μ a) s
 
+noncomputable def printedTailESeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
+  Prop51.expSeries (printedTailLowExpInput μ a)
+
+noncomputable def printedTailLowJSeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
+  mk fun r => if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0
+
+noncomputable def printedTailWSeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
+  printedTailESeries μ a * (1 - printedTailLowJSeries μ a)
+
 /-- The coefficient `omega_s` of `W(t)=E(t)(1-J(t))`, written as a finite
 convolution with the low marked numerator `J`. -/
 def printedTailOmegaCoeff (μ : List Nat) (a s : Nat) : ℚ :=
@@ -189,6 +200,58 @@ def printedTailOmegaCoeff (μ : List Nat) (a s : Nat) : ℚ :=
       if r ≤ printedTailP a then
         kCoeff μ r * printedTailECoeff μ a (s - r)
       else 0).sum
+
+theorem coeff_printedTailESeries (μ : List Nat) (a s : Nat) :
+    coeff s (printedTailESeries μ a) = printedTailECoeff μ a s := by
+  simp [printedTailESeries, printedTailECoeff]
+
+theorem coeff_printedTailLowJSeries (μ : List Nat) (a r : Nat) :
+    coeff r (printedTailLowJSeries μ a) =
+      if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0 := by
+  simp [printedTailLowJSeries]
+
+theorem coeff_printedTailESeries_mul_lowJSeries
+    (μ : List Nat) (a s : Nat) :
+    coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) =
+      ((List.range s).map fun j : Nat =>
+        let r := j + 1
+        if r ≤ printedTailP a then
+          kCoeff μ r * printedTailECoeff μ a (s - r)
+        else 0).sum := by
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedTailESeries, coeff_printedTailLowJSeries]
+  rw [Finset.sum_range_succ]
+  simp
+  rw [Prop51.list_range_map_sum]
+  rw [← Finset.sum_range_reflect (fun x : Nat =>
+    if 1 ≤ s - x ∧ s ≤ printedTailP a + x then
+      printedTailECoeff μ a x * kCoeff μ (s - x)
+    else 0) s]
+  refine Finset.sum_congr rfl fun j hj => ?_
+  have hjlt : j < s := Finset.mem_range.mp hj
+  have hs_sub : s - (s - 1 - j) = j + 1 := by omega
+  have hs_sub' : s - (j + 1) = s - 1 - j := by omega
+  have hcond :
+      (1 ≤ s - (s - 1 - j) ∧ s ≤ printedTailP a + (s - 1 - j)) ↔
+        j < printedTailP a := by
+    constructor <;> intro h
+    · omega
+    · constructor <;> omega
+  rw [hs_sub']
+  by_cases hp : j < printedTailP a
+  · have hc : 1 ≤ s - (s - 1 - j) ∧ s ≤ printedTailP a + (s - 1 - j) :=
+      hcond.mpr hp
+    rw [if_pos hc, if_pos hp, hs_sub]
+    ring
+  · have hc : ¬(1 ≤ s - (s - 1 - j) ∧ s ≤ printedTailP a + (s - 1 - j)) :=
+      fun hc => hp (hcond.mp hc)
+    rw [if_neg hc, if_neg hp]
+
+theorem coeff_printedTailWSeries (μ : List Nat) (a s : Nat) :
+    coeff s (printedTailWSeries μ a) = printedTailOmegaCoeff μ a s := by
+  unfold printedTailWSeries printedTailOmegaCoeff
+  rw [mul_sub, mul_one, map_sub, coeff_printedTailESeries,
+    coeff_printedTailESeries_mul_lowJSeries]
 
 /-- Integer-shape Gamma moment `Gamma(a-s)/(6^s Gamma(a))`, expressed as a
 rational factorial ratio.  The large-tail proofs only use this for
