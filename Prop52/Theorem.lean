@@ -262,6 +262,17 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
   correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_wPointX2
     hmid hgamma printedTailWPointMomentBounds_closed hpoint
 
+/-- Final assembly after both finite `\widehat W` point interfaces have been
+proved from the endpoint estimates in `Prop52.Printed`.  The remaining
+large-tail analytic input is now the Gamma/integral lower bound, together with
+the separate mid-range certificate for `14 <= a <= 149`. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
+    (hmid : PrintedCoeffNegativityMid)
+    (hgamma : PrintedTailGammaIntegralLowerBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
+    hmid hgamma printedTailWPointBoundX2_closed
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
