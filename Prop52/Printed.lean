@@ -6858,6 +6858,588 @@ theorem printedTailJDerivPointSum_x2_le
           ring
     _ ≤ 41 / 10 := le_of_lt (printedTailX2Bound4_lt a ha)
 
+private theorem printedTailR0_le_P (a : Nat) :
+    printedTailR0 a ≤ printedTailP a := by
+  unfold printedTailR0 printedTailP
+  omega
+
+private theorem printedTailX0_nonneg {a : Nat} (ha : 150 ≤ a) :
+    0 ≤ printedTailX0 a := by
+  unfold printedTailX0
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hden : 0 < 6 * ((a : ℚ) - 12) := by nlinarith
+  positivity
+
+private theorem printedTailX2_nonneg {a : Nat} (ha : 150 ≤ a) :
+    0 ≤ printedTailX2 a := by
+  unfold printedTailX2
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hden : 0 < 3 * (a : ℚ) := by nlinarith
+  positivity
+
+private theorem printedTailExpPrefix_nonneg {y : ℚ}
+    (hy : 0 ≤ y) (m : Nat) :
+    0 ≤ printedTailExpPrefix y m := by
+  unfold printedTailExpPrefix
+  exact Finset.sum_nonneg fun q _ =>
+    div_nonneg (pow_nonneg hy q) (by positivity)
+
+private theorem printedTailLowAbsInput_point_prefix_le_LPointSum
+    {a : Nat} {μ : List Nat} {x : ℚ} {m : Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (hx : 0 ≤ x)
+    (hm : m ≤ printedTailP a) :
+    (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+      ≤ printedTailLPointSum μ a x := by
+  have hsubset :
+      Finset.range (m + 1) ⊆ Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (by
+      have hr' := Finset.mem_range.mp hr
+      omega)
+  have hsum_eq :
+      (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+        =
+      ∑ r ∈ Finset.range (m + 1), hCoeff μ r * x^r := by
+    refine Finset.sum_congr rfl fun r hr => ?_
+    have hrp : r ≤ printedTailP a := by
+      have hr' := Finset.mem_range.mp hr
+      omega
+    unfold printedTailLowAbsInput printedTailLowExpInput
+    rw [if_pos hrp, abs_neg,
+      abs_of_nonneg (hCoeff_nonneg_of_partition hμ r)]
+    ring
+  rw [hsum_eq, printedTailLPointSum]
+  exact Finset.sum_le_sum_of_subset_of_nonneg hsubset
+    (fun r _ _ => mul_nonneg (hCoeff_nonneg_of_partition hμ r)
+      (pow_nonneg hx r))
+
+private theorem printedTailLowAbsInput_deriv_prefix_le_LDerivPointSum
+    {a : Nat} {μ : List Nat} {x : ℚ} {m : Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (hx : 0 ≤ x)
+    (hm : m ≤ printedTailP a) :
+    (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * (x^r * printedTailLowAbsInput μ a r))
+      ≤ printedTailLDerivPointSum μ a x := by
+  have hsubset :
+      Finset.range (m + 1) ⊆ Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (by
+      have hr' := Finset.mem_range.mp hr
+      omega)
+  have hsum_eq :
+      (∑ r ∈ Finset.range (m + 1),
+          (r : ℚ) * (x^r * printedTailLowAbsInput μ a r))
+        =
+      ∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * hCoeff μ r * x^r := by
+    refine Finset.sum_congr rfl fun r hr => ?_
+    have hrp : r ≤ printedTailP a := by
+      have hr' := Finset.mem_range.mp hr
+      omega
+    unfold printedTailLowAbsInput printedTailLowExpInput
+    rw [if_pos hrp, abs_neg,
+      abs_of_nonneg (hCoeff_nonneg_of_partition hμ r)]
+    ring
+  rw [hsum_eq, printedTailLDerivPointSum]
+  exact Finset.sum_le_sum_of_subset_of_nonneg hsubset
+    (fun r _ _ => by
+      exact mul_nonneg
+        (mul_nonneg (by positivity) (hCoeff_nonneg_of_partition hμ r))
+        (pow_nonneg hx r))
+
+private theorem printedTailJAbsCoeff_point_prefix_le_JPointSum
+    {a : Nat} {μ : List Nat} {x : ℚ} {m : Nat}
+    (hx : 0 ≤ x) (hm : m ≤ printedTailP a) :
+    (∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x^r)
+      ≤ printedTailJPointSum μ a x := by
+  have hsubset :
+      Finset.range (m + 1) ⊆ Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (by
+      have hr' := Finset.mem_range.mp hr
+      omega)
+  have hsum_eq :
+      (∑ r ∈ Finset.range (m + 1),
+          printedTailJAbsCoeff μ a r * x^r)
+        =
+      ∑ r ∈ Finset.range (m + 1), kCoeff μ r * x^r := by
+    refine Finset.sum_congr rfl fun r hr => ?_
+    have hrp : r ≤ printedTailP a := by
+      have hr' := Finset.mem_range.mp hr
+      omega
+    by_cases hr0 : r = 0
+    · subst r
+      simp [printedTailJAbsCoeff, kCoeff]
+    · have hr1 : 1 ≤ r := by omega
+      simp [printedTailJAbsCoeff, hr1, hrp]
+  rw [hsum_eq, printedTailJPointSum]
+  exact Finset.sum_le_sum_of_subset_of_nonneg hsubset
+    (fun r _ _ => mul_nonneg (kCoeff_nonneg μ r) (pow_nonneg hx r))
+
+private theorem printedTailJAbsCoeff_deriv_prefix_le_JDerivPointSum
+    {a : Nat} {μ : List Nat} {x : ℚ} {m : Nat}
+    (hx : 0 ≤ x) (hm : m ≤ printedTailP a) :
+    (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * printedTailJAbsCoeff μ a r * x^r)
+      ≤ printedTailJDerivPointSum μ a x := by
+  have hsubset :
+      Finset.range (m + 1) ⊆ Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (by
+      have hr' := Finset.mem_range.mp hr
+      omega)
+  have hsum_eq :
+      (∑ r ∈ Finset.range (m + 1),
+          (r : ℚ) * printedTailJAbsCoeff μ a r * x^r)
+        =
+      ∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * kCoeff μ r * x^r := by
+    refine Finset.sum_congr rfl fun r hr => ?_
+    have hrp : r ≤ printedTailP a := by
+      have hr' := Finset.mem_range.mp hr
+      omega
+    by_cases hr0 : r = 0
+    · subst r
+      simp [printedTailJAbsCoeff, kCoeff]
+    · have hr1 : 1 ≤ r := by omega
+      simp [printedTailJAbsCoeff, hr1, hrp]
+  rw [hsum_eq, printedTailJDerivPointSum]
+  exact Finset.sum_le_sum_of_subset_of_nonneg hsubset
+    (fun r _ _ => by
+      exact mul_nonneg (mul_nonneg (by positivity) (kCoeff_nonneg μ r))
+        (pow_nonneg hx r))
+
+private theorem printedTailEAbsPointPrefix_nonneg
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    0 ≤ ∑ s ∈ Finset.range (m + 1),
+      printedTailEAbsCoeff μ a s * x^s := by
+  exact Finset.sum_nonneg fun s _ =>
+    mul_nonneg (printedTailEAbsCoeff_nonneg μ a s) (pow_nonneg hx s)
+
+private theorem printedTailEAbsDerivPrefix_nonneg
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    0 ≤ ∑ s ∈ Finset.range (m + 1),
+      (s : ℚ) * printedTailEAbsCoeff μ a s * x^s := by
+  exact Finset.sum_nonneg fun s _ =>
+    mul_nonneg
+      (mul_nonneg (by positivity) (printedTailEAbsCoeff_nonneg μ a s))
+      (pow_nonneg hx s)
+
+private theorem printedTailJAbsPointPrefix_nonneg
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    0 ≤ ∑ r ∈ Finset.range (m + 1),
+      printedTailJAbsCoeff μ a r * x^r := by
+  exact Finset.sum_nonneg fun r _ =>
+    mul_nonneg (printedTailJAbsCoeff_nonneg μ a r) (pow_nonneg hx r)
+
+private theorem printedTailJAbsDerivPrefix_nonneg
+    (μ : List Nat) (a : Nat) {x : ℚ} (hx : 0 ≤ x) (m : Nat) :
+    0 ≤ ∑ r ∈ Finset.range (m + 1),
+      (r : ℚ) * printedTailJAbsCoeff μ a r * x^r := by
+  exact Finset.sum_nonneg fun r _ =>
+    mul_nonneg
+      (mul_nonneg (by positivity) (printedTailJAbsCoeff_nonneg μ a r))
+      (pow_nonneg hx r)
+
+private theorem printedTailEAbsPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      printedTailEAbsCoeff μ a s * (printedTailX0 a)^s) ≤
+        203 / 50 := by
+  let m := printedTailR0 a
+  let x := printedTailX0 a
+  have hx : 0 ≤ x := by simpa [x] using printedTailX0_nonneg ha
+  have hm : m ≤ printedTailP a := by
+    simpa [m] using printedTailR0_le_P a
+  have hLprefix :=
+    printedTailLowAbsInput_point_prefix_le_LPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hLbd :
+      (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+        ≤ 7 / 5 :=
+    hLprefix.trans (by
+      simpa [x] using
+        (printedTailLPointSum_x0_le (a := a) (μ := μ) ha hμ))
+  have hLnonneg :
+      0 ≤ ∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r := by
+    exact Finset.sum_nonneg fun r _ =>
+      mul_nonneg (pow_nonneg hx r)
+        (printedTailLowAbsInput_nonneg μ a r)
+  have hE := expCoeff_point_sum_le_expPrefix
+    (L := printedTailLowAbsInput μ a)
+    (printedTailLowAbsInput_zero μ a)
+    (printedTailLowAbsInput_nonneg μ a) (x := x) hx m
+  have hE' :
+      (∑ s ∈ Finset.range (m + 1),
+        printedTailEAbsCoeff μ a s * x^s)
+        ≤ printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := by
+    simpa [printedTailEAbsCoeff, printedTailLowAbsInput] using hE
+  have hExp := printedTailExpPrefix_le_203_50 hLnonneg hLbd m
+  simpa [m, x] using hE'.trans hExp
+
+private theorem printedTailEAbsDerivPointSum_x0_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      (s : ℚ) * printedTailEAbsCoeff μ a s * (printedTailX0 a)^s) ≤
+        (203 / 50 : ℚ) * (3 / 2) := by
+  let m := printedTailR0 a
+  let x := printedTailX0 a
+  have hx : 0 ≤ x := by simpa [x] using printedTailX0_nonneg ha
+  have hm : m ≤ printedTailP a := by
+    simpa [m] using printedTailR0_le_P a
+  have hLprefix :=
+    printedTailLowAbsInput_point_prefix_le_LPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hLbd :
+      (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+        ≤ 7 / 5 :=
+    hLprefix.trans (by
+      simpa [x] using
+        (printedTailLPointSum_x0_le (a := a) (μ := μ) ha hμ))
+  have hLnonneg :
+      0 ≤ ∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r := by
+    exact Finset.sum_nonneg fun r _ =>
+      mul_nonneg (pow_nonneg hx r)
+        (printedTailLowAbsInput_nonneg μ a r)
+  have hDprefix :=
+    printedTailLowAbsInput_deriv_prefix_le_LDerivPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hDbd :
+      (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) ≤ 3 / 2 :=
+    hDprefix.trans (by
+      simpa [x] using
+        (printedTailLDerivPointSum_x0_le (a := a) (μ := μ) ha hμ))
+  have hExpbd := printedTailExpPrefix_le_203_50 hLnonneg hLbd m
+  have hExpnonneg := printedTailExpPrefix_nonneg hLnonneg m
+  have hD := expCoeff_deriv_point_sum_le_expPrefix
+    (L := printedTailLowAbsInput μ a)
+    (printedTailLowAbsInput_zero μ a)
+    (printedTailLowAbsInput_nonneg μ a) (x := x) hx m
+  have hD' :
+      (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x^s)
+        ≤ (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := by
+    simpa [printedTailEAbsCoeff, printedTailLowAbsInput] using hD
+  calc
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      (s : ℚ) * printedTailEAbsCoeff μ a s * (printedTailX0 a)^s)
+        =
+      ∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x^s := by simp [m, x]
+    _ ≤ (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := hD'
+    _ ≤ (3 / 2 : ℚ) * (203 / 50) :=
+          mul_le_mul hDbd hExpbd hExpnonneg (by norm_num)
+    _ = (203 / 50 : ℚ) * (3 / 2) := by ring
+
+private theorem printedTailEAbsPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      printedTailEAbsCoeff μ a s * (printedTailX2 a)^s) ≤
+        182 := by
+  let m := printedTailR0 a
+  let x := printedTailX2 a
+  have hx : 0 ≤ x := by simpa [x] using printedTailX2_nonneg ha
+  have hm : m ≤ printedTailP a := by
+    simpa [m] using printedTailR0_le_P a
+  have hLprefix :=
+    printedTailLowAbsInput_point_prefix_le_LPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hLbd :
+      (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+        ≤ 26 / 5 :=
+    hLprefix.trans (by
+      simpa [x] using
+        (printedTailLPointSum_x2_le (a := a) (μ := μ) ha hμ))
+  have hLnonneg :
+      0 ≤ ∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r := by
+    exact Finset.sum_nonneg fun r _ =>
+      mul_nonneg (pow_nonneg hx r)
+        (printedTailLowAbsInput_nonneg μ a r)
+  have hE := expCoeff_point_sum_le_expPrefix
+    (L := printedTailLowAbsInput μ a)
+    (printedTailLowAbsInput_zero μ a)
+    (printedTailLowAbsInput_nonneg μ a) (x := x) hx m
+  have hE' :
+      (∑ s ∈ Finset.range (m + 1),
+        printedTailEAbsCoeff μ a s * x^s)
+        ≤ printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := by
+    simpa [printedTailEAbsCoeff, printedTailLowAbsInput] using hE
+  have hExp := printedTailExpPrefix_le_182 hLnonneg hLbd m
+  simpa [m, x] using hE'.trans hExp
+
+private theorem printedTailEAbsDerivPointSum_x2_le
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      (s : ℚ) * printedTailEAbsCoeff μ a s * (printedTailX2 a)^s) ≤
+        (182 : ℚ) * (11 / 2) := by
+  let m := printedTailR0 a
+  let x := printedTailX2 a
+  have hx : 0 ≤ x := by simpa [x] using printedTailX2_nonneg ha
+  have hm : m ≤ printedTailP a := by
+    simpa [m] using printedTailR0_le_P a
+  have hLprefix :=
+    printedTailLowAbsInput_point_prefix_le_LPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hLbd :
+      (∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r)
+        ≤ 26 / 5 :=
+    hLprefix.trans (by
+      simpa [x] using
+        (printedTailLPointSum_x2_le (a := a) (μ := μ) ha hμ))
+  have hLnonneg :
+      0 ≤ ∑ r ∈ Finset.range (m + 1), x^r * printedTailLowAbsInput μ a r := by
+    exact Finset.sum_nonneg fun r _ =>
+      mul_nonneg (pow_nonneg hx r)
+        (printedTailLowAbsInput_nonneg μ a r)
+  have hDprefix :=
+    printedTailLowAbsInput_deriv_prefix_le_LDerivPointSum
+      (a := a) (μ := μ) (x := x) (m := m) hμ hx hm
+  have hDbd :
+      (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) ≤ 11 / 2 :=
+    hDprefix.trans (by
+      simpa [x] using
+        (printedTailLDerivPointSum_x2_le (a := a) (μ := μ) ha hμ))
+  have hExpbd := printedTailExpPrefix_le_182 hLnonneg hLbd m
+  have hExpnonneg := printedTailExpPrefix_nonneg hLnonneg m
+  have hD := expCoeff_deriv_point_sum_le_expPrefix
+    (L := printedTailLowAbsInput μ a)
+    (printedTailLowAbsInput_zero μ a)
+    (printedTailLowAbsInput_nonneg μ a) (x := x) hx m
+  have hD' :
+      (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x^s)
+        ≤ (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := by
+    simpa [printedTailEAbsCoeff, printedTailLowAbsInput] using hD
+  calc
+    (∑ s ∈ Finset.range (printedTailR0 a + 1),
+      (s : ℚ) * printedTailEAbsCoeff μ a s * (printedTailX2 a)^s)
+        =
+      ∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x^s := by simp [m, x]
+    _ ≤ (∑ r ∈ Finset.range (m + 1),
+            (r : ℚ) * (x^r * printedTailLowAbsInput μ a r)) *
+          printedTailExpPrefix
+            (∑ r ∈ Finset.range (m + 1),
+              x^r * printedTailLowAbsInput μ a r) m := hD'
+    _ ≤ (11 / 2 : ℚ) * 182 :=
+          mul_le_mul hDbd hExpbd hExpnonneg (by norm_num)
+    _ = (182 : ℚ) * (11 / 2) := by ring
+
+theorem printedTailWPointMomentBounds_closed :
+    PrintedTailWPointMomentBounds := by
+  intro a ha μ hμ
+  let m := printedTailR0 a
+  let x0 := printedTailX0 a
+  let x2 := printedTailX2 a
+  have hm : m ≤ printedTailP a := by
+    simpa [m] using printedTailR0_le_P a
+  have hx0 : 0 ≤ x0 := by simpa [x0] using printedTailX0_nonneg ha
+  have hx2 : 0 ≤ x2 := by simpa [x2] using printedTailX2_nonneg ha
+  have hE0 :
+      (∑ s ∈ Finset.range (m + 1),
+        printedTailEAbsCoeff μ a s * x0^s) ≤ 203 / 50 := by
+    simpa [m, x0] using printedTailEAbsPointSum_x0_le
+      (a := a) (μ := μ) ha hμ
+  have hEd0 :
+      (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x0^s) ≤
+          (203 / 50 : ℚ) * (3 / 2) := by
+    simpa [m, x0] using printedTailEAbsDerivPointSum_x0_le
+      (a := a) (μ := μ) ha hμ
+  have hJ0 :
+      (∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x0^r) ≤ 11 / 10 := by
+    exact (printedTailJAbsCoeff_point_prefix_le_JPointSum
+      (a := a) (μ := μ) (x := x0) (m := m) hx0 hm).trans
+        (by
+          simpa [x0] using
+            (printedTailJPointSum_x0_le (a := a) (μ := μ) ha hμ))
+  have hJd0 :
+      (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * printedTailJAbsCoeff μ a r * x0^r) ≤ 11 / 10 := by
+    exact (printedTailJAbsCoeff_deriv_prefix_le_JDerivPointSum
+      (a := a) (μ := μ) (x := x0) (m := m) hx0 hm).trans
+        (by
+          simpa [x0] using
+            (printedTailJDerivPointSum_x0_le (a := a) (μ := μ) ha hμ))
+  have hE2 :
+      (∑ s ∈ Finset.range (m + 1),
+        printedTailEAbsCoeff μ a s * x2^s) ≤ 182 := by
+    simpa [m, x2] using printedTailEAbsPointSum_x2_le
+      (a := a) (μ := μ) ha hμ
+  have hEd2 :
+      (∑ s ∈ Finset.range (m + 1),
+        (s : ℚ) * printedTailEAbsCoeff μ a s * x2^s) ≤
+          (182 : ℚ) * (11 / 2) := by
+    simpa [m, x2] using printedTailEAbsDerivPointSum_x2_le
+      (a := a) (μ := μ) ha hμ
+  have hJ2 :
+      (∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x2^r) ≤ 81 / 20 := by
+    exact (printedTailJAbsCoeff_point_prefix_le_JPointSum
+      (a := a) (μ := μ) (x := x2) (m := m) hx2 hm).trans
+        (by
+          simpa [x2] using
+            (printedTailJPointSum_x2_le (a := a) (μ := μ) ha hμ))
+  have hJd2 :
+      (∑ r ∈ Finset.range (m + 1),
+        (r : ℚ) * printedTailJAbsCoeff μ a r * x2^r) ≤ 41 / 10 := by
+    exact (printedTailJAbsCoeff_deriv_prefix_le_JDerivPointSum
+      (a := a) (μ := μ) (x := x2) (m := m) hx2 hm).trans
+        (by
+          simpa [x2] using
+            (printedTailJDerivPointSum_x2_le (a := a) (μ := μ) ha hμ))
+  have hE0_nonneg := printedTailEAbsPointPrefix_nonneg μ a hx0 m
+  have hEd0_nonneg := printedTailEAbsDerivPrefix_nonneg μ a hx0 m
+  have hJ0_nonneg := printedTailJAbsPointPrefix_nonneg μ a hx0 m
+  have hJd0_nonneg := printedTailJAbsDerivPrefix_nonneg μ a hx0 m
+  have hE2_nonneg := printedTailEAbsPointPrefix_nonneg μ a hx2 m
+  have hEd2_nonneg := printedTailEAbsDerivPrefix_nonneg μ a hx2 m
+  have hJ2_nonneg := printedTailJAbsPointPrefix_nonneg μ a hx2 m
+  have hJd2_nonneg := printedTailJAbsDerivPrefix_nonneg μ a hx2 m
+  have hJ0_factor_nonneg :
+      0 ≤ 1 + ∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x0^r := by linarith
+  have hJ2_factor_nonneg :
+      0 ≤ 1 + ∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x2^r := by linarith
+  have hJ0_factor_le :
+      1 + ∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x0^r ≤ 1 + 11 / 10 := by
+    linarith
+  have hJ2_factor_le :
+      1 + ∑ r ∈ Finset.range (m + 1),
+        printedTailJAbsCoeff μ a r * x2^r ≤ 1 + 81 / 20 := by
+    linarith
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · have hW := printedTailW_point_sum_le_product μ a (x := x0) hx0 m
+    have hprod :
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x0^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x0^r)
+          ≤ (203 / 50 : ℚ) * (1 + 11 / 10) :=
+      mul_le_mul hE0 hJ0_factor_le hJ0_factor_nonneg (by norm_num)
+    calc
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+        printedTailWAbsCoeff μ a s * (printedTailX0 a)^s)
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          printedTailWAbsCoeff μ a s * x0^s := by simp [m, x0]
+      _ ≤ (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x0^s) *
+          (1 + ∑ r ∈ Finset.range (m + 1),
+            printedTailJAbsCoeff μ a r * x0^r) := hW
+      _ ≤ (203 / 50 : ℚ) * (1 + 11 / 10) := hprod
+      _ = (203 / 50 : ℚ) * (21 / 10) := by norm_num
+  · have hW := printedTailW_deriv_point_sum_le_product μ a (x := x0) hx0 m
+    have hterm1 :
+        (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x0^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x0^r)
+          ≤ ((203 / 50 : ℚ) * (3 / 2)) * (1 + 11 / 10) :=
+      mul_le_mul hEd0 hJ0_factor_le hJ0_factor_nonneg (by norm_num)
+    have hterm2 :
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x0^s) *
+            (∑ r ∈ Finset.range (m + 1),
+              (r : ℚ) * printedTailJAbsCoeff μ a r * x0^r)
+          ≤ (203 / 50 : ℚ) * (11 / 10) :=
+      mul_le_mul hE0 hJd0 hJd0_nonneg (by norm_num)
+    calc
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+        (s : ℚ) * printedTailWAbsCoeff μ a s * (printedTailX0 a)^s)
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailWAbsCoeff μ a s * x0^s := by simp [m, x0]
+      _ ≤ (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x0^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x0^r) +
+          (∑ s ∈ Finset.range (m + 1),
+            printedTailEAbsCoeff μ a s * x0^s) *
+            (∑ r ∈ Finset.range (m + 1),
+              (r : ℚ) * printedTailJAbsCoeff μ a r * x0^r) := hW
+      _ ≤ ((203 / 50 : ℚ) * (3 / 2)) * (1 + 11 / 10) +
+          (203 / 50 : ℚ) * (11 / 10) := add_le_add hterm1 hterm2
+      _ = (203 / 50 : ℚ) * (17 / 4) := by norm_num
+  · have hW := printedTailW_point_sum_le_product μ a (x := x2) hx2 m
+    have hprod :
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x2^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x2^r)
+          ≤ (182 : ℚ) * (1 + 81 / 20) :=
+      mul_le_mul hE2 hJ2_factor_le hJ2_factor_nonneg (by norm_num)
+    calc
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+        printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          printedTailWAbsCoeff μ a s * x2^s := by simp [m, x2]
+      _ ≤ (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x2^s) *
+          (1 + ∑ r ∈ Finset.range (m + 1),
+            printedTailJAbsCoeff μ a r * x2^r) := hW
+      _ ≤ (182 : ℚ) * (1 + 81 / 20) := hprod
+      _ = (182 : ℚ) * (101 / 20) := by norm_num
+  · have hW := printedTailW_deriv_point_sum_le_product μ a (x := x2) hx2 m
+    have hterm1 :
+        (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x2^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x2^r)
+          ≤ ((182 : ℚ) * (11 / 2)) * (1 + 81 / 20) :=
+      mul_le_mul hEd2 hJ2_factor_le hJ2_factor_nonneg (by norm_num)
+    have hterm2 :
+        (∑ s ∈ Finset.range (m + 1),
+          printedTailEAbsCoeff μ a s * x2^s) *
+            (∑ r ∈ Finset.range (m + 1),
+              (r : ℚ) * printedTailJAbsCoeff μ a r * x2^r)
+          ≤ (182 : ℚ) * (41 / 10) :=
+      mul_le_mul hE2 hJd2 hJd2_nonneg (by norm_num)
+    calc
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+        (s : ℚ) * printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+          =
+        ∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailWAbsCoeff μ a s * x2^s := by simp [m, x2]
+      _ ≤ (∑ s ∈ Finset.range (m + 1),
+          (s : ℚ) * printedTailEAbsCoeff μ a s * x2^s) *
+            (1 + ∑ r ∈ Finset.range (m + 1),
+              printedTailJAbsCoeff μ a r * x2^r) +
+          (∑ s ∈ Finset.range (m + 1),
+            printedTailEAbsCoeff μ a s * x2^s) *
+            (∑ r ∈ Finset.range (m + 1),
+              (r : ℚ) * printedTailJAbsCoeff μ a r * x2^r) := hW
+      _ ≤ ((182 : ℚ) * (11 / 2)) * (1 + 81 / 20) +
+          (182 : ℚ) * (41 / 10) := add_le_add hterm1 hterm2
+      _ = (182 : ℚ) * (255 / 8) := by norm_num
+
 /-- Final rational arithmetic for the first absolute-moment budget:
 `exp(7/5) < 203/50` and `exp(26/5) < 182` reduce the displayed bound below
 `9`. -/

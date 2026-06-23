@@ -249,6 +249,19 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_w
     hmomPoint
     hpoint
 
+/-- Final assembly after the finite point/derivative bounds for
+`\widehat W` have been proved from the endpoint estimates in `Prop52.Printed`.
+The remaining analytic tail inputs are the mid-range certificate, the
+Gamma/integral lower bound, and the finite `x_2` point bound used for the
+coefficientwise `omega_a` estimate. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
+    (hmid : PrintedCoeffNegativityMid)
+    (hgamma : PrintedTailGammaIntegralLowerBound)
+    (hpoint : PrintedTailWPointBoundX2) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_wPointX2
+    hmid hgamma printedTailWPointMomentBounds_closed hpoint
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
