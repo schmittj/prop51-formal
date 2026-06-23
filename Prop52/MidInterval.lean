@@ -52,6 +52,57 @@ def midDINeg (I : DI) : Bool :=
 def midDINegPart (I : DI) : DI :=
   (DI.neg I).hull0
 
+theorem midDIOfInt_mem (z : Int) :
+    DI.mem (z : ℚ) (midDIOfInt z) := by
+  unfold midDIOfInt
+  by_cases hz : z < 0
+  · rw [if_pos hz]
+    have hmem := DI.mem_neg (DI.mem_exact z.natAbs)
+    have hzabs : (z : ℚ) = -((z.natAbs : Nat) : ℚ) := by
+      rcases Int.natAbs_eq z with h | h
+      · have hnonneg : (0 : ℤ) ≤ z := by omega
+        omega
+      · exact_mod_cast h
+    rw [hzabs]
+    exact hmem
+  · rw [if_neg hz]
+    have hnonneg : (0 : ℤ) ≤ z := by omega
+    have hzto : ((z.toNat : Nat) : ℤ) = z := Int.toNat_of_nonneg hnonneg
+    have hmem := DI.mem_exact z.toNat
+    have hzcast : ((z.toNat : Nat) : ℚ) = (z : ℚ) := by exact_mod_cast hzto
+    rw [← hzcast]
+    exact hmem
+
+theorem midDIOfRat_mem (q : ℚ) :
+    DI.mem q (midDIOfRat q) := by
+  unfold midDIOfRat
+  have hq : ((q.num : ℚ) / (q.den : ℚ)) = q := by
+    change ((q.num : ℚ) / (((q.den : Nat) : Int) : ℚ)) = q
+    rw [Rat.intCast_div_eq_divInt, Rat.num_divInt_den]
+  have hmem := DI.mem_divNat q.den q.den_pos (midDIOfInt_mem q.num)
+  simpa [hq] using hmem
+
+theorem midDIPowTwoInv_mem (k : Nat) :
+    DI.mem (1 / (2 : ℚ)^k) (midDIPowTwoInv k) := by
+  unfold midDIPowTwoInv
+  simpa using DI.mem_shr k DI.mem_one
+
+theorem midDINegPart_mem {x : ℚ} {I : DI} (hx : DI.mem x I) :
+    DI.mem (midNegPart x) (midDINegPart I) := by
+  unfold midNegPart midDINegPart
+  by_cases hneg : x < 0
+  · rw [if_pos hneg]
+    exact DI.mem_hull0_of_mem (DI.mem_neg hx)
+  · rw [if_neg hneg]
+    exact DI.zero_mem_hull0 (DI.neg I)
+
+theorem midDINeg_sound {x : ℚ} {I : DI}
+    (hx : DI.mem x I) (hI : midDINeg I = true) :
+    x < 0 := by
+  unfold midDINeg at hI
+  have hhi : I.hi.m < 0 := of_decide_eq_true hI
+  exact lt_of_le_of_lt hx.2 (DF.val_neg_of_m_neg hhi)
+
 /-! ## Precomputed row constants -/
 
 /-- Matrix of dyadic enclosures for `R_{k,r}`, indexed by row `r` then `k`. -/
