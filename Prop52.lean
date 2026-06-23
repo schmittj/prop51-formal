@@ -9,4 +9,5 @@ import Prop52.Recurrence
 import Prop52.Modular
 import Prop52.ModularNat
 import Prop52.ModularNat11
+import Prop52.ModularNatBridge
 import Prop52.Finite
