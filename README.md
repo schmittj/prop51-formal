@@ -49,6 +49,16 @@ lake build           # check every proof, including the native_decide certificat
 lake env lean scripts/PublicAxiomsReport.lean   # print the axioms the result depends on
 ```
 
+If a matching Lean/Mathlib Lake package tree already exists locally, reuse it
+instead of cloning Mathlib again:
+
+```sh
+./scripts/use-local-lake-packages.sh /home/jo314/lean/prop51build/.lake/packages
+lake build
+```
+
+Use this only with the same Lean/Mathlib versions recorded above.
+
 The proof is **`sorry`-free**. `#print axioms` for the final theorem reports
 exactly
 
