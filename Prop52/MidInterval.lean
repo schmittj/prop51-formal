@@ -103,6 +103,11 @@ theorem midDINeg_sound {x : ℚ} {I : DI}
   have hhi : I.hi.m < 0 := of_decide_eq_true hI
   exact lt_of_le_of_lt hx.2 (DF.val_neg_of_m_neg hhi)
 
+private theorem getD_range_map_toArray {α : Type} (fallback : α)
+    (f : Nat → α) (n i : Nat) (hi : i < n) :
+    (((List.range n).map f).toArray.getD i fallback) = f i := by
+  simp [Array.getD_eq_getD_getElem?, hi]
+
 /-! ## Precomputed row constants -/
 
 /-- Matrix of dyadic enclosures for `R_{k,r}`, indexed by row `r` then `k`. -/
@@ -115,11 +120,32 @@ def midRMatrix (D : Array ℚ) (a : Nat) : Array (Array DI) :=
 def midRMatrixGet (R : Array (Array DI)) (k r : Nat) : DI :=
   (R.getD r #[]).getD k DI.zero
 
+theorem midRMatrixGet_mem (D : Array ℚ) (a k r : Nat)
+    (hk : k ≤ a) (hr : r ≤ a) :
+    DI.mem (midRTab D k r) (midRMatrixGet (midRMatrix D a) k r) := by
+  unfold midRMatrixGet midRMatrix
+  have hrlt : r < a + 1 := by omega
+  have hklt : k < a + 1 := by omega
+  rw [getD_range_map_toArray #[] (fun r : Nat =>
+    ((List.range (a + 1)).map fun k : Nat =>
+      midDIOfRat (midRTab D k r)).toArray) (a + 1) r hrlt]
+  rw [getD_range_map_toArray DI.zero
+    (fun k : Nat => midDIOfRat (midRTab D k r)) (a + 1) k hklt]
+  exact midDIOfRat_mem _
+
 /-- Dyadic enclosures of `S_r(M)` for a fixed row. -/
 def midSIntervals (D Y : Array ℚ) (a : Nat) : Array DI :=
   let m := M a
   ((List.range (a + 1)).map fun r : Nat =>
     midDIOfRat (midSTab D Y m r)).toArray
+
+theorem midSIntervals_mem (D Y : Array ℚ) (a r : Nat) (hr : r ≤ a) :
+    DI.mem (midSTab D Y (M a) r) ((midSIntervals D Y a).getD r DI.zero) := by
+  unfold midSIntervals
+  have hrlt : r < a + 1 := by omega
+  rw [getD_range_map_toArray DI.zero
+    (fun r : Nat => midDIOfRat (midSTab D Y (M a) r)) (a + 1) r hrlt]
+  exact midDIOfRat_mem _
 
 /-! ## Interval `X` recurrence and row check -/
 
