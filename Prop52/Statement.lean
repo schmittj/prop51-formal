@@ -74,4 +74,10 @@ def CorrectedCoeffNonvanishing : Prop :=
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       correctedCoeff a μ ≠ 0
 
+/-- Finite-range nonvanishing statement for corrected Proposition 5.2. -/
+def CorrectedCoeffFiniteNonvanishing : Prop :=
+  ∀ a : Nat, 2 ≤ a → a ≤ 13 →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      correctedCoeff a μ ≠ 0
+
 end Prop52

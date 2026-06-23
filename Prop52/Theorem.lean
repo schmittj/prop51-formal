@@ -75,6 +75,26 @@ theorem correctedCoeff_neg_large_of_printed
   rw [correctedCoeff_eq_printedCoeff_add]
   nlinarith
 
+/-- Final assembly interface for corrected Proposition 5.2.
+
+The remaining proof work is now concentrated in two independent inputs:
+
+* `hfinite`: the exact finite nonvanishing check for `2 <= a <= 13`;
+* `hprinted`: the printed-series sign theorem for `a >= 14`.
+
+Together with the correction identity and the Proposition 5.1 rectangle
+theorem, these imply the full corrected nonvanishing statement. -/
+theorem correctedCoeff_nonvanishing_of_finite_and_printed
+    (hfinite : CorrectedCoeffFiniteNonvanishing)
+    (hprinted : PrintedCoeffNegativityLarge) :
+    CorrectedCoeffNonvanishing := by
+  intro a ha μ hμ
+  by_cases hsmall : a ≤ 13
+  · exact hfinite a ha hsmall μ hμ
+  · have hlarge : correctedCoeff a μ < 0 :=
+      correctedCoeff_neg_large_of_printed hprinted a (by omega) μ hμ
+    exact ne_of_lt hlarge
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records
