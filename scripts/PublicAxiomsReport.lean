@@ -32,8 +32,11 @@ import Prop51
 #print axioms Prop52.ratCast_mul_of_good
 #print axioms Prop52.ratCast_add_of_good
 #print axioms Prop52.ratCast_sub_of_good
+#print axioms Prop52.ratCast_list_sum_of_suffix_good
 #print axioms Prop52.finitePrime1_ratCast_sPower_of_good
+#print axioms Prop52.finitePrime1_ratCast_sPower_of_suffix_good
 #print axioms Prop52.finitePrime1_ratCast_markedWeight_of_good
+#print axioms Prop52.finitePrime1_ratCast_markedWeight_of_suffix_good
 #print axioms Prop52.finitePrime1_ratCast_hCoeff_of_good
 #print axioms Prop52.correctedCoeff_neg_large_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_finite_and_printed

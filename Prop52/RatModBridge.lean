@@ -120,6 +120,31 @@ theorem ratCast_list_sum_of_good
       rw [ratCast_add_of_good x xs.sum hx hsum_xs hsum_all, ih hxs]
       rfl
 
+theorem ratCast_list_sum_of_suffix_good
+    (xs : List ℚ)
+    (hterm : ∀ x ∈ xs, RatGood x)
+    (hsuffix : ∀ ys : List ℚ, List.IsSuffix ys xs → RatGood ys.sum) :
+    (((xs.sum : ℚ) : ZMod finitePrime1) =
+      (xs.map fun x => (x : ZMod finitePrime1)).sum) := by
+  induction xs with
+  | nil =>
+      simp
+  | cons x xs ih =>
+      have hx : RatGood x := hterm x (by simp)
+      have hterm_tail : ∀ y ∈ xs, RatGood y := by
+        intro y hy
+        exact hterm y (by simp [hy])
+      have hsuffix_tail : ∀ ys : List ℚ, List.IsSuffix ys xs → RatGood ys.sum := by
+        intro ys hys
+        exact hsuffix ys (hys.trans (List.suffix_cons x xs))
+      have hsum_xs : RatGood xs.sum := hsuffix_tail xs (List.suffix_refl xs)
+      have hsum_all : RatGood (x + xs.sum) := by
+        simpa [List.sum_cons] using hsuffix (x :: xs) (List.suffix_refl (x :: xs))
+      simp only [List.sum_cons]
+      rw [ratCast_add_of_good x xs.sum hx hsum_xs hsum_all,
+        ih hterm_tail hsuffix_tail]
+      rfl
+
 /-! ## Finite-range denominator certificates -/
 
 theorem finitePrime1_RatGood_c (r : Nat) (hr : r ≤ 13) :
@@ -185,6 +210,36 @@ theorem finitePrime1_ratCast_sPower_of_good
       simpa [div_eq_mul_inv] using
         finitePrime1_ratCast_sPower_summand mi r hq (le_trans hr ha))
 
+theorem finitePrime1_ratCast_sPower_of_suffix_good
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
+    (hsuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys (μ.map fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    (((sPower μ r : ℚ) : ZMod finitePrime1) = sPowerMod finitePrime1 μ r) := by
+  unfold sPower sPowerMod
+  rw [ratCast_list_sum_of_suffix_good]
+  · let fQ : Nat → ℚ := fun mi => 1 / (((mi + 1 : Nat) : ℚ)^r)
+    let fZ : Nat → ZMod finitePrime1 :=
+      fun mi => 1 / (((mi + 1 : Nat) : ZMod finitePrime1)^r)
+    refine congrArg (fun xs : List (ZMod finitePrime1) => xs.sum) ?_
+    simpa [fQ, fZ, List.map_eq_flatMap, List.flatMap_assoc] using
+      (List.map_congr_left fun mi hmi => by
+        have hq : mi + 1 ≤ 73 := by
+          exact le_trans
+            (Nat.add_le_add_right (by simpa [hμsum] using le_sum_of_mem hmi) 1)
+            (M_add_one_le_73_of_le_13 ha)
+        simpa [div_eq_mul_inv] using
+          finitePrime1_ratCast_sPower_summand mi r hq (le_trans hr ha))
+  · intro x hx
+    rcases List.mem_map.mp hx with ⟨mi, hmi, rfl⟩
+    have hq : mi + 1 ≤ 73 := by
+      exact le_trans
+        (Nat.add_le_add_right (by simpa [hμsum] using le_sum_of_mem hmi) 1)
+        (M_add_one_le_73_of_le_13 ha)
+    exact finitePrime1_RatGood_sPower_summand mi r hq (le_trans hr ha)
+  · exact hsuffix
+
 theorem finitePrime1_ratCast_markedWeight_of_good
     (a : Nat) (μ : List Nat) (r : Nat)
     (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
@@ -208,6 +263,38 @@ theorem finitePrime1_ratCast_markedWeight_of_good
           (M_add_one_le_73_of_le_13 ha)
       simpa [div_eq_mul_inv] using
         finitePrime1_ratCast_markedWeight_summand mi r hq (le_trans hr ha))
+
+theorem finitePrime1_ratCast_markedWeight_of_suffix_good
+    (a : Nat) (μ : List Nat) (r : Nat)
+    (ha : a ≤ 13) (hμsum : μ.sum = M a) (hr : r ≤ a)
+    (hsuffix : ∀ ys : List ℚ,
+      List.IsSuffix ys
+        (μ.map fun mi : Nat => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) →
+        RatGood ys.sum) :
+    (((markedWeight μ r : ℚ) : ZMod finitePrime1) =
+      markedWeightMod finitePrime1 μ r) := by
+  unfold markedWeight markedWeightMod
+  rw [ratCast_list_sum_of_suffix_good]
+  · let fQ : Nat → ℚ := fun mi => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)
+    let fZ : Nat → ZMod finitePrime1 :=
+      fun mi => (mi : ZMod finitePrime1) / (((mi + 1 : Nat) : ZMod finitePrime1)^r)
+    refine congrArg (fun xs : List (ZMod finitePrime1) => xs.sum) ?_
+    simpa [fQ, fZ, List.map_eq_flatMap, List.flatMap_assoc] using
+      (List.map_congr_left fun mi hmi => by
+        have hq : mi + 1 ≤ 73 := by
+          exact le_trans
+            (Nat.add_le_add_right (by simpa [hμsum] using le_sum_of_mem hmi) 1)
+            (M_add_one_le_73_of_le_13 ha)
+        simpa [div_eq_mul_inv] using
+          finitePrime1_ratCast_markedWeight_summand mi r hq (le_trans hr ha))
+  · intro x hx
+    rcases List.mem_map.mp hx with ⟨mi, hmi, rfl⟩
+    have hq : mi + 1 ≤ 73 := by
+      exact le_trans
+        (Nat.add_le_add_right (by simpa [hμsum] using le_sum_of_mem hmi) 1)
+        (M_add_one_le_73_of_le_13 ha)
+    exact finitePrime1_RatGood_markedWeight_summand mi r hq (le_trans hr ha)
+  · exact hsuffix
 
 theorem finitePrime1_ratCast_hCoeff_of_good
     (a : Nat) (μ : List Nat) (r : Nat)
