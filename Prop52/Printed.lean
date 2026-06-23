@@ -478,6 +478,191 @@ theorem truncationResidue_bound (a : Nat) (ha : 150 ≤ a) :
   rw [lt_div_iff₀ ha_sq_pos]
   nlinarith
 
+/-! ## Uniform endpoint arithmetic for the `x₀` and `x₂` majorants -/
+
+def printedTailMrat (a : Nat) : ℚ :=
+  6 * (a : ℚ) - 6
+
+def printedTailX0Bound1 (a : Nat) : ℚ :=
+  (5 * printedTailMrat a) / (24 * ((a : ℚ) - 12)) +
+    (88 * printedTailMrat a) / (125 * ((a : ℚ) - 12)^2)
+
+def printedTailX0Bound2 (a : Nat) : ℚ :=
+  (5 * printedTailMrat a) / (24 * ((a : ℚ) - 12)) +
+    (36 * printedTailMrat a) / (25 * ((a : ℚ) - 12)^2)
+
+def printedTailX0Bound3 (a : Nat) : ℚ :=
+  printedTailMrat a / (6 * ((a : ℚ) - 12)) +
+    (11 * printedTailMrat a) / (100 * ((a : ℚ) - 12)^2)
+
+def printedTailX0Bound4 (a : Nat) : ℚ :=
+  printedTailMrat a / (6 * ((a : ℚ) - 12)) +
+    (72 * printedTailMrat a) / (325 * ((a : ℚ) - 12)^2)
+
+theorem printedTailX0Bound1_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX0Bound1 a < 7 / 5 := by
+  unfold printedTailX0Bound1 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hn_pos : (0 : ℚ) < (a : ℚ) - 12 := by nlinarith
+  field_simp [hn_pos.ne']
+  nlinarith
+
+theorem printedTailX0Bound2_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX0Bound2 a < 3 / 2 := by
+  unfold printedTailX0Bound2 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hn_pos : (0 : ℚ) < (a : ℚ) - 12 := by nlinarith
+  field_simp [hn_pos.ne']
+  nlinarith
+
+theorem printedTailX0Bound3_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX0Bound3 a < 11 / 10 := by
+  unfold printedTailX0Bound3 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hn_pos : (0 : ℚ) < (a : ℚ) - 12 := by nlinarith
+  field_simp [hn_pos.ne']
+  nlinarith
+
+theorem printedTailX0Bound4_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX0Bound4 a < 11 / 10 := by
+  unfold printedTailX0Bound4 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hn_pos : (0 : ℚ) < (a : ℚ) - 12 := by nlinarith
+  field_simp [hn_pos.ne']
+  nlinarith
+
+def printedTailX2Bound1 (a : Nat) : ℚ :=
+  5 * ((a : ℚ) - 1) / (a : ℚ) +
+    (8 * printedTailMrat a / 25) *
+      (16 / (a : ℚ)^2 + 128 / (a : ℚ)^3 + 1730 / (a : ℚ)^4)
+
+def printedTailX2Bound2 (a : Nat) : ℚ :=
+  5 * ((a : ℚ) - 1) / (a : ℚ) +
+    (8 * printedTailMrat a / 25) *
+      (32 / (a : ℚ)^2 + 384 / (a : ℚ)^3 + 7340 / (a : ℚ)^4)
+
+def printedTailX2Bound3 (a : Nat) : ℚ :=
+  4 * ((a : ℚ) - 1) / (a : ℚ) +
+    (8 * printedTailMrat a / 25) *
+      (4 / (a : ℚ)^2 + 16 / (a : ℚ)^3 + 103 / (a : ℚ)^4)
+
+def printedTailX2Bound4 (a : Nat) : ℚ :=
+  4 * ((a : ℚ) - 1) / (a : ℚ) +
+    (8 * printedTailMrat a / 25) *
+      (8 / (a : ℚ)^2 + 48 / (a : ℚ)^3 + 413 / (a : ℚ)^4)
+
+private theorem printedTailX2Bound1_poly_pos (a : Nat) (ha : 150 ≤ a) :
+    0 < 25 * (a : ℚ)^4 - 3215 * (a : ℚ)^3 - 26880 * (a : ℚ)^2 -
+      384480 * (a : ℚ) + 415200 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+  have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+  have hcube : 0 ≤ ((a : ℚ) - 150)^3 := by positivity
+  have hfour : 0 ≤ ((a : ℚ) - 150)^4 := by positivity
+  have hdecomp :
+      25 * (a : ℚ)^4 - 3215 * (a : ℚ)^3 - 26880 * (a : ℚ)^2 -
+          384480 * (a : ℚ) + 415200 =
+        25 * ((a : ℚ) - 150)^4 + 11785 * ((a : ℚ) - 150)^3 +
+          1901370 * ((a : ℚ) - 150)^2 + 112039020 * ((a : ℚ) - 150) +
+          1143568200 := by
+    ring
+  rw [hdecomp]
+  nlinarith
+
+private theorem printedTailX2Bound2_poly_pos (a : Nat) (ha : 150 ≤ a) :
+    0 < 25 * (a : ℚ)^4 - 2822 * (a : ℚ)^3 - 33792 * (a : ℚ)^2 -
+      667776 * (a : ℚ) + 704640 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+  have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+  have hcube : 0 ≤ ((a : ℚ) - 150)^3 := by positivity
+  have hfour : 0 ≤ ((a : ℚ) - 150)^4 := by positivity
+  have hdecomp :
+      25 * (a : ℚ)^4 - 2822 * (a : ℚ)^3 - 33792 * (a : ℚ)^2 -
+          667776 * (a : ℚ) + 704640 =
+        25 * ((a : ℚ) - 150)^4 + 12178 * ((a : ℚ) - 150)^3 +
+          2071308 * ((a : ℚ) - 150)^2 + 136209624 * ((a : ℚ) - 150) +
+          2272218240 := by
+    ring
+  rw [hdecomp]
+  nlinarith
+
+private theorem printedTailX2Bound3_poly_pos (a : Nat) (ha : 150 ≤ a) :
+    0 < 25 * (a : ℚ)^4 - 1840 * (a : ℚ)^3 - 11520 * (a : ℚ)^2 -
+      83520 * (a : ℚ) + 98880 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+  have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+  have hcube : 0 ≤ ((a : ℚ) - 150)^3 := by positivity
+  have hfour : 0 ≤ ((a : ℚ) - 150)^4 := by positivity
+  have hdecomp :
+      25 * (a : ℚ)^4 - 1840 * (a : ℚ)^3 - 11520 * (a : ℚ)^2 -
+          83520 * (a : ℚ) + 98880 =
+        25 * ((a : ℚ) - 150)^4 + 13160 * ((a : ℚ) - 150)^3 +
+          2535480 * ((a : ℚ) - 150)^2 + 209760480 * ((a : ℚ) - 150) +
+          6174620880 := by
+    ring
+  rw [hdecomp]
+  nlinarith
+
+private theorem printedTailX2Bound4_poly_pos (a : Nat) (ha : 150 ≤ a) :
+    0 < 25 * (a : ℚ)^4 - 2840 * (a : ℚ)^3 - 19200 * (a : ℚ)^2 -
+      175200 * (a : ℚ) + 198240 := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hshift : 0 ≤ (a : ℚ) - 150 := by nlinarith
+  have hsq : 0 ≤ ((a : ℚ) - 150)^2 := sq_nonneg _
+  have hcube : 0 ≤ ((a : ℚ) - 150)^3 := by positivity
+  have hfour : 0 ≤ ((a : ℚ) - 150)^4 := by positivity
+  have hdecomp :
+      25 * (a : ℚ)^4 - 2840 * (a : ℚ)^3 - 19200 * (a : ℚ)^2 -
+          175200 * (a : ℚ) + 198240 =
+        25 * ((a : ℚ) - 150)^4 + 12160 * ((a : ℚ) - 150)^3 +
+          2077800 * ((a : ℚ) - 150)^2 + 139864800 * ((a : ℚ) - 150) +
+          2613168240 := by
+    ring
+  rw [hdecomp]
+  nlinarith
+
+theorem printedTailX2Bound1_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX2Bound1 a < 26 / 5 := by
+  unfold printedTailX2Bound1 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by nlinarith
+  have hpoly := printedTailX2Bound1_poly_pos a ha
+  field_simp [ha_pos.ne']
+  ring_nf
+  nlinarith
+
+theorem printedTailX2Bound2_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX2Bound2 a < 11 / 2 := by
+  unfold printedTailX2Bound2 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by nlinarith
+  have hpoly := printedTailX2Bound2_poly_pos a ha
+  field_simp [ha_pos.ne']
+  ring_nf
+  nlinarith
+
+theorem printedTailX2Bound3_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX2Bound3 a < 81 / 20 := by
+  unfold printedTailX2Bound3 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by nlinarith
+  have hpoly := printedTailX2Bound3_poly_pos a ha
+  field_simp [ha_pos.ne']
+  ring_nf
+  nlinarith
+
+theorem printedTailX2Bound4_lt (a : Nat) (ha : 150 ≤ a) :
+    printedTailX2Bound4 a < 41 / 10 := by
+  unfold printedTailX2Bound4 printedTailMrat
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have ha_pos : (0 : ℚ) < (a : ℚ) := by nlinarith
+  have hpoly := printedTailX2Bound4_poly_pos a ha
+  field_simp [ha_pos.ne']
+  ring_nf
+  nlinarith
+
 /-! ## Endpoint arithmetic for the `x₀` and `x₂` majorants -/
 
 def endpointM : Nat := 6 * 150 - 6

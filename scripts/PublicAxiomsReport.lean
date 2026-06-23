@@ -118,6 +118,14 @@ import Prop52.Printed
 #print axioms Prop52.truncationResidue_157
 #print axioms Prop52.truncationResidueScaled_step8
 #print axioms Prop52.truncationResidue_bound
+#print axioms Prop52.printedTailX0Bound1_lt
+#print axioms Prop52.printedTailX0Bound2_lt
+#print axioms Prop52.printedTailX0Bound3_lt
+#print axioms Prop52.printedTailX0Bound4_lt
+#print axioms Prop52.printedTailX2Bound1_lt
+#print axioms Prop52.printedTailX2Bound2_lt
+#print axioms Prop52.printedTailX2Bound3_lt
+#print axioms Prop52.printedTailX2Bound4_lt
 #print axioms Prop52.x0Endpoint1_lt
 #print axioms Prop52.x0Endpoint2_lt
 #print axioms Prop52.x0Endpoint3_lt
