@@ -9,7 +9,6 @@ Prop52 bundle.  The remaining finite degrees `9 <= a <= 13` are larger and
 will use either a scaled exact check or the modular-certificate bridge.
 -/
 
-import Prop52.Theorem
 import Prop52.RatModBridge
 import Prop51.PartitionsComplete
 
@@ -112,11 +111,5 @@ theorem correctedCoeff_ne_2_13 :
 theorem correctedCoeff_finite_nonvanishing :
     CorrectedCoeffFiniteNonvanishing :=
   correctedCoeff_ne_2_13
-
-theorem correctedCoeff_nonvanishing_of_printed
-    (hprinted : PrintedCoeffNegativityLarge) :
-    CorrectedCoeffNonvanishing :=
-  correctedCoeff_nonvanishing_of_finite_and_printed
-    correctedCoeff_finite_nonvanishing hprinted
 
 end Prop52

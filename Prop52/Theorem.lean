@@ -12,6 +12,7 @@ Proposition 5.1 rectangle theorem.
 
 import Prop52.Statement
 import Prop51.Rectangle
+import Prop52.Finite
 
 namespace Prop52
 
@@ -94,6 +95,18 @@ theorem correctedCoeff_nonvanishing_of_finite_and_printed
   · have hlarge : correctedCoeff a μ < 0 :=
       correctedCoeff_neg_large_of_printed hprinted a (by omega) μ hμ
     exact ne_of_lt hlarge
+
+/-! The finite input in the preceding assembly theorem is now fully proved in
+`Prop52.Finite`, by exact checks for `2 <= a <= 8` and a modular-certificate
+lift for `9 <= a <= 13`.  The remaining analytic input for the complete
+corrected Proposition 5.2 statement is the printed-series large-range sign
+theorem. -/
+
+theorem correctedCoeff_nonvanishing_of_printed
+    (hprinted : PrintedCoeffNegativityLarge) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_finite_and_printed
+    correctedCoeff_finite_nonvanishing hprinted
 
 /-! ## Executable checks for the smallest corrected example
 

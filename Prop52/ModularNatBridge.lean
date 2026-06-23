@@ -51,6 +51,7 @@ import Prop52.ModularNat13VeryLowHighTail
 import Prop52.ModularNat13VeryLowMid
 import Prop52.ModularNat13VeryLowMidHigh
 import Prop52.ModularNat13VeryLowMidTail
+import Mathlib.Data.List.GetD
 import Prop51.PartitionsComplete
 import Mathlib.Data.Bool.AllAny
 import Mathlib.Data.List.TakeDrop

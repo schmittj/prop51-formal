@@ -18,7 +18,8 @@ The final theorem `correctedCoeffFast_eq` is the bridge from this executable
 certificate recurrence back to the statement-level coefficient.
 -/
 
-import Prop52.Theorem
+import Prop52.Statement
+import Prop51.BCoeffSeries
 
 namespace Prop52
 
