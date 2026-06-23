@@ -233,6 +233,195 @@ def printedTailP (a : Nat) : Nat :=
 def printedTailR0 (a : Nat) : Nat :=
   a - printedTailP a - 1
 
+private theorem N_eq_M_add_length_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    N μ = M a + μ.length := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  unfold N
+  rw [Prop51.sum_map_add_one, hsum]
+
+private theorem N_le_twoM_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    N μ ≤ 2 * M a := by
+  have hN := N_eq_M_add_length_of_partition (a := a) (μ := μ) hμ
+  obtain ⟨hsum, hpos⟩ := hμ
+  have hlen := Prop51.length_le_sum μ hpos
+  omega
+
+private theorem sPower_nonneg_of_coeffs (μ : List Nat) (r : Nat) :
+    0 ≤ sPower μ r := by
+  unfold sPower
+  refine List.sum_nonneg fun x hx => ?_
+  simp only [List.mem_map] at hx
+  obtain ⟨mi, _hmi, rfl⟩ := hx
+  positivity
+
+private theorem sPower_le_length (μ : List Nat) (r : Nat) :
+    sPower μ r ≤ (μ.length : ℚ) := by
+  induction μ with
+  | nil =>
+      simp [sPower]
+  | cons mi μ ih =>
+      unfold sPower at ih ⊢
+      simp only [List.map_cons, List.sum_cons, List.length_cons, Nat.cast_add,
+        Nat.cast_one]
+      have ih' :
+          (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (μ.length : ℚ) := by
+        simpa [Nat.cast_add, Nat.cast_one] using ih
+      change
+        1 / (((mi : ℚ) + 1)^r) +
+            (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+          ≤ (μ.length : ℚ) + 1
+      have hq_ge_one : (1 : ℚ) ≤ (mi : ℚ) + 1 := by
+        have hmi_nonneg : (0 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast Nat.zero_le mi
+        linarith
+      have hpow_ge_one : (1 : ℚ) ≤ (((mi : ℚ) + 1)^r) :=
+        one_le_pow₀ hq_ge_one
+      have hinv_le_one : 1 / (((mi : ℚ) + 1)^r) ≤ 1 := by
+        simpa using
+          (one_div_le_one_div_of_le (by norm_num : (0 : ℚ) < 1) hpow_ge_one)
+      have hmain :
+          1 / (((mi : ℚ) + 1)^r) +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ 1 + (μ.length : ℚ) :=
+        add_le_add hinv_le_one ih'
+      calc
+        1 / (((mi : ℚ) + 1)^r) +
+            (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ 1 + (μ.length : ℚ) := hmain
+        _ = (μ.length : ℚ) + 1 := by ring
+
+private theorem sPower_le_N (μ : List Nat) (r : Nat) :
+    sPower μ r ≤ (N μ : ℚ) := by
+  have hslen := sPower_le_length μ r
+  have hlenN : μ.length ≤ N μ := by
+    unfold N
+    rw [Prop51.sum_map_add_one]
+    omega
+  have hlenNQ : (μ.length : ℚ) ≤ (N μ : ℚ) := by exact_mod_cast hlenN
+  exact hslen.trans hlenNQ
+
+theorem hCoeff_nonneg_of_partition {a : Nat} {μ : List Nat}
+    (_hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    0 ≤ hCoeff μ r := by
+  unfold hCoeff
+  have hs : sPower μ r ≤ (N μ : ℚ) := sPower_le_N μ r
+  exact mul_nonneg (Prop51.c_nonneg r) (sub_nonneg.mpr hs)
+
+theorem hCoeff_le_twoM_c_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    hCoeff μ r ≤ (2 * (M a : ℚ)) * Prop51.c r := by
+  unfold hCoeff
+  have hs : sPower μ r ≤ (N μ : ℚ) := sPower_le_N μ r
+  have hs_nonneg : 0 ≤ sPower μ r := sPower_nonneg_of_coeffs μ r
+  have hN : ((N μ : Nat) : ℚ) ≤ 2 * (M a : ℚ) := by
+    exact_mod_cast N_le_twoM_of_partition (a := a) (μ := μ) hμ
+  have hc : 0 ≤ Prop51.c r := Prop51.c_nonneg r
+  calc
+    Prop51.c r * ((N μ : ℚ) - sPower μ r)
+        ≤ Prop51.c r * (N μ : ℚ) :=
+          mul_le_mul_of_nonneg_left (by linarith) hc
+    _ ≤ Prop51.c r * (2 * (M a : ℚ)) :=
+          mul_le_mul_of_nonneg_left hN hc
+    _ = (2 * (M a : ℚ)) * Prop51.c r := by ring
+
+private theorem markedWeight_term_le (mi r : Nat) :
+    (mi : ℚ) / ((mi + 1 : Nat) : ℚ)^r ≤ (mi : ℚ) / (2 : ℚ)^r := by
+  by_cases hmi : mi = 0
+  · simp [hmi]
+  · have hmi_pos : 1 ≤ mi := Nat.succ_le_of_lt (Nat.pos_of_ne_zero hmi)
+    have hq_ge_two : (2 : ℚ) ≤ ((mi + 1 : Nat) : ℚ) := by
+      exact_mod_cast Nat.succ_le_succ hmi_pos
+    have hpow_le : (2 : ℚ)^r ≤ (((mi + 1 : Nat) : ℚ)^r) :=
+      pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 2) hq_ge_two r
+    have hden_pos : (0 : ℚ) < (2 : ℚ)^r := by positivity
+    have hfrac : (((mi + 1 : Nat) : ℚ)^r)⁻¹ ≤ ((2 : ℚ)^r)⁻¹ := by
+      simpa [one_div] using one_div_le_one_div_of_le hden_pos hpow_le
+    simpa [div_eq_mul_inv] using
+      mul_le_mul_of_nonneg_left hfrac (by positivity : 0 ≤ (mi : ℚ))
+
+theorem markedWeight_nonneg_of_coeffs (μ : List Nat) (r : Nat) :
+    0 ≤ markedWeight μ r := by
+  unfold markedWeight
+  refine List.sum_nonneg fun x hx => ?_
+  simp only [List.mem_map] at hx
+  obtain ⟨mi, _hmi, rfl⟩ := hx
+  positivity
+
+private theorem markedWeight_le_sum_div_two_pow (μ : List Nat) (r : Nat) :
+    markedWeight μ r ≤ (μ.sum : ℚ) / (2 : ℚ)^r := by
+  induction μ with
+  | nil =>
+      simp [markedWeight]
+  | cons mi μ ih =>
+      unfold markedWeight at ih ⊢
+      simp only [List.map_cons, List.sum_cons, Nat.cast_add]
+      have ih' :
+          (List.map (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (μ.sum : ℚ) / (2 : ℚ)^r := by
+        simpa [Nat.cast_add, Nat.cast_one] using ih
+      change
+        (mi : ℚ) / (((mi : ℚ) + 1)^r) +
+            (List.map
+              (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+          ≤ ((mi : ℚ) + (μ.sum : ℚ)) / (2 : ℚ)^r
+      have hterm := markedWeight_term_le mi r
+      have hterm' : (mi : ℚ) / (((mi : ℚ) + 1)^r) ≤ (mi : ℚ) / (2 : ℚ)^r := by
+        simpa [Nat.cast_add, Nat.cast_one] using hterm
+      have hmain :
+          (mi : ℚ) / (((mi : ℚ) + 1)^r) +
+              (List.map
+                (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (mi : ℚ) / (2 : ℚ)^r + (μ.sum : ℚ) / (2 : ℚ)^r :=
+        add_le_add hterm' ih'
+      calc
+        (mi : ℚ) / (((mi : ℚ) + 1)^r) +
+            (List.map
+              (fun mi : Nat => (mi : ℚ) / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (mi : ℚ) / (2 : ℚ)^r + (μ.sum : ℚ) / (2 : ℚ)^r :=
+          hmain
+        _ = ((mi : ℚ) + (μ.sum : ℚ)) / (2 : ℚ)^r := by ring
+
+theorem markedWeight_le_M_div_two_pow_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    markedWeight μ r ≤ (M a : ℚ) / (2 : ℚ)^r := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  simpa [hsum] using markedWeight_le_sum_div_two_pow μ r
+
+theorem kCoeff_nonneg (μ : List Nat) (r : Nat) :
+    0 ≤ kCoeff μ r := by
+  rcases r with _ | r
+  · simp [kCoeff]
+  rcases r with _ | r
+  · simp [kCoeff, markedWeight_nonneg_of_coeffs]
+  · simp [kCoeff]
+    exact mul_nonneg
+      (mul_nonneg (mul_nonneg (by norm_num) (by positivity))
+        (Prop51.c_nonneg (r + 1)))
+      (markedWeight_nonneg_of_coeffs μ (r + 2))
+
+theorem kCoeff_le_partition_marked_bound {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    kCoeff μ r ≤
+      match r with
+      | 0 => 0
+      | 1 => 2 * ((M a : ℚ) / (2 : ℚ))
+      | r + 2 =>
+          12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1) *
+            ((M a : ℚ) / (2 : ℚ)^(r + 2)) := by
+  rcases r with _ | r
+  · simp [kCoeff]
+  rcases r with _ | r
+  · simp [kCoeff]
+    simpa using markedWeight_le_M_div_two_pow_of_partition (a := a) (μ := μ) hμ 1
+  · simp [kCoeff]
+    have hmw :=
+      markedWeight_le_M_div_two_pow_of_partition (a := a) (μ := μ) hμ (r + 2)
+    exact mul_le_mul_of_nonneg_left hmw
+      (mul_nonneg (mul_nonneg (by norm_num) (by positivity))
+        (Prop51.c_nonneg (r + 1)))
+
 /-- Coefficients of the low polynomial `-L(t)` used to define
 `E(t)=exp(-L(t))`. -/
 def printedTailLowExpInput (μ : List Nat) (a r : Nat) : ℚ :=
