@@ -9,9 +9,11 @@ modulo a prime, with inverses and inverse powers precomputed for the fixed
 degree.
 
 The current theorems check the first two new finite degrees, `a = 9, 10`,
-over all generated partitions.  A separate soundness bridge will connect this Nat-level
-kernel to `Prop52.Modular.correctedCoeffMod` and then to the rational
-coefficient.
+over all generated partitions.  Larger degrees use the chunk interface below
+from separate certificate modules, so adding a new chunk does not force Lean to
+re-evaluate the earlier certificates.  A separate soundness bridge will connect
+this Nat-level kernel to `Prop52.Modular.correctedCoeffMod` and then to the
+rational coefficient.
 -/
 
 import Prop52.Modular
@@ -117,6 +119,15 @@ def checkGeneratedModNat (p a : Nat) : Bool :=
   let invInt := invIntTable p a
   let invPow := invPowTable p a (M a + 1)
   (Prop51.partitions (M a)).all fun μ =>
+    correctedCoeffModNatWith p a c invInt invPow μ != 0
+
+/-- Chunked variant of `checkGeneratedModNat`, used for the larger finite
+degrees so each native certificate has bounded evaluation cost. -/
+def checkGeneratedModNatChunk (p a start len : Nat) : Bool :=
+  let c := (cListModNat p a).toArray
+  let invInt := invIntTable p a
+  let invPow := invPowTable p a (M a + 1)
+  ((Prop51.partitions (M a)).drop start |>.take len).all fun μ =>
     correctedCoeffModNatWith p a c invInt invPow μ != 0
 
 /-- Fast Nat-residue certificate for the first previously open finite degree. -/

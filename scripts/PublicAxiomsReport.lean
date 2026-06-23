@@ -22,6 +22,7 @@ import Prop51
 #print axioms Prop52.correctedCoeffMod_anchor
 #print axioms Prop52.checkGeneratedModNat_9_prime1
 #print axioms Prop52.checkGeneratedModNat_10_prime1
+#print axioms Prop52.checkGeneratedModNat_11_prime1_chunk_0
 #print axioms Prop52.correctedCoeff_neg_large_of_printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_finite_and_printed
 #print axioms Prop52.correctedCoeff_ne_2_8

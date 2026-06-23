@@ -8,4 +8,5 @@ import Prop52.Theorem
 import Prop52.Recurrence
 import Prop52.Modular
 import Prop52.ModularNat
+import Prop52.ModularNat11
 import Prop52.Finite
