@@ -234,6 +234,21 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_wPointMoments_wPointX2
     (printedTailMajorantMomentBounds_of_wPointMomentBounds hmomPoint)
     hpoint
 
+/-- Final assembly with the main lower estimate supplied in the Gamma/integral
+form of the printed proof; the Taylor--Gamma truncation residue is discharged
+inside `Prop52.Printed`. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_wPointX2
+    (hmid : PrintedCoeffNegativityMid)
+    (hgamma : PrintedTailGammaIntegralLowerBound)
+    (hmomPoint : PrintedTailWPointMomentBounds)
+    (hpoint : PrintedTailWPointBoundX2) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_wPointMoments_wPointX2
+    hmid
+    (printedTailMainLowerBound_of_gammaIntegralLowerBound hgamma)
+    hmomPoint
+    hpoint
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records

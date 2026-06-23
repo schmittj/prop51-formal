@@ -143,6 +143,7 @@ import Prop52.Printed
 #print axioms Prop52.truncationResidue_157
 #print axioms Prop52.truncationResidueScaled_step8
 #print axioms Prop52.truncationResidue_bound
+#print axioms Prop52.printedTailMainLowerBound_of_gammaIntegralLowerBound
 #print axioms Prop52.printedTailX0Bound1_lt
 #print axioms Prop52.printedTailX0Bound2_lt
 #print axioms Prop52.printedTailX0Bound3_lt
@@ -176,3 +177,4 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_omegaCoeff
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_wPointX2
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_wPointMoments_wPointX2
+#print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_wPointX2

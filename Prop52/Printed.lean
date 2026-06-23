@@ -2755,6 +2755,28 @@ theorem truncationResidue_bound (a : Nat) (ha : 150 ≤ a) :
   rw [lt_div_iff₀ ha_sq_pos]
   nlinarith
 
+/-! ## Main Gamma-margin interface -/
+
+/-- The untruncated Gamma/integral lower estimate from the printed proof,
+stated after moving the Taylor--Gamma truncation residue to the right-hand
+side.  The theorem below combines this with `truncationResidue_bound` to recover
+the finite main-sum lower bound consumed by the exact split assembly. -/
+def PrintedTailGammaIntegralLowerBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      9 / (40 * ((a : ℚ) - 2)) ≤
+        printedTailMainSum μ a + truncationResidueRhs a
+
+/-- Convert the Gamma/integral lower estimate plus the formal truncation
+residue bound into the finite main-sum lower bound used by the tail assembly. -/
+theorem printedTailMainLowerBound_of_gammaIntegralLowerBound
+    (hgamma : PrintedTailGammaIntegralLowerBound) :
+    PrintedTailMainLowerBound := by
+  intro a ha μ hμ
+  have hg := hgamma a ha μ hμ
+  have hres := truncationResidue_bound a ha
+  nlinarith
+
 /-! ## Uniform endpoint arithmetic for the `x₀` and `x₂` majorants -/
 
 def printedTailMrat (a : Nat) : ℚ :=
