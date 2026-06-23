@@ -130,6 +130,35 @@ def checkGeneratedModNatChunk (p a start len : Nat) : Bool :=
   ((Prop51.partitions (M a)).drop start |>.take len).all fun μ =>
     correctedCoeffModNatWith p a c invInt invPow μ != 0
 
+/-- Generated partitions of `n` whose first part is exactly `first`.
+
+This branch-shaped enumerator avoids repeatedly constructing the full
+partition list when large finite certificates are split into chunks. -/
+def partitionsWithFirst (n first : Nat) : List (List Nat) :=
+  if first = 0 ∨ n < first then
+    []
+  else
+    (Prop51.partitionsLe (n - first) first).map fun μ => first :: μ
+
+def checkGeneratedModNatFirstPartWith
+    (p a : Nat) (c invInt : Array Nat) (invPow : Array (Array Nat))
+    (first : Nat) : Bool :=
+  (partitionsWithFirst (M a) first).all fun μ =>
+    correctedCoeffModNatWith p a c invInt invPow μ != 0
+
+def checkGeneratedModNatFirstPart (p a first : Nat) : Bool :=
+  let c := (cListModNat p a).toArray
+  let invInt := invIntTable p a
+  let invPow := invPowTable p a (M a + 1)
+  checkGeneratedModNatFirstPartWith p a c invInt invPow first
+
+def checkGeneratedModNatFirstPartRange (p a start len : Nat) : Bool :=
+  let c := (cListModNat p a).toArray
+  let invInt := invIntTable p a
+  let invPow := invPowTable p a (M a + 1)
+  (List.range len).all fun j =>
+    checkGeneratedModNatFirstPartWith p a c invInt invPow (start + j)
+
 /-- Fast Nat-residue certificate for the first previously open finite degree. -/
 theorem checkGeneratedModNat_9_prime1 :
     checkGeneratedModNat finitePrime1 9 = true := by

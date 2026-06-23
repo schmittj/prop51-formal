@@ -612,6 +612,87 @@ theorem finitePrime1_correctedCoeffMod_ne_of_checkGeneratedChunks
     (Prop51.mem_partitions_iff.mp hmem).1
   exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne a μ ha hsum hnat
 
+theorem mem_partitionsWithFirst_cons_of_mem
+    {n first : Nat} {tail : List Nat}
+    (hmem : first :: tail ∈ Prop51.partitions n) :
+    first :: tail ∈ partitionsWithFirst n first := by
+  obtain ⟨hsum, hpair, hpos⟩ := Prop51.mem_partitions_iff.mp hmem
+  have hfirst_pos : 1 ≤ first := hpos first (by simp)
+  have hfirst_le : first ≤ n := by
+    simp only [List.sum_cons] at hsum
+    omega
+  unfold partitionsWithFirst
+  have hcond : ¬ (first = 0 ∨ n < first) := by
+    omega
+  rw [if_neg hcond]
+  refine List.mem_map.mpr ⟨tail, ?_, rfl⟩
+  rw [Prop51.mem_partitionsLe_iff]
+  refine ⟨?_, ?_, ?_⟩
+  · simp only [List.sum_cons] at hsum
+    omega
+  · exact (List.pairwise_cons.mp hpair).2
+  · intro x hx
+    have hxpos : 1 ≤ x := hpos x (List.mem_cons_of_mem _ hx)
+    have hxle : first ≥ x := (List.pairwise_cons.mp hpair).1 x hx
+    exact ⟨hxpos, hxle⟩
+
+theorem checkGeneratedModNatFirstPartRange_get
+    (p a start len first : Nat)
+    (hcheck : checkGeneratedModNatFirstPartRange p a start len = true)
+    (hlo : start ≤ first) (hhi : first < start + len) :
+    checkGeneratedModNatFirstPart p a first = true := by
+  have hall :
+      ∀ j : Nat, j ∈ List.range len →
+        checkGeneratedModNatFirstPartWith p a
+          (cListModNat p a).toArray
+          (invIntTable p a)
+          (invPowTable p a (M a + 1)) (start + j) = true := by
+    simpa [checkGeneratedModNatFirstPartRange, List.all_eq_true] using hcheck
+  have hjmem : first - start ∈ List.range len := by
+    simp [List.mem_range]
+    omega
+  have h := hall (first - start) hjmem
+  have hstart : start + (first - start) = first := by
+    omega
+  simpa [checkGeneratedModNatFirstPart, hstart] using h
+
+theorem finitePrime1_correctedCoeffMod_ne_of_checkGeneratedFirstParts
+    (a : Nat) (μ : List Nat)
+    (ha : a ≤ 13) (hMpos : 0 < M a)
+    (hchecks : ∀ first : Nat, 1 ≤ first → first ≤ M a →
+      checkGeneratedModNatFirstPart finitePrime1 a first = true)
+    (hmem : μ ∈ Prop51.partitions (M a)) :
+    correctedCoeffMod finitePrime1 a μ ≠ 0 := by
+  cases μ with
+  | nil =>
+      have hsum : ([] : List Nat).sum = M a :=
+        (Prop51.mem_partitions_iff.mp hmem).1
+      simp at hsum
+      omega
+  | cons first tail =>
+      obtain ⟨hsum, _hpair, hpos⟩ := Prop51.mem_partitions_iff.mp hmem
+      have hfirst_pos : 1 ≤ first := hpos first (by simp)
+      have hfirst_le : first ≤ M a := by
+        simp only [List.sum_cons] at hsum
+        omega
+      have hcheck := hchecks first hfirst_pos hfirst_le
+      have hall :
+          ∀ ν : List Nat, ν ∈ partitionsWithFirst (M a) first →
+            (correctedCoeffModNatWith finitePrime1 a
+              (cListModNat finitePrime1 a).toArray
+              (invIntTable finitePrime1 a)
+              (invPowTable finitePrime1 a (M a + 1)) ν != 0) = true := by
+        simpa [checkGeneratedModNatFirstPart, checkGeneratedModNatFirstPartWith,
+          List.all_eq_true] using hcheck
+      have hmemFirst :
+          first :: tail ∈ partitionsWithFirst (M a) first :=
+        mem_partitionsWithFirst_cons_of_mem hmem
+      have hnatWith := hall (first :: tail) hmemFirst
+      have hnat : (correctedCoeffModNat finitePrime1 a (first :: tail) != 0) = true := by
+        simpa [correctedCoeffModNat] using hnatWith
+      exact finitePrime1_correctedCoeffMod_nonzero_of_nat_ne a (first :: tail)
+        ha hsum hnat
+
 theorem finitePrime1_correctedCoeffMod_ne_9_generated :
     ∀ μ ∈ Prop51.partitions (M 9), correctedCoeffMod finitePrime1 9 μ ≠ 0 := by
   intro μ hmem
