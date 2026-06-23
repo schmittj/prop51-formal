@@ -226,6 +226,9 @@ def printedTailR0 (a : Nat) : Nat :=
 def printedTailLowExpInput (μ : List Nat) (a r : Nat) : ℚ :=
   if r ≤ printedTailP a then -hCoeff μ r else 0
 
+def printedTailHighExpInput (μ : List Nat) (a r : Nat) : ℚ :=
+  if printedTailP a < r then -hCoeff μ r else 0
+
 /-- The coefficient `e_s` of `E(t)=exp(-L(t))`. -/
 def printedTailECoeff (μ : List Nat) (a s : Nat) : ℚ :=
   Prop51.expCoeff (printedTailLowExpInput μ a) s
@@ -233,8 +236,14 @@ def printedTailECoeff (μ : List Nat) (a s : Nat) : ℚ :=
 noncomputable def printedTailESeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
   Prop51.expSeries (printedTailLowExpInput μ a)
 
+noncomputable def printedTailHighESeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
+  Prop51.expSeries (printedTailHighExpInput μ a)
+
 noncomputable def printedTailLowJSeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
   mk fun r => if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0
+
+noncomputable def printedTailHighKSeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
+  mk fun r => if printedTailP a < r then kCoeff μ r else 0
 
 noncomputable def printedTailWSeries (μ : List Nat) (a : Nat) : ℚ⟦X⟧ :=
   printedTailESeries μ a * (1 - printedTailLowJSeries μ a)
@@ -253,10 +262,70 @@ theorem coeff_printedTailESeries (μ : List Nat) (a s : Nat) :
     coeff s (printedTailESeries μ a) = printedTailECoeff μ a s := by
   simp [printedTailESeries, printedTailECoeff]
 
+private theorem expCoeff_eq_zero_of_input_eq_zero_le (L : Nat → ℚ) :
+    ∀ n : Nat, 1 ≤ n → (∀ r : Nat, 1 ≤ r → r ≤ n → L r = 0) →
+      Prop51.expCoeff L n = 0
+  | 0, hn, _ => by omega
+  | n + 1, _hn, hzero => by
+      have hrec := Prop51.expCoeff_succ_mul L n
+      have hsum :
+          (∑ t ∈ Finset.range (n + 1),
+              ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)) =
+            0 := by
+        refine Finset.sum_eq_zero fun t ht => ?_
+        have htlt : t < n + 1 := Finset.mem_range.mp ht
+        have hz : L (t + 1) = 0 := hzero (t + 1) (by omega) (by omega)
+        simp [hz]
+      have hne : (((n + 1 : Nat) : ℚ) ≠ 0) := by
+        exact_mod_cast Nat.succ_ne_zero n
+      rw [hsum] at hrec
+      exact (mul_eq_zero.mp hrec).resolve_left hne
+
+theorem coeff_printedTailHighESeries_eq_zero_of_le_p
+    (μ : List Nat) (a s : Nat) (hs : 1 ≤ s) (hsp : s ≤ printedTailP a) :
+    coeff s (printedTailHighESeries μ a) = 0 := by
+  rw [printedTailHighESeries, Prop51.coeff_expSeries]
+  refine expCoeff_eq_zero_of_input_eq_zero_le (printedTailHighExpInput μ a)
+    s hs ?_
+  intro r hr1 hrs
+  unfold printedTailHighExpInput
+  rw [if_neg (by omega)]
+
 theorem coeff_printedTailLowJSeries (μ : List Nat) (a r : Nat) :
     coeff r (printedTailLowJSeries μ a) =
       if 1 ≤ r ∧ r ≤ printedTailP a then kCoeff μ r else 0 := by
   simp [printedTailLowJSeries]
+
+theorem coeff_printedTailHighKSeries_eq_zero_of_le_p
+    (μ : List Nat) (a s : Nat) (hs : s ≤ printedTailP a) :
+    coeff s (printedTailHighKSeries μ a) = 0 := by
+  simp [printedTailHighKSeries, hs]
+
+theorem printedFullFSeries_eq_low_mul_high (μ : List Nat) (a : Nat) :
+    printedFullFSeries μ = printedTailESeries μ a * printedTailHighESeries μ a := by
+  rw [printedFullFSeries, printedTailESeries, printedTailHighESeries,
+    Prop51.expSeries_mul]
+  congr 1
+  funext r
+  unfold printedTailLowExpInput printedTailHighExpInput
+  by_cases hr : r ≤ printedTailP a
+  · rw [if_pos hr, if_neg (by omega)]
+    ring
+  · rw [if_neg hr, if_pos (by omega)]
+    ring
+
+theorem printedFullKSeries_eq_low_add_high (μ : List Nat) (a : Nat) :
+    printedFullKSeries μ = printedTailLowJSeries μ a + printedTailHighKSeries μ a := by
+  ext r
+  simp only [printedFullKSeries, printedTailLowJSeries, printedTailHighKSeries,
+    coeff_mk, map_add]
+  rcases r with _ | r
+  · simp [kCoeff]
+  · by_cases hr : r + 1 ≤ printedTailP a
+    · rw [if_pos ⟨by omega, hr⟩, if_neg (by omega)]
+      ring
+    · rw [if_neg (fun h => hr h.2), if_pos (by omega)]
+      ring
 
 theorem coeff_printedTailESeries_mul_lowJSeries
     (μ : List Nat) (a s : Nat) :

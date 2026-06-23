@@ -101,6 +101,10 @@ import Prop52.Printed
 #print axioms Prop52.coeff_printedFullFSeries
 #print axioms Prop52.coeff_printedFullFSeries_mul_KSeries
 #print axioms Prop52.coeff_printedFullSeries_eq_printedCoeff
+#print axioms Prop52.coeff_printedTailHighESeries_eq_zero_of_le_p
+#print axioms Prop52.coeff_printedTailHighKSeries_eq_zero_of_le_p
+#print axioms Prop52.printedFullFSeries_eq_low_mul_high
+#print axioms Prop52.printedFullKSeries_eq_low_add_high
 #print axioms Prop52.printedTailNormalizedLowerBound_of_split_errorBounds
 #print axioms Prop52.printedCoeffNegativityTail_of_split_errorBounds
 #print axioms Prop52.coeff_printedTailESeries
