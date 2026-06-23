@@ -179,6 +179,21 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_moments_eMoment_errorBounds
   correctedCoeff_nonvanishing_of_printed_mid_moments_errorBounds hmid hmain
     hmom (printedTailKErrorBound_of_eAbsoluteMoment he) homega
 
+/-- Final assembly using the coefficientwise-positive majorant moment bounds
+for `\widehat W` and `\widehat E`, matching the majorant layer of the printed
+tail proof. -/
+theorem correctedCoeff_nonvanishing_of_printed_mid_majorantMoments_errorBounds
+    (hmid : PrintedCoeffNegativityMid)
+    (hmain : PrintedTailMainLowerBound)
+    (hmaj : PrintedTailMajorantMomentBounds)
+    (homega : PrintedTailOmegaErrorBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_moments_eMoment_errorBounds
+    hmid hmain
+    (printedTailAbsoluteMomentBounds_of_majorant hmaj)
+    (printedTailEAbsoluteMomentBound_of_majorant hmaj)
+    homega
+
 /-! ## Executable checks for the smallest corrected example
 
 For `g = 4` (`a = 2`) and `μ = (1^6)`, the corrected note records

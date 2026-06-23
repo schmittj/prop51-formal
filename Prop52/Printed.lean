@@ -725,6 +725,124 @@ def PrintedTailHErrorBound : Prop :=
       |printedTailHNormSum μ a - printedTailMainSum μ a| ≤
         printedTailHErrorBudget a
 
+/-- Positive coefficientwise majorant for the low exponential
+`E(t)=exp(-L(t))`, using absolute logarithmic coefficients. -/
+def printedTailEAbsCoeff (μ : List Nat) (a s : Nat) : ℚ :=
+  Prop51.expCoeff (fun r => |printedTailLowExpInput μ a r|) s
+
+/-- Positive coefficientwise majorant for
+`W(t)=E(t)(1-J(t))`, namely `exp(|L|) * (1 + |J|)` at coefficient level. -/
+def printedTailWAbsCoeff (μ : List Nat) (a s : Nat) : ℚ :=
+  printedTailEAbsCoeff μ a s +
+    ((List.range s).map fun j : Nat =>
+      let r := j + 1
+      |if r ≤ printedTailP a then
+        kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+      else 0|).sum
+
+private theorem printedTailEAbsCoeff_nonneg (μ : List Nat) (a s : Nat) :
+    0 ≤ printedTailEAbsCoeff μ a s := by
+  unfold printedTailEAbsCoeff
+  exact Prop51.expCoeff_nonneg (fun r => abs_nonneg _) s
+
+theorem abs_printedTailECoeff_le_EAbsCoeff (μ : List Nat) (a s : Nat) :
+    |printedTailECoeff μ a s| ≤ printedTailEAbsCoeff μ a s := by
+  unfold printedTailECoeff printedTailEAbsCoeff
+  exact Prop51.abs_expCoeff_le_of_abs_le (fun r => abs_nonneg _)
+    (fun r => le_rfl) s
+
+theorem abs_printedTailOmegaCoeff_le_WAbsCoeff
+    (μ : List Nat) (a s : Nat) :
+    |printedTailOmegaCoeff μ a s| ≤ printedTailWAbsCoeff μ a s := by
+  unfold printedTailOmegaCoeff printedTailWAbsCoeff
+  have hconv :
+      |((List.range s).map fun j : Nat =>
+          let r := j + 1
+          if r ≤ printedTailP a then
+            kCoeff μ r * printedTailECoeff μ a (s - r)
+          else 0).sum|
+        ≤
+      ((List.range s).map fun j : Nat =>
+          |let r := j + 1
+          if r ≤ printedTailP a then
+            kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+          else 0|).sum := by
+    rw [Prop51.list_range_map_sum, Prop51.list_range_map_sum]
+    refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
+    refine Finset.sum_le_sum fun j hj => ?_
+    dsimp only
+    by_cases hr : j + 1 ≤ printedTailP a
+    · simp [hr]
+      rw [abs_of_nonneg (printedTailEAbsCoeff_nonneg μ a (s - (j + 1)))]
+      exact mul_le_mul_of_nonneg_left
+        (abs_printedTailECoeff_le_EAbsCoeff μ a (s - (j + 1)))
+        (abs_nonneg _)
+    · simp [hr]
+  calc
+    |printedTailECoeff μ a s -
+        ((List.range s).map fun j : Nat =>
+          let r := j + 1
+          if r ≤ printedTailP a then
+            kCoeff μ r * printedTailECoeff μ a (s - r)
+          else 0).sum|
+        ≤
+      |printedTailECoeff μ a s| +
+        |((List.range s).map fun j : Nat =>
+          let r := j + 1
+          if r ≤ printedTailP a then
+            kCoeff μ r * printedTailECoeff μ a (s - r)
+          else 0).sum| := by
+          calc
+            |printedTailECoeff μ a s -
+                ((List.range s).map fun j : Nat =>
+                  let r := j + 1
+                  if r ≤ printedTailP a then
+                    kCoeff μ r * printedTailECoeff μ a (s - r)
+                  else 0).sum|
+                =
+              |printedTailECoeff μ a s +
+                -((List.range s).map fun j : Nat =>
+                  let r := j + 1
+                  if r ≤ printedTailP a then
+                    kCoeff μ r * printedTailECoeff μ a (s - r)
+                  else 0).sum| := by ring_nf
+            _ ≤
+              |printedTailECoeff μ a s| +
+                |-((List.range s).map fun j : Nat =>
+                  let r := j + 1
+                  if r ≤ printedTailP a then
+                    kCoeff μ r * printedTailECoeff μ a (s - r)
+                  else 0).sum| := abs_add_le _ _
+            _ =
+              |printedTailECoeff μ a s| +
+                |((List.range s).map fun j : Nat =>
+                  let r := j + 1
+                  if r ≤ printedTailP a then
+                    kCoeff μ r * printedTailECoeff μ a (s - r)
+                  else 0).sum| := by rw [abs_neg]
+    _ ≤
+      printedTailEAbsCoeff μ a s +
+        ((List.range s).map fun j : Nat =>
+          |let r := j + 1
+          if r ≤ printedTailP a then
+            kCoeff μ r * printedTailEAbsCoeff μ a (s - r)
+          else 0|).sum := by
+        exact add_le_add
+          (abs_printedTailECoeff_le_EAbsCoeff μ a s) hconv
+
+/-- Majorant moment estimates for `exp(|L|)*(1+|J|)` and `exp(|L|)`.
+These are the coefficientwise-positive moment bounds that correspond most
+directly to `\widehat W` and `\widehat E` in the printed proof. -/
+def PrintedTailMajorantMomentBounds : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+          gammaWeight a s * printedTailWAbsCoeff μ a s ≤ 9) ∧
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+          (s : ℚ) * gammaWeight a s * printedTailWAbsCoeff μ a s ≤ 18) ∧
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+          gammaWeight a s * printedTailEAbsCoeff μ a s ≤ 9)
+
 /-- The two absolute-moment estimates from the printed proof:
 `sum gamma_s |omega_s| <= 9` and
 `sum s gamma_s |omega_s| <= 18`.
@@ -778,6 +896,38 @@ private theorem printedTail_two_mul_sub_ge {a s : Nat} (ha : 150 ≤ a)
   have hp := printedTail_range_p_succ_le (a := a) (s := s) ha hs
   unfold printedTailP at hp
   omega
+
+theorem printedTailAbsoluteMomentBounds_of_majorant
+    (hmaj : PrintedTailMajorantMomentBounds) :
+    PrintedTailAbsoluteMomentBounds := by
+  intro a ha μ hμ
+  have hmajW0 := (hmaj a ha μ hμ).1
+  have hmajW1 := (hmaj a ha μ hμ).2.1
+  constructor
+  · calc
+      ∑ s ∈ Finset.range (printedTailR0 a + 1),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|
+          ≤
+        ∑ s ∈ Finset.range (printedTailR0 a + 1),
+          gammaWeight a s * printedTailWAbsCoeff μ a s := by
+          refine Finset.sum_le_sum fun s hs => ?_
+          have hslt := printedTail_range_lt_a (a := a) (s := s) ha hs
+          exact mul_le_mul_of_nonneg_left
+            (abs_printedTailOmegaCoeff_le_WAbsCoeff μ a s)
+            (gammaWeight_nonneg hslt)
+      _ ≤ 9 := hmajW0
+  · calc
+      ∑ s ∈ Finset.range (printedTailR0 a + 1),
+          (s : ℚ) * gammaWeight a s * |printedTailOmegaCoeff μ a s|
+          ≤
+        ∑ s ∈ Finset.range (printedTailR0 a + 1),
+          (s : ℚ) * gammaWeight a s * printedTailWAbsCoeff μ a s := by
+          refine Finset.sum_le_sum fun s hs => ?_
+          have hslt := printedTail_range_lt_a (a := a) (s := s) ha hs
+          exact mul_le_mul_of_nonneg_left
+            (abs_printedTailOmegaCoeff_le_WAbsCoeff μ a s)
+            (mul_nonneg (by positivity) (gammaWeight_nonneg hslt))
+      _ ≤ 18 := hmajW1
 
 private theorem inv_q_pow_le_q_over_two_pow_succ {mi r : Nat}
     (hmi : 1 ≤ mi) :
@@ -1194,6 +1344,24 @@ def PrintedTailEAbsoluteMomentBound : Prop :=
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       ∑ s ∈ Finset.range (printedTailR0 a + 1),
           gammaWeight a s * |printedTailECoeff μ a s| ≤ 9
+
+theorem printedTailEAbsoluteMomentBound_of_majorant
+    (hmaj : PrintedTailMajorantMomentBounds) :
+    PrintedTailEAbsoluteMomentBound := by
+  intro a ha μ hμ
+  have hmajE := (hmaj a ha μ hμ).2.2
+  calc
+    ∑ s ∈ Finset.range (printedTailR0 a + 1),
+        gammaWeight a s * |printedTailECoeff μ a s|
+        ≤
+      ∑ s ∈ Finset.range (printedTailR0 a + 1),
+        gammaWeight a s * printedTailEAbsCoeff μ a s := by
+        refine Finset.sum_le_sum fun s hs => ?_
+        have hslt := printedTail_range_lt_a (a := a) (s := s) ha hs
+        exact mul_le_mul_of_nonneg_left
+          (abs_printedTailECoeff_le_EAbsCoeff μ a s)
+          (gammaWeight_nonneg hslt)
+    _ ≤ 9 := hmajE
 
 def printedTailKPowBudgetRhs (a : Nat) : ℚ :=
   9 / (2 : ℚ)^(printedTailP a)
