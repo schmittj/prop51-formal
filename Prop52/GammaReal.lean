@@ -41,6 +41,22 @@ theorem real_exp_neg_le_integral_exp_neg_of_integral_le
     linarith
   exact (Real.exp_le_exp_of_le hmean_neg).trans hJ
 
+/-- The scalar prefactor conversion in the Gamma margin:
+`(5/(6(a-2))) * (27/100) = 9/(40(a-2))`. -/
+theorem gammaPrefactor_lower_of_expLower
+    (a : Nat) (ha : 150 ≤ a) {Z : ℝ}
+    (hZ : (27 / 100 : ℝ) ≤ Z) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      (5 / (6 * ((a : ℝ) - 2))) * Z := by
+  have hden : (0 : ℝ) < (a : ℝ) - 2 := by
+    have haR : (150 : ℝ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  rw [show 9 / (40 * ((a : ℝ) - 2)) =
+      (5 / (6 * ((a : ℝ) - 2))) * (27 / 100 : ℝ) by
+        field_simp [hden.ne']
+        ring]
+  exact mul_le_mul_of_nonneg_left hZ (by positivity)
+
 /-- A three-term Taylor upper bound for `exp(3/10)`. -/
 theorem real_exp_three_tenths_le :
     Real.exp (3 / 10 : ℝ) ≤ 1351 / 1000 := by
@@ -88,6 +104,24 @@ theorem real_exp_neg_gammaExponentBound_gt
   have hneg : -(13 / 10 : ℝ) < -(gammaExponentBound a : ℝ) := by
     linarith
   exact real_exp_neg_thirteen_tenths_gt.trans (Real.exp_strictMono hneg)
+
+/-- Jensen plus the scalar exponential endpoint, in the prefactored form used
+by the printed Gamma-margin proof. -/
+theorem gammaPrefactor_integral_exp_neg_lower_of_mean_le_bound
+    {α : Type*} [MeasurableSpace α] {μ : Measure α} [IsProbabilityMeasure μ]
+    {a : Nat} (ha : 150 ≤ a) {f : α → ℝ}
+    (hf : Integrable f μ)
+    (hexp : Integrable (fun x => Real.exp (-f x)) μ)
+    (hmean : ∫ x, f x ∂ μ ≤ (gammaExponentBound a : ℝ)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ∫ x, Real.exp (-f x) ∂ μ := by
+  have hJ := real_exp_neg_le_integral_exp_neg_of_integral_le
+    (μ := μ) (f := f) (C := (gammaExponentBound a : ℝ)) hf hexp hmean
+  have h27 :
+      (27 / 100 : ℝ) ≤ ∫ x, Real.exp (-f x) ∂ μ :=
+    (real_exp_neg_gammaExponentBound_gt a ha).le.trans hJ
+  exact gammaPrefactor_lower_of_expLower a ha h27
 
 /-- Real form of the finite exponent-moment estimate. -/
 theorem printedTailGammaExponentMoment_real_lt_thirteen_tenths
