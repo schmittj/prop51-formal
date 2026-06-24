@@ -1,6 +1,10 @@
-# Prop 5.1 Formalization — Curated Codex CLI Session Excerpt
+# Codex CLI Session Excerpts — Chen–Larson Proposition 5.1 & 5.2 Formalizations
 
-*Companion archive for the Chen–Larson Proposition 5.1 coefficient-negativity formalization.*
+*Companion archive for the Chen–Larson Proposition 5.1 and (corrected) 5.2
+coefficient (non-)vanishing formalizations. The chronological turns below are the
+Proposition 5.1 completion drive (15–20 June 2026); the **Proposition 5.2**
+section at the end records the separate, autonomous Proposition 5.2 completion
+drive (23–24 June 2026).*
 
 This is a **curated, redacted** excerpt of the OpenAI Codex CLI completion drive that
 formalized the proof in Lean 4. It reproduces the **human-authored prompts verbatim**
@@ -241,4 +245,56 @@ Outcome: The worker refreshed the Appendix A façade listing and the disclosure 
 
 ---
 
-*End of curated excerpt. Raw rollout logs (~185 MB) omitted.*
+# Proposition 5.2 (corrected) — autonomous Codex completion (23–24 June 2026)
+
+After the Proposition 5.1 result was shared with the authors — who were open to
+the approach and asked whether the remaining `g ≡ 1 (mod 3)` case (their
+Proposition 5.2) could now be attacked — the informal mathematics for the
+*corrected* Proposition 5.2 was worked out in ChatGPT 5.5 Pro (that timeline is
+recorded in the paper's AI-use section, not here) and packaged as a self-contained
+bundle: a corrected research note, an independent audit, the pinned Proposition
+5.1 dependency, and a detailed Lean formalization plan with milestones. That
+bundle — not a bare prompt — was handed to a fresh OpenAI Codex CLI worker.
+
+Unlike the Proposition 5.1 drive, this run required **no further mathematical or
+technical intervention**: from the single handoff task below, the worker completed
+the entire Lean formalization autonomously in roughly twenty hours.
+
+Handoff task (verbatim excerpt):
+
+> You are implementing a Lean formalization of the corrected Chen–Larson
+> Proposition 5.2 coefficient theorem. Read the entire bundle before editing
+> code... Proceed milestone by milestone. Begin with: fetching and building
+> Prop51; locating the concrete theorem that supplies `Unorm a N < 0` for the
+> entire rectangle when `a >= 401`; exporting a concise theorem
+> `Prop51.bCoeff_neg_of_rectangle`; creating a downstream module that imports it
+> and proves the elementary correction identity... preserve the elementary
+> identity `T_corrected = T_printed + (M-1)b` as the central assembly interface...
+> run `#print axioms` on every new capstone theorem.
+
+Outcome (summarized from the commit history and the worker's final report):
+
+- Exposed `Prop51.bCoeff_neg_of_rectangle`, repackaging the closed Proposition
+  5.1 direct-saddle certificates in the rectangle bookkeeping `6a−7 ≤ N ≤ 12a−8`.
+- Defined the corrected coefficient and proved the central identity
+  `T^cor = T^old + (M−1)·b_a` for arbitrary `a, μ`, with the `g=4`, `μ=(1⁶)`
+  exact checks (`b₂ = −195/8`, `T^old = 45/8`, `T^cor = −465/4`).
+- Closed the finite range `2 ≤ a ≤ 13`: exact rational `native_decide` for
+  `2 ≤ a ≤ 8`, and a two-prime modular-certificate lift (with a proved ℚ→𝔽ₚ
+  cast) for `9 ≤ a ≤ 13`.
+- Re-proved the printed-series large-range negativity `T^old < 0` for `a ≥ 14`
+  entirely in Lean: the mid-range `14 ≤ a ≤ 149` via exact dyadic-interval
+  certificates (replacing the note's external Boost interval layer), and the tail
+  `a ≥ 150` via a Gamma-completion / Taylor-truncation argument reduced to a
+  closed real exponential power-series identity.
+- Assembled the two assumption-free public theorems
+  `Prop52.correctedCoeff_nonvanishing` and `Prop52.correctedCoeff_neg`, with
+  `#print axioms` reporting only the standard `propext`, `Classical.choice`,
+  `Quot.sound` plus `Lean.ofReduceBool`, `Lean.trustCompiler`.
+
+Recorded tool-goal usage for the drive was about 17.5 million tokens over roughly
+twenty hours, with no human turns between the handoff and completion.
+
+---
+
+*End of curated excerpt. Raw rollout logs are omitted.*
