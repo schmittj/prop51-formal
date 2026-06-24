@@ -147,6 +147,65 @@ def PrintedTailERealSeriesHasSum : Prop :=
           (fun s : Nat => (printedTailECoeff μ a s : ℝ) * t^s)
           (Real.exp (-(printedTailLReal μ a t)))
 
+theorem printedTailLowExpInput_zero (μ : List Nat) (a : Nat) :
+    printedTailLowExpInput μ a 0 = 0 := by
+  unfold printedTailLowExpInput hCoeff
+  simp
+
+/-- The formal low-exponential input evaluates to the real polynomial
+`-L(t)` used in the printed Gamma-tail argument. -/
+theorem printedTailLowExpInput_eval_eq_neg_printedTailLReal
+    (μ : List Nat) (a : Nat) (t : ℝ) :
+    (∑ r ∈ Finset.range (printedTailP a + 1),
+        (printedTailLowExpInput μ a r : ℝ) * t^r)
+      = -(printedTailLReal μ a t) := by
+  unfold printedTailLowExpInput printedTailLReal
+  have hsubset :
+      Finset.Ico 1 (printedTailP a + 1) ⊆
+        Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (Finset.mem_Ico.mp hr).2
+  have hzero :
+      ∀ r ∈ Finset.range (printedTailP a + 1),
+        r ∉ Finset.Ico 1 (printedTailP a + 1) →
+          ((if r ≤ printedTailP a then -hCoeff μ r else 0 : ℚ) : ℝ) *
+              t^r = 0 := by
+    intro r hr hnot
+    have hrlt : r < printedTailP a + 1 := Finset.mem_range.mp hr
+    have hr0 : r = 0 := by
+      by_contra hne
+      have hr1 : 1 ≤ r := by omega
+      exact hnot (Finset.mem_Ico.mpr ⟨hr1, hrlt⟩)
+    subst r
+    simp [hCoeff]
+  calc
+    ∑ r ∈ Finset.range (printedTailP a + 1),
+        ((if r ≤ printedTailP a then -hCoeff μ r else 0 : ℚ) : ℝ) * t^r
+        = ∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+            ((if r ≤ printedTailP a then -hCoeff μ r else 0 : ℚ) : ℝ) *
+              t^r := by
+          exact (Finset.sum_subset hsubset hzero).symm
+    _ = ∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+          -((hCoeff μ r : ℝ) * t^r) := by
+          refine Finset.sum_congr rfl fun r hr => ?_
+          have hrle : r ≤ printedTailP a :=
+            Nat.le_of_lt_succ (Finset.mem_Ico.mp hr).2
+          simp [hrle]
+    _ = -∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+          (hCoeff μ r : ℝ) * t^r := by
+          rw [Finset.sum_neg_distrib]
+
+theorem printedTailX1_lt_one_real {a : Nat} (ha : 150 ≤ a) :
+    (printedTailX1 a : ℝ) < 1 := by
+  have haR : (150 : ℝ) ≤ (a : ℝ) := by exact_mod_cast ha
+  have hx1_cast : (printedTailX1 a : ℝ) = 1 / (3 * (a : ℝ)) := by
+    unfold printedTailX1
+    norm_num
+  rw [hx1_cast]
+  have hden_pos : (0 : ℝ) < 3 * (a : ℝ) := by nlinarith
+  rw [div_lt_one hden_pos]
+  nlinarith
+
 private theorem hasSum_nat_shift_mul_left
     {f : Nat → ℝ} {A c : ℝ} (hf : HasSum f A) (r : Nat) :
     HasSum (fun s : Nat => if r ≤ s then c * f (s - r) else 0) (c * A) := by
