@@ -201,4 +201,23 @@ theorem hasDerivAt_gammaIBPEnvelope_bracket
   rw [gammaIBP_logDeriv_eq_bracket_add_J_sub_one
     (μ := μ) (a := a) ha hx]
 
+/-- Density form of the Gamma integration-by-parts envelope on the support of
+the Gamma law. -/
+theorem gammaPDF_toReal_mul_exp_neg_L_eq_invGamma_mul_envelope
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) {x : ℝ} (hx : 0 ≤ x) :
+    (ProbabilityTheory.gammaPDF (a : ℝ) 1 x).toReal *
+        Real.exp (-(printedTailLGammaArg μ a x)) =
+      (Real.Gamma (a : ℝ))⁻¹ * gammaIBPEnvelope μ a x := by
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hx]
+  rw [ENNReal.toReal_ofReal]
+  · simp only [Real.one_rpow, one_mul]
+    unfold gammaIBPEnvelope
+    have hshape : (a : ℝ) - 1 = ((a - 1 : Nat) : ℝ) := by
+      rw [Nat.cast_sub (by omega : 1 ≤ a)]
+      ring
+    rw [hshape]
+    rw [Real.rpow_natCast]
+    ring
+  · positivity
+
 end Prop52
