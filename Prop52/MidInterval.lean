@@ -103,10 +103,47 @@ theorem midDINeg_sound {x : ℚ} {I : DI}
   have hhi : I.hi.m < 0 := of_decide_eq_true hI
   exact lt_of_le_of_lt hx.2 (DF.val_neg_of_m_neg hhi)
 
+/-- Right-associated interval sum, chosen to make enclosure proofs simple. -/
+def midDISum : List DI → DI
+  | [] => DI.zero
+  | I :: Is => I.add (midDISum Is)
+
+theorem midDISum_mem {α : Type} (xs : List α) (f : α → ℚ) (g : α → DI)
+    (h : ∀ x ∈ xs, DI.mem (f x) (g x)) :
+    DI.mem ((xs.map f).sum) (midDISum (xs.map g)) := by
+  induction xs with
+  | nil =>
+      simpa [midDISum] using DI.mem_zero
+  | cons x xs ih =>
+      simp only [List.map_cons, List.sum_cons, midDISum]
+      exact DI.mem_add (h x (by simp))
+        (ih fun y hy => h y (by simp [hy]))
+
+private theorem list_sum_map_mul_left {α : Type} (xs : List α) (c : ℚ)
+    (f : α → ℚ) :
+    ((xs.map fun x => c * f x).sum) = c * (xs.map f).sum := by
+  induction xs with
+  | nil =>
+      simp
+  | cons x xs ih =>
+      simp only [List.map_cons, List.sum_cons, ih]
+      ring
+
 private theorem getD_range_map_toArray {α : Type} (fallback : α)
     (f : Nat → α) (n i : Nat) (hi : i < n) :
     (((List.range n).map f).toArray.getD i fallback) = f i := by
   simp [Array.getD_eq_getD_getElem?, hi]
+
+private theorem getD_push_lt {α : Type} (T : Array α) (x fallback : α) (i : Nat)
+    (h : i < T.size) :
+    (T.push x).getD i fallback = T.getD i fallback := by
+  simp [Array.getD_eq_getD_getElem?, Array.getElem?_push, Nat.ne_of_lt h]
+
+private theorem getD_push_size {α : Type} (T : Array α) (x fallback : α) (i : Nat)
+    (h : i = T.size) :
+    (T.push x).getD i fallback = x := by
+  subst h
+  simp [Array.getD_eq_getD_getElem?]
 
 /-! ## Precomputed row constants -/
 
@@ -156,26 +193,195 @@ def midXIntervalTab (R : Array (Array DI)) (N : Nat) : Nat → Array DI
   | n + 2 =>
       let r := n + 2
       let T := midXIntervalTab R N (r - 1)
-      let s : DI := ((List.range (r - 1)).map fun j : Nat =>
+      let s : DI := midDISum (((List.range (r - 1)).map fun j : Nat =>
         let k := j + 1
-        DI.nsmul k ((midRMatrixGet R k r).mul (T.getD (r - k) DI.zero))).foldl
-          DI.add DI.zero
+        DI.nsmul k ((midRMatrixGet R k r).mul (T.getD (r - k) DI.zero))))
       let scaled := (DI.nsmul N s).divNat r
       T.push ((DI.exact 1).neg.add scaled.neg)
+
+theorem midXTab_size (D : Array ℚ) (N : Nat) :
+    ∀ n, (midXTab D N n).size = n + 1
+  | 0 => rfl
+  | 1 => rfl
+  | n + 2 => by
+      show ((midXTab D N (n + 1)).push _).size = _
+      rw [Array.size_push, midXTab_size D N (n + 1)]
+
+theorem midXIntervalTab_size (R : Array (Array DI)) (N : Nat) :
+    ∀ n, (midXIntervalTab R N n).size = n + 1
+  | 0 => rfl
+  | 1 => rfl
+  | n + 2 => by
+      show ((midXIntervalTab R N (n + 1)).push _).size = _
+      rw [Array.size_push, midXIntervalTab_size R N (n + 1)]
+
+private theorem midXStepSum_mem (D : Array ℚ) (a N r : Nat) (hr : r ≤ a)
+    (hprev : ∀ i, i ≤ r - 1 →
+      DI.mem ((midXTab D N (r - 1)).getD i 0)
+        ((midXIntervalTab (midRMatrix D a) N (r - 1)).getD i DI.zero)) :
+    DI.mem (((List.range (r - 1)).map fun j : Nat =>
+      let k := j + 1
+      (k : ℚ) * midRTab D k r * (midXTab D N (r - 1)).getD (r - k) 0).sum)
+      (midDISum (((List.range (r - 1)).map fun j : Nat =>
+        let k := j + 1
+        DI.nsmul k ((midRMatrixGet (midRMatrix D a) k r).mul
+          ((midXIntervalTab (midRMatrix D a) N (r - 1)).getD (r - k) DI.zero))))) := by
+  refine midDISum_mem _ _ _ ?_
+  intro j hj
+  have hjlt : j < r - 1 := List.mem_range.mp hj
+  let k := j + 1
+  have hkr : k < r := by omega
+  have hka : k ≤ a := by omega
+  have hrka : r - k ≤ r - 1 := by omega
+  have hR := midRMatrixGet_mem D a k r hka hr
+  have hX := hprev (r - k) hrka
+  have hterm := DI.mem_nsmul k (DI.mem_mul hR hX)
+  simpa [k, mul_assoc] using hterm
+
+theorem midXIntervalTab_mem (D : Array ℚ) (a N : Nat) :
+    ∀ n i, n ≤ a → i ≤ n →
+      DI.mem ((midXTab D N n).getD i 0)
+        ((midXIntervalTab (midRMatrix D a) N n).getD i DI.zero)
+  | 0, i, _hn, hi => by
+      have hi0 : i = 0 := by omega
+      subst hi0
+      simpa [midXTab, midXIntervalTab] using DI.mem_zero
+  | 1, i, _hn, hi => by
+      interval_cases i
+      · simpa [midXTab, midXIntervalTab] using DI.mem_zero
+      · simpa [midXTab, midXIntervalTab] using DI.mem_neg (DI.mem_exact 1)
+  | n + 2, i, hn, hi => by
+      let r := n + 2
+      by_cases hlt : i < r
+      · have hrec := midXIntervalTab_mem D a N (n + 1) i (by omega) (by omega)
+        change DI.mem (((midXTab D N (n + 1)).push _).getD i 0)
+          (((midXIntervalTab (midRMatrix D a) N (n + 1)).push _).getD i DI.zero)
+        rw [getD_push_lt _ _ _ _ (by rw [midXTab_size]; omega),
+          getD_push_lt _ _ _ _ (by rw [midXIntervalTab_size]; omega)]
+        exact hrec
+      · have hi_eq : i = r := by omega
+        subst i
+        let sexact : ℚ := ((List.range (r - 1)).map fun j : Nat =>
+          let k := j + 1
+          (k : ℚ) * midRTab D k r * (midXTab D N (r - 1)).getD (r - k) 0).sum
+        let sint : DI := midDISum (((List.range (r - 1)).map fun j : Nat =>
+          let k := j + 1
+          DI.nsmul k ((midRMatrixGet (midRMatrix D a) k r).mul
+            ((midXIntervalTab (midRMatrix D a) N (r - 1)).getD (r - k) DI.zero))))
+        change DI.mem
+          (((midXTab D N (n + 1)).push (-1 - ((N : ℚ) / (r : ℚ)) * sexact)).getD r 0)
+          (((midXIntervalTab (midRMatrix D a) N (n + 1)).push
+            ((DI.exact 1).neg.add (((DI.nsmul N sint).divNat r).neg))).getD r DI.zero)
+        rw [getD_push_size _ _ _ _ (by rw [midXTab_size]),
+          getD_push_size _ _ _ _ (by rw [midXIntervalTab_size])]
+        have hs : DI.mem sexact sint := by
+          dsimp [sexact, sint]
+          exact midXStepSum_mem D a N r (by omega) (fun idx hidx =>
+            midXIntervalTab_mem D a N (r - 1) idx (by omega) hidx)
+        have hscaled0 :
+            DI.mem (((N : ℚ) * sexact) / (r : ℚ)) ((DI.nsmul N sint).divNat r) :=
+          DI.mem_divNat r (by omega) (DI.mem_nsmul N hs)
+        have hscaled :
+            DI.mem (((N : ℚ) / (r : ℚ)) * sexact) ((DI.nsmul N sint).divNat r) := by
+          convert hscaled0 using 1
+          ring
+        have hone : DI.mem (-1 : ℚ) (DI.exact 1).neg := by
+          simpa using DI.mem_neg (DI.mem_exact 1)
+        have hadd := DI.mem_add hone (DI.mem_neg hscaled)
+        convert hadd using 1
+        ring
 
 /-- Interval enclosure of the normalized upper bound `U_a(N)/(N c_a)`. -/
 def midUNormIntervalWithRows (R : Array (Array DI)) (S : Array DI)
     (a N : Nat) : DI :=
   let m := M a
   let X := midXIntervalTab R N a
-  let tail : DI := ((List.range (a - 1)).map fun j : Nat =>
+  let tail : DI := midDISum (((List.range (a - 1)).map fun j : Nat =>
     let k := j + 1
     let s := a - k
     DI.nsmul m
       ((((midRMatrixGet R k a).mul (midDIPowTwoInv s)).mul
           (midDINegPart (X.getD k DI.zero))).mul
-        (S.getD s DI.zero))).foldl DI.add DI.zero
+        (S.getD s DI.zero))))
   (X.getD a DI.zero).add tail
+
+private theorem midUTailSum_mem (D Y : Array ℚ) (a N : Nat) :
+    DI.mem (((List.range (a - 1)).map fun j : Nat =>
+      let k := j + 1
+      (M a : ℚ) *
+        (((midRTab D k a * (1 / (2 : ℚ) ^ (a - k))) *
+          midNegPart ((midXTab D N a).getD k 0)) *
+          midSTab D Y (M a) (a - k))).sum)
+      (midDISum (((List.range (a - 1)).map fun j : Nat =>
+        let k := j + 1
+        let s := a - k
+        DI.nsmul (M a)
+          ((((midRMatrixGet (midRMatrix D a) k a).mul (midDIPowTwoInv s)).mul
+              (midDINegPart ((midXIntervalTab (midRMatrix D a) N a).getD k DI.zero))).mul
+            ((midSIntervals D Y a).getD s DI.zero))))) := by
+  refine midDISum_mem _ _ _ ?_
+  intro j hj
+  have hjlt : j < a - 1 := List.mem_range.mp hj
+  let k := j + 1
+  let s := a - k
+  have hka : k ≤ a := by omega
+  have hsa : s ≤ a := by omega
+  have hR := midRMatrixGet_mem D a k a hka le_rfl
+  have h2 := midDIPowTwoInv_mem s
+  have hX := midXIntervalTab_mem D a N a k le_rfl hka
+  have hNeg := midDINegPart_mem hX
+  have hS := midSIntervals_mem D Y a s hsa
+  have hprod := DI.mem_mul (DI.mem_mul (DI.mem_mul hR h2) hNeg) hS
+  have hterm := DI.mem_nsmul (M a) hprod
+  simpa [k, s, mul_assoc] using hterm
+
+theorem midUNormIntervalWithRows_mem (D Y : Array ℚ) (a N : Nat) :
+    DI.mem (midUNormWithTabs D Y a N)
+      (midUNormIntervalWithRows (midRMatrix D a) (midSIntervals D Y a) a N) := by
+  unfold midUNormWithTabs midUNormIntervalWithRows
+  let X := midXTab D N a
+  let XI := midXIntervalTab (midRMatrix D a) N a
+  let base : List ℚ := (List.range (a - 1)).map fun j : Nat =>
+    let k := j + 1
+    midRTab D k a * (1 / (2 : ℚ) ^ (a - k)) *
+      midNegPart (X.getD k 0) * midSTab D Y (M a) (a - k)
+  let scaled : List ℚ := (List.range (a - 1)).map fun j : Nat =>
+    let k := j + 1
+    (M a : ℚ) *
+      (((midRTab D k a * (1 / (2 : ℚ) ^ (a - k))) *
+        midNegPart (X.getD k 0)) * midSTab D Y (M a) (a - k))
+  let tailI : DI := midDISum (((List.range (a - 1)).map fun j : Nat =>
+    let k := j + 1
+    let s := a - k
+    DI.nsmul (M a)
+      ((((midRMatrixGet (midRMatrix D a) k a).mul (midDIPowTwoInv s)).mul
+          (midDINegPart (XI.getD k DI.zero))).mul
+        ((midSIntervals D Y a).getD s DI.zero))))
+  change DI.mem (X.getD a 0 + (M a : ℚ) * base.sum) ((XI.getD a DI.zero).add tailI)
+  have hx : DI.mem (X.getD a 0) (XI.getD a DI.zero) := by
+    dsimp [X, XI]
+    exact midXIntervalTab_mem D a N a a le_rfl le_rfl
+  have htail : DI.mem scaled.sum tailI := by
+    dsimp [scaled, X, XI, tailI]
+    exact midUTailSum_mem D Y a N
+  have hscaled : scaled.sum = (M a : ℚ) * base.sum := by
+    dsimp [scaled, base]
+    rw [list_sum_map_mul_left]
+  rw [← hscaled]
+  exact DI.mem_add hx htail
+
+theorem midUNormFast_neg_of_interval (a N : Nat)
+    (h :
+      let m := M a
+      let D := midDTab a
+      let Y := midYTab D m a
+      midDINeg (midUNormIntervalWithRows (midRMatrix D a) (midSIntervals D Y a) a N) = true) :
+    midUNormFast a N < 0 := by
+  unfold midUNormFast
+  let m := M a
+  let D := midDTab a
+  let Y := midYTab D m a
+  exact midDINeg_sound (midUNormIntervalWithRows_mem D Y a N) h
 
 /-- One-row interval check for `M(a)+1 <= N <= 2M(a)`. -/
 def checkPrintedMidRowInterval (a : Nat) : Bool :=
@@ -211,12 +417,43 @@ def checkPrintedMidRowsInterval (lo len : Nat) : Bool :=
   (List.range len).all fun i : Nat =>
     checkPrintedMidRowInterval (lo + i)
 
+theorem midUNormFast_neg_of_rowInterval (a i : Nat)
+    (hcheck : checkPrintedMidRowInterval a = true) (hi : i < M a) :
+    midUNormFast a (M a + 1 + i) < 0 := by
+  unfold checkPrintedMidRowInterval at hcheck
+  dsimp only at hcheck
+  have himem : i ∈ List.range (M a) := List.mem_range.mpr hi
+  have hentry := List.all_eq_true.mp hcheck i himem
+  exact midUNormFast_neg_of_interval a (M a + 1 + i) hentry
+
+theorem midUNormFast_neg_of_rowIntervalSlice (a start len i : Nat)
+    (hcheck : checkPrintedMidRowIntervalSlice a start len = true)
+    (hlo : start ≤ i) (hhi : i < start + len) (him : i < M a) :
+    midUNormFast a (M a + 1 + i) < 0 := by
+  unfold checkPrintedMidRowIntervalSlice at hcheck
+  dsimp only at hcheck
+  have hjmem : i - start ∈ List.range len := List.mem_range.mpr (by omega)
+  have hentry := List.all_eq_true.mp hcheck (i - start) hjmem
+  have hidx : start + (i - start) = i := by omega
+  rw [hidx, if_pos him] at hentry
+  exact midUNormFast_neg_of_interval a (M a + 1 + i) hentry
+
 theorem checkPrintedMidRowInterval_14 :
     checkPrintedMidRowInterval 14 = true := by
   native_decide
 
+theorem midUNormFast_neg_row14 (i : Nat) (hi : i < M 14) :
+    midUNormFast 14 (M 14 + 1 + i) < 0 :=
+  midUNormFast_neg_of_rowInterval 14 i checkPrintedMidRowInterval_14 hi
+
 theorem checkPrintedMidRowIntervalSlice_149_0_100 :
     checkPrintedMidRowIntervalSlice 149 0 100 = true := by
   native_decide
+
+theorem midUNormFast_neg_row149_slice_0_100 (i : Nat)
+    (hi : i < 100) (him : i < M 149) :
+    midUNormFast 149 (M 149 + 1 + i) < 0 :=
+  midUNormFast_neg_of_rowIntervalSlice 149 0 100 i
+    checkPrintedMidRowIntervalSlice_149_0_100 (by omega) (by omega) him
 
 end Prop52
