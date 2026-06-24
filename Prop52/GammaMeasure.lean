@@ -252,6 +252,11 @@ integration-by-parts side before shifting two powers of `1/(6Y)`. -/
 noncomputable def gammaFullMeasure (a : Nat) : Measure ℝ :=
   ProbabilityTheory.gammaMeasure ((a : ℝ)) 1
 
+theorem gammaFullMeasure_eq_gammaTailMeasure_add_two (a : Nat) :
+    gammaFullMeasure a = gammaTailMeasure (a + 2) := by
+  unfold gammaFullMeasure gammaTailMeasure
+  rw [show a + 2 - 2 = a by omega]
+
 theorem ae_nonneg_gammaTailMeasure (a : Nat) :
     ∀ᵐ y ∂ gammaTailMeasure a, 0 ≤ y := by
   rw [ae_iff]
@@ -535,6 +540,29 @@ theorem integrable_invPow_gammaTailMeasure
     (a := a) (r := r) ha hr]
   exact ne_of_gt (gammaMonomialMoment_pos (a - 2) r)
 
+theorem integral_invPow_gammaFullMeasure_eq_gammaMonomialMoment
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a + 1) :
+    (∫ y, (1 / (6 * y))^r ∂ gammaFullMeasure a) =
+      gammaMonomialMoment a r := by
+  rw [gammaFullMeasure_eq_gammaTailMeasure_add_two]
+  have hA : 150 ≤ a + 2 := by omega
+  have hrA : r ≤ printedTailP (a + 2) := by
+    unfold printedTailP at hr ⊢
+    omega
+  have h := integral_invPow_gammaTailMeasure_eq_gammaMonomialMoment
+    (a := a + 2) (r := r) hA hrA
+  simpa [show a + 2 - 2 = a by omega] using h
+
+theorem integrable_invPow_gammaFullMeasure
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a + 1) :
+    Integrable (fun y : ℝ => (1 / (6 * y))^r) (gammaFullMeasure a) := by
+  rw [gammaFullMeasure_eq_gammaTailMeasure_add_two]
+  have hA : 150 ≤ a + 2 := by omega
+  have hrA : r ≤ printedTailP (a + 2) := by
+    unfold printedTailP at hr ⊢
+    omega
+  exact integrable_invPow_gammaTailMeasure (a := a + 2) (r := r) hA hrA
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by
@@ -616,6 +644,101 @@ theorem integrable_exp_neg_printedTailLGammaArg
     constructor
     · positivity
     · simpa [printedTailLGammaArg] using hle
+
+theorem integrable_invPow_mul_exp_neg_printedTailLGammaArg_gammaFull
+    {a r : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : r ≤ printedTailP a + 1) :
+    Integrable
+      (fun y => (1 / (6 * y))^r *
+        Real.exp (-(printedTailLGammaArg μ a y))) (gammaFullMeasure a) := by
+  refine (integrable_invPow_gammaFullMeasure
+    (a := a) (r := r) ha hr).mono' ?hmeas ?hbound
+  · unfold printedTailLGammaArg printedTailLReal
+    fun_prop
+  · filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    have hpow : 0 ≤ (1 / (6 * y))^r := pow_nonneg hx r
+    have hexp_le := real_exp_neg_printedTailLReal_le_one
+      (a := a) (μ := μ) hμ hx
+    have hprod_nonneg :
+        0 ≤ (1 / (6 * y))^r *
+          Real.exp (-(printedTailLGammaArg μ a y)) := by positivity
+    rw [Real.norm_eq_abs, abs_of_nonneg hprod_nonneg]
+    exact mul_le_of_le_one_right hpow hexp_le
+
+theorem integrable_fiveM_invSq_exp_neg_printedTailLGammaArg_gammaFull
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    Integrable
+      (fun y => (5 * (M a : ℝ)) *
+        ((1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y)))) (gammaFullMeasure a) := by
+  exact (integrable_invPow_mul_exp_neg_printedTailLGammaArg_gammaFull
+    (a := a) (r := 2) (μ := μ) ha hμ (by
+      unfold printedTailP
+      omega)).const_mul _
+
+theorem integrable_exp_neg_mul_gammaLowBracketAlignedReal_gammaFull
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    Integrable
+      (fun y => Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y))) (gammaFullMeasure a) := by
+  let E : ℝ → ℝ := fun y => Real.exp (-(printedTailLGammaArg μ a y))
+  have hlin :
+      Integrable
+        (fun y => E y *
+          (((M a : ℝ) - (kCoeff μ 1 : ℝ)) * (1 / (6 * y))))
+        (gammaFullMeasure a) := by
+    have hbase := integrable_invPow_mul_exp_neg_printedTailLGammaArg_gammaFull
+      (a := a) (r := 1) (μ := μ) ha hμ (by
+        unfold printedTailP
+        omega)
+    simpa [E, pow_one, mul_assoc, mul_comm, mul_left_comm] using
+      hbase.const_mul ((M a : ℝ) - (kCoeff μ 1 : ℝ))
+  have hsumF :
+      Integrable
+        (fun y => E y *
+          (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+            6 * (j : ℝ) * (hCoeff μ j : ℝ) * (1 / (6 * y))^(j + 1)))
+        (gammaFullMeasure a) := by
+    have hsum :
+        Integrable
+          (fun y => ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+            E y * (6 * (j : ℝ) * (hCoeff μ j : ℝ) *
+              (1 / (6 * y))^(j + 1))) (gammaFullMeasure a) := by
+      refine MeasureTheory.integrable_finset_sum _ ?_
+      intro j hj
+      have hr : j + 1 ≤ printedTailP a + 1 := (Finset.mem_Ico.mp hj).2
+      have hbase := integrable_invPow_mul_exp_neg_printedTailLGammaArg_gammaFull
+        (a := a) (r := j + 1) (μ := μ) ha hμ hr
+      simpa [E, mul_assoc, mul_comm, mul_left_comm] using
+        hbase.const_mul (6 * (j : ℝ) * (hCoeff μ j : ℝ))
+    simpa [Finset.mul_sum, mul_assoc, mul_comm, mul_left_comm] using hsum
+  have hsumG :
+      Integrable
+        (fun y => E y *
+          (∑ j ∈ Finset.Ico 1 (printedTailP a),
+            (kCoeff μ (j + 1) : ℝ) * (1 / (6 * y))^(j + 1)))
+        (gammaFullMeasure a) := by
+    have hsum :
+        Integrable
+          (fun y => ∑ j ∈ Finset.Ico 1 (printedTailP a),
+            E y * ((kCoeff μ (j + 1) : ℝ) *
+              (1 / (6 * y))^(j + 1))) (gammaFullMeasure a) := by
+      refine MeasureTheory.integrable_finset_sum _ ?_
+      intro j hj
+      have hr : j + 1 ≤ printedTailP a + 1 := by
+        have hjlt : j < printedTailP a := (Finset.mem_Ico.mp hj).2
+        omega
+      have hbase := integrable_invPow_mul_exp_neg_printedTailLGammaArg_gammaFull
+        (a := a) (r := j + 1) (μ := μ) ha hμ hr
+      simpa [E, mul_assoc, mul_comm, mul_left_comm] using
+        hbase.const_mul (kCoeff μ (j + 1) : ℝ)
+    simpa [Finset.mul_sum, mul_assoc, mul_comm, mul_left_comm] using hsum
+  simpa [gammaLowBracketAlignedReal, E, mul_add, mul_sub, Finset.mul_sum,
+    mul_assoc, mul_comm, mul_left_comm] using (hlin.add hsumF).sub hsumG
 
 /-- Jensen and the scalar endpoint specialized to the Gamma law with shape
 `a - 2`. -/
@@ -712,5 +835,19 @@ theorem gammaLowBracketAlignedIntegral_lower_of_integrable
             gammaLowBracketAlignedReal μ a (1 / (6 * y)) :=
           mul_le_mul_of_nonneg_left hb hexp_nonneg
   exact hJ.trans hmono
+
+/-- Closed integrated retained-bracket lower bound. -/
+theorem gammaLowBracketAlignedIntegral_lower
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂ gammaFullMeasure a :=
+  gammaLowBracketAlignedIntegral_lower_of_integrable
+    (a := a) (μ := μ) ha hμ
+    (integrable_fiveM_invSq_exp_neg_printedTailLGammaArg_gammaFull
+      (a := a) (μ := μ) ha hμ)
+    (integrable_exp_neg_mul_gammaLowBracketAlignedReal_gammaFull
+      (a := a) (μ := μ) ha hμ)
 
 end Prop52
