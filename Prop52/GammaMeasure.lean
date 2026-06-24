@@ -659,4 +659,58 @@ theorem fiveM_integral_invSq_exp_neg_printedTailLGammaArg_gammaFull_lower
   exact gammaTailPrefactor_integral_exp_neg_printedTailLGammaArg_lower
     (a := a) (μ := μ) ha hμ
 
+/-- Integrated retained-bracket lower bound, with integrability kept explicit.
+The remaining analytic work is to identify the integral of this bracket with
+the Gamma expectation of `W` and then compare that expectation to the finite
+coefficient sum. -/
+theorem gammaLowBracketAlignedIntegral_lower_of_integrable
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hleft : Integrable
+      (fun y => (5 * (M a : ℝ)) *
+        ((1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y)))) (gammaFullMeasure a))
+    (hright : Integrable
+      (fun y => Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y))) (gammaFullMeasure a)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂ gammaFullMeasure a := by
+  have hJ :=
+    fiveM_integral_invSq_exp_neg_printedTailLGammaArg_gammaFull_lower
+      (a := a) (μ := μ) ha hμ
+  have hleft_int :
+      (∫ y, (5 * (M a : ℝ)) *
+        ((1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y))) ∂ gammaFullMeasure a) =
+        (5 * (M a : ℝ)) *
+          ∫ y, (1 / (6 * y))^2 *
+            Real.exp (-(printedTailLGammaArg μ a y)) ∂ gammaFullMeasure a := by
+    rw [MeasureTheory.integral_const_mul]
+  rw [← hleft_int] at hJ
+  have hmono :
+      (∫ y, (5 * (M a : ℝ)) *
+        ((1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y))) ∂ gammaFullMeasure a) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂ gammaFullMeasure a := by
+    refine MeasureTheory.integral_mono_ae hleft hright ?_
+    filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    have hb := fiveM_x2_le_gammaLowBracketAlignedReal
+      (a := a) (μ := μ) ha hμ hx
+    have hexp_nonneg :
+        0 ≤ Real.exp (-(printedTailLGammaArg μ a y)) := by positivity
+    calc
+      (5 * (M a : ℝ)) *
+          ((1 / (6 * y))^2 *
+            Real.exp (-(printedTailLGammaArg μ a y)))
+          =
+        Real.exp (-(printedTailLGammaArg μ a y)) *
+          (5 * (M a : ℝ) * (1 / (6 * y))^2) := by ring
+      _ ≤ Real.exp (-(printedTailLGammaArg μ a y)) *
+            gammaLowBracketAlignedReal μ a (1 / (6 * y)) :=
+          mul_le_mul_of_nonneg_left hb hexp_nonneg
+  exact hJ.trans hmono
+
 end Prop52
