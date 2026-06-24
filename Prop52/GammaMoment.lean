@@ -9,7 +9,7 @@ factorial ratios: the probabilistic language in the paper is represented here
 by the weights `gammaWeight`.
 -/
 
-import Prop52.Printed
+import Prop52.GammaRetain
 
 namespace Prop52
 
@@ -188,6 +188,284 @@ theorem printedTailLowDerivConv_six_eq_neg
           · simp [ht]
     _ = 6 * (-(n : ℚ) * printedTailECoeff μ a n) := by rw [h]
     _ = -6 * (n : ℚ) * printedTailECoeff μ a n := by ring
+
+/-- Split the marked numerator convolution in `ω_{n+1}` into the head
+`k₁ e_n` and the shifted remaining terms. -/
+theorem printedTailOmegaCoeff_succ_sub_E_eq_neg_split
+    (μ : List Nat) {a n : Nat} (ha : 150 ≤ a) :
+    printedTailOmegaCoeff μ a (n + 1) - printedTailECoeff μ a (n + 1) =
+      -(kCoeff μ 1 * printedTailECoeff μ a n +
+        ∑ t ∈ Finset.range n,
+          if t + 1 < printedTailP a then
+            kCoeff μ (t + 2) * printedTailECoeff μ a (n - 1 - t)
+          else 0) := by
+  let F : Nat → ℚ := fun j =>
+    if j + 1 ≤ printedTailP a then
+      kCoeff μ (j + 1) * printedTailECoeff μ a (n + 1 - (j + 1))
+    else 0
+  have hp1 : 1 ≤ printedTailP a := by
+    unfold printedTailP
+    omega
+  have hconv :
+      ((List.range (n + 1)).map fun j : Nat =>
+        let r := j + 1
+        if r ≤ printedTailP a then
+          kCoeff μ r * printedTailECoeff μ a (n + 1 - r)
+        else 0).sum =
+        ∑ j ∈ Finset.range (n + 1), F j := by
+    rw [Prop51.list_range_map_sum]
+  have hsplit :
+      (∑ j ∈ Finset.range (n + 1), F j) =
+        kCoeff μ 1 * printedTailECoeff μ a n +
+          ∑ t ∈ Finset.range n,
+            if t + 1 < printedTailP a then
+              kCoeff μ (t + 2) * printedTailECoeff μ a (n - 1 - t)
+            else 0 := by
+    rw [Finset.sum_range_succ']
+    have htail :
+        (∑ x ∈ Finset.range n, F (x + 1)) =
+          ∑ t ∈ Finset.range n,
+            if t + 1 < printedTailP a then
+              kCoeff μ (t + 2) * printedTailECoeff μ a (n - 1 - t)
+            else 0 := by
+      refine Finset.sum_congr rfl fun t ht => ?_
+      have htlt : t < n := Finset.mem_range.mp ht
+      dsimp [F]
+      by_cases htp : t + 1 < printedTailP a
+      · have htp' : t + 1 + 1 ≤ printedTailP a := by omega
+        rw [if_pos htp', if_pos htp]
+        congr 2
+        omega
+      · have htp' : ¬ t + 1 + 1 ≤ printedTailP a := by omega
+        rw [if_neg htp', if_neg htp]
+    rw [htail]
+    dsimp [F]
+    rw [if_pos hp1]
+    ring
+  unfold printedTailOmegaCoeff
+  rw [hconv, hsplit]
+  ring
+
+/-- Coefficient of `t^s` in the product of the low exponential `E(t)` and
+the aligned rational bracket `M t + 6 t^2 L'(t) - J(t)`.
+
+This is written directly as a coefficient convolution instead of introducing a
+new formal-power-series wrapper for `gammaLowBracketAligned`; the three terms
+are exactly the linear, derivative, and marked-numerator pieces of that
+bracket. -/
+def printedTailLowBracketProductCoeff (μ : List Nat) (a s : Nat) : ℚ :=
+  if s = 0 then 0 else
+    let n := s - 1;
+      ((M a : ℚ) - kCoeff μ 1) * printedTailECoeff μ a n +
+        (∑ t ∈ Finset.range n,
+          if t + 1 ≤ printedTailP a then
+            6 * ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+              printedTailECoeff μ a (n - 1 - t)
+          else 0) -
+        (∑ t ∈ Finset.range n,
+          if t + 1 < printedTailP a then
+            kCoeff μ (t + 2) * printedTailECoeff μ a (n - 1 - t)
+          else 0)
+
+/-- The aligned bracket product coefficient is the exact telescoping core:
+one shifted low-exponential term plus the omega-minus-exponential correction. -/
+theorem printedTailLowBracketProductCoeff_succ_eq_telescopeCore
+    (μ : List Nat) {a n : Nat} (ha : 150 ≤ a) :
+    printedTailLowBracketProductCoeff μ a (n + 1) =
+      ((M a : ℚ) - 6 * (n : ℚ)) * printedTailECoeff μ a n +
+        printedTailOmegaCoeff μ a (n + 1) -
+        printedTailECoeff μ a (n + 1) := by
+  unfold printedTailLowBracketProductCoeff
+  rw [if_neg (by omega : n + 1 ≠ 0)]
+  rw [show n + 1 - 1 = n by omega]
+  change
+    (((M a : ℚ) - kCoeff μ 1) * printedTailECoeff μ a n +
+        (∑ t ∈ Finset.range n,
+          if t + 1 ≤ printedTailP a then
+            6 * ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+              printedTailECoeff μ a (n - 1 - t)
+          else 0) -
+        (∑ t ∈ Finset.range n,
+          if t + 1 < printedTailP a then
+            kCoeff μ (t + 2) * printedTailECoeff μ a (n - 1 - t)
+          else 0)) =
+      ((M a : ℚ) - 6 * (n : ℚ)) * printedTailECoeff μ a n +
+        printedTailOmegaCoeff μ a (n + 1) -
+        printedTailECoeff μ a (n + 1)
+  have hderiv := printedTailLowDerivConv_six_eq_neg μ a n
+  have homega := printedTailOmegaCoeff_succ_sub_E_eq_neg_split
+    (μ := μ) (a := a) (n := n) ha
+  rw [hderiv]
+  rw [show
+      ((M a : ℚ) - 6 * (n : ℚ)) * printedTailECoeff μ a n +
+          printedTailOmegaCoeff μ a (n + 1) -
+          printedTailECoeff μ a (n + 1) =
+        ((M a : ℚ) - 6 * (n : ℚ)) * printedTailECoeff μ a n +
+          (printedTailOmegaCoeff μ a (n + 1) -
+            printedTailECoeff μ a (n + 1)) by ring]
+  rw [homega]
+  ring
+
+/-- Weighted form of the coefficient telescope.  After multiplication by the
+Gamma moment weight, the factor `M-6n = 6(a-(n+1))` shifts the weight down by
+one index. -/
+theorem gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq
+    (μ : List Nat) {a n : Nat} (ha : 150 ≤ a) (hnlt : n + 1 < a) :
+    gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1) =
+      gammaWeight a n * printedTailECoeff μ a n +
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1) -
+        gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1) := by
+  rw [printedTailLowBracketProductCoeff_succ_eq_telescopeCore
+    (μ := μ) (a := a) (n := n) ha]
+  have hMcast : (M a : ℚ) = 6 * ((a : ℚ) - 1) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a)]
+    push_cast
+    ring
+  have hshiftCoeff :
+      (M a : ℚ) - 6 * (n : ℚ) =
+        6 * ((a : ℚ) - (n + 1 : Nat)) := by
+    rw [hMcast]
+    push_cast
+    ring
+  have hgamma := gammaWeight_mul_six_sub_eq_pred
+    (a := a) (s := n + 1) (by omega : 1 ≤ n + 1) hnlt
+  rw [hshiftCoeff]
+  calc
+    gammaWeight a (n + 1) *
+        (6 * ((a : ℚ) - ↑(n + 1)) *
+            printedTailECoeff μ a n +
+          printedTailOmegaCoeff μ a (n + 1) -
+          printedTailECoeff μ a (n + 1))
+        =
+      (gammaWeight a (n + 1) *
+          (6 * ((a : ℚ) - ↑(n + 1)))) *
+          printedTailECoeff μ a n +
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1) -
+        gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1) := by
+        ring
+    _ =
+      gammaWeight a n * printedTailECoeff μ a n +
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1) -
+        gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1) := by
+        rw [hgamma]
+        rw [show n + 1 - 1 = n by omega]
+
+/-- Elementary finite telescoping identity used by the weighted bracket
+coefficients. -/
+private theorem sum_range_sub_shift_eq_boundary (F : Nat → ℚ) (R : Nat) :
+    (∑ n ∈ Finset.range R, F n) -
+        (∑ n ∈ Finset.range R, F (n + 1)) =
+      F 0 - F R := by
+  induction R with
+  | zero =>
+      simp
+  | succ R ih =>
+      rw [Finset.sum_range_succ, Finset.sum_range_succ]
+      calc
+        ((∑ n ∈ Finset.range R, F n) + F R) -
+            ((∑ n ∈ Finset.range R, F (n + 1)) + F (R + 1))
+            =
+          ((∑ n ∈ Finset.range R, F n) -
+              (∑ n ∈ Finset.range R, F (n + 1))) +
+            F R - F (R + 1) := by
+            ring
+        _ = F 0 - F R + F R - F (R + 1) := by rw [ih]
+        _ = F 0 - F (R + 1) := by ring
+
+/-- At degree zero, the omega coefficient is the exponential coefficient; the
+marked numerator has no constant term. -/
+theorem printedTailOmegaCoeff_zero_eq_ECoeff_zero (μ : List Nat) (a : Nat) :
+    printedTailOmegaCoeff μ a 0 = printedTailECoeff μ a 0 := by
+  unfold printedTailOmegaCoeff
+  simp
+
+/-- Summed weighted bracket identity before collapsing the shifted
+low-exponential sums. -/
+theorem sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq
+    (μ : List Nat) {a R : Nat} (ha : 150 ≤ a) (hRlt : R < a) :
+    (∑ n ∈ Finset.range R,
+      gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1)) =
+      (∑ n ∈ Finset.range R,
+        gammaWeight a n * printedTailECoeff μ a n) +
+      (∑ n ∈ Finset.range R,
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) -
+      (∑ n ∈ Finset.range R,
+        gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1)) := by
+  calc
+    (∑ n ∈ Finset.range R,
+      gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1))
+        =
+      ∑ n ∈ Finset.range R,
+        (gammaWeight a n * printedTailECoeff μ a n +
+          gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1) -
+          gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1)) := by
+        refine Finset.sum_congr rfl fun n hn => ?_
+        have hnlt : n + 1 < a := by
+          have hnR : n < R := Finset.mem_range.mp hn
+          omega
+        exact gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq
+          (μ := μ) (a := a) (n := n) ha hnlt
+    _ =
+      (∑ n ∈ Finset.range R,
+        gammaWeight a n * printedTailECoeff μ a n) +
+      (∑ n ∈ Finset.range R,
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) -
+      (∑ n ∈ Finset.range R,
+        gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1)) := by
+        rw [Finset.sum_sub_distrib, Finset.sum_add_distrib]
+
+/-- Summed weighted bracket identity in telescoped form. -/
+theorem sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq_telescope
+    (μ : List Nat) {a R : Nat} (ha : 150 ≤ a) (hRlt : R < a) :
+    (∑ n ∈ Finset.range R,
+      gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1)) =
+      gammaWeight a 0 * printedTailECoeff μ a 0 -
+        gammaWeight a R * printedTailECoeff μ a R +
+      (∑ n ∈ Finset.range R,
+        gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) := by
+  rw [sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq
+    (μ := μ) (a := a) (R := R) ha hRlt]
+  have htelescope := sum_range_sub_shift_eq_boundary
+    (fun n => gammaWeight a n * printedTailECoeff μ a n) R
+  rw [show
+      (∑ n ∈ Finset.range R, gammaWeight a n * printedTailECoeff μ a n) +
+          (∑ n ∈ Finset.range R,
+            gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) -
+          (∑ n ∈ Finset.range R,
+            gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1)) =
+        ((∑ n ∈ Finset.range R, gammaWeight a n * printedTailECoeff μ a n) -
+          (∑ n ∈ Finset.range R,
+            gammaWeight a (n + 1) * printedTailECoeff μ a (n + 1))) +
+          (∑ n ∈ Finset.range R,
+            gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) by ring]
+  rw [htelescope]
+
+/-- Summed weighted bracket identity as an omega prefix minus the terminal
+low-exponential boundary. -/
+theorem sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq_omegaPrefix
+    (μ : List Nat) {a R : Nat} (ha : 150 ≤ a) (hRlt : R < a) :
+    (∑ n ∈ Finset.range R,
+      gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1)) =
+      (∑ s ∈ Finset.range (R + 1),
+        gammaWeight a s * printedTailOmegaCoeff μ a s) -
+        gammaWeight a R * printedTailECoeff μ a R := by
+  rw [sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq_telescope
+    (μ := μ) (a := a) (R := R) ha hRlt]
+  have hshift :
+      (∑ s ∈ Finset.range (R + 1),
+        gammaWeight a s * printedTailOmegaCoeff μ a s) =
+        (∑ n ∈ Finset.range R,
+          gammaWeight a (n + 1) * printedTailOmegaCoeff μ a (n + 1)) +
+          gammaWeight a 0 * printedTailOmegaCoeff μ a 0 := by
+    rw [Finset.sum_range_succ']
+  rw [hshift, printedTailOmegaCoeff_zero_eq_ECoeff_zero]
+  ring
 
 /-- The basic factorial-ratio identity behind the paper's Gamma-moment
 calculation:
