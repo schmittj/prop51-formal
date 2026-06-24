@@ -214,4 +214,129 @@ theorem midR_eq_c_ratio (k r : Nat) (hk : 1 ≤ k) (hkr : k < r) :
   rw [hC]
   field_simp [hd_r_ne, hA_ne, hB_ne, hD_ne]
 
+/-! ## The `X` recurrence and `Bq` -/
+
+/-- Each `midXList` step appends exactly one entry. -/
+theorem midXList_succ_append (N : Nat) :
+    ∀ n : Nat, ∃ x : ℚ, midXList N (n + 1) = midXList N n ++ [x]
+  | 0 => ⟨-1, rfl⟩
+  | _ + 1 => ⟨_, rfl⟩
+
+/-- `midXList N n` contains exactly the entries `0, ..., n`. -/
+theorem midXList_length (N : Nat) :
+    ∀ n : Nat, (midXList N n).length = n + 1
+  | 0 => rfl
+  | n + 1 => by
+      obtain ⟨x, hx⟩ := midXList_succ_append N n
+      rw [hx, List.length_append, midXList_length N n]
+      rfl
+
+/-- Prefix stability for `midXList`. -/
+theorem midXList_getD_eq (N r m : Nat) (h : r ≤ m) :
+    (midXList N m).getD r 0 = midX N r := by
+  induction m with
+  | zero =>
+      have : r = 0 := by omega
+      subst this
+      rfl
+  | succ m ih =>
+      rcases Nat.lt_or_ge r (m + 1) with hlt | hge
+      · obtain ⟨x, hx⟩ := midXList_succ_append N m
+        rw [hx, List.getD_eq_getElem?_getD,
+          List.getElem?_append_left (by rw [midXList_length]; omega),
+          ← List.getD_eq_getElem?_getD]
+        exact ih (by omega)
+      · have : r = m + 1 := le_antisymm h hge
+        subst this
+        rfl
+
+/-- The defining recurrence of `Bq`, in division form. -/
+theorem Bq_succ (N n : Nat) :
+    Prop51.Bq N (n + 1) =
+      (∑ t ∈ Finset.range (n + 1),
+        ((t + 1 : Nat) : ℚ) * (-(N : ℚ) * Prop51.c (t + 1)) *
+          Prop51.Bq N (n - t)) / ((n + 1 : Nat) : ℚ) := by
+  have h := Prop51.expCoeff_succ_mul
+    (fun r => -(N : ℚ) * Prop51.c r) n
+  rw [eq_div_iff (by exact_mod_cast (by omega : (0 : Nat) < n + 1).ne')]
+  rw [mul_comm]
+  exact h
+
+/-- The explicit recurrence step for the normalized `X` coefficients. -/
+theorem midX_succ_succ (N n : Nat) :
+    midX N (n + 2) =
+      -1 - ((N : ℚ) / ((n + 2 : Nat) : ℚ)) *
+        ∑ j ∈ Finset.range (n + 1),
+          ((j + 1 : Nat) : ℚ) * midR (j + 1) (n + 2) *
+            midX N (n + 1 - j) := by
+  change (midXList N (n + 2)).getD (n + 2) 0 = _
+  have hlast :
+      (midXList N (n + 2)).getD (n + 2) 0 =
+        -1 - ((N : ℚ) / ((n + 2 : Nat) : ℚ)) *
+          ∑ j ∈ Finset.range (n + 1),
+            ((j + 1 : Nat) : ℚ) * midR (j + 1) (n + 2) *
+              (midXList N (n + 1)).getD (n + 1 - j) 0 := by
+    simp [midXList, midXList_length, Prop51.list_range_map_sum]
+  rw [hlast]
+  apply congrArg (fun s : ℚ => -1 - ((N : ℚ) / ((n + 2 : Nat) : ℚ)) * s)
+  refine Finset.sum_congr rfl fun j hj => ?_
+  have hjlt : j < n + 1 := Finset.mem_range.mp hj
+  rw [midXList_getD_eq N (n + 1 - j) (n + 1) (by omega)]
+
+@[simp] theorem Bq_zero (N : Nat) : Prop51.Bq N 0 = 1 := by
+  simp [Prop51.Bq]
+
+/-- The normalized `X` recurrence computes `Bq N r / (N c_r)` in scaled form. -/
+theorem Bq_eq_N_c_mul_midX (N r : Nat) (hr : 1 ≤ r) :
+    Prop51.Bq N r = ((N : ℚ) * Prop51.c r) * midX N r := by
+  induction r using Nat.strong_induction_on with
+  | h r ih =>
+      rcases r with _ | r
+      · omega
+      rcases r with _ | n
+      · rw [Prop51.Bq_one]
+        norm_num [midX, midXList]
+      have hB := Bq_succ N (n + 1)
+      rw [hB, midX_succ_succ]
+      rw [Finset.sum_range_succ]
+      have hpre :
+          (∑ t ∈ Finset.range (n + 1),
+              ((t + 1 : Nat) : ℚ) * (-(N : ℚ) * Prop51.c (t + 1)) *
+                Prop51.Bq N (n + 1 - t)) =
+            ∑ t ∈ Finset.range (n + 1),
+              -(((N : ℚ) ^ 2) *
+                (((t + 1 : Nat) : ℚ) * Prop51.c (t + 1) *
+                  Prop51.c (n + 1 - t) * midX N (n + 1 - t))) := by
+        refine Finset.sum_congr rfl fun t ht => ?_
+        have htlt : t < n + 1 := Finset.mem_range.mp ht
+        have hdeg : 1 ≤ n + 1 - t := by omega
+        rw [ih (n + 1 - t) (by omega) hdeg]
+        ring
+      rw [hpre]
+      have hmidR :
+          (∑ t ∈ Finset.range (n + 1),
+              -(((N : ℚ) ^ 2) *
+                (((t + 1 : Nat) : ℚ) * Prop51.c (t + 1) *
+                  Prop51.c (n + 1 - t) * midX N (n + 1 - t)))) =
+            -((N : ℚ) ^ 2 * Prop51.c (n + 2)) *
+              ∑ t ∈ Finset.range (n + 1),
+                ((t + 1 : Nat) : ℚ) * midR (t + 1) (n + 2) *
+                  midX N (n + 1 - t) := by
+        rw [Finset.mul_sum]
+        refine Finset.sum_congr rfl fun t ht => ?_
+        have htlt : t < n + 1 := Finset.mem_range.mp ht
+        have hR := midR_eq_c_ratio (t + 1) (n + 2) (by omega) (by omega)
+        rw [hR]
+        have hsub : n + 2 - (t + 1) = n + 1 - t := by omega
+        rw [hsub]
+        have hc_ne : Prop51.c (n + 2) ≠ 0 :=
+          (Prop51.c_pos (n + 2) (by omega)).ne'
+        field_simp [hc_ne]
+      rw [hmidR]
+      have hden : (((n + 2 : Nat) : ℚ)) ≠ 0 := by
+        exact_mod_cast (by omega : (n + 2 : Nat) ≠ 0)
+      field_simp [hden]
+      rw [show n + 1 - (n + 1) = 0 by omega, Bq_zero]
+      ring
+
 end Prop52
