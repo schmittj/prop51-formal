@@ -796,6 +796,130 @@ theorem integral_abs_printedTailWTruncReal_a_sub_R0_upper_event_le_residue_term
     _ = ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
       simp [C]
 
+/-- Combined lower-event truncation-error estimate.  It packages the triangle
+inequality
+`|W - W_{\le r0}| <= |W| + |W_{\le r0}|` with the two lower-event residue
+terms proved above. -/
+theorem integral_abs_printedTailWGammaIntegrand_sub_WTruncReal_R0_lower_event_le_residue_terms
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |(Real.exp (-(printedTailLGammaArg μ a y)) *
+          (1 - printedTailJReal μ a (1 / (6 * y)))) -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a) ≤
+      ((2 * (5 / 6 : ℚ)^a +
+        ((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|)) : ℚ) : ℝ) := by
+  let S : Set ℝ := Set.Iio ((a : ℝ) / 2)
+  let W : ℝ → ℝ := fun y =>
+    Real.exp (-(printedTailLGammaArg μ a y)) *
+      (1 - printedTailJReal μ a (1 / (6 * y)))
+  let P : ℝ → ℝ := fun y =>
+    printedTailWTruncReal μ a (printedTailR0 a) y
+  haveI : IsProbabilityMeasure (gammaFullMeasure a) := by
+    unfold gammaFullMeasure
+    exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+      (by exact_mod_cast (by omega : 0 < a)) (by norm_num)
+  have hfinite : gammaFullMeasure a S ≠ ∞ := measure_ne_top _ _
+  have hW_bound_restrict :
+      ∀ᵐ y ∂(gammaFullMeasure a).restrict S, ‖W y‖ ≤ (2 : ℝ) := by
+    filter_upwards [ae_restrict_of_ae (ae_nonneg_gammaFullMeasure a)] with y hy_nonneg
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    simpa [W, printedTailLGammaArg, Real.norm_eq_abs] using
+      abs_exp_neg_L_mul_one_sub_JReal_le_two
+        (a := a) (μ := μ) hμ (x := 1 / (6 * y)) hx
+  have hW_int : IntegrableOn W S (gammaFullMeasure a) := by
+    refine Measure.integrableOn_of_bounded hfinite ?_ hW_bound_restrict
+    dsimp [W]
+    unfold printedTailLGammaArg printedTailLReal printedTailJReal
+    fun_prop
+  have hRle : printedTailR0 a ≤ printedTailP a + 1 := by
+    unfold printedTailR0 printedTailP
+    omega
+  have hP_int : IntegrableOn P S (gammaFullMeasure a) := by
+    dsimp [P]
+    exact (integrable_printedTailWTruncReal
+      (a := a) (R := printedTailR0 a) (μ := μ) ha hRle).integrableOn
+  have hleft_int :
+      IntegrableOn (fun y => |W y - P y|) S (gammaFullMeasure a) := by
+    change Integrable (fun y => |W y - P y|)
+      ((gammaFullMeasure a).restrict S)
+    exact (hW_int.integrable.sub hP_int.integrable).abs
+  have hright_int :
+      IntegrableOn (fun y => |W y| + |P y|) S (gammaFullMeasure a) := by
+    change Integrable (fun y => |W y| + |P y|)
+      ((gammaFullMeasure a).restrict S)
+    exact hW_int.integrable.abs.add hP_int.integrable.abs
+  have htriangle :
+      (∫ y in S, |W y - P y| ∂ gammaFullMeasure a) ≤
+        ∫ y in S, (|W y| + |P y|) ∂ gammaFullMeasure a := by
+    refine MeasureTheory.setIntegral_mono_ae_restrict
+      hleft_int hright_int ?_
+    filter_upwards with y
+    exact abs_sub (W y) (P y)
+  have hadd :
+      (∫ y in S, (|W y| + |P y|) ∂ gammaFullMeasure a) =
+        (∫ y in S, |W y| ∂ gammaFullMeasure a) +
+          ∫ y in S, |P y| ∂ gammaFullMeasure a := by
+    rw [MeasureTheory.integral_add]
+    · exact hW_int.integrable.abs
+    · exact hP_int.integrable.abs
+  have hW_bound :
+      (∫ y in S, |W y| ∂ gammaFullMeasure a) ≤
+        ((2 * (5 / 6 : ℚ)^a : ℚ) : ℝ) := by
+    simpa [S, W] using
+      integral_abs_printedTailWGammaIntegrand_lower_event_le_prob_term
+        (a := a) ha (μ := μ) hμ
+  have hP_bound :
+      (∫ y in S, |P y| ∂ gammaFullMeasure a) ≤
+        (((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) : ℚ) : ℝ) := by
+    simpa [S, P] using
+      integral_abs_printedTailWTruncReal_R0_lower_event_le_residue_terms
+        (a := a) ha μ
+  calc
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |(Real.exp (-(printedTailLGammaArg μ a y)) *
+          (1 - printedTailJReal μ a (1 / (6 * y)))) -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a)
+        =
+      ∫ y in S, |W y - P y| ∂ gammaFullMeasure a := rfl
+    _ ≤ ∫ y in S, (|W y| + |P y|) ∂ gammaFullMeasure a := htriangle
+    _ = (∫ y in S, |W y| ∂ gammaFullMeasure a) +
+          ∫ y in S, |P y| ∂ gammaFullMeasure a := hadd
+    _ ≤
+      ((2 * (5 / 6 : ℚ)^a : ℚ) : ℝ) +
+        (((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) : ℚ) : ℝ) :=
+        add_le_add hW_bound hP_bound
+    _ =
+      ((2 * (5 / 6 : ℚ)^a +
+        ((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|)) : ℚ) : ℝ) := by
+        norm_num
+
 /-- The four rational residue pieces which remain after the analytic
 Taylor--Gamma event split:
 
