@@ -9,10 +9,12 @@ and algebraic identities needed for that integration-by-parts step.
 -/
 
 import Prop52.GammaTruncation
+import Mathlib.MeasureTheory.Integral.IntegrableOn
 
 namespace Prop52
 
 open Finset
+open MeasureTheory
 
 /-- Real derivative polynomial of the low logarithm `L`. -/
 noncomputable def printedTailLDerivReal
@@ -219,5 +221,60 @@ theorem gammaPDF_toReal_mul_exp_neg_L_eq_invGamma_mul_envelope
     rw [Real.rpow_natCast]
     ring
   · positivity
+
+noncomputable def gammaIBPBracketIntegrand
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  gammaIBPEnvelope μ a x *
+    gammaLowBracketAlignedReal μ a (1 / (6 * x))
+
+noncomputable def gammaIBPWIntegrand
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  gammaIBPEnvelope μ a x *
+    (1 - printedTailJReal μ a (1 / (6 * x)))
+
+noncomputable def gammaIBPDerivativeIntegrand
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  gammaIBPEnvelope μ a x *
+    (gammaLowBracketAlignedReal μ a (1 / (6 * x)) +
+      printedTailJReal μ a (1 / (6 * x)) - 1)
+
+theorem gammaIBPDerivativeIntegrand_eq_bracket_sub_W
+    (μ : List Nat) (a : Nat) (x : ℝ) :
+    gammaIBPDerivativeIntegrand μ a x =
+      gammaIBPBracketIntegrand μ a x - gammaIBPWIntegrand μ a x := by
+  unfold gammaIBPDerivativeIntegrand gammaIBPBracketIntegrand
+    gammaIBPWIntegrand
+  ring
+
+/-- Conditional integral form of the Gamma integration-by-parts identity.
+
+The remaining analytic endpoint work is exactly the proof that the derivative
+integral on `(0,∞)` vanishes, together with the two integrability facts. -/
+theorem gammaIBP_integral_W_eq_bracket_of_derivative_integral_zero
+    (μ : List Nat) (a : Nat)
+    (hzero :
+      (∫ x in Set.Ioi (0 : ℝ),
+        gammaIBPDerivativeIntegrand μ a x) = 0)
+    (hbracket :
+      IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (hW :
+      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ))) :
+    (∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x) =
+      ∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x := by
+  have hderiv_sub :
+      (∫ x in Set.Ioi (0 : ℝ),
+        gammaIBPDerivativeIntegrand μ a x) =
+      ∫ x in Set.Ioi (0 : ℝ),
+        (gammaIBPBracketIntegrand μ a x - gammaIBPWIntegrand μ a x) := by
+    refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun x _hx => ?_
+    exact gammaIBPDerivativeIntegrand_eq_bracket_sub_W μ a x
+  have hsub :
+      (∫ x in Set.Ioi (0 : ℝ),
+        (gammaIBPBracketIntegrand μ a x - gammaIBPWIntegrand μ a x)) =
+        (∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x) -
+          ∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x := by
+    exact MeasureTheory.integral_sub hbracket hW
+  rw [hderiv_sub, hsub] at hzero
+  linarith
 
 end Prop52
