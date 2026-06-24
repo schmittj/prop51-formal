@@ -131,6 +131,136 @@ def PrintedTailWRealTailResidueBound : Prop :=
             (printedTailOmegaCoeff μ a s : ℝ) * t^s)| ≤
         ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
 
+/-- Real power-series representation for the full upper-event function.
+
+This is the remaining analytic identity behind the Taylor tail: on the
+interval used by the Gamma upper event, the formal `omega` coefficients really
+sum to `exp(-L(t)) * (1 - J(t))`.  The theorem below shows that the already
+closed coefficient majorant then supplies the printed `920 / 2^(r0+1)` tail
+budget. -/
+def PrintedTailWRealSeriesHasSum : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      ∀ t : ℝ, 0 ≤ t → t ≤ (printedTailX1 a : ℝ) →
+        HasSum
+          (fun s : Nat => (printedTailOmegaCoeff μ a s : ℝ) * t^s)
+          (Real.exp (-(printedTailLReal μ a t)) *
+            (1 - printedTailJReal μ a t))
+
+theorem printedTailWRealTailResidueBound_of_hasSum
+    (hseries : PrintedTailWRealSeriesHasSum) :
+    PrintedTailWRealTailResidueBound := by
+  intro a ha μ hμ t ht0 ht1
+  let R : Nat := printedTailR0 a + 1
+  let f : Nat → ℝ := fun s =>
+    (printedTailOmegaCoeff μ a s : ℝ) * t^s
+  let G : Nat → ℝ := fun s =>
+    if R ≤ s then
+      ((printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+    else 0
+  let W : ℝ :=
+    Real.exp (-(printedTailLReal μ a t)) *
+      (1 - printedTailJReal μ a t)
+  have hsum : HasSum f W := by
+    simpa [f, W] using hseries a ha μ hμ t ht0 ht1
+  have hf : Summable f := hsum.summable
+  have hsplit :
+      (∑ i ∈ Finset.range R, f i) +
+          (∑' i : Nat, f (i + R)) = W := by
+    have h := hf.sum_add_tsum_nat_add R
+    simpa [hsum.tsum_eq] using h
+  have hdiff :
+      W - (∑ s ∈ Finset.range R, f s) =
+        ∑' i : Nat, f (i + R) := by
+    linarith
+  have hG_nonneg : ∀ s : Nat, 0 ≤ G s := by
+    intro s
+    dsimp [G]
+    by_cases hs : R ≤ s
+    · rw [if_pos hs]
+      exact_mod_cast
+        mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+          (pow_nonneg (by unfold printedTailX1; positivity) s)
+    · rw [if_neg hs]
+  have hG : Summable G := by
+    simpa [G, R] using
+      summable_printedTailWAbsCoeff_x1_tail_closed
+        (a := a) ha (μ := μ) hμ
+  have hG_shift : Summable (fun i : Nat => G (i + R)) := by
+    exact (summable_nat_add_iff R).mpr hG
+  have hnorm_le_G : ∀ i : Nat, ‖f (i + R)‖ ≤ G (i + R) := by
+    intro i
+    have hsR : R ≤ i + R := by omega
+    have homega :
+        |(printedTailOmegaCoeff μ a (i + R) : ℝ)| ≤
+          (printedTailWAbsCoeff μ a (i + R) : ℝ) := by
+      exact_mod_cast abs_printedTailOmegaCoeff_le_WAbsCoeff μ a (i + R)
+    have hpow_nonneg : 0 ≤ t^(i + R) := pow_nonneg ht0 _
+    have hpow :
+        |t^(i + R)| ≤ (printedTailX1 a : ℝ)^(i + R) := by
+      rw [abs_of_nonneg hpow_nonneg]
+      exact pow_le_pow_left₀ ht0 ht1 _
+    have hW_nonneg :
+        0 ≤ (printedTailWAbsCoeff μ a (i + R) : ℝ) := by
+      exact_mod_cast printedTailWAbsCoeff_nonneg μ a (i + R)
+    calc
+      ‖f (i + R)‖
+          = |(printedTailOmegaCoeff μ a (i + R) : ℝ) * t^(i + R)| := by
+            change ‖(printedTailOmegaCoeff μ a (i + R) : ℝ) *
+                t^(i + R)‖ =
+              |(printedTailOmegaCoeff μ a (i + R) : ℝ) * t^(i + R)|
+            rw [Real.norm_eq_abs]
+      _ = |(printedTailOmegaCoeff μ a (i + R) : ℝ)| * |t^(i + R)| := by
+            rw [abs_mul]
+      _ ≤ (printedTailWAbsCoeff μ a (i + R) : ℝ) *
+            (printedTailX1 a : ℝ)^(i + R) :=
+            mul_le_mul homega hpow (abs_nonneg _) hW_nonneg
+      _ = ((printedTailWAbsCoeff μ a (i + R) *
+              (printedTailX1 a)^(i + R) : ℚ) : ℝ) := by
+            rw [Rat.cast_mul, Rat.cast_pow]
+      _ = G (i + R) := by
+            dsimp [G]
+            rw [if_pos hsR]
+  have hnorm_summable : Summable (fun i : Nat => ‖f (i + R)‖) :=
+    Summable.of_nonneg_of_le (fun i => norm_nonneg (f (i + R)))
+      hnorm_le_G hG_shift
+  have htail_norm_le :
+      ‖∑' i : Nat, f (i + R)‖ ≤
+        ∑' i : Nat, G (i + R) := by
+    calc
+      ‖∑' i : Nat, f (i + R)‖ ≤
+          ∑' i : Nat, ‖f (i + R)‖ :=
+            norm_tsum_le_tsum_norm hnorm_summable
+      _ ≤ ∑' i : Nat, G (i + R) :=
+            Summable.tsum_le_tsum hnorm_le_G hnorm_summable hG_shift
+  have hprefix_nonneg : 0 ≤ ∑ i ∈ Finset.range R, G i :=
+    Finset.sum_nonneg fun i _hi => hG_nonneg i
+  have hG_shift_le_total :
+      (∑' i : Nat, G (i + R)) ≤ ∑' s : Nat, G s := by
+    have h := hG.sum_add_tsum_nat_add R
+    nlinarith
+  have hG_total_le :
+      (∑' s : Nat, G s) ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+    simpa [G, R] using
+      tsum_printedTailWAbsCoeff_x1_tail_le_residue_term_closed
+        (a := a) ha (μ := μ) hμ
+  calc
+    |Real.exp (-(printedTailLReal μ a t)) *
+        (1 - printedTailJReal μ a t) -
+      (∑ s ∈ Finset.range (printedTailR0 a + 1),
+        (printedTailOmegaCoeff μ a s : ℝ) * t^s)|
+        =
+      |W - ∑ s ∈ Finset.range R, f s| := by
+        simp [W, f, R]
+    _ = |∑' i : Nat, f (i + R)| := by
+        rw [hdiff]
+    _ = ‖∑' i : Nat, f (i + R)‖ := by
+        rw [Real.norm_eq_abs]
+    _ ≤ ∑' i : Nat, G (i + R) := htail_norm_le
+    _ ≤ ∑' s : Nat, G s := hG_shift_le_total
+    _ ≤ ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := hG_total_le
+
 theorem printedTailUpperEventPointwiseResidueBound_of_realTail
     (htail : PrintedTailWRealTailResidueBound) :
     PrintedTailUpperEventPointwiseResidueBound := by

@@ -417,6 +417,27 @@ theorem correctedCoeff_neg_of_realTailResidue
     (printedTailUpperEventResidueBound_of_realTail htail)
     ha hμ
 
+/-- Public assembly from the real power-series representation of the full
+upper-event function.  Once the `omega` coefficients are shown to sum to
+`exp(-L(t)) * (1 - J(t))` on `0 <= t <= x1`, the closed coefficient-majorant
+tail proves the printed residue bound. -/
+theorem correctedCoeff_nonvanishing_of_realSeriesHasSum
+    (hseries : PrintedTailWRealSeriesHasSum) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_realTailResidue
+    (printedTailWRealTailResidueBound_of_hasSum hseries)
+
+/-- Large-range strict negativity from the real power-series representation
+of the full upper-event function. -/
+theorem correctedCoeff_neg_of_realSeriesHasSum
+    (hseries : PrintedTailWRealSeriesHasSum)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_realTailResidue
+    (printedTailWRealTailResidueBound_of_hasSum hseries)
+    ha hμ
+
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite
 Gamma moments, finite-window upper tail, residue arithmetic, mid-range, and

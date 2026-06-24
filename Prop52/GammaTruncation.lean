@@ -330,6 +330,235 @@ theorem printedTailWAbsCoeff_x1_tail_le_residue_term
           rw [one_div_pow]
           ring
 
+/-- Prefix-uniform version of the upper-event positive-majorant tail bound.
+
+The earlier finite-window bound only needed the prefix through degree `a`.
+The remaining analytic Taylor tail needs the same geometric estimate for
+arbitrary finite prefixes before passing to the infinite limit.  This theorem
+records the closed `x₂` majorant in exactly that form. -/
+theorem printedTailWAbsCoeff_x1_prefix_tail_le_residue_term_closed
+    {a m : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (hpm : printedTailP a ≤ m) :
+    (∑ s ∈ (Finset.range (m + 1)).filter
+        (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        printedTailWAbsCoeff μ a s * (printedTailX1 a)^s)
+      ≤ 920 / (2 : ℚ)^(printedTailR0 a + 1) := by
+  let C : ℚ := (1 / 2 : ℚ)^(printedTailR0 a + 1)
+  have hterm :
+      (∑ s ∈ (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX1 a)^s)
+        ≤
+      ∑ s ∈ (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+          C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hRs : printedTailR0 a + 1 ≤ s :=
+      (Finset.mem_filter.mp hs).2
+    have hW : 0 ≤ printedTailWAbsCoeff μ a s :=
+      printedTailWAbsCoeff_nonneg μ a s
+    have hx1 :=
+      printedTailX1_pow_le_scaled_X2_pow
+        (a := a) (s := s) (R := printedTailR0 a) ha hRs
+    calc
+      printedTailWAbsCoeff μ a s * (printedTailX1 a)^s
+          ≤ printedTailWAbsCoeff μ a s *
+              (C * (printedTailX2 a)^s) :=
+            mul_le_mul_of_nonneg_left hx1 hW
+      _ = C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+            dsimp [C]
+            ring
+  have hsubset :
+      (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s) ⊆
+        Finset.range (m + 1) := by
+    intro s hs
+    exact (Finset.mem_filter.mp hs).1
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have hpoint_subset :
+      (∑ s ∈ (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+        ≤ ∑ s ∈ Finset.range (m + 1),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s :=
+    Finset.sum_le_sum_of_subset_of_nonneg hsubset
+      (by
+        intro s _hs _hnot
+        exact mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+          (pow_nonneg hx2_nonneg s))
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  calc
+    (∑ s ∈ (Finset.range (m + 1)).filter
+        (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        printedTailWAbsCoeff μ a s * (printedTailX1 a)^s)
+        ≤ ∑ s ∈ (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+          C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := hterm
+    _ = C * (∑ s ∈ (Finset.range (m + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+          rw [Finset.mul_sum]
+    _ ≤ C * 920 :=
+          mul_le_mul_of_nonneg_left
+            (hpoint_subset.trans
+              (printedTailWPointBoundX2_prefix_closed
+                (a := a) (m := m) (μ := μ) ha hμ hpm))
+            hC_nonneg
+    _ = 920 / (2 : ℚ)^(printedTailR0 a + 1) := by
+          dsimp [C]
+          rw [one_div_pow]
+          ring
+
+/-- Summability of the infinite positive-majorant tail at `x₁`. -/
+theorem summable_printedTailWAbsCoeff_x1_tail_closed
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    Summable (fun s : Nat =>
+      if printedTailR0 a + 1 ≤ s then
+        ((printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+      else 0) := by
+  let F : Nat → ℝ := fun s =>
+    if printedTailR0 a + 1 ≤ s then
+      ((printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+    else 0
+  have hF_nonneg : ∀ s : Nat, 0 ≤ F s := by
+    intro s
+    dsimp [F]
+    by_cases hs : printedTailR0 a + 1 ≤ s
+    · rw [if_pos hs]
+      exact_mod_cast
+        mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+          (pow_nonneg (by unfold printedTailX1; positivity) s)
+    · rw [if_neg hs]
+  have hpartial :
+      ∀ n : Nat, ∑ s ∈ Finset.range n, F s ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+    intro n
+    let m : Nat := max (printedTailP a) n
+    have hsubset :
+        (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s) ⊆
+          (Finset.range (m + 1)).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s) := by
+      intro s hs
+      have hsrange : s ∈ Finset.range n := (Finset.mem_filter.mp hs).1
+      have hscond : printedTailR0 a + 1 ≤ s := (Finset.mem_filter.mp hs).2
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by
+            have hslt : s < n := Finset.mem_range.mp hsrange
+            dsimp [m]
+            omega),
+          hscond⟩
+    have htail_m :=
+      printedTailWAbsCoeff_x1_prefix_tail_le_residue_term_closed
+        (a := a) (m := m) (μ := μ) ha hμ
+        (by dsimp [m]; exact le_max_left _ _)
+    have htail_n :
+        (∑ s ∈ (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            printedTailWAbsCoeff μ a s * (printedTailX1 a)^s)
+          ≤ 920 / (2 : ℚ)^(printedTailR0 a + 1) := by
+      have hnonneg :
+          ∀ x ∈ (Finset.range (m + 1)).filter
+              (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            x ∉ (Finset.range n).filter
+              (fun s : Nat => printedTailR0 a + 1 ≤ s) →
+            0 ≤ printedTailWAbsCoeff μ a x * (printedTailX1 a)^x := by
+        intro x _hx _hnot
+        exact mul_nonneg (printedTailWAbsCoeff_nonneg μ a x)
+          (pow_nonneg (by unfold printedTailX1; positivity) x)
+      exact (Finset.sum_le_sum_of_subset_of_nonneg hsubset hnonneg).trans htail_m
+    have hsum_filter :
+        ∑ s ∈ Finset.range n, F s =
+          ((∑ s ∈ (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ) := by
+      rw [Rat.cast_sum]
+      rw [Finset.sum_filter]
+    rw [hsum_filter]
+    exact_mod_cast htail_n
+  simpa [F] using summable_of_sum_range_le hF_nonneg hpartial
+
+/-- Infinite positive-majorant tail at `x₁`, obtained by applying the
+prefix-uniform finite estimate to all partial sums.
+
+This is the coefficient-tail half of the remaining analytic argument.  The
+separate issue is to connect the analytic function
+`exp(-L(t)) * (1 - J(t))` with the formal `omega` Taylor coefficients. -/
+theorem tsum_printedTailWAbsCoeff_x1_tail_le_residue_term_closed
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑' s : Nat,
+      if printedTailR0 a + 1 ≤ s then
+        ((printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+      else 0) ≤
+      ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+  let F : Nat → ℝ := fun s =>
+    if printedTailR0 a + 1 ≤ s then
+      ((printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+    else 0
+  have hF_nonneg : ∀ s : Nat, 0 ≤ F s := by
+    intro s
+    dsimp [F]
+    by_cases hs : printedTailR0 a + 1 ≤ s
+    · rw [if_pos hs]
+      exact_mod_cast
+        mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+          (pow_nonneg (by unfold printedTailX1; positivity) s)
+    · rw [if_neg hs]
+  have hpartial :
+      ∀ n : Nat, ∑ s ∈ Finset.range n, F s ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+    intro n
+    let m : Nat := max (printedTailP a) n
+    have hsubset :
+        (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s) ⊆
+          (Finset.range (m + 1)).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s) := by
+      intro s hs
+      have hsrange : s ∈ Finset.range n := (Finset.mem_filter.mp hs).1
+      have hscond : printedTailR0 a + 1 ≤ s := (Finset.mem_filter.mp hs).2
+      exact Finset.mem_filter.mpr
+        ⟨Finset.mem_range.mpr (by
+            have hslt : s < n := Finset.mem_range.mp hsrange
+            dsimp [m]
+            omega),
+          hscond⟩
+    have htail_m :=
+      printedTailWAbsCoeff_x1_prefix_tail_le_residue_term_closed
+        (a := a) (m := m) (μ := μ) ha hμ
+        (by dsimp [m]; exact le_max_left _ _)
+    have htail_n :
+        (∑ s ∈ (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            printedTailWAbsCoeff μ a s * (printedTailX1 a)^s)
+          ≤ 920 / (2 : ℚ)^(printedTailR0 a + 1) := by
+      have hnonneg :
+          ∀ x ∈ (Finset.range (m + 1)).filter
+              (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            x ∉ (Finset.range n).filter
+              (fun s : Nat => printedTailR0 a + 1 ≤ s) →
+            0 ≤ printedTailWAbsCoeff μ a x * (printedTailX1 a)^x := by
+        intro x _hx _hnot
+        exact mul_nonneg (printedTailWAbsCoeff_nonneg μ a x)
+          (pow_nonneg (by unfold printedTailX1; positivity) x)
+      exact (Finset.sum_le_sum_of_subset_of_nonneg hsubset hnonneg).trans htail_m
+    have hsum_filter :
+        ∑ s ∈ Finset.range n, F s =
+          ((∑ s ∈ (Finset.range n).filter
+            (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ) := by
+      rw [Rat.cast_sum]
+      rw [Finset.sum_filter]
+    rw [hsum_filter]
+    exact_mod_cast htail_n
+  simpa [F] using Real.tsum_le_of_sum_range_le hF_nonneg hpartial
+
 /-- Pointwise upper-event finite-window tail bound in the displayed residue
 constant form. -/
 theorem abs_printedTailWTruncReal_a_sub_R0_le_residue_term

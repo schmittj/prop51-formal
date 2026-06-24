@@ -7573,55 +7573,63 @@ theorem printedTailWPointMomentBounds_closed :
           (182 : ℚ) * (41 / 10) := add_le_add hterm1 hterm2
       _ = (182 : ℚ) * (255 / 8) := by norm_num
 
-theorem printedTailWPointBoundX2_closed :
-    PrintedTailWPointBoundX2 := by
-  intro a ha μ hμ
+theorem printedTailWPointBoundX2_prefix_closed
+    {a m : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) (hpm : printedTailP a ≤ m) :
+    (∑ s ∈ Finset.range (m + 1),
+      printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) ≤ 920 := by
   let x := printedTailX2 a
   have hx : 0 ≤ x := by simpa [x] using printedTailX2_nonneg ha
-  have hpa : printedTailP a ≤ a := by
-    unfold printedTailP
-    omega
   have hE :
-      (∑ s ∈ Finset.range (a + 1),
+      (∑ s ∈ Finset.range (m + 1),
         printedTailEAbsCoeff μ a s * x^s) ≤ 182 := by
     simpa [x] using printedTailEAbsPointSum_x2_prefix_le_of_P_le
-      (a := a) (μ := μ) (m := a) ha hμ hpa
+      (a := a) (μ := μ) (m := m) ha hμ hpm
   have hJ :
-      (∑ r ∈ Finset.range (a + 1),
+      (∑ r ∈ Finset.range (m + 1),
         printedTailJAbsCoeff μ a r * x^r) ≤ 81 / 20 := by
     exact (printedTailJAbsCoeff_point_prefix_le_JPointSum_of_P_le
-      (a := a) (μ := μ) (x := x) (m := a) hpa).trans
+      (a := a) (μ := μ) (x := x) (m := m) hpm).trans
         (by
           simpa [x] using
             (printedTailJPointSum_x2_le (a := a) (μ := μ) ha hμ))
-  have hJ_nonneg := printedTailJAbsPointPrefix_nonneg μ a hx a
+  have hJ_nonneg := printedTailJAbsPointPrefix_nonneg μ a hx m
   have hJ_factor_nonneg :
-      0 ≤ 1 + ∑ r ∈ Finset.range (a + 1),
+      0 ≤ 1 + ∑ r ∈ Finset.range (m + 1),
         printedTailJAbsCoeff μ a r * x^r := by linarith
   have hJ_factor_le :
-      1 + ∑ r ∈ Finset.range (a + 1),
+      1 + ∑ r ∈ Finset.range (m + 1),
         printedTailJAbsCoeff μ a r * x^r ≤ 1 + 81 / 20 := by
     linarith
-  have hW := printedTailW_point_sum_le_product μ a (x := x) hx a
+  have hW := printedTailW_point_sum_le_product μ a (x := x) hx m
   have hprod :
-      (∑ s ∈ Finset.range (a + 1),
+      (∑ s ∈ Finset.range (m + 1),
         printedTailEAbsCoeff μ a s * x^s) *
-          (1 + ∑ r ∈ Finset.range (a + 1),
+          (1 + ∑ r ∈ Finset.range (m + 1),
             printedTailJAbsCoeff μ a r * x^r)
         ≤ (182 : ℚ) * (1 + 81 / 20) :=
     mul_le_mul hE hJ_factor_le hJ_factor_nonneg (by norm_num)
   calc
-    (∑ s ∈ Finset.range (a + 1),
+    (∑ s ∈ Finset.range (m + 1),
       printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
         =
-      ∑ s ∈ Finset.range (a + 1),
+      ∑ s ∈ Finset.range (m + 1),
         printedTailWAbsCoeff μ a s * x^s := by simp [x]
-    _ ≤ (∑ s ∈ Finset.range (a + 1),
+    _ ≤ (∑ s ∈ Finset.range (m + 1),
         printedTailEAbsCoeff μ a s * x^s) *
-        (1 + ∑ r ∈ Finset.range (a + 1),
+        (1 + ∑ r ∈ Finset.range (m + 1),
           printedTailJAbsCoeff μ a r * x^r) := hW
     _ ≤ (182 : ℚ) * (1 + 81 / 20) := hprod
     _ ≤ 920 := by norm_num
+
+theorem printedTailWPointBoundX2_closed :
+    PrintedTailWPointBoundX2 := by
+  intro a ha μ hμ
+  have hpa : printedTailP a ≤ a := by
+    unfold printedTailP
+    omega
+  exact printedTailWPointBoundX2_prefix_closed
+    (a := a) (m := a) (μ := μ) ha hμ hpa
 
 /-- Final rational arithmetic for the first absolute-moment budget:
 `exp(7/5) < 203/50` and `exp(26/5) < 182` reduce the displayed bound below
