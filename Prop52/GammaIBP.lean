@@ -310,6 +310,67 @@ theorem gammaIBP_derivative_integral_zero_of_tendsto
     simp [hpow]
   simpa [hzero] using hFTC
 
+/-- The Gamma-substitution low logarithm tends to zero at infinity, since it
+is a finite sum of positive inverse powers of `x`. -/
+theorem tendsto_printedTailLGammaArg_atTop_zero
+    (μ : List Nat) (a : Nat) :
+    Tendsto (printedTailLGammaArg μ a) atTop (nhds 0) := by
+  unfold printedTailLGammaArg printedTailLReal
+  have hbase : Tendsto (fun y : ℝ => 1 / (6 * y)) atTop (nhds 0) := by
+    have hy : Tendsto (fun y : ℝ => y⁻¹) atTop (nhds 0) :=
+      tendsto_inv_atTop_zero
+    simpa [div_eq_mul_inv, Ring.mul_inverse_rev] using
+      hy.mul (tendsto_const_nhds (x := (6 : ℝ)⁻¹))
+  have hsum :
+      Tendsto
+        (fun y : ℝ =>
+          ∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+            (hCoeff μ r : ℝ) * (1 / (6 * y))^r)
+        atTop
+        (nhds
+          (∑ r ∈ Finset.Ico 1 (printedTailP a + 1), (0 : ℝ))) := by
+    refine tendsto_finset_sum _ fun r hr => ?_
+    have hrpos : r ≠ 0 := by
+      have hle : 1 ≤ r := (Finset.mem_Ico.mp hr).1
+      omega
+    have hpow : Tendsto (fun y : ℝ => (1 / (6 * y))^r) atTop (nhds 0) := by
+      simpa [zero_pow hrpos] using hbase.pow r
+    simpa using hpow.const_mul (hCoeff μ r : ℝ)
+  simpa using hsum
+
+/-- The Gamma integration-by-parts envelope vanishes at infinity. -/
+theorem tendsto_gammaIBPEnvelope_atTop_zero
+    (μ : List Nat) (a : Nat) :
+    Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0) := by
+  have hpoly_exp :
+      Tendsto (fun x : ℝ => x^(a - 1) * Real.exp (-x))
+        atTop (nhds 0) :=
+    Real.tendsto_pow_mul_exp_neg_atTop_nhds_zero (a - 1)
+  have hL := tendsto_printedTailLGammaArg_atTop_zero μ a
+  have hexpL :
+      Tendsto (fun x : ℝ => Real.exp (-(printedTailLGammaArg μ a x)))
+        atTop (nhds 1) := by
+    have hneg : Tendsto (fun x : ℝ => -(printedTailLGammaArg μ a x))
+        atTop (nhds 0) := by
+      simpa using hL.neg
+    simpa using (Real.continuous_exp.tendsto 0).comp hneg
+  unfold gammaIBPEnvelope
+  simpa using hpoly_exp.mul hexpL
+
+/-- The derivative integral vanishes after the infinity endpoint has been
+closed; the remaining hypotheses are the origin continuity and derivative
+integrability required by the improper FTC. -/
+theorem gammaIBP_derivative_integral_zero_of_origin
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a)
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0)
+    (hderivInt :
+      IntegrableOn (gammaIBPDerivativeIntegrand μ a) (Set.Ioi (0 : ℝ))) :
+    (∫ x in Set.Ioi (0 : ℝ),
+      gammaIBPDerivativeIntegrand μ a x) = 0 := by
+  exact gammaIBP_derivative_integral_zero_of_tendsto
+    μ ha hcont hderivInt (tendsto_gammaIBPEnvelope_atTop_zero μ a)
+
 /-- Endpoint-and-integrability packaged version of the Gamma
 integration-by-parts identity. -/
 theorem gammaIBP_integral_W_eq_bracket_of_endpoints
@@ -321,14 +382,13 @@ theorem gammaIBP_integral_W_eq_bracket_of_endpoints
     (hbracket :
       IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)))
     (hW :
-      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ)))
-    (htop : Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0)) :
+      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ))) :
     (∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x) =
       ∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x := by
   exact gammaIBP_integral_W_eq_bracket_of_derivative_integral_zero
     μ a
-    (gammaIBP_derivative_integral_zero_of_tendsto
-      μ ha hcont hderivInt htop)
+    (gammaIBP_derivative_integral_zero_of_origin
+      μ ha hcont hderivInt)
     hbracket hW
 
 /-- Convert the bracket Gamma expectation to the Lebesgue envelope integral
@@ -412,15 +472,14 @@ theorem gammaFull_WIntegral_lower_of_IBP_endpoints
     (hbracket :
       IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)))
     (hW :
-      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ)))
-    (htop : Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0)) :
+      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ))) :
     9 / (40 * ((a : ℝ) - 2)) ≤
       ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
         (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
   have hlower := gammaLowBracketAlignedIntegral_lower
     (a := a) (μ := μ) ha hμ
   have hIBP := gammaIBP_integral_W_eq_bracket_of_endpoints
-    μ ha hcont hderivInt hbracket hW htop
+    μ ha hcont hderivInt hbracket hW
   calc
     9 / (40 * ((a : ℝ) - 2))
         ≤ ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
