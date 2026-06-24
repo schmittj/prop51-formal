@@ -1246,8 +1246,8 @@ $b_a(\mu)$, whose sign is already understood.  The Lean development computes
 the marked forms (\code{printedCoeff}, \code{correctedCoeff}) and also
 formalizes Lemma~\ref{lem:bridge52} at coefficient level as
 \code{sourceCorrectedCoeff\_eq} in \code{Prop52/Source.lean}.  The public
-Proposition~5.2 facade is therefore stated for the source coefficient
-\code{sourceCoeff}, not merely for the marked proxy.
+Proposition~5.2 facade is therefore stated directly as the coefficient of
+$B_\mu(t)D_\mu^{\mathrm{cor}}(t)$, not merely for the marked proxy.
 
 \subsection{Strict negativity for \texorpdfstring{$a\ge14$}{a>=14}}\label{subsec:large52}
 
@@ -1361,8 +1361,9 @@ constant term one.
 
 For the corrected Proposition~5.2 the public facade is
 \code{Prop52/Theorem.lean}.  It imports \code{Prop52/Source.lean}, where the
-source coefficient \code{sourceCoeff}, the coefficient-level source--marked
-bridge \code{sourceCorrectedCoeff\_eq}, and the $g=4$ executable checks live.
+source coefficient \code{sourceCoeff}, the coefficient-level product pinning,
+the source--marked bridge \code{sourceCorrectedCoeff\_eq}, and the $g=4$
+executable checks live.
 The facade itself exposes only two genus-indexed source theorems: one for
 non-vanishing and one for strict negativity.  The exact Lean identifiers are
 listed in Appendix~\ref{app:lean-statement}.  The marked theorem names
@@ -1759,7 +1760,7 @@ The file \code{Prop51/Theorem.lean} is intended as the first audit surface: it
 names the series \(\C\), states the quotient-series identity, and exposes the
 strict-negativity and non-vanishing theorems for Proposition~5.1.  Its
 counterpart \code{Prop52/Theorem.lean} exposes the corrected Proposition~5.2
-source coefficient through two genus-indexed theorems.  The root files
+source product coefficient through two genus-indexed theorems.  The root files
 \code{Prop51.lean} and \code{Prop52.lean} import the respective libraries.
 
 The proof backend remains more historical.  In the current release,
@@ -2507,18 +2508,22 @@ import Prop52.Source
 
 namespace Prop52
 
--- sourceCoeff (M (g / 3 + 1)) mu (g / 3 + 1)
---   = [t^(g/3+1)] B_mu(t) * D_mu^cor(t)
+-- chenLarsonSeries mu is B_mu(t).
+-- chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu is D_mu^cor(t).
 
 theorem chenLarsonProp52Coefficient_nonvanishing
     {g : Nat} (hg : 2 <= g) (hmod : g % 3 = 1)
     {mu : List Nat} (hmu : Prop51.IsPartitionOf mu (2 * g - 2)) :
-    sourceCoeff (M (g / 3 + 1)) mu (g / 3 + 1) != 0
+    coeff (g / 3 + 1)
+      (chenLarsonSeries mu *
+        chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) != 0
 
 theorem chenLarsonProp52Coefficient_neg
     {g : Nat} (hg : 40 <= g) (hmod : g % 3 = 1)
     {mu : List Nat} (hmu : Prop51.IsPartitionOf mu (2 * g - 2)) :
-    sourceCoeff (M (g / 3 + 1)) mu (g / 3 + 1) < 0
+    coeff (g / 3 + 1)
+      (chenLarsonSeries mu *
+        chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) < 0
 
 end Prop52
 \end{lstlisting}

@@ -61,7 +61,8 @@ corrected source factor obtained by pulling back Ionel's relation (the factor
 printed in the preprint is the same with the leading `M` replaced by `1`). The
 public Lean statements are `Prop52.chenLarsonProp52Coefficient_nonvanishing` and
 `Prop52.chenLarsonProp52Coefficient_neg` in
-[`Prop52/Theorem.lean`](Prop52/Theorem.lean), stated for this source coefficient.
+[`Prop52/Theorem.lean`](Prop52/Theorem.lean), stated directly as coefficients of
+`B_μ(t)·D_μ^cor(t)`.
 The formal bridge `Prop52.sourceCorrectedCoeff_eq` in
 [`Prop52/Source.lean`](Prop52/Source.lean) identifies it in degree `a` with the
 marked coefficient `[t^a] B_μ·(M − K_μ)`, `K_μ = Σ_i m_i·Φ(t/q_i)`,
