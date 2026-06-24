@@ -378,6 +378,45 @@ theorem correctedCoeff_neg_of_upperEventResidue
     (printedTailGammaTruncationResidueBound_of_upperEvent hupper)
     ha hμ
 
+/-- Public assembly with the remaining analytic work reduced to the pointwise
+upper-event Taylor tail.  This is the same paper-shaped residue constant as
+`correctedCoeff_nonvanishing_of_upperEventResidue`, but before the elementary
+integration step over the upper Gamma event. -/
+theorem correctedCoeff_nonvanishing_of_upperEventPointwiseResidue
+    (hpoint : PrintedTailUpperEventPointwiseResidueBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_upperEventResidue
+    (printedTailUpperEventResidueBound_of_pointwise hpoint)
+
+/-- Large-range strict negativity from the pointwise upper-event Taylor tail. -/
+theorem correctedCoeff_neg_of_upperEventPointwiseResidue
+    (hpoint : PrintedTailUpperEventPointwiseResidueBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_upperEventResidue
+    (printedTailUpperEventResidueBound_of_pointwise hpoint)
+    ha hμ
+
+/-- Public assembly from the pure real-variable Taylor tail on
+`0 <= t <= x1`.  This is the smallest remaining analytic interface: the Gamma
+substitution and integration over the upper event are both closed in Lean. -/
+theorem correctedCoeff_nonvanishing_of_realTailResidue
+    (htail : PrintedTailWRealTailResidueBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_upperEventResidue
+    (printedTailUpperEventResidueBound_of_realTail htail)
+
+/-- Large-range strict negativity from the pure real-variable Taylor tail. -/
+theorem correctedCoeff_neg_of_realTailResidue
+    (htail : PrintedTailWRealTailResidueBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_upperEventResidue
+    (printedTailUpperEventResidueBound_of_realTail htail)
+    ha hμ
+
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite
 Gamma moments, finite-window upper tail, residue arithmetic, mid-range, and

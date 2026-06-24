@@ -16,6 +16,7 @@ import Prop52.GammaIBP
 namespace Prop52
 
 open MeasureTheory
+open scoped ENNReal
 
 /-- The untruncated Gamma integrand
 `W(t_Y)=exp(-L(t_Y))(1-J(t_Y))`, with `t_Y=1/(6Y)`. -/
@@ -97,6 +98,138 @@ def PrintedTailUpperEventResidueBound : Prop :=
             printedTailWTruncReal μ a (printedTailR0 a) y|
             ∂ gammaFullMeasure a) ≤
         ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
+
+/-- Pointwise form of the paper-shaped upper-event Taylor bound.
+
+This is the real analytic estimate left by the printed proof: on the upper
+event `Y >= a/2`, equivalently `t_Y <= x₁`, the full Taylor tail of
+`W(t)=exp(-L(t))(1-J(t))` after `r0` is bounded by
+`920 / 2^(r0+1)`.  The following theorem turns this pointwise statement into
+the integrated upper-event interface using only that `gammaFullMeasure` is a
+probability measure. -/
+def PrintedTailUpperEventPointwiseResidueBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      ∀ y : ℝ, (a : ℝ) / 2 ≤ y →
+        |printedTailWGammaIntegrand μ a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y| ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
+
+/-- Pure real-variable form of the remaining Taylor tail.
+
+This is the analytic core with all Gamma-measure bookkeeping removed.  It
+states that the Taylor tail of
+`t ↦ exp(-L(t)) * (1 - J(t))` after `r0` is bounded on the interval
+`0 <= t <= x1`. -/
+def PrintedTailWRealTailResidueBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      ∀ t : ℝ, 0 ≤ t → t ≤ (printedTailX1 a : ℝ) →
+        |Real.exp (-(printedTailLReal μ a t)) *
+            (1 - printedTailJReal μ a t) -
+          (∑ s ∈ Finset.range (printedTailR0 a + 1),
+            (printedTailOmegaCoeff μ a s : ℝ) * t^s)| ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
+
+theorem printedTailUpperEventPointwiseResidueBound_of_realTail
+    (htail : PrintedTailWRealTailResidueBound) :
+    PrintedTailUpperEventPointwiseResidueBound := by
+  intro a ha μ hμ y hy
+  have ha_pos : (0 : ℝ) < a := by
+    exact_mod_cast (by omega : 0 < a)
+  have hy_pos : 0 < y := by nlinarith
+  have ht_nonneg : 0 ≤ 1 / (6 * y) := by positivity
+  have ht_le : 1 / (6 * y) ≤ (printedTailX1 a : ℝ) := by
+    have hden_pos : 0 < 3 * (a : ℝ) := by nlinarith
+    have hden_le : 3 * (a : ℝ) ≤ 6 * y := by nlinarith
+    have hx1_cast : (printedTailX1 a : ℝ) = 1 / (3 * (a : ℝ)) := by
+      unfold printedTailX1
+      norm_num
+    rw [hx1_cast]
+    exact one_div_le_one_div_of_le hden_pos hden_le
+  simpa [printedTailWGammaIntegrand, printedTailLGammaArg,
+    printedTailWTruncReal] using
+    htail a ha μ hμ (1 / (6 * y)) ht_nonneg ht_le
+
+theorem printedTailUpperEventResidueBound_of_pointwise
+    (hpoint : PrintedTailUpperEventPointwiseResidueBound) :
+    PrintedTailUpperEventResidueBound := by
+  intro a ha μ hμ
+  let S : Set ℝ := Set.Ici ((a : ℝ) / 2)
+  let W : ℝ → ℝ := printedTailWGammaIntegrand μ a
+  let P : ℝ → ℝ := printedTailWTruncReal μ a (printedTailR0 a)
+  let C : ℝ := ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
+  haveI : IsProbabilityMeasure (gammaFullMeasure a) := by
+    unfold gammaFullMeasure
+    exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+      (by exact_mod_cast (by omega : 0 < a)) (by norm_num)
+  have hfinite : gammaFullMeasure a S ≠ ⊤ := measure_ne_top _ _
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  have hW_bound :
+      ∀ᵐ y ∂ gammaFullMeasure a, ‖W y‖ ≤ (2 : ℝ) := by
+    filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy_nonneg
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    simpa [W, printedTailWGammaIntegrand, printedTailLGammaArg, Real.norm_eq_abs]
+      using abs_exp_neg_L_mul_one_sub_JReal_le_two
+        (a := a) (μ := μ) hμ (x := 1 / (6 * y)) hx
+  have hW_int : Integrable W (gammaFullMeasure a) := by
+    refine Integrable.of_bound ?_ 2 hW_bound
+    dsimp [W]
+    unfold printedTailWGammaIntegrand printedTailLGammaArg
+      printedTailLReal printedTailJReal
+    fun_prop
+  have hRle : printedTailR0 a ≤ printedTailP a + 1 := by
+    unfold printedTailR0 printedTailP
+    omega
+  have hP_int : Integrable P (gammaFullMeasure a) := by
+    dsimp [P]
+    exact integrable_printedTailWTruncReal
+      (a := a) (R := printedTailR0 a) (μ := μ) ha hRle
+  have hleft_int :
+      IntegrableOn (fun y => |W y - P y|) S (gammaFullMeasure a) :=
+    (hW_int.sub hP_int).abs.integrableOn
+  have hright_int :
+      IntegrableOn (fun _ : ℝ => C) S (gammaFullMeasure a) :=
+    integrableOn_const hfinite
+  have hmono_restrict :
+      (fun y => |W y - P y|) ≤ᵐ[(gammaFullMeasure a).restrict S]
+        fun _ : ℝ => C := by
+    filter_upwards [ae_restrict_mem measurableSet_Ici] with y hy
+    simpa [S, W, P, C] using hpoint a ha μ hμ y hy
+  have hmeasure_le_one :
+      (gammaFullMeasure a S).toReal ≤ (1 : ℝ) := by
+    have hle : gammaFullMeasure a S ≤ (1 : ℝ≥0∞) := by
+      calc
+        gammaFullMeasure a S ≤ gammaFullMeasure a Set.univ :=
+          measure_mono (Set.subset_univ S)
+        _ = 1 := by simp
+    simpa using ENNReal.toReal_mono (by simp : (1 : ℝ≥0∞) ≠ ∞) hle
+  calc
+    (∫ y in Set.Ici ((a : ℝ) / 2),
+        |printedTailWGammaIntegrand μ a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a)
+        =
+      ∫ y in S, |W y - P y| ∂ gammaFullMeasure a := rfl
+    _ ≤ ∫ y in S, C ∂ gammaFullMeasure a :=
+      MeasureTheory.setIntegral_mono_ae_restrict
+        hleft_int hright_int hmono_restrict
+    _ = (gammaFullMeasure a S).toReal * C := by
+      rw [MeasureTheory.setIntegral_const (μ := gammaFullMeasure a)
+        (s := S) (c := C)]
+      simp [MeasureTheory.measureReal_def, smul_eq_mul]
+    _ ≤ 1 * C := by
+      exact mul_le_mul_of_nonneg_right hmeasure_le_one hC_nonneg
+    _ = ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+      simp [C]
+
+theorem printedTailUpperEventResidueBound_of_realTail
+    (htail : PrintedTailWRealTailResidueBound) :
+    PrintedTailUpperEventResidueBound :=
+  printedTailUpperEventResidueBound_of_pointwise
+    (printedTailUpperEventPointwiseResidueBound_of_realTail htail)
 
 theorem printedTailGammaTruncationErrorBound_of_upperEvent
     (hupper : PrintedTailUpperEventTruncationBound) :
