@@ -8,6 +8,7 @@ import Prop52.Theorem
 import Prop52.Printed
 import Prop52.GammaMoment
 import Prop52.GammaReal
+import Prop52.GammaRetain
 import Prop52.Mid
 import Prop52.MidNormalization
 import Prop52.MidInterval
