@@ -106,6 +106,188 @@ theorem gammaWeight_mul_six_sub_eq_pred
   rw [hfac, hpow_s]
   field_simp [hpow6, hpow6s, hfac_den_ne, hasubQ]
 
+theorem gammaWeight_zero (a : Nat) :
+    gammaWeight a 0 = 1 := by
+  unfold gammaWeight
+  rw [show a - 0 - 1 = a - 1 by omega]
+  field_simp [factorial_cast_ne (a - 1)]
+
+theorem gammaWeight_succ_eq_mul_inv_six_sub
+    {a s : Nat} (hslt : s + 1 < a) :
+    gammaWeight a (s + 1) =
+      gammaWeight a s * (1 / (6 * ((a : ℚ) - (s + 1 : Nat)))) := by
+  have hrec := gammaWeight_mul_six_sub_eq_pred
+    (a := a) (s := s + 1) (by omega : 1 ≤ s + 1) hslt
+  rw [show s + 1 - 1 = s by omega] at hrec
+  have hden : 6 * ((a : ℚ) - (s + 1 : Nat)) ≠ 0 := by
+    have hsQ : ((s + 1 : Nat) : ℚ) < a := by exact_mod_cast hslt
+    nlinarith
+  have hden' : (a : ℚ) - (s + 1 : Nat) ≠ 0 := by
+    have hsQ : ((s + 1 : Nat) : ℚ) < a := by exact_mod_cast hslt
+    nlinarith
+  calc
+    gammaWeight a (s + 1)
+        = (gammaWeight a (s + 1) *
+            (6 * ((a : ℚ) - (s + 1 : Nat)))) /
+            (6 * ((a : ℚ) - (s + 1 : Nat))) := by
+            field_simp [hden, hden']
+    _ = gammaWeight a s /
+            (6 * ((a : ℚ) - (s + 1 : Nat))) := by
+            rw [hrec]
+    _ = gammaWeight a s *
+            (1 / (6 * ((a : ℚ) - (s + 1 : Nat)))) := by
+            ring
+
+private theorem gammaWeight_small_step_le_scaled_x2
+    {a s : Nat} (ha : 150 ≤ a) (hs : s ≤ a / 8) :
+    1 / (6 * ((a : ℚ) - (s + 1 : Nat))) ≤
+      (3 / 10 : ℚ) * printedTailX2 a := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hs8 : 8 * s ≤ a := by omega
+  have hs8Q : (8 * s : ℚ) ≤ a := by exact_mod_cast hs8
+  have hden1 : 0 < 6 * ((a : ℚ) - (s + 1 : Nat)) := by
+    push_cast
+    nlinarith
+  have hden2 : 0 < 5 * (a : ℚ) := by nlinarith
+  have hden_le :
+      5 * (a : ℚ) ≤ 6 * ((a : ℚ) - (s + 1 : Nat)) := by
+    push_cast
+    nlinarith
+  unfold printedTailX2
+  rw [show (3 / 10 : ℚ) * (2 / (3 * (a : ℚ))) =
+      1 / (5 * (a : ℚ)) by
+        field_simp [(by nlinarith : (3 * (a : ℚ)) ≠ 0),
+          (by nlinarith : (5 * (a : ℚ)) ≠ 0)]
+        ring]
+  exact one_div_le_one_div_of_le hden2 hden_le
+
+private theorem gammaWeight_large_step_le_x2
+    {a s : Nat} (ha : 150 ≤ a) (hsR : s + 1 ≤ printedTailR0 a) :
+    1 / (6 * ((a : ℚ) - (s + 1 : Nat))) ≤
+      printedTailX2 a := by
+  have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+  have hnat : a ≤ 4 * (a - (s + 1)) := by
+    unfold printedTailR0 printedTailP at hsR
+    omega
+  have hq : (a : ℚ) ≤ 4 * ((a - (s + 1) : Nat) : ℚ) := by
+    exact_mod_cast hnat
+  have hsub_cast :
+      ((a - (s + 1) : Nat) : ℚ) = (a : ℚ) - (s + 1 : Nat) := by
+    rw [Nat.cast_sub (by omega : s + 1 ≤ a)]
+  have hden1 : 0 < 6 * ((a : ℚ) - (s + 1 : Nat)) := by
+    rw [← hsub_cast]
+    have hsub_pos : 0 < a - (s + 1) := by
+      unfold printedTailR0 printedTailP at hsR
+      omega
+    positivity
+  have hden2 : 0 < 3 * (a : ℚ) := by nlinarith
+  unfold printedTailX2
+  rw [div_le_iff₀ hden1]
+  field_simp [hden2.ne']
+  rw [← hsub_cast]
+  nlinarith
+
+private theorem gammaWeight_le_x2_minPow
+    {a : Nat} (ha : 150 ≤ a) :
+    ∀ s : Nat, s ≤ printedTailR0 a →
+      gammaWeight a s ≤
+        (3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+          (printedTailX2 a)^s
+  | 0, _hs => by
+      simp [gammaWeight_zero]
+  | s + 1, hsR => by
+      have hsRpred : s ≤ printedTailR0 a := by omega
+      have hslt : s + 1 < a := by
+        unfold printedTailR0 printedTailP at hsR
+        omega
+      have ih := gammaWeight_le_x2_minPow ha s hsRpred
+      have hstep_eq := gammaWeight_succ_eq_mul_inv_six_sub
+        (a := a) (s := s) hslt
+      have hx2_nonneg : 0 ≤ printedTailX2 a := by
+        unfold printedTailX2
+        positivity
+      have hpow_nonneg :
+          0 ≤ (printedTailX2 a)^s := pow_nonneg hx2_nonneg s
+      rw [hstep_eq]
+      by_cases hsmall : s ≤ a / 8
+      · have hstep := gammaWeight_small_step_le_scaled_x2
+          (a := a) (s := s) ha hsmall
+        have hstep_nonneg :
+            0 ≤ 1 / (6 * ((a : ℚ) - (s + 1 : Nat))) := by
+          have hsQ : ((s + 1 : Nat) : ℚ) < a := by exact_mod_cast hslt
+          have hdenpos : 0 < 6 * ((a : ℚ) - (s + 1 : Nat)) := by
+            nlinarith
+          exact (one_div_nonneg.mpr hdenpos.le)
+        have hA_nonneg :
+            0 ≤ (3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+              (printedTailX2 a)^s := by
+          exact mul_nonneg (by positivity) hpow_nonneg
+        have hmul :
+            gammaWeight a s *
+                (1 / (6 * ((a : ℚ) - (s + 1 : Nat)))) ≤
+              ((3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+                  (printedTailX2 a)^s) *
+                ((3 / 10 : ℚ) * printedTailX2 a) := by
+          exact mul_le_mul ih hstep hstep_nonneg hA_nonneg
+        have hmin_s : min s (a / 8 + 1) = s := by omega
+        have hmin_succ : min (s + 1) (a / 8 + 1) = s + 1 := by omega
+        calc
+          gammaWeight a s *
+              (1 / (6 * ((a : ℚ) - (s + 1 : Nat))))
+              ≤
+            ((3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+                (printedTailX2 a)^s) *
+              ((3 / 10 : ℚ) * printedTailX2 a) := hmul
+          _ =
+            (3 / 10 : ℚ)^(min (s + 1) (a / 8 + 1)) *
+              (printedTailX2 a)^(s + 1) := by
+              rw [hmin_s, hmin_succ, pow_succ, pow_succ]
+              ring
+      · have hstep := gammaWeight_large_step_le_x2
+          (a := a) (s := s) ha hsR
+        have hstep_nonneg :
+            0 ≤ 1 / (6 * ((a : ℚ) - (s + 1 : Nat))) := by
+          have hsQ : ((s + 1 : Nat) : ℚ) < a := by exact_mod_cast hslt
+          have hdenpos : 0 < 6 * ((a : ℚ) - (s + 1 : Nat)) := by
+            nlinarith
+          exact (one_div_nonneg.mpr hdenpos.le)
+        have hA_nonneg :
+            0 ≤ (3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+              (printedTailX2 a)^s := by
+          exact mul_nonneg (by positivity) hpow_nonneg
+        have hmul :
+            gammaWeight a s *
+                (1 / (6 * ((a : ℚ) - (s + 1 : Nat)))) ≤
+              ((3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+                  (printedTailX2 a)^s) *
+                printedTailX2 a := by
+          exact mul_le_mul ih hstep hstep_nonneg hA_nonneg
+        have hmin_s : min s (a / 8 + 1) = a / 8 + 1 := by omega
+        have hmin_succ : min (s + 1) (a / 8 + 1) = a / 8 + 1 := by omega
+        calc
+          gammaWeight a s *
+              (1 / (6 * ((a : ℚ) - (s + 1 : Nat))))
+              ≤
+            ((3 / 10 : ℚ)^(min s (a / 8 + 1)) *
+                (printedTailX2 a)^s) *
+              printedTailX2 a := hmul
+          _ =
+            (3 / 10 : ℚ)^(min (s + 1) (a / 8 + 1)) *
+              (printedTailX2 a)^(s + 1) := by
+              rw [hmin_s, hmin_succ, pow_succ]
+              ring
+
+/-- Tail-side gamma-weight comparison used in the final term of
+`truncationResidueRhs`: after `S=floor(a/8)`, the Gamma weight is smaller than
+the `x₂` coefficient weight by a factor `(3/10)^(S+1)`. -/
+theorem gammaWeight_le_x2_tailFactor
+    {a s : Nat} (ha : 150 ≤ a)
+    (hsR : s ≤ printedTailR0 a) (hsS : a / 8 + 1 ≤ s) :
+    gammaWeight a s ≤
+      (3 / 10 : ℚ)^(a / 8 + 1) * (printedTailX2 a)^s := by
+  have h := gammaWeight_le_x2_minPow (a := a) ha s hsR
+  rwa [show min s (a / 8 + 1) = a / 8 + 1 by omega] at h
+
 /-- Coefficient recurrence for the low exponential `E=exp(-L)`, with the
 minus sign exposed in the form used by the discrete integration-by-parts
 calculation. -/
