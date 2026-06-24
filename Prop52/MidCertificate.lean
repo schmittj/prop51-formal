@@ -163,4 +163,41 @@ theorem midUNormFast_neg_rows_14_80 (a i : Nat)
   · exact midUNormFast_neg_rows_14_73 a i ha_lo h73 hi
   · exact midUNormFast_neg_rows_74_80 a i (by omega) ha_hi hi
 
+theorem mid_N_eq_M_add_length_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    N μ = M a + μ.length := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  unfold N
+  rw [Prop51.sum_map_add_one, hsum]
+
+theorem mid_partition_length_pos {a : Nat} {μ : List Nat}
+    (ha : 14 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
+    1 ≤ μ.length := by
+  obtain ⟨hsum, _hpos⟩ := hμ
+  cases μ with
+  | nil =>
+      simp [M] at hsum
+      omega
+  | cons m μ =>
+      simp
+
+theorem midUNormFast_neg_rows_14_80_of_partition (a : Nat) (μ : List Nat)
+    (ha_lo : 14 ≤ a) (ha_hi : a ≤ 80)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    midUNormFast a (N μ) < 0 := by
+  have hN := mid_N_eq_M_add_length_of_partition (a := a) (μ := μ) hμ
+  have hlen_pos := mid_partition_length_pos (a := a) (μ := μ) ha_lo hμ
+  obtain ⟨hsum, hpos⟩ := hμ
+  have hlen_le := Prop51.length_le_sum μ hpos
+  let i := μ.length - 1
+  have hi : i < M a := by
+    dsimp [i]
+    rw [hsum] at hlen_le
+    omega
+  have hN' : N μ = M a + 1 + i := by
+    dsimp [i]
+    omega
+  rw [hN']
+  exact midUNormFast_neg_rows_14_80 a i ha_lo ha_hi hi
+
 end Prop52
