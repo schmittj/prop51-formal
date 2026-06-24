@@ -151,6 +151,81 @@ theorem integral_gammaTailMeasure_eq_integral_Ici_gammaPDF_toReal_smul
     rw [ProbabilityTheory.gammaPDF_of_neg hyneg]
     simp [Set.indicator, hynot]
 
+private theorem gammaPDF_toReal_mul_invPow_eq_gammaMonomial_integrand
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a)
+    {y : ℝ} (hy : 0 < y) :
+    (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal *
+        (1 / (6 * y))^r =
+      (1 / (6 : ℝ)^r) *
+        (1 / ((Nat.factorial (a - 3) : Nat) : ℝ)) *
+          (y ^ (((a - r - 3 : Nat) : ℝ)) * Real.exp (-y)) := by
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hy.le]
+  rw [ENNReal.toReal_ofReal]
+  · simp only [Real.one_rpow, one_mul]
+    have hshape : (((a - 2 : Nat) : ℝ)) = ((a - 3 : Nat) : ℝ) + 1 := by
+      rw [show a - 2 = (a - 3) + 1 by omega]
+      norm_num
+    rw [hshape]
+    rw [Real.Gamma_nat_eq_factorial (a - 3)]
+    have hpowA : y ^ (((a - 3 : Nat) : ℝ) + 1 - 1) = y ^ (a - 3) := by
+      rw [show (((a - 3 : Nat) : ℝ) + 1 - 1) =
+        ((a - 3 : Nat) : ℝ) by ring]
+      exact Real.rpow_natCast y (a - 3)
+    rw [hpowA]
+    have hsplit : a - 3 = (a - r - 3) + r := by
+      unfold printedTailP at hr
+      omega
+    rw [hsplit]
+    rw [pow_add]
+    rw [show y ^ (((a - r - 3 : Nat) : ℝ)) = y ^ (a - r - 3) by
+      exact Real.rpow_natCast y (a - r - 3)]
+    field_simp [pow_ne_zero r hy.ne', pow_ne_zero (a - r - 3) hy.ne',
+      pow_ne_zero (a - r - 3 + r) hy.ne', factorial_cast_real_ne (a - 3),
+      pow_ne_zero r (by norm_num : (6 : ℝ) ≠ 0)]
+    rw [← mul_pow y (1 / (y * 6)) r]
+    have hy6 : y * (1 / (y * 6)) = (1 / 6 : ℝ) := by
+      field_simp [hy.ne']
+    rw [hy6]
+    rw [show (1 / 6 : ℝ)^r * 6^r = ((1 / 6 : ℝ) * 6)^r by
+      rw [mul_pow]]
+    norm_num
+  · positivity
+
+/-- The actual Gamma-tail expectation of the inverse monomial `(1/(6Y))^r`
+is the normalized monomial moment used in the algebraic certificate layer. -/
+theorem integral_invPow_gammaTailMeasure_eq_gammaMonomialMoment
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a) :
+    (∫ y, (1 / (6 * y))^r ∂ gammaTailMeasure a) =
+      gammaMonomialMoment (a - 2) r := by
+  let C : ℝ := (1 / (6 : ℝ)^r) *
+    (1 / ((Nat.factorial (a - 3) : Nat) : ℝ))
+  calc
+    (∫ y, (1 / (6 * y))^r ∂ gammaTailMeasure a)
+        = ∫ y in Set.Ici 0,
+            (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal •
+              (1 / (6 * y))^r := by
+          rw [integral_gammaTailMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+    _ = ∫ y in Set.Ioi 0,
+            (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal •
+              (1 / (6 * y))^r := by
+          rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+    _ = ∫ y in Set.Ioi 0,
+            C * (y ^ (((a - r - 3 : Nat) : ℝ)) * Real.exp (-y)) := by
+          refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun y hy => ?_
+          dsimp [C]
+          simpa [smul_eq_mul, mul_assoc] using
+            gammaPDF_toReal_mul_invPow_eq_gammaMonomial_integrand
+              (a := a) (r := r) ha hr (Set.mem_Ioi.mp hy)
+    _ = C * ∫ y in Set.Ioi 0,
+            y ^ (((a - r - 3 : Nat) : ℝ)) * Real.exp (-y) := by
+          rw [MeasureTheory.integral_const_mul]
+    _ = gammaMonomialMoment (a - 2) r := by
+          dsimp [C]
+          unfold gammaMonomialMoment
+          have hshape : a - 2 - r - 1 = a - r - 3 := by omega
+          have hden : a - 2 - 1 = a - 3 := by omega
+          rw [hshape, hden]
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by
