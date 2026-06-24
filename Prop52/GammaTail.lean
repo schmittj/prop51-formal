@@ -233,4 +233,123 @@ theorem gammaFullMeasure_Iic_lambda_mul_shape_le
     _ = ENNReal.ofReal ((lambda * Real.exp (1 - lambda))^b) := by
           rw [hreal]
 
+/-- Scalar monotonicity estimate behind the `9/10` Gamma-tail budget.  This
+avoids invoking calculus: for `A=4/7`, the inequality follows from
+`lambda / A <= exp(lambda-A)`, itself a direct consequence of `1+x <= exp x`. -/
+theorem lambda_mul_exp_one_sub_le_nine_tenths
+    {lambda : ℝ} (hlambda_le : lambda ≤ 4 / 7) :
+    lambda * Real.exp (1 - lambda) ≤ 9 / 10 := by
+  let A : ℝ := 4 / 7
+  have hApos : 0 < A := by norm_num [A]
+  have hAle_one : A ≤ 1 := by norm_num [A]
+  have hdelta_nonneg : 0 ≤ A - lambda := by
+    dsimp [A] at hlambda_le ⊢
+    linarith
+  have hdelta_div_ge : A - lambda ≤ (A - lambda) / A := by
+    rw [le_div_iff₀ hApos]
+    nlinarith
+  have hone_sub :
+      1 - (A - lambda) / A ≤ 1 - (A - lambda) := by
+    linarith
+  have hexp :
+      1 - (A - lambda) ≤ Real.exp (-(A - lambda)) := by
+    have h := Real.add_one_le_exp (-(A - lambda))
+    linarith
+  have hratio :
+      lambda / A ≤ Real.exp (lambda - A) := by
+    calc
+      lambda / A = 1 - (A - lambda) / A := by
+        field_simp [hApos.ne']
+        ring
+      _ ≤ 1 - (A - lambda) := hone_sub
+      _ ≤ Real.exp (-(A - lambda)) := hexp
+      _ = Real.exp (lambda - A) := by
+        congr 1
+        ring
+  have hlambda_exp : lambda ≤ A * Real.exp (lambda - A) := by
+    have htmp : lambda ≤ Real.exp (lambda - A) * A := by
+      rwa [div_le_iff₀ hApos] at hratio
+    simpa [mul_comm] using htmp
+  have hmain :
+      lambda * Real.exp (1 - lambda) ≤
+        A * Real.exp (1 - A) := by
+    calc
+      lambda * Real.exp (1 - lambda)
+          ≤ (A * Real.exp (lambda - A)) *
+              Real.exp (1 - lambda) :=
+            mul_le_mul_of_nonneg_right hlambda_exp (Real.exp_pos _).le
+      _ = A * Real.exp (1 - A) := by
+        rw [mul_assoc, ← Real.exp_add]
+        congr 1
+        dsimp [A]
+        ring_nf
+  have hendpoint :
+      A * Real.exp (1 - A) < 9 / 10 := by
+    dsimp [A]
+    have h := real_exp_three_sevenths_lt_sixty_three_fortieths
+    nlinarith
+  exact hmain.trans hendpoint.le
+
+/-- Shifted-shape lower-tail estimate used for the low-degree part of
+`W_{\le r_0}` in the Taylor--Gamma truncation split.  For `s <= S=floor(a/8)`,
+the shape `a-s` is at least `a-S`, and the Chernoff base is bounded by `9/10`. -/
+theorem gammaFullMeasure_shifted_Iio_half_le_nine_tenths_pow
+    {a s : Nat} (ha : 150 ≤ a) (hs : s ≤ a / 8) :
+    gammaFullMeasure (a - s) (Set.Iio ((a : ℝ) / 2)) ≤
+      ENNReal.ofReal ((9 / 10 : ℝ)^(a - a / 8)) := by
+  have hb_one : 1 ≤ a - s := by omega
+  let lambda : ℝ := (a : ℝ) / (2 * ((a - s : Nat) : ℝ))
+  have hb_pos : (0 : ℝ) < ((a - s : Nat) : ℝ) := by
+    exact_mod_cast hb_one
+  have hlambda_pos : 0 < lambda := by
+    dsimp [lambda]
+    positivity
+  have hlambda_le : lambda ≤ 4 / 7 := by
+    have hnat : 7 * a ≤ 8 * (a - s) := by
+      omega
+    have hreal : (7 : ℝ) * (a : ℝ) ≤ 8 * ((a - s : Nat) : ℝ) := by
+      exact_mod_cast hnat
+    dsimp [lambda]
+    rw [div_le_iff₀ (by positivity : (0 : ℝ) < 2 * ((a - s : Nat) : ℝ))]
+    nlinarith
+  have hlambda_lt_one : lambda < 1 :=
+    lt_of_le_of_lt hlambda_le (by norm_num : (4 / 7 : ℝ) < 1)
+  have hlambda_mul_shape :
+      lambda * ((a - s : Nat) : ℝ) = (a : ℝ) / 2 := by
+    dsimp [lambda]
+    field_simp [ne_of_gt hb_pos]
+  have hsubset :
+      Set.Iio ((a : ℝ) / 2) ⊆
+        Set.Iic (lambda * ((a - s : Nat) : ℝ)) := by
+    intro y hy
+    rw [hlambda_mul_shape]
+    exact le_of_lt (Set.mem_Iio.mp hy)
+  have hchernoff :=
+    gammaFullMeasure_Iic_lambda_mul_shape_le
+      (b := a - s) hb_one hlambda_pos hlambda_lt_one
+  have hbase :
+      lambda * Real.exp (1 - lambda) ≤ 9 / 10 :=
+    lambda_mul_exp_one_sub_le_nine_tenths hlambda_le
+  have hpow_base :
+      (lambda * Real.exp (1 - lambda))^(a - s) ≤
+        (9 / 10 : ℝ)^(a - s) :=
+    pow_le_pow_left₀ (by positivity) hbase (a - s)
+  have hpow_exp :
+      (9 / 10 : ℝ)^(a - s) ≤
+        (9 / 10 : ℝ)^(a - a / 8) :=
+    pow_le_pow_of_le_one (by norm_num : (0 : ℝ) ≤ 9 / 10)
+      (by norm_num : (9 / 10 : ℝ) ≤ 1)
+      (by omega : a - a / 8 ≤ a - s)
+  calc
+    gammaFullMeasure (a - s) (Set.Iio ((a : ℝ) / 2))
+        ≤ gammaFullMeasure (a - s)
+            (Set.Iic (lambda * ((a - s : Nat) : ℝ))) :=
+          measure_mono hsubset
+    _ ≤ ENNReal.ofReal
+          ((lambda * Real.exp (1 - lambda))^(a - s)) := hchernoff
+    _ ≤ ENNReal.ofReal ((9 / 10 : ℝ)^(a - s)) :=
+          ENNReal.ofReal_le_ofReal hpow_base
+    _ ≤ ENNReal.ofReal ((9 / 10 : ℝ)^(a - a / 8)) :=
+          ENNReal.ofReal_le_ofReal hpow_exp
+
 end Prop52
