@@ -10,11 +10,13 @@ and algebraic identities needed for that integration-by-parts step.
 
 import Prop52.GammaTruncation
 import Mathlib.MeasureTheory.Integral.IntegrableOn
+import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 
 namespace Prop52
 
 open Finset
 open MeasureTheory
+open Filter
 
 /-- Real derivative polynomial of the low logarithm `L`. -/
 noncomputable def printedTailLDerivReal
@@ -276,5 +278,36 @@ theorem gammaIBP_integral_W_eq_bracket_of_derivative_integral_zero
     exact MeasureTheory.integral_sub hbracket hW
   rw [hderiv_sub, hsub] at hzero
   linarith
+
+/-- The derivative integral vanishes once the two endpoint conditions for the
+Gamma integration-by-parts envelope have been discharged.  This packages the
+standard improper FTC step and leaves only the analytic endpoint estimates as
+explicit hypotheses. -/
+theorem gammaIBP_derivative_integral_zero_of_tendsto
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a)
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0)
+    (hderivInt :
+      IntegrableOn (gammaIBPDerivativeIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (htop : Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0)) :
+    (∫ x in Set.Ioi (0 : ℝ),
+      gammaIBPDerivativeIntegrand μ a x) = 0 := by
+  have hderiv : ∀ x ∈ Set.Ioi (0 : ℝ),
+      HasDerivAt (fun z => gammaIBPEnvelope μ a z)
+        (gammaIBPDerivativeIntegrand μ a x) x := by
+    intro x hx
+    unfold gammaIBPDerivativeIntegrand
+    exact hasDerivAt_gammaIBPEnvelope_bracket μ ha
+      (ne_of_gt (Set.mem_Ioi.mp hx))
+  have hFTC := MeasureTheory.integral_Ioi_of_hasDerivAt_of_tendsto
+    (a := (0 : ℝ)) (f := fun x => gammaIBPEnvelope μ a x)
+    (f' := gammaIBPDerivativeIntegrand μ a) (m := 0)
+    hcont hderiv hderivInt htop
+  have hzero : gammaIBPEnvelope μ a 0 = 0 := by
+    unfold gammaIBPEnvelope
+    have hpow : (0 : ℝ)^(a - 1) = 0 := by
+      exact zero_pow (by omega : a - 1 ≠ 0)
+    simp [hpow]
+  simpa [hzero] using hFTC
 
 end Prop52
