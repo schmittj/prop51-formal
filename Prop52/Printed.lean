@@ -5154,6 +5154,22 @@ def printedTailJDerivPointSum (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
   ∑ r ∈ Finset.range (printedTailP a + 1),
     (r : ℚ) * kCoeff μ r * x^r
 
+/-- Pointwise form of the truncation proof's comparison `J(x) <= 2 L(x)`
+for nonnegative `x`. -/
+theorem printedTailJPointSum_le_two_LPointSum
+    {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
+    {x : ℚ} (hx : 0 ≤ x) :
+    printedTailJPointSum μ a x ≤ 2 * printedTailLPointSum μ a x := by
+  unfold printedTailJPointSum printedTailLPointSum
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun r _hr => ?_
+  calc
+    kCoeff μ r * x^r ≤ (2 * hCoeff μ r) * x^r :=
+      mul_le_mul_of_nonneg_right
+        (kCoeff_le_two_hCoeff_of_partition (a := a) (μ := μ) hμ r)
+        (pow_nonneg hx r)
+    _ = 2 * (hCoeff μ r * x^r) := by ring
+
 private theorem factorial_pred_le_pow_of_le (p : Nat) :
     ∀ r : Nat, 2 ≤ r → r ≤ p → (r - 1).factorial ≤ p^(r - 2)
   | 0, hr, _ => by omega

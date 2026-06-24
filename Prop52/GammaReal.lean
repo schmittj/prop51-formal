@@ -105,6 +105,23 @@ theorem real_exp_neg_gammaExponentBound_gt
     linarith
   exact real_exp_neg_thirteen_tenths_gt.trans (Real.exp_strictMono hneg)
 
+/-- Scalar inequality behind the truncation proof's pointwise estimate
+`exp(-L) * (1 + J) <= 2` once `0 <= L` and `J <= 2L`. -/
+theorem one_add_two_mul_mul_exp_neg_le_two {u : ℝ} (hu : 0 ≤ u) :
+    (1 + 2 * u) * Real.exp (-u) ≤ 2 := by
+  have h1 : 1 ≤ Real.exp u := Real.one_le_exp hu
+  have h2 : 2 * u ≤ Real.exp u := Real.two_mul_le_exp
+  have hsum : 1 + 2 * u ≤ 2 * Real.exp u := by
+    nlinarith
+  have hexp_neg_nonneg : 0 ≤ Real.exp (-u) := (Real.exp_pos _).le
+  have hmul := mul_le_mul_of_nonneg_right hsum hexp_neg_nonneg
+  calc
+    (1 + 2 * u) * Real.exp (-u)
+        ≤ (2 * Real.exp u) * Real.exp (-u) := hmul
+    _ = 2 := by
+      rw [mul_assoc, ← Real.exp_add]
+      simp
+
 /-- Jensen plus the scalar exponential endpoint, in the prefactored form used
 by the printed Gamma-margin proof. -/
 theorem gammaPrefactor_integral_exp_neg_lower_of_mean_le_bound

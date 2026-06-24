@@ -85,6 +85,9 @@ function. -/
 noncomputable def printedTailLReal (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
   ∑ r ∈ Finset.Ico 1 (printedTailP a + 1), (hCoeff μ r : ℝ) * x^r
 
+noncomputable def printedTailJReal (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  ∑ r ∈ Finset.Ico 1 (printedTailP a + 1), (kCoeff μ r : ℝ) * x^r
+
 theorem printedTailLReal_nonneg
     {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
     {x : ℝ} (hx : 0 ≤ x) :
@@ -95,6 +98,32 @@ theorem printedTailLReal_nonneg
     ((Rat.cast_nonneg (K := ℝ)).2 (hCoeff_nonneg_of_partition hμ r))
     (pow_nonneg hx r)
 
+theorem printedTailJReal_nonneg
+    (μ : List Nat) (a : Nat) {x : ℝ} (hx : 0 ≤ x) :
+    0 ≤ printedTailJReal μ a x := by
+  unfold printedTailJReal
+  refine Finset.sum_nonneg fun r _hr => ?_
+  exact mul_nonneg
+    ((Rat.cast_nonneg (K := ℝ)).2 (kCoeff_nonneg μ r))
+    (pow_nonneg hx r)
+
+theorem printedTailJReal_le_two_LReal
+    {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
+    {x : ℝ} (hx : 0 ≤ x) :
+    printedTailJReal μ a x ≤ 2 * printedTailLReal μ a x := by
+  unfold printedTailJReal printedTailLReal
+  rw [Finset.mul_sum]
+  refine Finset.sum_le_sum fun r _hr => ?_
+  have hkQ := kCoeff_le_two_hCoeff_of_partition
+    (a := a) (μ := μ) hμ r
+  have hkR : (kCoeff μ r : ℝ) ≤ 2 * (hCoeff μ r : ℝ) := by
+    have hcast := (Rat.cast_le (K := ℝ)).2 hkQ
+    simpa using hcast
+  calc
+    (kCoeff μ r : ℝ) * x^r ≤ (2 * (hCoeff μ r : ℝ)) * x^r :=
+      mul_le_mul_of_nonneg_right hkR (pow_nonneg hx r)
+    _ = 2 * ((hCoeff μ r : ℝ) * x^r) := by ring
+
 theorem real_exp_neg_printedTailLReal_le_one
     {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
     {x : ℝ} (hx : 0 ≤ x) :
@@ -102,6 +131,44 @@ theorem real_exp_neg_printedTailLReal_le_one
   have hL := printedTailLReal_nonneg (a := a) (μ := μ) hμ hx
   have hneg : -(printedTailLReal μ a x) ≤ 0 := by linarith
   simpa using (Real.exp_le_exp_of_le hneg)
+
+/-- Pointwise truncation estimate from the paper:
+`|W(t)| = |exp(-L(t)) (1-J(t))| <= 2` for `t >= 0`. -/
+theorem abs_exp_neg_L_mul_one_sub_JReal_le_two
+    {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
+    {x : ℝ} (hx : 0 ≤ x) :
+    |Real.exp (-(printedTailLReal μ a x)) *
+        (1 - printedTailJReal μ a x)| ≤ 2 := by
+  have hLnonneg := printedTailLReal_nonneg (a := a) (μ := μ) hμ hx
+  have hJnonneg := printedTailJReal_nonneg μ a hx
+  have hJle := printedTailJReal_le_two_LReal
+    (a := a) (μ := μ) hμ hx
+  have habsJ :
+      |1 - printedTailJReal μ a x| ≤
+        1 + printedTailJReal μ a x := by
+    refine abs_le.mpr ⟨?_, ?_⟩ <;> linarith
+  have hexp_nonneg :
+      0 ≤ Real.exp (-(printedTailLReal μ a x)) := (Real.exp_pos _).le
+  calc
+    |Real.exp (-(printedTailLReal μ a x)) *
+        (1 - printedTailJReal μ a x)|
+        =
+      Real.exp (-(printedTailLReal μ a x)) *
+        |1 - printedTailJReal μ a x| := by
+        rw [abs_mul, abs_of_nonneg hexp_nonneg]
+    _ ≤
+      Real.exp (-(printedTailLReal μ a x)) *
+        (1 + printedTailJReal μ a x) :=
+        mul_le_mul_of_nonneg_left habsJ hexp_nonneg
+    _ ≤
+      Real.exp (-(printedTailLReal μ a x)) *
+        (1 + 2 * printedTailLReal μ a x) := by
+        exact mul_le_mul_of_nonneg_left (by linarith) hexp_nonneg
+    _ =
+      (1 + 2 * printedTailLReal μ a x) *
+        Real.exp (-(printedTailLReal μ a x)) := by ring
+    _ ≤ 2 :=
+      one_add_two_mul_mul_exp_neg_le_two hLnonneg
 
 /-- Real version of the retained Gamma bracket lower polynomial. -/
 noncomputable def gammaRetainBracketLowerReal
