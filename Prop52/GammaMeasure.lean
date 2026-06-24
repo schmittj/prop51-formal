@@ -117,6 +117,40 @@ theorem ae_nonneg_gammaTailMeasure (a : Nat) :
       exact ProbabilityTheory.lintegral_gammaPDF_of_nonpos (x := 0)
         (a := ((a - 2 : Nat) : ℝ)) (r := 1) le_rfl)
 
+/-- Unfold integrals against the Gamma-tail measure to integrals against
+Lebesgue measure with the Gamma density. -/
+theorem integral_gammaTailMeasure_eq_integral_gammaPDF_toReal_smul
+    (a : Nat) (g : ℝ → ℝ) :
+    (∫ y, g y ∂ gammaTailMeasure a) =
+      ∫ y, (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal •
+        g y := by
+  unfold gammaTailMeasure ProbabilityTheory.gammaMeasure
+  rw [integral_withDensity_eq_integral_toReal_smul]
+  · unfold ProbabilityTheory.gammaPDF
+    exact (ProbabilityTheory.measurable_gammaPDFReal (((a - 2 : Nat) : ℝ)) 1).ennreal_ofReal
+  · filter_upwards with y
+    simp [ProbabilityTheory.gammaPDF]
+
+/-- Same density conversion, restricted to the support `[0,∞)` of the Gamma
+law. -/
+theorem integral_gammaTailMeasure_eq_integral_Ici_gammaPDF_toReal_smul
+    (a : Nat) (g : ℝ → ℝ) :
+    (∫ y, g y ∂ gammaTailMeasure a) =
+      ∫ y in Set.Ici 0,
+        (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal •
+          g y := by
+  rw [integral_gammaTailMeasure_eq_integral_gammaPDF_toReal_smul]
+  rw [← MeasureTheory.integral_indicator measurableSet_Ici]
+  refine MeasureTheory.integral_congr_ae ?_
+  filter_upwards with y
+  by_cases hy : 0 ≤ y
+  · have hymem : y ∈ Set.Ici (0 : ℝ) := hy
+    simp [Set.indicator, hymem]
+  · have hyneg : y < 0 := lt_of_not_ge hy
+    have hynot : y ∉ Set.Ici (0 : ℝ) := hy
+    rw [ProbabilityTheory.gammaPDF_of_neg hyneg]
+    simp [Set.indicator, hynot]
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by
