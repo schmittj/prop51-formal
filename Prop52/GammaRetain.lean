@@ -179,6 +179,63 @@ def gammaRetainBracketLower (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
     ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
       gammaRetainBracketCoeff μ j * x^(j + 1)
 
+/-- The coefficient-aligned low Gamma bracket from the integration-by-parts
+identity:
+
+`M x + 6 x^2 L'(x) - J(x)`.
+
+It is written with the same `j+1` indexing as `gammaRetainBracketLower`.
+The final `k_{p+1}` term is absent here because the low polynomial `J` stops
+at degree `p = printedTailP a`. -/
+def gammaLowBracketAligned (μ : List Nat) (a : Nat) (x : ℚ) : ℚ :=
+  ((M a : ℚ) - kCoeff μ 1) * x +
+    (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+      6 * (j : ℚ) * hCoeff μ j * x^(j + 1)) -
+    ∑ j ∈ Finset.Ico 1 (printedTailP a),
+      kCoeff μ (j + 1) * x^(j + 1)
+
+/-- The retained bracket differs from the full low bracket only by the omitted
+nonnegative final low-`J` term.  This is the Lean record of the small
+indexing divergence from the paper prose: the retained lower polynomial also
+subtracts `k_{p+1}` in order to keep a uniform coefficient formula. -/
+theorem gammaRetainBracketLower_add_final_eq_lowBracketAligned
+    (μ : List Nat) (a : Nat) (x : ℚ) (ha : 150 ≤ a) :
+    gammaRetainBracketLower μ a x +
+        kCoeff μ (printedTailP a + 1) * x^(printedTailP a + 1) =
+      gammaLowBracketAligned μ a x := by
+  let p : Nat := printedTailP a
+  let F : Nat → ℚ := fun j => 6 * (j : ℚ) * hCoeff μ j * x^(j + 1)
+  let G : Nat → ℚ := fun j => kCoeff μ (j + 1) * x^(j + 1)
+  have hp : 1 ≤ p := by
+    dsimp [p, printedTailP]
+    have : 2 ≤ a := by omega
+    omega
+  have hretain_sum :
+      (∑ j ∈ Finset.Ico 1 (p + 1),
+          gammaRetainBracketCoeff μ j * x^(j + 1)) =
+        ∑ j ∈ Finset.Ico 1 (p + 1), (F j - G j) := by
+    refine Finset.sum_congr rfl fun j _hj => ?_
+    dsimp [F, G, gammaRetainBracketCoeff]
+    ring
+  have hGsplit :
+      (∑ j ∈ Finset.Ico 1 (p + 1), G j) =
+        (∑ j ∈ Finset.Ico 1 p, G j) + G p := by
+    simpa using Finset.sum_Ico_succ_top hp G
+  have hretain_sum' :
+      (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+          gammaRetainBracketCoeff μ j * x^(j + 1)) =
+        ∑ j ∈ Finset.Ico 1 (printedTailP a + 1), (F j - G j) := by
+    simpa [p] using hretain_sum
+  have hGsplit' :
+      (∑ j ∈ Finset.Ico 1 (printedTailP a + 1), G j) =
+        (∑ j ∈ Finset.Ico 1 (printedTailP a), G j) +
+          G (printedTailP a) := by
+    simpa [p] using hGsplit
+  unfold gammaRetainBracketLower gammaLowBracketAligned
+  rw [hretain_sum', Finset.sum_sub_distrib, hGsplit']
+  dsimp [F, G]
+  ring
+
 /-- The linear coefficient of the retained Gamma bracket is nonnegative. -/
 theorem gammaRetainBracketLinearCoeff_nonneg
     {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
@@ -230,5 +287,28 @@ theorem fiveM_x2_le_gammaRetainBracketLower
           ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
             gammaRetainBracketCoeff μ j * x^(j + 1) := by
           nlinarith
+
+/-- The retained lower bound is indeed below the full low Gamma bracket. -/
+theorem gammaRetainBracketLower_le_lowBracketAligned
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a) {x : ℚ} (hx : 0 ≤ x) :
+    gammaRetainBracketLower μ a x ≤ gammaLowBracketAligned μ a x := by
+  have hfinal :
+      0 ≤ kCoeff μ (printedTailP a + 1) * x^(printedTailP a + 1) :=
+    mul_nonneg (kCoeff_nonneg μ (printedTailP a + 1))
+      (pow_nonneg hx (printedTailP a + 1))
+  have h_eq :=
+    gammaRetainBracketLower_add_final_eq_lowBracketAligned μ a x ha
+  nlinarith
+
+/-- Pointwise low-bracket lower bound in the form used by the Gamma integral:
+the full low bracket dominates the single retained `5M x^2` contribution. -/
+theorem fiveM_x2_le_gammaLowBracketAligned
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) {x : ℚ} (hx : 0 ≤ x) :
+    5 * (M a : ℚ) * x^2 ≤ gammaLowBracketAligned μ a x := by
+  exact (fiveM_x2_le_gammaRetainBracketLower
+    (a := a) (μ := μ) ha hμ hx).trans
+      (gammaRetainBracketLower_le_lowBracketAligned
+        (a := a) (μ := μ) ha (x := x) hx)
 
 end Prop52
