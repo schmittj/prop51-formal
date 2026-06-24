@@ -111,6 +111,30 @@ theorem abs_printedTailWTruncReal_le_WAbsCoeff_sum
         rw [abs_mul, abs_of_nonneg hpow_nonneg]
         exact mul_le_mul homega le_rfl hpow_nonneg hW_nonneg
 
+/-- Termwise absolute bound for the finite Taylor polynomial of `W`, keeping
+the actual `|omega_s|` coefficients.  This is the form used by the lower-tail
+Gamma moment estimates. -/
+theorem abs_printedTailWTruncReal_le_absOmega_sum
+    (μ : List Nat) (a R : Nat) {y : ℝ}
+    (hy : 0 ≤ 1 / (6 * y)) :
+    |printedTailWTruncReal μ a R y| ≤
+      ∑ s ∈ Finset.range (R + 1),
+        (|printedTailOmegaCoeff μ a s| : ℚ) * (1 / (6 * y))^s := by
+  unfold printedTailWTruncReal
+  calc
+    |∑ s ∈ Finset.range (R + 1),
+        (printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s|
+        ≤ ∑ s ∈ Finset.range (R + 1),
+            |(printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s| :=
+          Finset.abs_sum_le_sum_abs _ _
+    _ = ∑ s ∈ Finset.range (R + 1),
+          (|printedTailOmegaCoeff μ a s| : ℚ) * (1 / (6 * y))^s := by
+        refine Finset.sum_congr rfl fun s _hs => ?_
+        have hpow_nonneg : 0 ≤ (1 / (6 * y))^s :=
+          pow_nonneg hy s
+        rw [abs_mul, abs_of_nonneg hpow_nonneg]
+        norm_num
+
 private theorem printedTailX1_eq_half_mul_X2
     {a : Nat} (ha : 150 ≤ a) :
     printedTailX1 a = (1 / 2 : ℚ) * printedTailX2 a := by
