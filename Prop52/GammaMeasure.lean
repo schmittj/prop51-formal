@@ -324,4 +324,18 @@ theorem gammaTailPrefactor_integral_exp_neg_lower_of_mean_le_bound
   exact gammaPrefactor_integral_exp_neg_lower_of_mean_le_bound
     (μ := gammaTailMeasure a) (a := a) ha hf hexp hmean
 
+/-- The Jensen/Gamma lower bound for the concrete low polynomial
+`L(1/(6Y))` attached to a partition. -/
+theorem gammaTailPrefactor_integral_exp_neg_printedTailLGammaArg_lower
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) ∂ gammaTailMeasure a := by
+  exact gammaTailPrefactor_integral_exp_neg_lower_of_mean_le_bound
+    (a := a) ha
+    (integrable_printedTailLGammaArg (a := a) (μ := μ) ha)
+    (integrable_exp_neg_printedTailLGammaArg (a := a) (μ := μ) ha hμ)
+    (integral_printedTailLGammaArg_le_bound (a := a) (μ := μ) ha hμ)
+
 end Prop52
