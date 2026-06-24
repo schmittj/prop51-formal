@@ -43,11 +43,11 @@ import Prop51.PositiveSaddleHybridRatioCertificate
 
 namespace Prop51
 
-/-- What is currently machine-checked towards `CoefficientNegativity` for
-small genus: every *generated* partition for every relevant `g ≤ 23`.
-Upgrading `∀ μ ∈ partitions (2g-2)` to `∀ μ, IsPartitionOf μ (2g-2)` needs
-the generator-completeness lemma plus permutation-invariance of `bCoeff`
-(ROADMAP, Layer A′). -/
+/-- The small-genus result towards `CoefficientNegativity` in *generated*-
+partition form: every generated partition for every relevant `g ≤ 23`.  The
+upgrade `∀ μ ∈ partitions (2g-2)` ⟶ `∀ μ, IsPartitionOf μ (2g-2)` (generator
+completeness plus permutation-invariance of `bCoeff`) is carried out for the
+public theorems; see `Prop51/PartitionsComplete.lean`. -/
 theorem coefficientNegativity_of_g_le_23 :
     ∀ g < 24, 2 ≤ g → g % 3 ≠ 1 →
       ∀ μ ∈ partitions (2*g - 2), bCoeff μ (g/3 + 1) < 0 :=

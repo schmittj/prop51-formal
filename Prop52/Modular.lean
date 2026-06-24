@@ -10,11 +10,11 @@ nonvanishing over `ℚ`.  This file begins the Lean-side modular checker: it use
 the same one-pass recurrence as `Prop52.Recurrence`, but evaluates it in
 `ZMod p`.
 
-The theorems in this file are not yet the final rational nonvanishing theorem:
-the remaining bridge is to prove that the modular recurrence is the reduction
-of `correctedCoeffFast`.  They are nevertheless genuine Lean certificates for
-the finite-field recurrence and are the computational core needed by that
-bridge.
+The theorems in this file are the finite-field core.  The rational-to-`ZMod`
+reduction bridge (that the modular recurrence is the reduction of
+`correctedCoeffFast`) is proved in `Prop52.RatModBridge` and assembled in
+`Prop52.Finite`, where it yields the final rational nonvanishing theorem
+`correctedCoeff_finite_nonvanishing`.
 -/
 
 import Prop52.Recurrence

@@ -6,14 +6,14 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 This module translates the normalized recurrences used by the printed
 Proposition 5.2 interval certificate for `14 <= a <= 149`.
 
-The definitions here are exact rational arithmetic.  They intentionally do
-not yet close `PrintedCoeffNegativityMid`: the remaining bridge is the
-one-parameter majorant inequality
+The definitions here are exact rational arithmetic; this module supplies the
+mid-range kernel only.  `PrintedCoeffNegativityMid` itself is closed in
+`Prop52.MidBridge` (`printedCoeffNegativityMid_closed`), via the one-parameter
+majorant inequality
 
   `printedCoeff μ a <= U_a (N μ)`,
 
-followed by a finite proof that `U_a(N)/(N c_a) < 0` throughout the
-rectangle.  The names below mirror the notation of the accompanying TeX note:
+followed by a finite proof that `U_a(N)/(N c_a) < 0` throughout the rectangle.  The names below mirror the notation of the accompanying TeX note:
 `X_r = B_r/(N c_r)`, `Y_r = 2^r Q_r/(M c_r)`,
 `S_r = 2^r R_r/(M c_r)`, and `midUNormExact = U_a(N)/(N c_a)`.
 -/

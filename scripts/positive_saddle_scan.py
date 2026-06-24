@@ -98,5 +98,6 @@ print(f"scanned a={A_LO}..{A_HI}, both N edges per regime")
 print(f"worst summed majorant: a={best[0]}, log={best[1]:.6f}, "
       f"value={math.exp(best[1]):.6e}  (target log {target:.2f})")
 print(f"worst summand: k={best[2][0]}, logterm={best[2][1]:.6f}")
-assert best[1] < target, "positive-part majorant exceeds 1e-8 target!"
+if not best[1] < target:
+    raise SystemExit("FAIL: positive-part majorant exceeds 1e-8 target!")
 print("PASS: positive part below 1e-8 throughout the window.")

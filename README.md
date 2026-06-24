@@ -1,4 +1,4 @@
-# Strict negativity of a Chen–Larson hypergeometric coefficient
+# Strict negativity and non-vanishing of Chen–Larson hypergeometric coefficients
 
 [![CI](https://github.com/schmittj/prop51-formal/actions/workflows/ci.yml/badge.svg)](https://github.com/schmittj/prop51-formal/actions/workflows/ci.yml)
 ![Lean](https://img.shields.io/badge/Lean-4.27.0-blue)
@@ -14,10 +14,12 @@ computational certificates, with continuous integration that rebuilds the
 production proof closure and audits its axioms.
 
 Proposition 5.2 is formalized in its **corrected** form: the series printed in
-the preprint used the constant term `1` where Ionel's relation gives
-`κ₀ = 2g − 2`, which changes the coefficient. The repository proves the
-corrected non-vanishing statement; the authors agreed with this correction in
-private correspondence (the public arXiv v1 is not yet updated).
+the preprint (arXiv v1, equation (5.4)) used the constant term `1` where Ionel's
+relation (Proposition 1.7, equation (1.13)) gives `κ₀ = 2g − 2`, which changes the
+coefficient. The repository proves the corrected non-vanishing statement; the
+correction follows directly from the published formulas, and the authors
+additionally agreed with it in private correspondence (June 2026). The public
+arXiv v1 is not yet updated.
 
 ## The theorem
 
@@ -48,20 +50,22 @@ series `C`, gives its coefficient formula, and proves the generating-function
 identity `C(t)^N · B_μ(t) = Π_i C(t/(m_i+1))` that pins the formal object to the
 one in the paper.
 
-**Proposition 5.2 (corrected, `g ≡ 1 mod 3`).** Writing `g = 3a − 2` and
-`M = 2g − 2 = 6a − 6`: for every `a ≥ 2` and every positive partition `μ` of
-`M`, the corrected coefficient
-`[t^a] F_μ(t)·(M − 2·A_μ·t − 12·t²·B_μ(t))` is **nonzero** (and strictly
-negative for `a ≥ 14`), where `F_μ(t) = Π_i C(t/(m_i+1)) / C(t)^N` is the
-Proposition 5.1 quotient and `A_μ, B_μ` are the marked first/second-derivative
-terms of the corrected note. The public Lean statements are
-`Prop52.chenLarsonProp52Coefficient_nonvanishing` and
+**Proposition 5.2 (corrected, `g ≡ 1 mod 3`).** Writing `g = 3a − 2`,
+`M = 2g − 2 = 6a − 6`, `q_i = m_i + 1`, `N = Σ_i q_i`, `s_r = Σ_i q_i^(−r)`, and
+`L = C'/C`: for every `a ≥ 2` and every positive partition `μ` of `M`, the
+corrected coefficient `[t^a] B_μ(t)·D_μ^cor(t)` is **nonzero** (and strictly
+negative for `a ≥ 14`), where `B_μ(t) = Π_i C(t/q_i) / C(t)^N` is the
+Proposition 5.1 quotient and
+`D_μ^cor(t) = M − 2(N − s₁)·t − 12·t²·(N·L(t) − Σ_i q_i^(−2)·L(t/q_i))` is the
+corrected source factor obtained by pulling back Ionel's relation (the factor
+printed in the preprint is the same with the leading `M` replaced by `1`). The
+public Lean statements are `Prop52.chenLarsonProp52Coefficient_nonvanishing` and
 `Prop52.chenLarsonProp52Coefficient_neg` in
-[`Prop52/Theorem.lean`](Prop52/Theorem.lean); they are stated for the
-**source** coefficient.  The formal bridge
-`Prop52.sourceCorrectedCoeff_eq` in [`Prop52/Source.lean`](Prop52/Source.lean)
-identifies this source coefficient in degree `a` with the marked coefficient
-`[t^a] F_μ·(M − K_μ)` because `M = 6a − 6`. The decisive step is then
+[`Prop52/Theorem.lean`](Prop52/Theorem.lean), stated for this source coefficient.
+The formal bridge `Prop52.sourceCorrectedCoeff_eq` in
+[`Prop52/Source.lean`](Prop52/Source.lean) identifies it in degree `a` with the
+marked coefficient `[t^a] B_μ·(M − K_μ)`, `K_μ = Σ_i m_i·Φ(t/q_i)`,
+`Φ = 2t + 12·t²·L`, because `M = 6a − 6`. The decisive step is then
 `T^cor = T^old + (2g − 3)·b_a`, reducing the corrected coefficient to two sign
 inputs already controlled by the Proposition 5.1 analysis.
 

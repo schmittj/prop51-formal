@@ -83,3 +83,15 @@ def kappa(z):
     return math.exp(-z)*(623*z/108.0 - 6*z*z + (5.0/3.0)*z**3 - z**4/8.0)
 mx = max((abs(kappa(i*(10/3)/200000)), i) for i in range(200001))
 print(f"\nChecksum grid max |kappa2| on [0,10/3]: {mx[0]:.12f} at grid index {mx[1]}")
+
+# Fail-safe gate: this script is a release check, not only a printout, so it
+# must exit nonzero if any allowance or the budget is violated (or non-finite).
+_fail = [f"{name}: value {val:.6f} exceeds allowance {allow}"
+         for name, val, allow in pieces if not (val <= allow)]
+if not all(math.isfinite(v) for _, v, _ in pieces):
+    _fail.append("a computed allowance is not finite")
+if not (total_allow < budget):
+    _fail.append(f"total allowance {total_allow} not below budget {budget:.6f}")
+if _fail:
+    raise SystemExit("FAIL constants_check:\n  " + "\n  ".join(_fail))
+print("constants_check OK: every piece within its allowance and the total below budget")

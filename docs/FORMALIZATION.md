@@ -1,10 +1,12 @@
 # prop51-formal
 
-Formal verification (Lean 4 + mathlib) of the coefficient-negativity theorem
-behind **Chen–Larson, Proposition 5.1** (*Independence of tautological classes
-and cohomological stability for strata of differentials*,
-[arXiv:2603.23850](https://arxiv.org/abs/2603.23850)), together with the
-LaTeX proof document and the computational certificates it relies on.
+Formal verification (Lean 4 + mathlib) of the coefficient (non-)vanishing
+theorems behind **Chen–Larson, Propositions 5.1 and 5.2** (*Independence of
+tautological classes and cohomological stability for strata of differentials*,
+[arXiv:2603.23850](https://arxiv.org/abs/2603.23850)), together with the LaTeX
+proof document and the computational certificates they rely on.  The synopsis
+just below is for Proposition 5.1; the corrected Proposition 5.2 (`g ≡ 1 mod 3`)
+is documented in its own section further down.
 
 ## The theorem
 

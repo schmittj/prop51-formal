@@ -3,6 +3,7 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,7 +14,7 @@ jobs:
     # smaller job count to lake (e.g. build-args: '-j2') or use a larger runner.
     timeout-minutes: 360
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build Lean project (lake build + mathlib cache)
         uses: leanprover/lean-action@v1
         with:
@@ -23,12 +24,10 @@ jobs:
           ~/.elan/bin/lake env lean scripts/PublicAxiomsReport.lean | tee public_axioms.txt
           ~/.elan/bin/lake env lean scripts/AxiomsReport.lean | tee axioms.txt
       - name: Check public axiom allowlist
-        # Exact parser: no audited theorem may depend on sorryAx or on any axiom
-        # outside the documented allowlist. (A substring grep can hide an
-        # unexpected axiom printed on the same line as an allowed one.) The parser
-        # also fails on elaboration errors / missing declarations, requires the
-        # named public theorems to be present, and refuses an empty report, so it
-        # cannot pass vacuously if the output format changes or a theorem is renamed.
+        # Theorem-specific parser: it pairs each named public theorem with its
+        # own `#print axioms` block and checks that block against the allowlist
+        # (not a global union of all blocks); it also fails on elaboration errors,
+        # missing declarations, sorryAx, or any parsed block exceeding the list.
         run: |
           python3 - <<'PY'
           import pathlib, re, sys
@@ -53,23 +52,32 @@ jobs:
                   sys.exit(f"FAIL: axiom report contains {bad!r} (elaboration error / missing decl)")
           if "sorryAx" in text:
               sys.exit("FAIL: an audited theorem depends on sorryAx")
-          missing = [n for n in required if f"'{n}'" not in text]
-          if missing:
-              sys.exit(f"FAIL: required public theorems absent from report: {missing}")
-          blocks = re.findall(r"depends on axioms:\s*\[([^\]]*)\]", text)
-          if len(blocks) < len(required):
-              sys.exit(f"FAIL: only {len(blocks)} axiom blocks parsed; report truncated/malformed")
-          found = set()
-          for body in blocks:
-              found.update(n.strip() for n in body.split(",") if n.strip())
-          unexpected = found - allowed
-          if unexpected:
-              sys.exit(f"FAIL: unexpected axioms: {sorted(unexpected)}")
-          print(f"Axiom allowlist OK ({len(blocks)} blocks, {len(required)} required theorems present):",
-                sorted(found))
+          # Pair each theorem with its OWN axiom block (theorem-specific, not a
+          # global union); handle the "does not depend on any axioms" wording too.
+          axioms_of = {}
+          for m in re.finditer(r"'([^']+)' depends on axioms:\s*\[([^\]]*)\]", text):
+              axioms_of[m.group(1)] = {n.strip() for n in m.group(2).split(",") if n.strip()}
+          for m in re.finditer(r"'([^']+)' does not depend on any axioms", text):
+              axioms_of.setdefault(m.group(1), set())
+          problems = []
+          for n in required:
+              if n not in axioms_of:
+                  problems.append(f"{n}: no axiom block found in report")
+              elif axioms_of[n] - allowed:
+                  problems.append(f"{n}: unexpected axioms {sorted(axioms_of[n] - allowed)}")
+          if problems:
+              sys.exit("FAIL (theorem-specific axiom check):\n  " + "\n  ".join(problems))
+          # Defence in depth: no parsed block anywhere may exceed the allowlist.
+          overall = {n: sorted(s - allowed) for n, s in axioms_of.items() if s - allowed}
+          if overall:
+              sys.exit(f"FAIL: blocks with unexpected axioms: {overall}")
+          print(f"Axiom allowlist OK: {len(axioms_of)} theorem blocks; "
+                f"all {len(required)} required theorems individually within {sorted(allowed)}")
           PY
       - name: Python certificate scripts (fast layer)
         run: |
+          python3 -m py_compile scripts/*.py
+          python3 scripts/constants_check.py
           python3 scripts/positive_saddle_scan.py --quick
       - name: Positive saddle generator smoke (legacy-regression)
         # NB: this exercises the historical tangent/exact-product generator
@@ -121,7 +129,7 @@ jobs:
   paper:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile paper/prop51.tex
         uses: xu-cheng/latex-action@v3
         with:

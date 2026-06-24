@@ -125,8 +125,9 @@ Proposition~5.1 analysis, together with an exhaustive finite check.  The scalar
 power-series theorems behind both propositions --- after the geometric reduction,
 and including the elementary correction bridge --- are formalized in \Lean{}~4 and
 Mathlib, the public theorems depending only on the standard axioms and the two
-compiler-trust axioms of \code{native\_decide}; the algebraic-geometric reduction
-itself is cited from Chen--Larson, not formalized here.  We also describe the
+compiler-trust axioms of \code{native\_decide}.  The tautological relations of
+Ionel and Chen--Larson and their pullback to the strata are cited, not formalized
+here.  We also describe the
 role of long-horizon generative-AI assistance in the development, including an AI
 audit that uncovered the Proposition~5.2 error in the original paper, and the
 precise trust boundary of the computational certificates.
@@ -1159,13 +1160,16 @@ Proposition~5.1 quotient series and its coefficient.
 
 \subsection{The correction}\label{subsec:correction}
 
-Ionel's relation~\cite{Ionel}, specialized to the degree $b=1$ relevant here,
-contributes the factor
+Ionel's relation~\cite{Ionel} (Proposition~1.7, equation~(1.13)), with parameter
+$b=1$, applies in the target degree $a=\tfrac{g-1}{3}+1=\tfrac{g+2}{3}$ (one of
+its two admissible degrees, valid since $g\equiv1\pmod3$), and contributes the
+factor
 \begin{equation}\label{eq:ionel-b1}
  \kappa_0-2\kappa_1t-12\sum_{j\ge1}jc_j\kappa_{j+1}t^{j+1},
 \end{equation}
 where on $\mathcal M_g$ one has $\kappa_0=2g-2=M$.  The series printed in
-Chen--Larson Proposition~5.2 instead has constant term $1$.  Dividing the whole
+Chen--Larson Proposition~5.2 (equation~(5.4) of the public arXiv~v1) instead has
+constant term $1$.  Dividing the whole
 relation by $\kappa_0=M$ would be legitimate, but it would divide \emph{every}
 term of~\eqref{eq:ionel-b1}; replacing only $\kappa_0$ by $1$ is therefore not a
 normalization, and it changes the coefficient under consideration.  Using the
@@ -1259,9 +1263,9 @@ Sections~\ref{sec:majorant}--\ref{sec:completion} in fact proves a stronger
 \emph{rectangular} statement: $b_a(\mu)<0$ whenever $a\ge9$ and
 $6a-7\le N\le12a-8$.  Indeed, from the point at which the majorant
 $b_a(\mu)\le U_a(N)$ is introduced, no hypothesis on $\sum_i(q_i-1)$ is used, and
-$U_a(N)<0$ is established across that whole rectangle --- exactly for
-$9\le a\le60$, by verified dyadic intervals for $61\le a\le400$, and analytically
-for $a\ge401$.  The interval~\eqref{eq:Nrange52} is contained in the rectangle,
+$U_a(N)<0$ is established across that whole rectangle --- by exact rational
+certificates for $9\le a\le60$, verified dyadic intervals for $61\le a\le400$, and
+an analytic argument for $a\ge401$.  The interval~\eqref{eq:Nrange52} is contained in the rectangle,
 so
 \begin{equation}\label{eq:bneg52}
  b_a(\mu)<0\qquad(a\ge14).
@@ -1956,19 +1960,37 @@ one has
 \end{lemma}
 
 \begin{proof}
-On this range the entropy-shadow quotient satisfies
+Since $s_+=\ceil{\sqrt{12a-8}}$, an elementary integer estimate gives
+\begin{equation}\label{eq:app-tail-small-cutoff}
+ 12s_+\le a\qquad(a>2000),
+\end{equation}
+because $\ceil{\sqrt{12a-8}}<\sqrt{12a-8}+1$ (an elementary integer bound,
+discharged in Lean as part of the small-branch certificate).  As $r<s_+$, hence
+$r+1\le s_+$, this gives $12(r+1)\le a$; writing $j=a-r$ then yields
+$j\ge11(r+1)+1$, and therefore
+\begin{equation}\label{eq:app-tail-small-linear-gap}
+ 272(r+1)\le25j .
+\end{equation}
+For $r\ge2$ the factorization
+\eqref{eq:app-tail-P-factor}--\eqref{eq:app-tail-P} bounds the first power ratio
+by $\e<\tfrac{68}{25}$ and the second by $1$ (both by monotonicity of
+$n\mapsto(1+1/n)^n$), so $\mathcal P_a(r)\le\tfrac{68}{25}$ and
 \begin{equation}\label{eq:app-tail-qraw-half}
- \mathfrak q_a(r)\le\frac12.
+ \mathfrak q_a(r)=2\frac{r+1}{j}\,\mathcal P_a(r)
+ \le\frac{136(r+1)}{25j}\le\frac12
 \end{equation}
-This is a denominator-cleared rational inequality obtained from
-\eqref{eq:app-tail-qraw} and the bounds
-$r<s_+$ and $s_+^2\ge N_+=12a-8$.  The small exponent is nonincreasing:
+by \eqref{eq:app-tail-small-linear-gap}.  For $r=1$ one has directly
+\[
+ \mathfrak q_a(1)=\frac4j\Bigl(\frac{j-2}{j-1}\Bigr)^{j-2}\le\frac4j\le\frac12,
+\]
+since $j=a-1>1999$, so \eqref{eq:app-tail-qraw-half} holds throughout
+$1\le r<\min\{K,s_+\}$.  The small exponent is nonincreasing,
 \begin{equation}\label{eq:app-tail-Es-mono}
- E_s(a,r+1)\le E_s(a,r).
+ E_s(a,r+1)\le E_s(a,r),
 \end{equation}
-Monotonicity of \eqref{eq:app-tail-PE} in its argument therefore gives
-$L_s(a,r+1)\le L_s(a,r)$.  Substitution in
-\eqref{eq:app-tail-ratio-exact} proves the claim.
+so monotonicity of \eqref{eq:app-tail-PE} gives $L_s(a,r+1)\le L_s(a,r)$.
+Substituting \eqref{eq:app-tail-qraw-half} and this bound into
+\eqref{eq:app-tail-ratio-exact} proves \eqref{eq:app-tail-small-ratio}.
 \end{proof}
 
 The first candidate has the exact form
@@ -2604,12 +2626,14 @@ $T_a^{\mathrm{cor}}<0$ from $T_a^{\mathrm{old}}<0$ and $b_a<0$\\
 \bibitem{ChenLarson}
 D.~Chen and H.~Larson,
 \emph{Independence of tautological classes and cohomological stability for
-strata of differentials}, arXiv:2603.23850, 2026.
+strata of differentials}, arXiv:2603.23850v1, 25~March~2026
+(Proposition~5.2 and equation~(5.4)).
 
 \bibitem{Ionel}
 E.-N.~Ionel,
 \emph{Relations in the tautological ring of $\mathcal M_g$},
-Duke Math. J. \textbf{129} (2005), no.~1, 157--186.
+Duke Math. J. \textbf{129} (2005), no.~1, 157--186; arXiv:math/0312100
+(Proposition~1.7, equation~(1.13)).
 
 \bibitem{LeanAxioms}
 The Lean development team,

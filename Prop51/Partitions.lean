@@ -4,12 +4,13 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 # Partition enumeration
 
 A standard descending-parts partition generator, used by the small-genus
-certificate (`Prop51/CertificateSmall.lean`).  Completeness of the generator
-(every weakly-decreasing positive list summing to `n` occurs) is the lemma
-`mem_partitions_iff` — see `ROADMAP.md`; the certificates only need the
-*membership* direction (they quantify over the generated list), and the
-cardinality cross-checks below tie the generator to the known partition
-numbers p(n).
+certificate (`Prop51/CertificateSmall.lean`).  The small-genus certificates use
+only the *membership* direction (`mem_partitions_iff`, since they quantify over
+the generated list); the converse *completeness* of the generator — every
+weakly-decreasing positive list summing to `n` occurs — is proved in
+`Prop51/PartitionsComplete.lean` and is what lifts the certificates to the
+arbitrary-partition public theorems.  The cardinality cross-checks below tie the
+generator to the known partition numbers p(n).
 -/
 
 namespace Prop51
