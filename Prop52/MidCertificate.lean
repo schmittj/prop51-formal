@@ -62,4 +62,57 @@ theorem midUNormFast_neg_rows_14_58 (a i : Nat)
           · exact midUNormFast_neg_of_rowsInterval 54 5 a i
               checkPrintedMidRowsInterval_54_5 (by omega) (by omega) hi
 
+theorem checkPrintedMidRowsInterval_59_3 :
+    checkPrintedMidRowsInterval 59 3 = true := by
+  native_decide
+
+theorem checkPrintedMidRowsInterval_62_3 :
+    checkPrintedMidRowsInterval 62 3 = true := by
+  native_decide
+
+theorem checkPrintedMidRowsInterval_65_3 :
+    checkPrintedMidRowsInterval 65 3 = true := by
+  native_decide
+
+theorem checkPrintedMidRowsInterval_68_2 :
+    checkPrintedMidRowsInterval 68 2 = true := by
+  native_decide
+
+theorem checkPrintedMidRowsInterval_70_2 :
+    checkPrintedMidRowsInterval 70 2 = true := by
+  native_decide
+
+theorem checkPrintedMidRowsInterval_72_2 :
+    checkPrintedMidRowsInterval 72 2 = true := by
+  native_decide
+
+/-- Exact normalized negativity certified for the second mid-range shard. -/
+theorem midUNormFast_neg_rows_59_73 (a i : Nat)
+    (ha_lo : 59 ≤ a) (ha_hi : a ≤ 73) (hi : i < M a) :
+    midUNormFast a (M a + 1 + i) < 0 := by
+  by_cases h62 : a < 62
+  · exact midUNormFast_neg_of_rowsInterval 59 3 a i
+      checkPrintedMidRowsInterval_59_3 (by omega) h62 hi
+  · by_cases h65 : a < 65
+    · exact midUNormFast_neg_of_rowsInterval 62 3 a i
+        checkPrintedMidRowsInterval_62_3 (by omega) h65 hi
+    · by_cases h68 : a < 68
+      · exact midUNormFast_neg_of_rowsInterval 65 3 a i
+          checkPrintedMidRowsInterval_65_3 (by omega) h68 hi
+      · by_cases h70 : a < 70
+        · exact midUNormFast_neg_of_rowsInterval 68 2 a i
+            checkPrintedMidRowsInterval_68_2 (by omega) h70 hi
+        · by_cases h72 : a < 72
+          · exact midUNormFast_neg_of_rowsInterval 70 2 a i
+              checkPrintedMidRowsInterval_70_2 (by omega) h72 hi
+          · exact midUNormFast_neg_of_rowsInterval 72 2 a i
+              checkPrintedMidRowsInterval_72_2 (by omega) (by omega) hi
+
+theorem midUNormFast_neg_rows_14_73 (a i : Nat)
+    (ha_lo : 14 ≤ a) (ha_hi : a ≤ 73) (hi : i < M a) :
+    midUNormFast a (M a + 1 + i) < 0 := by
+  by_cases h58 : a ≤ 58
+  · exact midUNormFast_neg_rows_14_58 a i ha_lo h58 hi
+  · exact midUNormFast_neg_rows_59_73 a i (by omega) ha_hi hi
+
 end Prop52
