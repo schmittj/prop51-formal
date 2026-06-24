@@ -1,0 +1,81 @@
+/-
+Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
+
+# Gamma integral bridge for the Proposition 5.2 tail
+
+`Prop52.GammaMoment` proves the finite rational moment bound used in the
+large-tail argument.  This file begins the analytic bridge back to the printed
+Gamma-integral proof: the monomial Gamma integrals are evaluated and identified
+with the factorial ratios `gammaWeight`.
+-/
+
+import Prop52.GammaReal
+import Mathlib.Probability.Distributions.Gamma
+
+namespace Prop52
+
+open Finset
+open MeasureTheory Set
+
+private theorem gammaIntegral_nat_power_exp_eq_factorial (n : Nat) :
+    ∫ y : ℝ in Set.Ioi 0, y ^ ((n : Nat) : ℝ) * Real.exp (-y) =
+      (n.factorial : ℝ) := by
+  have h := Real.integral_rpow_mul_exp_neg_mul_Ioi
+    (a := (n : ℝ) + 1) (r := (1 : ℝ)) (by positivity) (by norm_num)
+  have hpow : ((n : ℝ) + 1 - 1) = (n : ℝ) := by ring
+  simpa [hpow, Real.Gamma_nat_eq_factorial] using h
+
+private theorem factorial_cast_real_ne (n : Nat) :
+    ((n.factorial : Nat) : ℝ) ≠ 0 := by
+  exact_mod_cast n.factorial_pos.ne'
+
+/-- The normalized monomial contribution obtained from the integer-shape
+Gamma density after substituting `t = 1/(6y)`.
+
+The statement uses the same truncated Nat subtractions as `gammaWeight`; in all
+applications below the caller is in the non-underflow range supplied by
+`printedTailP`. -/
+noncomputable def gammaMonomialMoment (shape s : Nat) : ℝ :=
+  (1 / (6 : ℝ)^s) *
+    (1 / ((Nat.factorial (shape - 1) : Nat) : ℝ)) *
+      ∫ y : ℝ in Set.Ioi 0,
+        y ^ (((shape - s - 1 : Nat) : ℝ)) * Real.exp (-y)
+
+/-- Evaluation of the normalized integer-shape Gamma monomial integral as the
+factorial ratio already used by the rational certificate layer. -/
+theorem gammaMonomialMoment_eq_gammaWeight (shape s : Nat) :
+    gammaMonomialMoment shape s = (gammaWeight shape s : ℝ) := by
+  unfold gammaMonomialMoment
+  rw [gammaIntegral_nat_power_exp_eq_factorial]
+  unfold gammaWeight
+  norm_num
+  field_simp [pow_ne_zero s (by norm_num : (6 : ℝ) ≠ 0),
+    factorial_cast_real_ne (shape - 1)]
+
+/-- Integral form of the low-polynomial exponent mean
+`E[L(1/(6Y))]`, expanded monomial-by-monomial. -/
+noncomputable def printedTailGammaExponentIntegral (μ : List Nat) (a : Nat) : ℝ :=
+  ∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+    (hCoeff μ r : ℝ) * gammaMonomialMoment (a - 2) r
+
+/-- The analytic Gamma-integral expansion is exactly the finite rational moment
+already bounded in `Prop52.GammaMoment`. -/
+theorem printedTailGammaExponentIntegral_eq_moment
+    (μ : List Nat) (a : Nat) :
+    printedTailGammaExponentIntegral μ a =
+      (printedTailGammaExponentMoment μ a : ℝ) := by
+  unfold printedTailGammaExponentIntegral printedTailGammaExponentMoment
+  rw [Rat.cast_sum]
+  refine Finset.sum_congr rfl fun r hr => ?_
+  rw [Rat.cast_mul, gammaMonomialMoment_eq_gammaWeight]
+
+/-- Analytic restatement of the rational Gamma exponent budget. -/
+theorem printedTailGammaExponentIntegral_le_bound
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailGammaExponentIntegral μ a ≤ (gammaExponentBound a : ℝ) := by
+  rw [printedTailGammaExponentIntegral_eq_moment]
+  exact (Rat.cast_le (K := ℝ)).2
+    (printedTailGammaExponentMoment_le_bound (a := a) (μ := μ) ha hμ)
+
+end Prop52
