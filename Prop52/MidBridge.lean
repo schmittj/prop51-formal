@@ -622,6 +622,10 @@ def PrintedMidExactToFast : Prop :=
   ∀ a N : Nat, 14 ≤ a → a ≤ 149 →
     midUNormExact a N = midUNormFast a N
 
+theorem printedMidExactToFast_closed : PrintedMidExactToFast := by
+  intro a N _ha_lo _ha_hi
+  exact (midUNormFast_eq_exact a N).symm
+
 theorem printedMidUpperBound_of_simpleComparison_rawToNorm
     (hcomp : PrintedMidSimpleComparison)
     (hraw : PrintedMidRawToNormBound) :
@@ -655,6 +659,9 @@ theorem printedMidRawToNormBound_of_exactToFast
     mid_N_pos_of_partition (a := a) (μ := μ) ha_lo hμ
   rw [printedMidRawUpper_eq_scaled_midUNormExact a (N μ) (by omega) hNpos]
   rw [hfast a (N μ) ha_lo ha_hi]
+
+theorem printedMidRawToNormBound_closed : PrintedMidRawToNormBound :=
+  printedMidRawToNormBound_of_exactToFast printedMidExactToFast_closed
 
 /--
 Closing the printed mid-range sign from the coefficientwise bridge and the

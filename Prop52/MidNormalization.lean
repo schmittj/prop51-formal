@@ -13,6 +13,17 @@ import Prop51.DNorm
 
 namespace Prop52
 
+private theorem array_getD_push_lt {α : Type} (T : Array α) (x fallback : α) (i : Nat)
+    (h : i < T.size) :
+    (T.push x).getD i fallback = T.getD i fallback := by
+  simp [Array.getD_eq_getD_getElem?, Array.getElem?_push, Nat.ne_of_lt h]
+
+private theorem array_getD_push_size {α : Type} (T : Array α) (x fallback : α) (i : Nat)
+    (h : i = T.size) :
+    (T.push x).getD i fallback = x := by
+  subst h
+  simp [Array.getD_eq_getD_getElem?]
+
 /-! ## Prefix-list stability for `midD` -/
 
 /-- Each `midDList` step appends exactly one entry. -/
@@ -119,6 +130,85 @@ theorem midD_eq_d (r : Nat) : midD r = Prop51.d r := by
         ring
       rw [hlast, htop, hsum_get, ← hconv]
 
+/-! ## Array-table stability for `midD` -/
+
+/-- Explicit recurrence step for `midD`, separated from the identification
+with `Prop51.d` so that the array-backed table can be proved extensionally
+against the list specification. -/
+theorem midD_succ_succ_succ (n : Nat) :
+    midD (n + 3) =
+      midD (n + 2) +
+        ((List.range (n + 1)).map fun j : Nat =>
+          midD (j + 1) * midD (n + 1 - j) *
+            midInvChoose (n + 2) (j + 1)).sum / ((n + 3 : Nat) : ℚ) := by
+  change (midDList (n + 3)).getD (n + 3) 0 =
+    midD (n + 2) +
+      ((List.range (n + 1)).map fun j : Nat =>
+        midD (j + 1) * midD (n + 1 - j) *
+          midInvChoose (n + 2) (j + 1)).sum / ((n + 3 : Nat) : ℚ)
+  have hlast :
+      (midDList (n + 3)).getD (n + 3) 0 =
+        (midDList (n + 2)).getD (n + 2) 0 +
+          ((List.range (n + 1)).map fun j : Nat =>
+            (midDList (n + 2)).getD (j + 1) 0 *
+              (midDList (n + 2)).getD (n + 1 - j) 0 *
+                midInvChoose (n + 2) (j + 1)).sum /
+            ((n + 3 : Nat) : ℚ) := by
+    simp [midDList, midDList_length]
+  rw [hlast]
+  congr 1
+  congr 1
+  apply congrArg List.sum
+  refine List.map_congr_left fun j hj => ?_
+  have hjlt : j < n + 1 := List.mem_range.mp hj
+  rw [midDList_getD_eq (j + 1) (n + 2) (by omega),
+    midDList_getD_eq (n + 1 - j) (n + 2) (by omega)]
+
+/-- `midDTab n` contains exactly the entries `0, ..., n`. -/
+theorem midDTab_size : ∀ n : Nat, (midDTab n).size = n + 1
+  | 0 => rfl
+  | 1 => rfl
+  | 2 => rfl
+  | n + 3 => by
+      show ((midDTab (n + 2)).push _).size = _
+      rw [Array.size_push, midDTab_size (n + 2)]
+
+/-- Prefix stability for the array-backed `midD` table. -/
+theorem midDTab_getD_eq (r m : Nat) (h : r ≤ m) :
+    (midDTab m).getD r 0 = midD r := by
+  revert r
+  induction m using Nat.strong_induction_on with
+  | h m ih =>
+      intro r h
+      rcases m with _ | m
+      · have : r = 0 := by omega
+        subst this
+        rfl
+      rcases m with _ | m
+      · interval_cases r <;> rfl
+      rcases m with _ | n
+      · interval_cases r <;> rfl
+      rcases Nat.lt_or_ge r (n + 3) with hlt | hge
+      · change ((midDTab (n + 2)).push _).getD r 0 = midD r
+        rw [array_getD_push_lt _ _ _ _ (by rw [midDTab_size]; omega)]
+        exact ih (n + 2) (by omega) r (by omega)
+      · have hr : r = n + 3 := le_antisymm h hge
+        subst r
+        change ((midDTab (n + 2)).push _).getD (n + 3) 0 = midD (n + 3)
+        rw [array_getD_push_size _ _ _ _ (by rw [midDTab_size])]
+        rw [midD_succ_succ_succ n]
+        simp only [show n + 3 - 1 = n + 2 by omega,
+          show n + 3 - 2 = n + 1 by omega]
+        congr 1
+        · exact ih (n + 2) (by omega) (n + 2) le_rfl
+        · congr 1
+          apply congrArg List.sum
+          refine List.map_congr_left fun j hj => ?_
+          have hjlt : j < n + 1 := List.mem_range.mp hj
+          have hsub : n + 2 - (j + 1) = n + 1 - j := by omega
+          rw [ih (n + 2) (by omega) (j + 1) (by omega),
+            hsub, ih (n + 2) (by omega) (n + 1 - j) (by omega)]
+
 /-! ## The normalized convolution quotient -/
 
 /-- The executable `midR` quotient rewritten with Prop51's normalized `d`. -/
@@ -213,6 +303,19 @@ theorem midR_eq_c_ratio (k r : Nat) (hk : 1 ≤ k) (hkr : k < r) :
     (A * Prop51.d k) * (B * Prop51.d (r - k)) / (C * Prop51.d r)
   rw [hC]
   field_simp [hd_r_ne, hA_ne, hB_ne, hD_ne]
+
+/-- The table-backed `midRTab` agrees with the specification when the `D`
+table is the canonical `midDTab` and the requested row is in range. -/
+theorem midRTab_midDTab_eq_midR (a k r : Nat) (hr : r ≤ a) :
+    midRTab (midDTab a) k r = midR k r := by
+  unfold midRTab midR
+  by_cases hactive : 1 ≤ k ∧ k < r
+  · rw [if_pos hactive, if_pos hactive]
+    have hk : k ≤ a := by omega
+    have hrk : r - k ≤ a := by omega
+    rw [midDTab_getD_eq k a hk, midDTab_getD_eq (r - k) a hrk,
+      midDTab_getD_eq r a hr]
+  · rw [if_neg hactive, if_neg hactive]
 
 /-! ## The `X` recurrence and `Bq` -/
 
@@ -547,5 +650,154 @@ theorem midS_scaled_eq_Q (M r : Nat) (hr : 1 ≤ r) :
     ring
   rw [hpow_succ]
   field_simp [hc_ne, (by positivity : (2 : ℚ)^(n + 1) ≠ 0)]
+
+/-! ## Exactness of the array-backed mid certificate kernel -/
+
+private theorem midXTab_size_exact (D : Array ℚ) (N : Nat) :
+    ∀ n : Nat, (midXTab D N n).size = n + 1
+  | 0 => rfl
+  | 1 => rfl
+  | n + 2 => by
+      show ((midXTab D N (n + 1)).push _).size = _
+      rw [Array.size_push, midXTab_size_exact D N (n + 1)]
+
+private theorem midYTab_size_exact (D : Array ℚ) (M : Nat) :
+    ∀ n : Nat, (midYTab D M n).size = n + 1
+  | 0 => rfl
+  | 1 => rfl
+  | n + 2 => by
+      show ((midYTab D M (n + 1)).push _).size = _
+      rw [Array.size_push, midYTab_size_exact D M (n + 1)]
+
+/-- The array-backed `X` table agrees with the list specification when the
+`D` table is the canonical `midDTab`. -/
+theorem midXTab_midDTab_getD_eq (a N : Nat) :
+    ∀ n i : Nat, n ≤ a → i ≤ n →
+      (midXTab (midDTab a) N n).getD i 0 = midX N i := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | h n ih =>
+      intro i hn hi
+      rcases n with _ | n
+      · have hi0 : i = 0 := by omega
+        subst hi0
+        rfl
+      rcases n with _ | n
+      · interval_cases i <;> rfl
+      let r := n + 2
+      by_cases hlt : i < r
+      · change ((midXTab (midDTab a) N (n + 1)).push _).getD i 0 = midX N i
+        rw [array_getD_push_lt _ _ _ _ (by rw [midXTab_size_exact]; omega)]
+        exact ih (n + 1) (by omega) i (by omega) (by omega)
+      · have hi_eq : i = r := by omega
+        subst i
+        change ((midXTab (midDTab a) N (n + 1)).push _).getD r 0 = midX N r
+        rw [array_getD_push_size _ _ _ _ (by rw [midXTab_size_exact])]
+        rw [midX_succ_succ N n]
+        dsimp [r]
+        rw [Prop51.list_range_map_sum]
+        congr 1
+        congr 1
+        refine Finset.sum_congr rfl fun j hj => ?_
+        have hjlt : j < n + 1 := Finset.mem_range.mp hj
+        have hsub : n + 2 - (j + 1) = n + 1 - j := by omega
+        rw [midRTab_midDTab_eq_midR a (j + 1) (n + 2) (by omega),
+          hsub, ih (n + 1) (by omega) (n + 1 - j) (by omega) (by omega)]
+
+/-- The array-backed `Y` table agrees with the list specification when the
+`D` table is the canonical `midDTab`. -/
+theorem midYTab_midDTab_getD_eq (a M : Nat) :
+    ∀ n i : Nat, n ≤ a → i ≤ n →
+      (midYTab (midDTab a) M n).getD i 0 = midY M i := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | h n ih =>
+      intro i hn hi
+      rcases n with _ | n
+      · have hi0 : i = 0 := by omega
+        subst hi0
+        rfl
+      rcases n with _ | n
+      · interval_cases i <;> rfl
+      let r := n + 2
+      by_cases hlt : i < r
+      · change ((midYTab (midDTab a) M (n + 1)).push _).getD i 0 = midY M i
+        rw [array_getD_push_lt _ _ _ _ (by rw [midYTab_size_exact]; omega)]
+        exact ih (n + 1) (by omega) i (by omega) (by omega)
+      · have hi_eq : i = r := by omega
+        subst i
+        change ((midYTab (midDTab a) M (n + 1)).push _).getD r 0 = midY M r
+        rw [array_getD_push_size _ _ _ _ (by rw [midYTab_size_exact])]
+        rw [midY_succ_succ M n]
+        dsimp [r]
+        rw [Prop51.list_range_map_sum]
+        congr 1
+        congr 1
+        refine Finset.sum_congr rfl fun j hj => ?_
+        have hjlt : j < n + 1 := Finset.mem_range.mp hj
+        have hsub : n + 2 - (j + 1) = n + 1 - j := by omega
+        rw [midRTab_midDTab_eq_midR a (j + 1) (n + 2) (by omega),
+          hsub, ih (n + 1) (by omega) (n + 1 - j) (by omega) (by omega)]
+
+/-- The table-backed `S` agrees with the specification on the canonical
+`D` and `Y` tables. -/
+theorem midSTab_midDTab_midYTab_eq_midS (a M r : Nat) (hr : r ≤ a) :
+    midSTab (midDTab a) (midYTab (midDTab a) M a) M r = midS M r := by
+  rcases r with _ | r
+  · rfl
+  rcases r with _ | n
+  · rfl
+  unfold midSTab midS
+  change 2 * ((M : ℚ) + 6 * ((n + 2 : Nat) : ℚ) - 6) *
+        ((midDTab a).getD (n + 1) 0 / (midDTab a).getD (n + 2) 0 /
+          (6 * ((n + 1 : Nat) : ℚ))) *
+        (midYTab (midDTab a) M a).getD (n + 1) 0 -
+        (midYTab (midDTab a) M a).getD (n + 2) 0 =
+      2 * ((M : ℚ) + 6 * ((n + 2 : Nat) : ℚ) - 6) *
+        (midD (n + 1) / midD (n + 2) /
+          (6 * ((n + 1 : Nat) : ℚ))) * midY M (n + 1) -
+        midY M (n + 2)
+  rw [midDTab_getD_eq (n + 1) a (by omega),
+    midDTab_getD_eq (n + 2) a (by omega),
+    midYTab_midDTab_getD_eq a M a (n + 1) le_rfl (by omega),
+    midYTab_midDTab_getD_eq a M a (n + 2) le_rfl (by omega)]
+
+/-- The array-backed normalized upper bound is exactly the list-specified
+normalized upper bound on the canonical tables. -/
+theorem midUNormWithTabs_midDTab_eq_exact (a N : Nat) :
+    midUNormWithTabs (midDTab a) (midYTab (midDTab a) (M a) a) a N =
+      midUNormExact a N := by
+  unfold midUNormWithTabs midUNormExact
+  change (midXTab (midDTab a) N a).getD a 0 +
+      (M a : ℚ) * ((List.range (a - 1)).map fun j : Nat =>
+        let k := j + 1
+        midRTab (midDTab a) k a * (1 / (2 : ℚ)^(a - k)) *
+          midNegPart ((midXTab (midDTab a) N a).getD k 0) *
+            midSTab (midDTab a) (midYTab (midDTab a) (M a) a) (M a) (a - k)).sum =
+    midX N a +
+      (M a : ℚ) * ((List.range (a - 1)).map fun j : Nat =>
+        let k := j + 1
+        midR k a * (1 / (2 : ℚ)^(a - k)) *
+          midNegPart (midX N k) * midS (M a) (a - k)).sum
+  rw [midXTab_midDTab_getD_eq a N a a le_rfl le_rfl]
+  congr 1
+  congr 1
+  apply congrArg List.sum
+  refine List.map_congr_left fun j hj => ?_
+  have hjlt : j < a - 1 := List.mem_range.mp hj
+  let k := j + 1
+  have hk : k ≤ a := by omega
+  have hka : a - k ≤ a := by omega
+  dsimp
+  rw [midRTab_midDTab_eq_midR a (j + 1) a le_rfl,
+    midXTab_midDTab_getD_eq a N a (j + 1) le_rfl (by omega),
+    midSTab_midDTab_midYTab_eq_midS a (M a) (a - (j + 1)) (by omega)]
+
+/-- The executable kernel used by the finite certificates is the same rational
+number as the list-specified mid upper bound. -/
+theorem midUNormFast_eq_exact (a N : Nat) :
+    midUNormFast a N = midUNormExact a N := by
+  unfold midUNormFast
+  simpa using midUNormWithTabs_midDTab_eq_exact a N
 
 end Prop52
