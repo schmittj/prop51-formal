@@ -467,6 +467,24 @@ theorem sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq_omegaPrefi
   rw [hshift, printedTailOmegaCoeff_zero_eq_ECoeff_zero]
   ring
 
+/-- Specialization of the bracket-coefficient telescope to the finite
+`printedTailMainSum` prefix used by the large-tail assembly. -/
+theorem sum_gammaWeight_mul_printedTailLowBracketProductCoeff_eq_mainSum_sub_boundary
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) :
+    (∑ n ∈ Finset.range (printedTailR0 a),
+      gammaWeight a (n + 1) *
+        printedTailLowBracketProductCoeff μ a (n + 1)) =
+      printedTailMainSum μ a -
+        gammaWeight a (printedTailR0 a) *
+          printedTailECoeff μ a (printedTailR0 a) := by
+  have hRlt : printedTailR0 a < a := by
+    unfold printedTailR0 printedTailP
+    omega
+  rw [sum_gammaWeight_mul_printedTailLowBracketProductCoeff_succ_eq_omegaPrefix
+    (μ := μ) (a := a) (R := printedTailR0 a) ha hRlt]
+  unfold printedTailMainSum
+  rw [Prop51.list_range_map_sum]
+
 /-- The basic factorial-ratio identity behind the paper's Gamma-moment
 calculation:
 
