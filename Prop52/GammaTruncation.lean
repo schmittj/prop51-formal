@@ -217,4 +217,61 @@ theorem gammaWeight_absOmega_low_tail_le_residue_term
   exact mul_le_mul_of_nonneg_right
     (hsum_subset.trans hmom0) hfactor_nonneg
 
+/-- The four rational residue pieces which remain after the analytic
+Taylor--Gamma event split:
+
+* upper-event coefficient tail beyond `r0`,
+* the crude lower-event probability term,
+* low-index lower-tail monomial terms, and
+* high-index lower-tail monomial terms.
+
+The next analytic step is to prove that the real truncation error is bounded
+by this finite expression. -/
+def truncationResiduePiecesLhs (μ : List Nat) (a : Nat) : ℚ :=
+  (∑ s ∈ (Finset.range (a + 1)).filter
+      (fun s : Nat => printedTailR0 a + 1 ≤ s),
+      printedTailWAbsCoeff μ a s * (printedTailX1 a)^s) +
+    2 * (5 / 6 : ℚ)^a +
+    ((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => s ≤ a / 8),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+        (9 / 10 : ℚ)^(a - a / 8)) +
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+
+/-- The finite residue pieces are bounded by the displayed residue budget in
+`Printed.lean`.  This theorem is the rational bookkeeping companion to the
+event split; it deliberately uses the exact four terms of
+`truncationResidueRhs`. -/
+theorem truncationResiduePiecesLhs_le_truncationResidueRhs
+    (hpoint : PrintedTailWPointBoundX2)
+    (hmom : PrintedTailAbsoluteMomentBounds)
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    truncationResiduePiecesLhs μ a ≤ truncationResidueRhs a := by
+  have hupper := printedTailWAbsCoeff_x1_tail_le_residue_term
+    hpoint (a := a) ha (μ := μ) hμ
+  have hlow := gammaWeight_absOmega_low_tail_le_residue_term
+    hmom (a := a) ha (μ := μ) hμ
+  have hhigh := gammaWeight_absOmega_high_tail_le_residue_term
+    hpoint (a := a) ha (μ := μ) hμ
+  have hpieces :
+      truncationResiduePiecesLhs μ a ≤
+        920 / (2 : ℚ)^(printedTailR0 a + 1) +
+          2 * (5 / 6 : ℚ)^a +
+          9 * (9 / 10 : ℚ)^(a - a / 8) +
+          920 * (a : ℚ) * (3 / 10 : ℚ)^(a / 8 + 1) := by
+    unfold truncationResiduePiecesLhs
+    nlinarith [hupper, hlow, hhigh]
+  have hbudget :
+      920 / (2 : ℚ)^(printedTailR0 a + 1) +
+          2 * (5 / 6 : ℚ)^a +
+          9 * (9 / 10 : ℚ)^(a - a / 8) +
+          920 * (a : ℚ) * (3 / 10 : ℚ)^(a / 8 + 1) =
+        truncationResidueRhs a := by
+    unfold truncationResidueRhs printedTailR0 printedTailP
+    ring
+  exact hpieces.trans_eq hbudget
+
 end Prop52
