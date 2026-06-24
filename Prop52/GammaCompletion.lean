@@ -12,6 +12,7 @@ so the public theorem surface does not obscure the only open analytic point.
 -/
 
 import Prop52.GammaIBP
+import Prop52.FiniteExp
 
 namespace Prop52
 
@@ -194,6 +195,28 @@ theorem printedTailLowExpInput_eval_eq_neg_printedTailLReal
     _ = -∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
           (hCoeff μ r : ℝ) * t^r := by
           rw [Finset.sum_neg_distrib]
+
+theorem printedTailLowExpInput_eq_zero_of_gt
+    (μ : List Nat) (a r : Nat) (hr : printedTailP a < r) :
+    printedTailLowExpInput μ a r = 0 := by
+  simp [printedTailLowExpInput, not_le_of_gt hr]
+
+/-- Finite-support power evaluation for the low exponent input. -/
+theorem hasSum_printedTailLowExpInput_pow_eval
+    (μ : List Nat) (a q : Nat) (t : ℝ) :
+    HasSum
+      (fun n : Nat =>
+        ((coeff n ((mk (printedTailLowExpInput μ a) : ℚ⟦X⟧)^q) : ℚ) : ℝ) *
+          t^n)
+      ((-(printedTailLReal μ a t))^q) := by
+  have hsupp :
+      ∀ r : Nat, printedTailP a < r → printedTailLowExpInput μ a r = 0 := by
+    intro r hr
+    exact printedTailLowExpInput_eq_zero_of_gt μ a r hr
+  have h := hasSum_coeff_mk_pow_eval_of_support
+    (L := printedTailLowExpInput μ a) (P := printedTailP a) hsupp t q
+  rw [printedTailLowExpInput_eval_eq_neg_printedTailLReal] at h
+  simpa using h
 
 theorem printedTailX1_lt_one_real {a : Nat} (ha : 150 ≤ a) :
     (printedTailX1 a : ℝ) < 1 := by
