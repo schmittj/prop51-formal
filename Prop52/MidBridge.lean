@@ -337,6 +337,318 @@ theorem kCoeff_simpleParts (M r : Nat) :
   rw [markedWeight_simpleParts]
   ring
 
+def midDeltaL (M : Nat) (μ : List Nat) (r : Nat) : ℚ :=
+  Prop51.c r * (sPower (simpleParts M) r - sPower μ r)
+
+def midDeltaK (M : Nat) (μ : List Nat) (r : Nat) : ℚ :=
+  kCoeff (simpleParts M) r - kCoeff μ r
+
+private theorem sPower_term_le_mass_div_two_pow (mi r : Nat) (hmi : 1 ≤ mi) :
+    1 / (((mi + 1 : Nat) : ℚ)^r) ≤ (mi : ℚ) / (2 : ℚ)^r := by
+  have hq_ge_two : (2 : ℚ) ≤ ((mi + 1 : Nat) : ℚ) := by
+    exact_mod_cast (by omega : 2 ≤ mi + 1)
+  have hpow_le : (2 : ℚ)^r ≤ (((mi + 1 : Nat) : ℚ)^r) :=
+    pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 2) hq_ge_two r
+  have hden_pos : (0 : ℚ) < (2 : ℚ)^r := by positivity
+  have hinv_le : 1 / (((mi + 1 : Nat) : ℚ)^r) ≤ 1 / (2 : ℚ)^r := by
+    simpa [one_div] using one_div_le_one_div_of_le hden_pos hpow_le
+  have hone_le : (1 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast hmi
+  have hdiv_nonneg : 0 ≤ 1 / (2 : ℚ)^r := by positivity
+  calc
+    1 / (((mi + 1 : Nat) : ℚ)^r) ≤ 1 / (2 : ℚ)^r := hinv_le
+    _ ≤ (mi : ℚ) / (2 : ℚ)^r := by
+      simpa [div_eq_mul_inv] using mul_le_mul_of_nonneg_right hone_le hdiv_nonneg
+
+theorem sPower_le_mass_div_two_pow_of_positive (μ : List Nat)
+    (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) :
+    sPower μ r ≤ (μ.sum : ℚ) / (2 : ℚ)^r := by
+  induction μ with
+  | nil =>
+      simp [sPower]
+  | cons mi μ ih =>
+      have hmi : 1 ≤ mi := hpos mi (by simp)
+      have htail : ∀ m ∈ μ, 1 ≤ m := by
+        intro m hm
+        exact hpos m (by simp [hm])
+      have ih' := ih htail
+      unfold sPower at ih' ⊢
+      simp only [List.map_cons, List.sum_cons, List.sum_cons, Nat.cast_add]
+      have hterm := sPower_term_le_mass_div_two_pow mi r hmi
+      have hmain :
+          1 / (((mi + 1 : Nat) : ℚ)^r) +
+              (List.map (fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r)) μ).sum
+            ≤ (mi : ℚ) / (2 : ℚ)^r + (μ.sum : ℚ) / (2 : ℚ)^r :=
+        add_le_add hterm ih'
+      have hmain' :
+          1 / (((mi : ℚ) + 1)^r) +
+              (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (mi : ℚ) / (2 : ℚ)^r + (μ.sum : ℚ) / (2 : ℚ)^r := by
+        simpa [Nat.cast_add, Nat.cast_one] using hmain
+      calc
+        1 / (((mi : ℚ) + 1)^r) +
+            (List.map (fun mi : Nat => 1 / (((mi : ℚ) + 1)^r)) μ).sum
+            ≤ (mi : ℚ) / (2 : ℚ)^r + (μ.sum : ℚ) / (2 : ℚ)^r := hmain'
+        _ = ((mi : ℚ) + (μ.sum : ℚ)) / (2 : ℚ)^r := by ring
+
+theorem sPower_le_simpleParts_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    sPower μ r ≤ sPower (simpleParts (M a)) r := by
+  obtain ⟨hsum, hpos⟩ := hμ
+  rw [sPower_simpleParts]
+  simpa [hsum] using sPower_le_mass_div_two_pow_of_positive μ hpos r
+
+theorem midDeltaL_nonneg_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    0 ≤ midDeltaL (M a) μ r := by
+  unfold midDeltaL
+  exact mul_nonneg (Prop51.c_nonneg r)
+    (sub_nonneg.mpr (sPower_le_simpleParts_of_partition hμ r))
+
+theorem midDeltaK_nonneg_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    0 ≤ midDeltaK (M a) μ r := by
+  unfold midDeltaK
+  rcases r with _ | r
+  · simp [kCoeff]
+  rcases r with _ | r
+  · simp [kCoeff, markedWeight_simpleParts]
+    have hmw := markedWeight_le_M_div_two_pow_of_partition hμ 1
+    have hdiff : 0 ≤ (M a : ℚ) / (2 : ℚ)^1 - markedWeight μ 1 :=
+      sub_nonneg.mpr hmw
+    nlinarith
+  · simp [kCoeff, markedWeight_simpleParts, Nat.cast_add, Nat.cast_one]
+    have hmw := markedWeight_le_M_div_two_pow_of_partition hμ (r + 2)
+    have hpref_nonneg :
+        0 ≤ 12 * ((r : ℚ) + 1) * Prop51.c (r + 1) := by
+      exact mul_nonneg (mul_nonneg (by norm_num) (by positivity))
+        (Prop51.c_nonneg (r + 1))
+    have hdiff :
+        0 ≤ (M a : ℚ) / (2 : ℚ)^(r + 2) - markedWeight μ (r + 2) :=
+      sub_nonneg.mpr hmw
+    have hprod := mul_nonneg hpref_nonneg hdiff
+    nlinarith
+
+/-- The marked coefficient prefactor dominates the logarithmic coefficient
+with the `7/5` slack used in the all-simple comparison. -/
+theorem seven_c_le_five_phiCoeff_of_two_le (r : Nat) (hr : 2 ≤ r) :
+    7 * Prop51.c r ≤ 5 * phiCoeff r := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 2 := ⟨r - 2, by omega⟩
+  have hdub : Prop51.d (n + 2) ≤ 4 / 25 :=
+    Prop51.d_ub (n + 2) (by omega)
+  have hdlb : 5 / 36 ≤ Prop51.d (n + 1) :=
+    Prop51.d_lb (n + 1) (by omega)
+  have hd : 7 * Prop51.d (n + 2) ≤ 10 * Prop51.d (n + 1) := by
+    nlinarith
+  let A : ℚ := (6 : ℚ)^(n + 1) * ((n.factorial : Nat) : ℚ)
+  have hfactor_nonneg : 0 ≤ 6 * ((n + 1 : Nat) : ℚ) * A := by
+    dsimp [A]
+    positivity
+  calc
+    7 * Prop51.c (n + 2)
+        = (6 * ((n + 1 : Nat) : ℚ) * A) * (7 * Prop51.d (n + 2)) := by
+          rw [Prop51.c_eq_d (n + 2)]
+          dsimp [A]
+          rw [show n + 2 = (n + 1) + 1 by omega, pow_succ]
+          rw [show (n + 1).factorial = (n + 1) * n.factorial by
+            rw [Nat.factorial_succ]]
+          push_cast
+          ring
+    _ ≤ (6 * ((n + 1 : Nat) : ℚ) * A) * (10 * Prop51.d (n + 1)) :=
+          mul_le_mul_of_nonneg_left hd hfactor_nonneg
+    _ = 5 * phiCoeff (n + 2) := by
+          simp [phiCoeff]
+          rw [Prop51.c_eq_d (n + 1)]
+          dsimp [A]
+          ring
+
+private theorem five_log_gap_term_le_seven_marked_gap_term
+    (mi r : Nat) (hmi : 2 ≤ mi) (hr : 2 ≤ r) :
+    5 * ((mi : ℚ) / (2 : ℚ)^r - 1 / (((mi + 1 : Nat) : ℚ)^r)) ≤
+      7 * ((mi : ℚ) / (2 : ℚ)^r -
+        (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) := by
+  obtain ⟨s, rfl⟩ : ∃ s : Nat, r = s + 2 := ⟨r - 2, by omega⟩
+  let q : ℚ := ((mi + 1 : Nat) : ℚ)
+  have hq2 : (2 : ℚ) ≤ q := by
+    dsimp [q]
+    exact_mod_cast (by omega : 2 ≤ mi + 1)
+  have hqpos : 0 < q := by
+    dsimp [q]
+    exact_mod_cast Nat.succ_pos mi
+  have hpow : (2 : ℚ)^s ≤ q^s :=
+    pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 2) hq2 s
+  have hbase :
+      0 ≤ 2 * (mi : ℚ) * q^2 - 4 * (7 * (mi : ℚ) - 5) := by
+    dsimp [q]
+    have hmiQ : (2 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast hmi
+    have hfactor :
+        2 * (mi : ℚ) * (((mi + 1 : Nat) : ℚ))^2 -
+            4 * (7 * (mi : ℚ) - 5) =
+          2 * ((mi : ℚ) - 2) * ((mi : ℚ) + 5) * ((mi : ℚ) - 1) := by
+      push_cast
+      ring
+    rw [hfactor]
+    have h1 : 0 ≤ (mi : ℚ) - 2 := by nlinarith
+    have h2 : 0 ≤ (mi : ℚ) + 5 := by nlinarith
+    have h3 : 0 ≤ (mi : ℚ) - 1 := by nlinarith
+    exact mul_nonneg (mul_nonneg (mul_nonneg (by norm_num) h1) h2) h3
+  have hpow_nonneg : 0 ≤ (2 : ℚ)^s := by positivity
+  have hcoef_nonneg : 0 ≤ 2 * (mi : ℚ) * q^2 := by positivity
+  have hfirst :
+      2 * (mi : ℚ) * ((2 : ℚ)^s * q^2) ≤
+        2 * (mi : ℚ) * (q^s * q^2) := by
+    have hmul : (2 : ℚ)^s * q^2 ≤ q^s * q^2 :=
+      mul_le_mul_of_nonneg_right hpow (by positivity)
+    exact mul_le_mul_of_nonneg_left hmul (by positivity)
+  have hclear :
+      0 ≤ 2 * (mi : ℚ) * q^(s + 2) -
+          (7 * (mi : ℚ) - 5) * (2 : ℚ)^(s + 2) := by
+    rw [pow_add, pow_add]
+    norm_num [pow_two]
+    nlinarith
+  have hden : 0 < (2 : ℚ)^(s + 2) * q^(s + 2) := by positivity
+  have hqpow_ne : q^(s + 2) ≠ 0 := by positivity
+  have h2pow_ne : (2 : ℚ)^(s + 2) ≠ 0 := by positivity
+  field_simp [hqpow_ne, h2pow_ne]
+  nlinarith
+
+private theorem midDelta_term_le (mi r : Nat) (hmi : 1 ≤ mi) :
+    Prop51.c r * ((mi : ℚ) / (2 : ℚ)^r -
+        1 / (((mi + 1 : Nat) : ℚ)^r)) ≤
+      phiCoeff r * ((mi : ℚ) / (2 : ℚ)^r -
+        (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r)) := by
+  rcases r with _ | r
+  · simp [phiCoeff, Prop51.c_zero]
+  rcases r with _ | r
+  · by_cases hmi_one : mi = 1
+    · subst mi
+      norm_num [phiCoeff, Prop51.c_one]
+    simp [phiCoeff, Prop51.c_one]
+    have hmiQ : (1 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast hmi
+    have hmi_two : 2 ≤ mi := by omega
+    have hqpos : (0 : ℚ) < ((mi + 1 : Nat) : ℚ) := by
+      exact_mod_cast Nat.succ_pos mi
+    have hfactor : 0 ≤ ((mi : ℚ) - 1) * (7 * (mi : ℚ) - 10) := by
+      have h1 : 0 ≤ (mi : ℚ) - 1 := by nlinarith
+      have h2 : 0 ≤ 7 * (mi : ℚ) - 10 := by
+        have hmiQ2 : (2 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast hmi_two
+        nlinarith
+      exact mul_nonneg h1 h2
+    field_simp [hqpos.ne']
+    nlinarith
+  · by_cases hmi_one : mi = 1
+    · subst mi
+      simp
+    have hmi_two : 2 ≤ mi := by omega
+    have hgap_nonneg :
+        0 ≤ (mi : ℚ) / (2 : ℚ)^(r + 2) -
+          (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^(r + 2)) := by
+      have hq_ge_two : (2 : ℚ) ≤ ((mi + 1 : Nat) : ℚ) := by
+        exact_mod_cast (by omega : 2 ≤ mi + 1)
+      have hpow_le : (2 : ℚ)^(r + 2) ≤ (((mi + 1 : Nat) : ℚ)^(r + 2)) :=
+        pow_le_pow_left₀ (by norm_num : (0 : ℚ) ≤ 2) hq_ge_two (r + 2)
+      have hden_pos : (0 : ℚ) < (2 : ℚ)^(r + 2) := by positivity
+      have hinv_le :
+          1 / (((mi + 1 : Nat) : ℚ)^(r + 2)) ≤ 1 / (2 : ℚ)^(r + 2) := by
+        simpa [one_div] using one_div_le_one_div_of_le hden_pos hpow_le
+      have hmi_nonneg : 0 ≤ (mi : ℚ) := by positivity
+      simpa [div_eq_mul_inv, sub_nonneg] using
+        mul_le_mul_of_nonneg_left hinv_le hmi_nonneg
+    have hfive :=
+      five_log_gap_term_le_seven_marked_gap_term mi (r + 2) hmi_two (by omega)
+    have hseven := seven_c_le_five_phiCoeff_of_two_le (r + 2) (by omega)
+    have hc_nonneg : 0 ≤ Prop51.c (r + 2) := Prop51.c_nonneg (r + 2)
+    have hleft :
+        5 * (Prop51.c (r + 2) *
+          ((mi : ℚ) / (2 : ℚ)^(r + 2) -
+            1 / (((mi + 1 : Nat) : ℚ)^(r + 2)))) ≤
+        Prop51.c (r + 2) *
+          (7 * ((mi : ℚ) / (2 : ℚ)^(r + 2) -
+            (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^(r + 2)))) := by
+      nlinarith [mul_le_mul_of_nonneg_left hfive hc_nonneg]
+    have hright :
+        Prop51.c (r + 2) *
+          (7 * ((mi : ℚ) / (2 : ℚ)^(r + 2) -
+            (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^(r + 2)))) ≤
+        5 * (phiCoeff (r + 2) *
+          ((mi : ℚ) / (2 : ℚ)^(r + 2) -
+            (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^(r + 2)))) := by
+      have hmul := mul_le_mul_of_nonneg_right hseven hgap_nonneg
+      nlinarith
+    nlinarith
+
+private theorem sum_map_nat_cast_div_const (μ : List Nat) (d : ℚ) :
+    (μ.map fun mi : Nat => (mi : ℚ) / d).sum = (μ.sum : ℚ) / d := by
+  induction μ with
+  | nil =>
+      simp
+  | cons mi μ ih =>
+      simp only [List.map_cons, List.sum_cons, List.sum_cons, Nat.cast_add]
+      rw [ih]
+      ring
+
+private theorem list_sum_mul_sub {α : Type} (xs : List α) (C : ℚ)
+    (f g : α → ℚ) :
+    C * ((xs.map f).sum - (xs.map g).sum) =
+      (xs.map fun x => C * (f x - g x)).sum := by
+  induction xs with
+  | nil =>
+      simp
+  | cons x xs ih =>
+      simp only [List.map_cons, List.sum_cons]
+      rw [← ih]
+      ring
+
+private theorem midDeltaL_eq_sum_terms {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    midDeltaL (M a) μ r =
+      (μ.map fun mi : Nat =>
+        Prop51.c r * ((mi : ℚ) / (2 : ℚ)^r -
+          1 / (((mi + 1 : Nat) : ℚ)^r))).sum := by
+  unfold midDeltaL
+  rw [sPower_simpleParts]
+  obtain ⟨hsum, _hpos⟩ := hμ
+  have hmass :
+      (M a : ℚ) / (2 : ℚ)^r =
+        (μ.map fun mi : Nat => (mi : ℚ) / (2 : ℚ)^r).sum := by
+    rw [← hsum]
+    exact (sum_map_nat_cast_div_const μ ((2 : ℚ)^r)).symm
+  unfold sPower
+  rw [hmass]
+  exact list_sum_mul_sub μ (Prop51.c r)
+    (fun mi : Nat => (mi : ℚ) / (2 : ℚ)^r)
+    (fun mi : Nat => 1 / (((mi + 1 : Nat) : ℚ)^r))
+
+private theorem midDeltaK_eq_sum_terms {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    midDeltaK (M a) μ r =
+      (μ.map fun mi : Nat =>
+        phiCoeff r * ((mi : ℚ) / (2 : ℚ)^r -
+          (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r))).sum := by
+  unfold midDeltaK
+  rw [kCoeff_simpleParts, kCoeff_eq_markedCoeff]
+  unfold markedCoeff
+  obtain ⟨hsum, _hpos⟩ := hμ
+  have hmass :
+      (M a : ℚ) / (2 : ℚ)^r =
+        (μ.map fun mi : Nat => (mi : ℚ) / (2 : ℚ)^r).sum := by
+    rw [← hsum]
+    exact (sum_map_nat_cast_div_const μ ((2 : ℚ)^r)).symm
+  unfold markedWeight
+  rw [show (M a : ℚ) * phiCoeff r / (2 : ℚ)^r =
+      phiCoeff r * ((M a : ℚ) / (2 : ℚ)^r) by ring]
+  rw [hmass]
+  rw [← mul_sub]
+  exact list_sum_mul_sub μ (phiCoeff r)
+    (fun mi : Nat => (mi : ℚ) / (2 : ℚ)^r)
+    (fun mi : Nat => (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r))
+
+theorem midDeltaL_le_midDeltaK_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) :
+    midDeltaL (M a) μ r ≤ midDeltaK (M a) μ r := by
+  rw [midDeltaL_eq_sum_terms hμ r, midDeltaK_eq_sum_terms hμ r]
+  refine List.sum_le_sum fun x hx => ?_
+  exact midDelta_term_le x r (hμ.2 x hx)
+
 theorem coeff_prodSeries_simpleParts (M r : Nat) :
     coeff r (Prop51.prodSeries (simpleParts M)) = midQCoeff M r := by
   rw [prodSeries_eq_expSeries_sPower]
