@@ -15,6 +15,7 @@ import Prop51.Rectangle
 import Prop52.Finite
 import Prop52.Printed
 import Prop52.MidBridge
+import Prop52.GammaCompletion
 
 namespace Prop52
 
@@ -281,6 +282,16 @@ theorem correctedCoeff_nonvanishing_of_gammaIntegral
     CorrectedCoeffNonvanishing :=
   correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
     printedCoeffNegativityMid_closed hgamma
+
+/-- Public assembly with the remaining analytic work isolated as the
+Taylor--Gamma truncation-error theorem.  The Gamma integration-by-parts lower
+bound, residue budget, finite range, mid-range, and Proposition 5.1 rectangle
+inputs are all closed in Lean. -/
+theorem correctedCoeff_nonvanishing_of_gammaTruncationError
+    (htrunc : PrintedTailGammaTruncationErrorBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_gammaIntegral
+    (printedTailGammaIntegralLowerBound_of_truncationError htrunc)
 
 /-! ## Executable checks for the smallest corrected example
 
