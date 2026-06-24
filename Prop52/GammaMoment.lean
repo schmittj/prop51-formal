@@ -288,6 +288,146 @@ theorem gammaWeight_le_x2_tailFactor
   have h := gammaWeight_le_x2_minPow (a := a) ha s hsR
   rwa [show min s (a / 8 + 1) = a / 8 + 1 by omega] at h
 
+/-- High-index part of the finite Gamma-weighted omega sum, compared with the
+`x₂` point majorant.  This is the formal version of the last event in the
+Taylor--Gamma truncation split: after `S=floor(a/8)`, each Gamma weight carries
+an extra `(3/10)^(S+1)` factor relative to the `x₂` coefficient weight. -/
+theorem gammaWeight_absOmega_high_tail_le_x2_sum
+    {a : Nat} (ha : 150 ≤ a) (μ : List Nat) :
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+      ≤ (3 / 10 : ℚ)^(a / 8 + 1) *
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+  let C : ℚ := (3 / 10 : ℚ)^(a / 8 + 1)
+  have hterm :
+      (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+        ≤ ∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hs_range :
+        s ∈ Finset.range (printedTailR0 a + 1) :=
+      (Finset.mem_filter.mp hs).1
+    have hsS : a / 8 + 1 ≤ s :=
+      (Finset.mem_filter.mp hs).2
+    have hsR : s ≤ printedTailR0 a := by
+      have := Finset.mem_range.mp hs_range
+      omega
+    have hgamma :=
+      gammaWeight_le_x2_tailFactor (a := a) (s := s) ha hsR hsS
+    have hgamma_nonneg : 0 ≤ gammaWeight a s := by
+      unfold gammaWeight
+      positivity
+    have hW_nonneg : 0 ≤ printedTailWAbsCoeff μ a s :=
+      printedTailWAbsCoeff_nonneg μ a s
+    calc
+      gammaWeight a s * |printedTailOmegaCoeff μ a s|
+          ≤ gammaWeight a s * printedTailWAbsCoeff μ a s :=
+            mul_le_mul_of_nonneg_left
+              (abs_printedTailOmegaCoeff_le_WAbsCoeff μ a s)
+              hgamma_nonneg
+      _ ≤ (C * (printedTailX2 a)^s) * printedTailWAbsCoeff μ a s :=
+            mul_le_mul_of_nonneg_right hgamma hW_nonneg
+      _ = C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+            dsimp [C]
+            ring
+  calc
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+        ≤ ∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          C * (printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := hterm
+    _ = C * (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+          rw [Finset.mul_sum]
+    _ = (3 / 10 : ℚ)^(a / 8 + 1) *
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := by
+          rfl
+
+/-- Certificate-facing high-tail bound matching the final term of
+`truncationResidueRhs`.  The estimate above actually gives a bound without the
+extra factor `a`; we retain the printed residue shape here so the final
+assembly can quote the displayed budget verbatim. -/
+theorem gammaWeight_absOmega_high_tail_le_residue_term
+    (hpoint : PrintedTailWPointBoundX2)
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+      ≤ 920 * (a : ℚ) * (3 / 10 : ℚ)^(a / 8 + 1) := by
+  let C : ℚ := (3 / 10 : ℚ)^(a / 8 + 1)
+  have hx2_nonneg : 0 ≤ printedTailX2 a := by
+    unfold printedTailX2
+    positivity
+  have hsubset :
+      (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s) ⊆
+        Finset.range (a + 1) := by
+    intro s hs
+    have hs_range :
+        s ∈ Finset.range (printedTailR0 a + 1) :=
+      (Finset.mem_filter.mp hs).1
+    have hsR : s ≤ printedTailR0 a := by
+      have := Finset.mem_range.mp hs_range
+      omega
+    have hslt : s < a + 1 := by
+      unfold printedTailR0 printedTailP at hsR
+      omega
+    exact Finset.mem_range.mpr hslt
+  have hpoint_subset :
+      (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+        ≤ ∑ s ∈ Finset.range (a + 1),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s :=
+    Finset.sum_le_sum_of_subset_of_nonneg hsubset
+      (by
+        intro s _hs _hnot
+        exact mul_nonneg (printedTailWAbsCoeff_nonneg μ a s)
+          (pow_nonneg hx2_nonneg s))
+  have htail :=
+    gammaWeight_absOmega_high_tail_le_x2_sum (a := a) ha μ
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  have hsum_le_920 :
+      C * (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s)
+        ≤ C * 920 :=
+    mul_le_mul_of_nonneg_left
+      (hpoint_subset.trans (hpoint a ha μ hμ)) hC_nonneg
+  have ha_one : (1 : ℚ) ≤ a := by
+    exact_mod_cast (by omega : 1 ≤ a)
+  have h920a : (920 : ℚ) ≤ 920 * (a : ℚ) := by nlinarith
+  have hrelax : 920 * C ≤ 920 * (a : ℚ) * C := by
+    calc
+      920 * C ≤ (920 * (a : ℚ)) * C :=
+        mul_le_mul_of_nonneg_right h920a hC_nonneg
+      _ = 920 * (a : ℚ) * C := by ring
+  calc
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+        ≤ C * (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          printedTailWAbsCoeff μ a s * (printedTailX2 a)^s) := htail
+    _ ≤ C * 920 := hsum_le_920
+    _ = 920 * C := by ring
+    _ ≤ 920 * (a : ℚ) * C := hrelax
+    _ = 920 * (a : ℚ) * (3 / 10 : ℚ)^(a / 8 + 1) := by
+          rfl
+
 /-- Coefficient recurrence for the low exponential `E=exp(-L)`, with the
 minus sign exposed in the form used by the discrete integration-by-parts
 calculation. -/
