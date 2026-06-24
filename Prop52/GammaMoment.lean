@@ -33,6 +33,48 @@ private theorem factorial_succ_cast (n : Nat) :
       ((n + 1 : Nat) : ℚ) * ((n.factorial : Nat) : ℚ) := by
   exact_mod_cast Nat.factorial_succ n
 
+/-- Shifting two powers of `t = 1/(6Y)` from a Gamma law of shape `a` to one
+of shape `a-2` produces exactly the scalar prefactor used in the Jensen
+margin. -/
+theorem M_mul_gammaWeight_shift_two_eq
+    {a r : Nat} (ha : 150 ≤ a) :
+    (M a : ℚ) * gammaWeight a (r + 2) =
+      (1 / (6 * ((a : ℚ) - 2))) * gammaWeight (a - 2) r := by
+  have hMcast : (M a : ℚ) = 6 * ((a : ℚ) - 1) := by
+    unfold M
+    rw [Nat.cast_sub (by omega : 6 ≤ 6 * a)]
+    push_cast
+    ring
+  rw [hMcast]
+  unfold gammaWeight
+  have hpow6 : (6 : ℚ)^r ≠ 0 := by positivity
+  have hpow6s : (6 : ℚ)^(r + 2) ≠ 0 := by positivity
+  have hfac_num_ne :
+      (((Nat.factorial (a - r - 3) : Nat) : ℚ)) ≠ 0 :=
+    factorial_cast_ne _
+  have hfac_den_ne :
+      (((Nat.factorial (a - 3) : Nat) : ℚ)) ≠ 0 :=
+    factorial_cast_ne _
+  have ha2Q : (a : ℚ) - 2 ≠ 0 := by
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  have ha1Q : (a : ℚ) - 1 ≠ 0 := by
+    have haQ : (150 : ℚ) ≤ a := by exact_mod_cast ha
+    nlinarith
+  rw [show a - (r + 2) - 1 = a - r - 3 by omega]
+  rw [show a - 2 - r - 1 = a - r - 3 by omega]
+  rw [show a - 2 - 1 = a - 3 by omega]
+  rw [show a - 1 = (a - 2) + 1 by omega, factorial_succ_cast]
+  rw [show (((a - 2 + 1 : Nat) : ℚ)) = (a : ℚ) - 1 by
+    rw [Nat.cast_add, Nat.cast_one, Nat.cast_sub (by omega : 2 ≤ a)]
+    ring]
+  rw [show a - 2 = (a - 3) + 1 by omega, factorial_succ_cast]
+  rw [show (((a - 3 + 1 : Nat) : ℚ)) = (a : ℚ) - 2 by
+    rw [Nat.cast_add, Nat.cast_one, Nat.cast_sub (by omega : 3 ≤ a)]
+    ring]
+  field_simp [hpow6, hpow6s, hfac_num_ne, hfac_den_ne, ha2Q, ha1Q]
+  ring
+
 /-- The basic factorial-ratio identity behind the paper's Gamma-moment
 calculation:
 
