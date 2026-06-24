@@ -14,6 +14,7 @@ import Prop52.Statement
 import Prop51.Rectangle
 import Prop52.Finite
 import Prop52.Printed
+import Prop52.MidBridge
 
 namespace Prop52
 
@@ -272,6 +273,14 @@ theorem correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
     CorrectedCoeffNonvanishing :=
   correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
     hmid hgamma printedTailWPointBoundX2_closed
+
+/-- Public assembly after the mid-range certificate has been closed in Lean.
+The only remaining large-tail input is the Gamma/integral lower bound. -/
+theorem correctedCoeff_nonvanishing_of_gammaIntegral
+    (hgamma : PrintedTailGammaIntegralLowerBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
+    printedCoeffNegativityMid_closed hgamma
 
 /-! ## Executable checks for the smallest corrected example
 
