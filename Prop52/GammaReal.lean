@@ -9,11 +9,37 @@ exponential endpoint used after Jensen's inequality in the printed proof.
 -/
 
 import Prop52.GammaMoment
+import Mathlib.Analysis.Convex.Integral
+import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.Complex.ExponentialBounds
 
 namespace Prop52
 
 open Finset
+open MeasureTheory Set
+
+/-- Jensen's inequality in the exact form needed for the Gamma margin.  The
+specific Gamma expectation is not hidden here: callers must still provide the
+integrability assumptions and the bound on the mean of `f`. -/
+theorem real_exp_neg_le_integral_exp_neg_of_integral_le
+    {α : Type*} [MeasurableSpace α] {μ : Measure α} [IsProbabilityMeasure μ]
+    {f : α → ℝ} {C : ℝ}
+    (hf : Integrable f μ)
+    (hexp : Integrable (fun x => Real.exp (-f x)) μ)
+    (hmean : ∫ x, f x ∂ μ ≤ C) :
+    Real.exp (-C) ≤ ∫ x, Real.exp (-f x) ∂ μ := by
+  have hJ :
+      Real.exp (∫ x, -f x ∂ μ) ≤ ∫ x, Real.exp (-f x) ∂ μ := by
+    simpa [Function.comp_def] using
+      (convexOn_exp.map_integral_le (s := univ) (g := Real.exp)
+        (f := fun x => -f x)
+        Real.continuous_exp.continuousOn isClosed_univ
+        (Filter.Eventually.of_forall fun _ => mem_univ _)
+        hf.neg hexp)
+  have hmean_neg : -C ≤ ∫ x, -f x ∂ μ := by
+    rw [integral_neg]
+    linarith
+  exact (Real.exp_le_exp_of_le hmean_neg).trans hJ
 
 /-- A three-term Taylor upper bound for `exp(3/10)`. -/
 theorem real_exp_three_tenths_le :
