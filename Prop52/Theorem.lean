@@ -283,6 +283,37 @@ theorem correctedCoeff_nonvanishing_of_gammaIntegral
   correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
     printedCoeffNegativityMid_closed hgamma
 
+/-- Printed-series negativity for all `a >= 14`, assembled from the closed
+mid-range certificate and the Gamma/integral tail lower bound. -/
+theorem printedCoeffNegativityLarge_of_gammaIntegral
+    (hgamma : PrintedTailGammaIntegralLowerBound) :
+    PrintedCoeffNegativityLarge :=
+  printedCoeffNegativityLarge_of_mid_tail printedCoeffNegativityMid_closed
+    (printedCoeffNegativityTail_of_errorBounds
+      (printedTailMainLowerBound_of_gammaIntegralLowerBound hgamma)
+      (printedTailHErrorBound_of_absoluteMoments
+        (printedTailAbsoluteMomentBounds_of_majorant
+          (printedTailMajorantMomentBounds_of_wPointMomentBounds
+            printedTailWPointMomentBounds_closed)))
+      (printedTailKErrorBound_of_eAbsoluteMoment
+        (printedTailEAbsoluteMomentBound_of_majorant
+          (printedTailMajorantMomentBounds_of_wPointMomentBounds
+            printedTailWPointMomentBounds_closed)))
+      (printedTailOmegaErrorBound_of_coeffMajorant
+        (printedTailOmegaCoeffMajorant_of_wPointBoundX2
+          printedTailWPointBoundX2_closed)))
+
+/-- Large-range strict negativity for the corrected coefficient once the
+Gamma/integral lower bound is available. -/
+theorem correctedCoeff_neg_of_gammaIntegral
+    (hgamma : PrintedTailGammaIntegralLowerBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_large_of_printed
+    (printedCoeffNegativityLarge_of_gammaIntegral hgamma)
+    a ha μ hμ
+
 /-- Public assembly with the remaining analytic work isolated as the
 Taylor--Gamma truncation-error theorem.  The Gamma integration-by-parts lower
 bound, residue budget, finite range, mid-range, and Proposition 5.1 rectangle
@@ -292,6 +323,17 @@ theorem correctedCoeff_nonvanishing_of_gammaTruncationError
     CorrectedCoeffNonvanishing :=
   correctedCoeff_nonvanishing_of_gammaIntegral
     (printedTailGammaIntegralLowerBound_of_truncationError htrunc)
+
+/-- Public large-range strict negativity with the remaining analytic work
+isolated as the Taylor--Gamma truncation-error theorem. -/
+theorem correctedCoeff_neg_of_gammaTruncationError
+    (htrunc : PrintedTailGammaTruncationErrorBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_gammaIntegral
+    (printedTailGammaIntegralLowerBound_of_truncationError htrunc)
+    ha hμ
 
 /-! ## Executable checks for the smallest corrected example
 
