@@ -3,75 +3,68 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 
 # Public facade for the corrected Chen--Larson Proposition 5.2
 
-This is the human-facing entry point.  It states the two assumption-free public
-theorems and the executable `g = 4` sanity checks, and nothing else of
-substance.  The staged reduction that proves them lives in `Prop52.Assembly`;
-the heavy finite and analytic inputs live in `Prop52.Finite`,
-`Prop52.MidBridge`, and the `Prop52.Gamma*` modules; the Proposition 5.1
-quotient sign input is `Prop51.bCoeff_neg_of_rectangle`.
+This file is the human-facing checkpoint for the `g ≡ 1 (mod 3)` case.  It
+contains only the final source-shaped theorems.
 
-## What the theorem says
+Notation matched to the paper:
 
-For `g ≡ 1 (mod 3)`, write `g = 3a - 2` and `M = 2g - 2 = 6a - 6`.  Chen--Larson's
-*printed* Proposition 5.2 used the constant term `1` where Ionel's relation gives
-`κ₀ = 2g - 2 = M`.  The *corrected* coefficient is
+* `Prop51.chenLarsonC` is the hypergeometric series
+  `C(t) = Σ_k (6k)! / ((3k)!(2k)! 72^k) t^k`;
+* `Prop51.chenLarsonSeries_spec` pins `Prop51.bCoeff μ a` as the coefficient
+  `b_a` of the Proposition 5.1 quotient
+  `B_μ(t) = ∏_i C(t/(m_i+1)) / C(t)^N`;
+* `Prop52.sourceCoeff (M a) μ a` is `[t^a] B_μ(t) * D^cor_μ(t)`, where
+  `D^cor_μ` is the corrected source factor of the corrected Proposition 5.2
+  identity;
+* `M a = 6a - 6`; when `g % 3 = 1` and `a = g / 3 + 1`, this is
+  `M a = 2g - 2`;
+* `Prop51.IsPartitionOf μ (2 * g - 2)` says that `μ` is a positive partition of
+  the geometric degree `2g - 2`;
+* the target coefficient degree is `a = g / 3 + 1`.
 
-  `correctedCoeff a μ = [t^a] F_μ(t) · (M - K_μ(t))`,
-
-defined in `Prop52.Statement` as `M * Prop51.bCoeff μ a - markedConvolution μ a`.
-The decisive identity `correctedCoeff_eq_printedCoeff_add` (in `Prop52.Assembly`)
-reads `T^cor = T^old + (M - 1) · b_a`: for `a ≥ 14` both summands are strictly
-negative (`T^old` by the printed-series proof, `b_a` by the Proposition 5.1
-rectangle), so the correction only deepens the sign; the finitely many
-`2 ≤ a ≤ 13` are checked exactly.
-
-## Reviewer's checklist (to ascertain the final theorem is correct)
-
-* the target statement `CorrectedCoeffNonvanishing` is defined in
-  `Prop52.Statement` (∀ `a ≥ 2`, ∀ positive partition `μ` of `M a`,
-  `correctedCoeff a μ ≠ 0`);
-* `correctedCoeff_nonvanishing` below has exactly that type and takes no
-  hypotheses;
-* `scripts/PublicAxiomsReport.lean` reports it depends only on
-  `propext, Classical.choice, Quot.sound, Lean.ofReduceBool, Lean.trustCompiler`;
-* the executable `g = 4` checks at the end match the worked example of the
-  corrected note (`b₂ = -195/8`, `T^old = 45/8`, `T^cor = -465/4`).
+Thus the theorems below state exactly that the corrected Proposition 5.2 source
+coefficient is nonzero for all `g ≥ 2`, `g ≡ 1 (mod 3)`, and is strictly
+negative in the large range used by the proof.
 -/
 
-import Prop52.Assembly
+import Prop52.Source
 
 namespace Prop52
 
-/-- **Corrected Chen--Larson Proposition 5.2: non-vanishing.**
+/-- Corrected Chen--Larson Proposition 5.2 source coefficient: non-vanishing
+for every genus `g ≥ 2` with `g ≡ 1 (mod 3)`. -/
+theorem chenLarsonProp52Coefficient_nonvanishing
+    {g : Nat} (hg : 2 ≤ g) (hmod : g % 3 = 1)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (2 * g - 2)) :
+    sourceCoeff (M (g / 3 + 1)) μ (g / 3 + 1) ≠ 0 := by
+  have hdecomp : g = 3 * (g / 3) + 1 := by
+    have h := Nat.mod_add_div g 3
+    omega
+  have hM : M (g / 3 + 1) = 2 * g - 2 := by
+    simp [M]
+    omega
+  have ha : 2 ≤ g / 3 + 1 := by
+    omega
+  have hμ' : Prop51.IsPartitionOf μ (M (g / 3 + 1)) := by
+    simpa [hM] using hμ
+  exact sourceCorrectedCoeff_nonvanishing (g / 3 + 1) ha μ hμ'
 
-Assumption-free.  For every `a ≥ 2` and every positive partition `μ` of
-`M = 6a - 6`, the corrected coefficient is nonzero.  The finite ranges, the
-Proposition 5.1 rectangle input, the mid-range interval certificate, the Gamma
-lower bound, the Taylor truncation residue, and the real exponential
-power-series identity are all closed in Lean (assembled in `Prop52.Assembly`). -/
-theorem correctedCoeff_nonvanishing : CorrectedCoeffNonvanishing :=
-  correctedCoeff_nonvanishing_of_eSeriesHasSum printedTailERealSeriesHasSum
-
-/-- **Corrected Chen--Larson Proposition 5.2: strict negativity for `a ≥ 14`.**
-
-Assumption-free.  For `a ≥ 14` and every positive partition `μ` of `M = 6a - 6`,
-the corrected coefficient is `< 0`. -/
-theorem correctedCoeff_neg
-    {a : Nat} (ha : 14 ≤ a)
-    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
-    correctedCoeff a μ < 0 :=
-  correctedCoeff_neg_of_eSeriesHasSum printedTailERealSeriesHasSum ha hμ
-
-/-! ## Executable checks for the smallest corrected example
-
-For `g = 4` (`a = 2`) and `μ = (1⁶)`, the corrected note records
-`[t²]F_μ = -195/8`, printed coefficient `45/8`, corrected coefficient `-465/4`;
-and indeed `-465/4 - 45/8 = 5 · (-195/8) = (M - 1) · b_a`. -/
-
-example : Prop51.bCoeff [1, 1, 1, 1, 1, 1] 2 = -195 / 8 := by native_decide
-
-example : printedCoeff [1, 1, 1, 1, 1, 1] 2 = 45 / 8 := by native_decide
-
-example : correctedCoeff 2 [1, 1, 1, 1, 1, 1] = -465 / 4 := by native_decide
+/-- Corrected Chen--Larson Proposition 5.2 source coefficient: strict
+negativity in the large range `g ≥ 40`, `g ≡ 1 (mod 3)`. -/
+theorem chenLarsonProp52Coefficient_neg
+    {g : Nat} (hg : 40 ≤ g) (hmod : g % 3 = 1)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (2 * g - 2)) :
+    sourceCoeff (M (g / 3 + 1)) μ (g / 3 + 1) < 0 := by
+  have hdecomp : g = 3 * (g / 3) + 1 := by
+    have h := Nat.mod_add_div g 3
+    omega
+  have hM : M (g / 3 + 1) = 2 * g - 2 := by
+    simp [M]
+    omega
+  have ha : 14 ≤ g / 3 + 1 := by
+    omega
+  have hμ' : Prop51.IsPartitionOf μ (M (g / 3 + 1)) := by
+    simpa [hM] using hμ
+  exact sourceCorrectedCoeff_neg ha hμ'
 
 end Prop52

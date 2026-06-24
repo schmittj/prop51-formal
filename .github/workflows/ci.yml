@@ -41,6 +41,10 @@ jobs:
               "Prop51.chenLarsonCoefficient_ne_zero",
               "Prop52.correctedCoeff_nonvanishing",
               "Prop52.correctedCoeff_neg",
+              "Prop52.sourceCorrectedCoeff_nonvanishing",
+              "Prop52.sourceCorrectedCoeff_neg",
+              "Prop52.chenLarsonProp52Coefficient_nonvanishing",
+              "Prop52.chenLarsonProp52Coefficient_neg",
           ]
           text = pathlib.Path("public_axioms.txt").read_text() \
                + "\n" + pathlib.Path("axioms.txt").read_text()

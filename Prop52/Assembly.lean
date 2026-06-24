@@ -6,9 +6,9 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 Internal module.  It carries the correction identity
 (`correctedCoeff_eq_printedCoeff_add`), the Proposition 5.1 rectangle bridge,
 and the staged ladder of `_of_*` reduction theorems that discharge the analytic
-and finite inputs one layer at a time.  The two assumption-free public theorems
-are stated in `Prop52.Theorem`, the human-facing facade; this file is where
-their proof terms are assembled.
+and finite inputs one layer at a time.  The assumption-free marked theorems live
+here; `Prop52.Source` bridges them to the source coefficient, and
+`Prop52.Theorem` is the human-facing source-shaped facade.
 -/
 
 import Prop52.Statement
@@ -459,11 +459,24 @@ theorem correctedCoeff_neg_of_eSeriesHasSum
     (printedTailWRealSeriesHasSum_of_eSeries hEseries)
     ha hμ
 
-/-! The two assumption-free public theorems `correctedCoeff_nonvanishing` and
-`correctedCoeff_neg` live in `Prop52.Theorem` (the facade).  Each is a single
-application of `correctedCoeff_nonvanishing_of_eSeriesHasSum` (resp.
-`correctedCoeff_neg_of_eSeriesHasSum`, above) to the closed input
-`printedTailERealSeriesHasSum`. -/
+/-! ## Assumption-free marked theorems
+
+These are retained as named theorems for downstream reports and for the source
+bridge, but they are no longer the human-facing facade: the public statement in
+`Prop52.Theorem` is phrased in terms of the source coefficient supplied by the
+corrected geometric identity. -/
+
+/-- Corrected marked Chen--Larson Proposition 5.2: non-vanishing. -/
+theorem correctedCoeff_nonvanishing : CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_eSeriesHasSum printedTailERealSeriesHasSum
+
+/-- Corrected marked Chen--Larson Proposition 5.2: strict negativity for
+`a >= 14`. -/
+theorem correctedCoeff_neg
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_eSeriesHasSum printedTailERealSeriesHasSum ha hμ
 
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite

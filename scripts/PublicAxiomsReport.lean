@@ -10,6 +10,7 @@ The final theorem is expected to use the standard axioms plus
 -/
 import Prop51
 import Prop52.Theorem
+import Prop52.Source
 import Prop52.Assembly
 import Prop52.Printed
 
@@ -192,6 +193,13 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
 
--- THE assumption-free public Proposition 5.2 theorems (stated in Prop52.Theorem):
+-- Marked Proposition 5.2 theorems retained behind the source facade:
 #print axioms Prop52.correctedCoeff_nonvanishing
 #print axioms Prop52.correctedCoeff_neg
+
+-- Source bridge and source-shaped public Proposition 5.2 theorems:
+#print axioms Prop52.sourceCorrectedCoeff_eq
+#print axioms Prop52.sourceCorrectedCoeff_nonvanishing
+#print axioms Prop52.sourceCorrectedCoeff_neg
+#print axioms Prop52.chenLarsonProp52Coefficient_nonvanishing
+#print axioms Prop52.chenLarsonProp52Coefficient_neg

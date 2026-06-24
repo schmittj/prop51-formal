@@ -54,14 +54,16 @@ one in the paper.
 `[t^a] F_μ(t)·(M − 2·A_μ·t − 12·t²·B_μ(t))` is **nonzero** (and strictly
 negative for `a ≥ 14`), where `F_μ(t) = Π_i C(t/(m_i+1)) / C(t)^N` is the
 Proposition 5.1 quotient and `A_μ, B_μ` are the marked first/second-derivative
-terms of the corrected note. The public Lean statement is
-`Prop52.correctedCoeff_nonvanishing` in
-[`Prop52/Theorem.lean`](Prop52/Theorem.lean); it is stated for the equivalent
-**marked** coefficient `[t^a] F_μ·(M − K_μ)` with `K_μ = Σ_i m_i·Φ(t/(m_i+1))`,
-`Φ = 2t + 12t²·C'/C`, which agrees with the displayed source coefficient in
-degree `a` because `M = 6a − 6` (the bridge identity of the paper). The decisive
-step is then `T^cor = T^old + (2g − 3)·b_a`, reducing the corrected coefficient
-to two sign inputs already controlled by the Proposition 5.1 analysis.
+terms of the corrected note. The public Lean statements are
+`Prop52.chenLarsonProp52Coefficient_nonvanishing` and
+`Prop52.chenLarsonProp52Coefficient_neg` in
+[`Prop52/Theorem.lean`](Prop52/Theorem.lean); they are stated for the
+**source** coefficient.  The formal bridge
+`Prop52.sourceCorrectedCoeff_eq` in [`Prop52/Source.lean`](Prop52/Source.lean)
+identifies this source coefficient in degree `a` with the marked coefficient
+`[t^a] F_μ·(M − K_μ)` because `M = 6a − 6`. The decisive step is then
+`T^cor = T^old + (2g − 3)·b_a`, reducing the corrected coefficient to two sign
+inputs already controlled by the Proposition 5.1 analysis.
 
 ## Verify it yourself
 
@@ -82,7 +84,8 @@ lake build
 Use this only with the same Lean/Mathlib versions recorded above.
 
 Both proofs are **`sorry`-free**. `#print axioms` for the final theorems —
-`Prop51.chenLarsonCoefficient_neg` and `Prop52.correctedCoeff_nonvanishing` —
+`Prop51.chenLarsonCoefficient_neg` and
+`Prop52.chenLarsonProp52Coefficient_nonvanishing` —
 reports exactly
 
 ```
@@ -111,7 +114,8 @@ paper/             the LaTeX paper(s) and compiled PDF; archive/ holds supersede
 Prop51/Theorem.lean   Prop 5.1 public facade: the series, the identity, the final theorems
 Prop51/Statement.lean concise statement of the Proposition 5.1 target
 Prop51/            the Prop 5.1 proof library (series bridge, majorant, sign lock, direct saddle, …)
-Prop52/Theorem.lean   Prop 5.2 public facade: the two assumption-free corrected theorems + g=4 checks
+Prop52/Theorem.lean   Prop 5.2 public facade: the two genus-indexed source theorems
+Prop52/Source.lean    source coefficient, source-marked bridge, source theorem layer, g=4 checks
 Prop52/Statement.lean the corrected Proposition 5.2 coefficient and target statements
 Prop52/            the Prop 5.2 proof library (correction identity, finite/modular checks, Gamma tail, mid-range intervals)
 Prop51Kernel.lean  the Mathlib-free, natively-compiled interval kernel
