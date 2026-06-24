@@ -10,6 +10,7 @@ The final theorem is expected to use the standard axioms plus
 -/
 import Prop51
 import Prop52.Theorem
+import Prop52.Assembly
 import Prop52.Printed
 
 #print axioms Prop51.Cseries_eq_expSeries_c
@@ -190,3 +191,7 @@ import Prop52.Printed
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointMoments_wPointX2
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral_wPointX2
 #print axioms Prop52.correctedCoeff_nonvanishing_of_printed_mid_gammaIntegral
+
+-- THE assumption-free public Proposition 5.2 theorems (stated in Prop52.Theorem):
+#print axioms Prop52.correctedCoeff_nonvanishing
+#print axioms Prop52.correctedCoeff_neg

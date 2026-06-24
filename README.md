@@ -5,13 +5,18 @@
 ![Mathlib](https://img.shields.io/badge/Mathlib-v4.27.0-blue)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
 
-A complete, machine-checked proof — in **Lean 4 + Mathlib** — of the coefficient
-negativity behind **Chen–Larson, Proposition 5.1**
+Complete, machine-checked proofs — in **Lean 4 + Mathlib** — of the coefficient
+(non-)vanishing behind **Chen–Larson, Propositions 5.1 and 5.2**
 (*Independence of tautological classes and cohomological stability for strata of
 differentials*, [arXiv:2603.23850](https://arxiv.org/abs/2603.23850)). The
 repository contains the Lean formalization, the LaTeX paper, and the
 computational certificates, with continuous integration that rebuilds every
 proof and audits its axioms.
+
+Proposition 5.2 is formalized in its **corrected** form: the series printed in
+the preprint used the constant term `1` where Ionel's relation gives
+`κ₀ = 2g − 2`, which changes the coefficient. The repository proves the
+corrected non-vanishing statement; the correction was confirmed by the authors.
 
 ## The theorem
 
@@ -30,10 +35,10 @@ C(t) = Σ_{r≥0} (6r)! / ((3r)! (2r)!) · (t/72)^r .
 
 In particular this coefficient is nonzero — the hypothesis of Chen–Larson
 Proposition 5.1 — so via their geometric reduction it yields their
-Conjecture 1.4 for holomorphic abelian strata, **for all genera in the residue
-classes `g ≡ 0, 2 (mod 3)`** (the `g ≡ 1` case uses a different series, their
-Proposition 5.2, and is not treated), extending their computer verification
-(`g ≤ 30`).
+Conjecture 1.4 for holomorphic abelian strata in the residue classes
+`g ≡ 0, 2 (mod 3)`. The remaining class `g ≡ 1 (mod 3)` is their
+Proposition 5.2, handled (in corrected form) below — so **all residue classes,
+hence all genera**, are now covered, well beyond their computer check (`g ≤ 30`).
 
 The public Lean statement is `Prop51.chenLarsonCoefficient_neg` in
 [`Prop51/Theorem.lean`](Prop51/Theorem.lean); that small file also names the
@@ -41,11 +46,23 @@ series `C`, gives its coefficient formula, and proves the generating-function
 identity `C(t)^N · B_μ(t) = Π_i C(t/(m_i+1))` that pins the formal object to the
 one in the paper.
 
+**Proposition 5.2 (corrected, `g ≡ 1 mod 3`).** Writing `g = 3a − 2` and
+`M = 2g − 2 = 6a − 6`: for every `a ≥ 2` and every positive partition `μ` of
+`M`, the corrected coefficient
+`[t^a] F_μ(t)·(M − 2·A_μ·t − 12·t²·B_μ(t))` is **nonzero** (and strictly
+negative for `a ≥ 14`), where `F_μ(t) = Π_i C(t/(m_i+1)) / C(t)^N` is the
+Proposition 5.1 quotient and `A_μ, B_μ` are the marked first/second-derivative
+terms of the corrected note. The public Lean statement is
+`Prop52.correctedCoeff_nonvanishing` in
+[`Prop52/Theorem.lean`](Prop52/Theorem.lean). The decisive step is the identity
+`T^cor = T^old + (2g − 3)·b_a`, which reduces the corrected coefficient to two
+sign inputs already controlled by the Proposition 5.1 analysis.
+
 ## Verify it yourself
 
 ```sh
 lake exe cache get   # download the prebuilt Mathlib oleans
-lake build           # check every proof, including the native_decide certificates
+lake build           # check every Prop 5.1 and 5.2 proof, incl. the native_decide certificates
 lake env lean scripts/PublicAxiomsReport.lean   # print the axioms the result depends on
 ```
 
@@ -53,14 +70,15 @@ If a matching Lean/Mathlib Lake package tree already exists locally, reuse it
 instead of cloning Mathlib again:
 
 ```sh
-./scripts/use-local-lake-packages.sh /home/jo314/lean/prop51build/.lake/packages
+./scripts/use-local-lake-packages.sh /path/to/existing/.lake/packages
 lake build
 ```
 
 Use this only with the same Lean/Mathlib versions recorded above.
 
-The proof is **`sorry`-free**. `#print axioms` for the final theorem reports
-exactly
+Both proofs are **`sorry`-free**. `#print axioms` for the final theorems —
+`Prop51.chenLarsonCoefficient_neg` and `Prop52.correctedCoeff_nonvanishing` —
+reports exactly
 
 ```
 propext, Classical.choice, Quot.sound,      -- the standard Mathlib axioms
@@ -84,10 +102,13 @@ compiler on those steps (`Lean.ofReduceBool`, `Lean.trustCompiler`). The
 ## Repository layout
 
 ```
-paper/             the LaTeX paper (paper/prop51.tex) and compiled PDF; archive/ holds superseded notes
-Prop51/Theorem.lean   public facade: the series, the identity, the final theorems
-Prop51/Statement.lean concise statement of the target proposition
-Prop51/            the proof library (series bridge, majorant, sign lock, direct saddle, …)
+paper/             the LaTeX paper(s) and compiled PDF; archive/ holds superseded notes
+Prop51/Theorem.lean   Prop 5.1 public facade: the series, the identity, the final theorems
+Prop51/Statement.lean concise statement of the Proposition 5.1 target
+Prop51/            the Prop 5.1 proof library (series bridge, majorant, sign lock, direct saddle, …)
+Prop52/Theorem.lean   Prop 5.2 public facade: the two assumption-free corrected theorems + g=4 checks
+Prop52/Statement.lean the corrected Proposition 5.2 coefficient and target statements
+Prop52/            the Prop 5.2 proof library (correction identity, finite/modular checks, Gamma tail, mid-range intervals)
 Prop51Kernel.lean  the Mathlib-free, natively-compiled interval kernel
 scripts/           axiom reports, constants checks, certificate generators
 certificates/      the external 192-bit Arb certificate package (9 ≤ a ≤ 400)

@@ -1,5 +1,5 @@
 name = "prop51"
-defaultTargets = ["Prop51"]
+defaultTargets = ["Prop51", "Prop52"]
 
 [[require]]
 name = "mathlib"

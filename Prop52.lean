@@ -5,6 +5,7 @@ Root module for the corrected Chen--Larson Proposition 5.2 formalization.
 -/
 
 import Prop52.Theorem
+import Prop52.Assembly
 import Prop52.Printed
 import Prop52.GammaMoment
 import Prop52.GammaReal
