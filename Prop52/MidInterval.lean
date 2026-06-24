@@ -438,6 +438,17 @@ theorem midUNormFast_neg_of_rowIntervalSlice (a start len i : Nat)
   rw [hidx, if_pos him] at hentry
   exact midUNormFast_neg_of_interval a (M a + 1 + i) hentry
 
+theorem midUNormFast_neg_of_rowsInterval (lo len a i : Nat)
+    (hcheck : checkPrintedMidRowsInterval lo len = true)
+    (ha_lo : lo ≤ a) (ha_hi : a < lo + len) (hi : i < M a) :
+    midUNormFast a (M a + 1 + i) < 0 := by
+  unfold checkPrintedMidRowsInterval at hcheck
+  have hamem : a - lo ∈ List.range len := List.mem_range.mpr (by omega)
+  have hrow := List.all_eq_true.mp hcheck (a - lo) hamem
+  have hidx : lo + (a - lo) = a := by omega
+  rw [hidx] at hrow
+  exact midUNormFast_neg_of_rowInterval a i hrow hi
+
 theorem checkPrintedMidRowInterval_14 :
     checkPrintedMidRowInterval 14 = true := by
   native_decide
