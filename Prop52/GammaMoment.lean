@@ -459,4 +459,12 @@ theorem printedTailGammaExponentMoment_le_bound
           dsimp [p] at hbudget ⊢
           exact hbudget
 
+/-- The closed rational moment estimate in the scalar form used by Jensen. -/
+theorem printedTailGammaExponentMoment_lt_thirteen_tenths
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    printedTailGammaExponentMoment μ a < 13 / 10 :=
+  (printedTailGammaExponentMoment_le_bound (a := a) (μ := μ) ha hμ).trans_lt
+    (gammaExponentBound_lt a ha)
+
 end Prop52

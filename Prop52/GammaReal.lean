@@ -48,4 +48,31 @@ theorem real_exp_neg_thirteen_tenths_gt :
   rw [lt_inv_comm₀ (by norm_num : (0 : ℝ) < 27 / 100) (Real.exp_pos _)]
   simpa using real_exp_thirteen_tenths_lt
 
+/-- Real form of the exponential endpoint for the rational Gamma exponent
+budget. -/
+theorem real_exp_neg_gammaExponentBound_gt
+    (a : Nat) (ha : 150 ≤ a) :
+    (27 / 100 : ℝ) < Real.exp (-(gammaExponentBound a : ℝ)) := by
+  have hboundQ := gammaExponentBound_lt a ha
+  have hboundR : (gammaExponentBound a : ℝ) < 13 / 10 := by
+    have hcast :
+        ((gammaExponentBound a : ℚ) : ℝ) < ((13 / 10 : ℚ) : ℝ) :=
+      (Rat.cast_lt (K := ℝ)).2 hboundQ
+    simpa using hcast
+  have hneg : -(13 / 10 : ℝ) < -(gammaExponentBound a : ℝ) := by
+    linarith
+  exact real_exp_neg_thirteen_tenths_gt.trans (Real.exp_strictMono hneg)
+
+/-- Real form of the finite exponent-moment estimate. -/
+theorem printedTailGammaExponentMoment_real_lt_thirteen_tenths
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (printedTailGammaExponentMoment μ a : ℝ) < 13 / 10 := by
+  have h := printedTailGammaExponentMoment_lt_thirteen_tenths
+    (a := a) (μ := μ) ha hμ
+  have hcast :
+      ((printedTailGammaExponentMoment μ a : ℚ) : ℝ) < ((13 / 10 : ℚ) : ℝ) :=
+    (Rat.cast_lt (K := ℝ)).2 h
+  simpa using hcast
+
 end Prop52
