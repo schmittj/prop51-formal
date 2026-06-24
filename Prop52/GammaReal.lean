@@ -70,6 +70,35 @@ theorem real_exp_three_tenths_le :
     _ = 1351 / 1000 := by
       norm_num [sum_range_succ, Nat.factorial]
 
+/-- Scalar endpoint used in the Gamma lower-tail estimate at `λ=1/2`. -/
+theorem real_exp_one_half_lt_five_thirds :
+    Real.exp (1 / 2 : ℝ) < 5 / 3 := by
+  have h := Real.exp_bound' (x := (1 / 2 : ℝ))
+    (by norm_num) (by norm_num) (n := 3) (by norm_num)
+  calc
+    Real.exp (1 / 2 : ℝ)
+        ≤ (∑ m ∈ range 3, (1 / 2 : ℝ) ^ m / (m.factorial : ℝ)) +
+            (1 / 2 : ℝ) ^ 3 * (3 + 1) /
+              ((Nat.factorial 3 : Nat) * 3 : ℝ) := h
+    _ = 119 / 72 := by
+      norm_num [sum_range_succ, Nat.factorial]
+    _ < 5 / 3 := by norm_num
+
+/-- Scalar endpoint used in the Gamma lower-tail estimate with
+`λ <= 4/7`. -/
+theorem real_exp_three_sevenths_lt_sixty_three_fortieths :
+    Real.exp (3 / 7 : ℝ) < 63 / 40 := by
+  have h := Real.exp_bound' (x := (3 / 7 : ℝ))
+    (by norm_num) (by norm_num) (n := 3) (by norm_num)
+  calc
+    Real.exp (3 / 7 : ℝ)
+        ≤ (∑ m ∈ range 3, (3 / 7 : ℝ) ^ m / (m.factorial : ℝ)) +
+            (3 / 7 : ℝ) ^ 3 * (3 + 1) /
+              ((Nat.factorial 3 : Nat) * 3 : ℝ) := h
+    _ = 1055 / 686 := by
+      norm_num [sum_range_succ, Nat.factorial]
+    _ < 63 / 40 := by norm_num
+
 /-- The scalar exponential endpoint used by the printed Gamma/Jensen margin. -/
 theorem real_exp_thirteen_tenths_lt :
     Real.exp (13 / 10 : ℝ) < 100 / 27 := by
