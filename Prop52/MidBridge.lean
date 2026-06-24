@@ -11,6 +11,7 @@ upper bound from the printed coefficient to that one-parameter expression.
 
 import Prop52.Printed
 import Prop52.MidCertificateAll
+import Prop52.MidNormalization
 
 namespace Prop52
 
@@ -315,6 +316,102 @@ theorem printedCoeff_eq_B_mul_A_coeff (μ : List Nat) (a : Nat) :
 def simpleParts (M : Nat) : List Nat :=
   List.replicate M 1
 
+theorem sPower_simpleParts (M r : Nat) :
+    sPower (simpleParts M) r = (M : ℚ) / (2 : ℚ)^r := by
+  unfold sPower simpleParts
+  simp [List.sum_replicate, div_eq_mul_inv]
+  ring_nf
+  exact Or.inl trivial
+
+theorem markedWeight_simpleParts (M r : Nat) :
+    markedWeight (simpleParts M) r = (M : ℚ) / (2 : ℚ)^r := by
+  unfold markedWeight simpleParts
+  simp [List.sum_replicate, div_eq_mul_inv]
+  ring_nf
+  exact Or.inl trivial
+
+theorem kCoeff_simpleParts (M r : Nat) :
+    kCoeff (simpleParts M) r = (M : ℚ) * phiCoeff r / (2 : ℚ)^r := by
+  rw [kCoeff_eq_markedCoeff]
+  unfold markedCoeff
+  rw [markedWeight_simpleParts]
+  ring
+
+theorem coeff_prodSeries_simpleParts (M r : Nat) :
+    coeff r (Prop51.prodSeries (simpleParts M)) = midQCoeff M r := by
+  rw [prodSeries_eq_expSeries_sPower]
+  simp only [Prop51.coeff_expSeries]
+  unfold midQCoeff
+  congr 1
+  funext s
+  rw [sPower_simpleParts]
+  ring
+
+theorem simpleK_convolution_eq_Q (M r : Nat) (hr : 1 ≤ r) :
+    (∑ j ∈ Finset.range r,
+        kCoeff (simpleParts M) (j + 1) * midQCoeff M (r - (j + 1))) =
+      ((M : ℚ) + 6 * (r : ℚ) - 6) * midQCoeff M (r - 1) := by
+  rcases r with _ | r
+  · omega
+  rcases r with _ | n
+  · simp [kCoeff_simpleParts, phiCoeff]
+  let F : Nat → ℚ := fun j =>
+    kCoeff (simpleParts M) (j + 1) * midQCoeff M (n + 2 - (j + 1))
+  change (∑ j ∈ Finset.range (n + 2), F j) =
+    ((M : ℚ) + 6 * ((n + 2 : Nat) : ℚ) - 6) * midQCoeff M (n + 2 - 1)
+  have hsplit :
+      (∑ j ∈ Finset.range (n + 2), F j) =
+        (∑ j ∈ Finset.range (n + 1), F (j + 1)) + F 0 := by
+    simpa [show n + 2 = n + 1 + 1 by omega] using
+      (Finset.sum_range_succ' F (n + 1))
+  rw [hsplit]
+  have hF0 : F 0 = (M : ℚ) * midQCoeff M (n + 1) := by
+    dsimp [F]
+    simp [kCoeff_simpleParts, phiCoeff]
+  have hrec :
+      (∑ j ∈ Finset.range (n + 1),
+        ((j + 1 : Nat) : ℚ) *
+          ((M : ℚ) * Prop51.c (j + 1) / (2 : ℚ)^(j + 1)) *
+          midQCoeff M (n - j)) =
+        ((n + 1 : Nat) : ℚ) * midQCoeff M (n + 1) := by
+    rw [midQCoeff_succ M n]
+    have hden : ((n + 1 : Nat) : ℚ) ≠ 0 := by
+      exact_mod_cast (by omega : (n + 1 : Nat) ≠ 0)
+    field_simp [hden]
+    refine Finset.sum_congr rfl fun x hx => ?_
+    ring
+  have hshift :
+      (∑ j ∈ Finset.range (n + 1), F (j + 1)) =
+        6 * ((n + 1 : Nat) : ℚ) * midQCoeff M (n + 1) := by
+    calc
+      (∑ j ∈ Finset.range (n + 1), F (j + 1))
+          =
+        6 * (∑ j ∈ Finset.range (n + 1),
+          ((j + 1 : Nat) : ℚ) *
+            ((M : ℚ) * Prop51.c (j + 1) / (2 : ℚ)^(j + 1)) *
+            midQCoeff M (n - j)) := by
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun j hj => ?_
+          have hjlt : j < n + 1 := Finset.mem_range.mp hj
+          dsimp [F]
+          rw [kCoeff_simpleParts]
+          simp [phiCoeff]
+          have hpow : (2 : ℚ)^(j + 2) =
+              (2 : ℚ) * (2 : ℚ)^(j + 1) := by
+            rw [show j + 2 = (j + 1) + 1 by omega, pow_succ]
+            ring
+          rw [hpow]
+          field_simp [(by positivity : (2 : ℚ)^(j + 1) ≠ 0)]
+          ring
+      _ = 6 * ((n + 1 : Nat) : ℚ) * midQCoeff M (n + 1) := by
+          rw [hrec]
+          ring
+  rw [hF0, hshift]
+  have hsub_top : n + 2 - 1 = n + 1 := by omega
+  rw [hsub_top]
+  norm_num [Nat.cast_add, Nat.cast_one]
+  ring
+
 /-- Coefficients of the all-simple marked numerator. -/
 noncomputable def printedMidSimpleACoeff (M r : Nat) : ℚ :=
   printedMidACoeff (simpleParts M) r
@@ -322,6 +419,28 @@ noncomputable def printedMidSimpleACoeff (M r : Nat) : ℚ :=
 /-- `R_r(M)=-[t^r]A_M^{simp}` in the printed proof. -/
 noncomputable def printedMidRCoeff (M r : Nat) : ℚ :=
   -printedMidSimpleACoeff M r
+
+theorem printedMidSimpleACoeff_eq_midQ_sub_simpleK (M r : Nat) :
+    printedMidSimpleACoeff M r =
+      midQCoeff M r -
+        ∑ j ∈ Finset.range r,
+          kCoeff (simpleParts M) (j + 1) * midQCoeff M (r - (j + 1)) := by
+  unfold printedMidSimpleACoeff
+  rw [printedMidACoeff_eq_prod_sub_convolution]
+  rw [coeff_prodSeries_simpleParts]
+  congr 1
+  refine Finset.sum_congr rfl fun j hj => ?_
+  rw [coeff_prodSeries_simpleParts]
+
+/-- The raw all-simple remainder coefficient is the scaled certificate `S`. -/
+theorem printedMidRCoeff_eq_midS_scaled (M r : Nat) (hr : 1 ≤ r) :
+    printedMidRCoeff M r =
+      (((M : ℚ) * Prop51.c r) / (2 : ℚ)^r) * midS M r := by
+  unfold printedMidRCoeff
+  rw [printedMidSimpleACoeff_eq_midQ_sub_simpleK]
+  rw [simpleK_convolution_eq_Q M r hr]
+  have hS := midS_scaled_eq_Q M r hr
+  linarith
 
 /-- The unnormalized one-parameter upper bound before identifying it with
 `midUNormFast`. -/
