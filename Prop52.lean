@@ -12,6 +12,7 @@ import Prop52.GammaRetain
 import Prop52.GammaMeasure
 import Prop52.GammaTail
 import Prop52.GammaTruncation
+import Prop52.GammaIBP
 import Prop52.Mid
 import Prop52.MidNormalization
 import Prop52.MidInterval
