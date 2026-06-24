@@ -10,6 +10,7 @@ with the factorial ratios `gammaWeight`.
 -/
 
 import Prop52.GammaReal
+import Prop52.GammaRetain
 import Mathlib.Probability.Distributions.Gamma
 
 namespace Prop52
@@ -101,6 +102,145 @@ theorem real_exp_neg_printedTailLReal_le_one
   have hL := printedTailLReal_nonneg (a := a) (μ := μ) hμ hx
   have hneg : -(printedTailLReal μ a x) ≤ 0 := by linarith
   simpa using (Real.exp_le_exp_of_le hneg)
+
+/-- Real version of the retained Gamma bracket lower polynomial. -/
+noncomputable def gammaRetainBracketLowerReal
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  ((M a : ℝ) - (kCoeff μ 1 : ℝ)) * x +
+    ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+      (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1)
+
+/-- Real version of the coefficient-aligned low Gamma bracket
+`M x + 6 x^2 L'(x) - J(x)`. -/
+noncomputable def gammaLowBracketAlignedReal
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  ((M a : ℝ) - (kCoeff μ 1 : ℝ)) * x +
+    (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+      6 * (j : ℝ) * (hCoeff μ j : ℝ) * x^(j + 1)) -
+    ∑ j ∈ Finset.Ico 1 (printedTailP a),
+      (kCoeff μ (j + 1) : ℝ) * x^(j + 1)
+
+theorem gammaRetainBracketLowerReal_add_final_eq_lowBracketAlignedReal
+    (μ : List Nat) (a : Nat) (x : ℝ) (ha : 150 ≤ a) :
+    gammaRetainBracketLowerReal μ a x +
+        (kCoeff μ (printedTailP a + 1) : ℝ) * x^(printedTailP a + 1) =
+      gammaLowBracketAlignedReal μ a x := by
+  let p : Nat := printedTailP a
+  let F : Nat → ℝ := fun j => 6 * (j : ℝ) * (hCoeff μ j : ℝ) * x^(j + 1)
+  let G : Nat → ℝ := fun j => (kCoeff μ (j + 1) : ℝ) * x^(j + 1)
+  have hp : 1 ≤ p := by
+    dsimp [p, printedTailP]
+    have : 2 ≤ a := by omega
+    omega
+  have hretain_sum :
+      (∑ j ∈ Finset.Ico 1 (p + 1),
+          (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1)) =
+        ∑ j ∈ Finset.Ico 1 (p + 1), (F j - G j) := by
+    refine Finset.sum_congr rfl fun j _hj => ?_
+    dsimp [F, G, gammaRetainBracketCoeff]
+    norm_num
+    ring
+  have hGsplit :
+      (∑ j ∈ Finset.Ico 1 (p + 1), G j) =
+        (∑ j ∈ Finset.Ico 1 p, G j) + G p := by
+    simpa using Finset.sum_Ico_succ_top hp G
+  have hretain_sum' :
+      (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+          (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1)) =
+        ∑ j ∈ Finset.Ico 1 (printedTailP a + 1), (F j - G j) := by
+    simpa [p] using hretain_sum
+  have hGsplit' :
+      (∑ j ∈ Finset.Ico 1 (printedTailP a + 1), G j) =
+        (∑ j ∈ Finset.Ico 1 (printedTailP a), G j) +
+          G (printedTailP a) := by
+    simpa [p] using hGsplit
+  unfold gammaRetainBracketLowerReal gammaLowBracketAlignedReal
+  rw [hretain_sum', Finset.sum_sub_distrib, hGsplit']
+  dsimp [F, G]
+  ring
+
+theorem gammaRetainBracketLowerReal_le_lowBracketAlignedReal
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a) {x : ℝ} (hx : 0 ≤ x) :
+    gammaRetainBracketLowerReal μ a x ≤ gammaLowBracketAlignedReal μ a x := by
+  have hk_nonneg :
+      0 ≤ (kCoeff μ (printedTailP a + 1) : ℝ) :=
+    (Rat.cast_nonneg (K := ℝ)).2 (kCoeff_nonneg μ (printedTailP a + 1))
+  have hfinal :
+      0 ≤ (kCoeff μ (printedTailP a + 1) : ℝ) *
+          x^(printedTailP a + 1) :=
+    mul_nonneg hk_nonneg (pow_nonneg hx (printedTailP a + 1))
+  have h_eq :=
+    gammaRetainBracketLowerReal_add_final_eq_lowBracketAlignedReal μ a x ha
+  nlinarith
+
+/-- Real pointwise retained-bracket lower bound. -/
+theorem fiveM_x2_le_gammaRetainBracketLowerReal
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) {x : ℝ} (hx : 0 ≤ x) :
+    5 * (M a : ℝ) * x^2 ≤ gammaRetainBracketLowerReal μ a x := by
+  unfold gammaRetainBracketLowerReal
+  have hlinear_nonneg :
+      0 ≤ ((M a : ℝ) - (kCoeff μ 1 : ℝ)) * x := by
+    have hq := gammaRetainBracketLinearCoeff_nonneg
+      (a := a) (μ := μ) hμ
+    have hr :
+        0 ≤ ((M a : ℝ) - (kCoeff μ 1 : ℝ)) := by
+      have hcast : (0 : ℝ) ≤ (((M a : ℚ) - kCoeff μ 1 : ℚ) : ℝ) :=
+        (Rat.cast_nonneg (K := ℝ)).2 hq
+      simpa using hcast
+    exact mul_nonneg hr hx
+  have hterms_nonneg :
+      ∀ j ∈ Finset.Ico 1 (printedTailP a + 1),
+        0 ≤ (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1) := by
+    intro j hj
+    have hj1 : 1 ≤ j := (Finset.mem_Ico.mp hj).1
+    have hcoeff :
+        0 ≤ (gammaRetainBracketCoeff μ j : ℝ) :=
+      (Rat.cast_nonneg (K := ℝ)).2
+        (gammaRetainBracketCoeff_nonneg (a := a) (μ := μ) hμ hj1)
+    exact mul_nonneg hcoeff (pow_nonneg hx (j + 1))
+  have hmem1 : 1 ∈ Finset.Ico 1 (printedTailP a + 1) := by
+    simp [printedTailP]
+    omega
+  have hsingle := Finset.single_le_sum hterms_nonneg hmem1
+  have hterm1 :
+      5 * (M a : ℝ) * x^2 ≤
+        (gammaRetainBracketCoeff μ 1 : ℝ) * x^(1 + 1) := by
+    have hcoeffQ := fiveM_le_gammaRetainBracketCoeff_one
+      (a := a) (μ := μ) hμ
+    have hcoeffR :
+        5 * (M a : ℝ) ≤ (gammaRetainBracketCoeff μ 1 : ℝ) := by
+      have hcast :
+          (((5 : ℚ) * (M a : ℚ) : ℚ) : ℝ) ≤
+            (gammaRetainBracketCoeff μ 1 : ℝ) :=
+        (Rat.cast_le (K := ℝ)).2 hcoeffQ
+      simpa using hcast
+    have hx2 : 0 ≤ x^2 := pow_nonneg hx 2
+    calc
+      5 * (M a : ℝ) * x^2
+          ≤ (gammaRetainBracketCoeff μ 1 : ℝ) * x^2 :=
+            mul_le_mul_of_nonneg_right hcoeffR hx2
+      _ = (gammaRetainBracketCoeff μ 1 : ℝ) * x^(1 + 1) := by norm_num
+  calc
+    5 * (M a : ℝ) * x^2
+        ≤ (gammaRetainBracketCoeff μ 1 : ℝ) * x^(1 + 1) := hterm1
+    _ ≤ ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+          (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1) := hsingle
+    _ ≤ ((M a : ℝ) - (kCoeff μ 1 : ℝ)) * x +
+          ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+            (gammaRetainBracketCoeff μ j : ℝ) * x^(j + 1) := by
+          nlinarith
+
+/-- Real pointwise low-bracket lower bound in the exact form needed under the
+Gamma integral. -/
+theorem fiveM_x2_le_gammaLowBracketAlignedReal
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) {x : ℝ} (hx : 0 ≤ x) :
+    5 * (M a : ℝ) * x^2 ≤ gammaLowBracketAlignedReal μ a x := by
+  exact (fiveM_x2_le_gammaRetainBracketLowerReal
+    (a := a) (μ := μ) ha hμ hx).trans
+      (gammaRetainBracketLowerReal_le_lowBracketAlignedReal
+        (a := a) (μ := μ) ha (x := x) hx)
 
 /-- The Gamma law used in the large-tail argument, with integer shape
 `a - 2` and rate `1`. -/
