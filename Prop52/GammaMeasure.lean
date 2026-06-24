@@ -88,6 +88,64 @@ noncomputable def printedTailLReal (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
 noncomputable def printedTailJReal (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
   ∑ r ∈ Finset.Ico 1 (printedTailP a + 1), (kCoeff μ r : ℝ) * x^r
 
+private theorem printedTailLReal_rat_eq_pointSum
+    (μ : List Nat) (a : Nat) (x : ℚ) :
+    printedTailLReal μ a (x : ℝ) =
+      (printedTailLPointSum μ a x : ℝ) := by
+  unfold printedTailLReal printedTailLPointSum
+  rw [Rat.cast_sum]
+  have hsubset :
+      Finset.Ico 1 (printedTailP a + 1) ⊆
+        Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (Finset.mem_Ico.mp hr).2
+  have hzero :
+      ∀ r ∈ Finset.range (printedTailP a + 1),
+        r ∉ Finset.Ico 1 (printedTailP a + 1) →
+          (hCoeff μ r : ℝ) * (x : ℝ)^r = 0 := by
+    intro r hr hnot
+    have hrlt : r < printedTailP a + 1 := Finset.mem_range.mp hr
+    have hr0 : r = 0 := by
+      by_contra hne
+      have hr1 : 1 ≤ r := by omega
+      exact hnot (Finset.mem_Ico.mpr ⟨hr1, hrlt⟩)
+    subst r
+    simp [hCoeff]
+  trans ∑ r ∈ Finset.range (printedTailP a + 1),
+      (hCoeff μ r : ℝ) * (x : ℝ)^r
+  · exact Finset.sum_subset hsubset hzero
+  · refine Finset.sum_congr rfl fun r _hr => ?_
+    rw [Rat.cast_mul, Rat.cast_pow]
+
+private theorem printedTailJReal_rat_eq_pointSum
+    (μ : List Nat) (a : Nat) (x : ℚ) :
+    printedTailJReal μ a (x : ℝ) =
+      (printedTailJPointSum μ a x : ℝ) := by
+  unfold printedTailJReal printedTailJPointSum
+  rw [Rat.cast_sum]
+  have hsubset :
+      Finset.Ico 1 (printedTailP a + 1) ⊆
+        Finset.range (printedTailP a + 1) := by
+    intro r hr
+    exact Finset.mem_range.mpr (Finset.mem_Ico.mp hr).2
+  have hzero :
+      ∀ r ∈ Finset.range (printedTailP a + 1),
+        r ∉ Finset.Ico 1 (printedTailP a + 1) →
+          (kCoeff μ r : ℝ) * (x : ℝ)^r = 0 := by
+    intro r hr hnot
+    have hrlt : r < printedTailP a + 1 := Finset.mem_range.mp hr
+    have hr0 : r = 0 := by
+      by_contra hne
+      have hr1 : 1 ≤ r := by omega
+      exact hnot (Finset.mem_Ico.mpr ⟨hr1, hrlt⟩)
+    subst r
+    simp [kCoeff]
+  trans ∑ r ∈ Finset.range (printedTailP a + 1),
+      (kCoeff μ r : ℝ) * (x : ℝ)^r
+  · exact Finset.sum_subset hsubset hzero
+  · refine Finset.sum_congr rfl fun r _hr => ?_
+    rw [Rat.cast_mul, Rat.cast_pow]
+
 theorem printedTailLReal_nonneg
     {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
     {x : ℝ} (hx : 0 ≤ x) :
@@ -169,6 +227,54 @@ theorem abs_exp_neg_L_mul_one_sub_JReal_le_two
         Real.exp (-(printedTailLReal μ a x)) := by ring
     _ ≤ 2 :=
       one_add_two_mul_mul_exp_neg_le_two hLnonneg
+
+/-- Closed real version of the printed `\widehat W(x₂) <= 920` endpoint:
+`exp(L(x₂)) (1 + J(x₂)) <= 920`.  The finite coefficient certificate
+`PrintedTailWPointBoundX2` is enough for top-coefficient estimates; this
+analytic value bound is the constant needed by the remaining Taylor-tail
+argument. -/
+theorem real_exp_LReal_mul_one_add_JReal_x2_le_920
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    Real.exp (printedTailLReal μ a (printedTailX2 a : ℝ)) *
+        (1 + printedTailJReal μ a (printedTailX2 a : ℝ)) ≤
+      920 := by
+  have hx2 : 0 ≤ (printedTailX2 a : ℝ) := by
+    unfold printedTailX2
+    have haR : (150 : ℝ) ≤ a := by exact_mod_cast ha
+    positivity
+  have hLq := printedTailLPointSum_x2_le (a := a) (μ := μ) ha hμ
+  have hJq := printedTailJPointSum_x2_le (a := a) (μ := μ) ha hμ
+  have hL :
+      printedTailLReal μ a (printedTailX2 a : ℝ) ≤
+        (26 / 5 : ℝ) := by
+    rw [printedTailLReal_rat_eq_pointSum]
+    simpa using (Rat.cast_le (K := ℝ)).2 hLq
+  have hJ :
+      printedTailJReal μ a (printedTailX2 a : ℝ) ≤
+        (81 / 20 : ℝ) := by
+    rw [printedTailJReal_rat_eq_pointSum]
+    simpa using (Rat.cast_le (K := ℝ)).2 hJq
+  have hExp :
+      Real.exp (printedTailLReal μ a (printedTailX2 a : ℝ)) ≤
+        182 :=
+    (Real.exp_le_exp.mpr hL).trans real_exp_twenty_six_fifths_le
+  have hJ_nonneg :
+      0 ≤ printedTailJReal μ a (printedTailX2 a : ℝ) :=
+    printedTailJReal_nonneg μ a hx2
+  have hJ_factor_nonneg :
+      0 ≤ 1 + printedTailJReal μ a (printedTailX2 a : ℝ) := by
+    linarith
+  have hJ_factor_le :
+      1 + printedTailJReal μ a (printedTailX2 a : ℝ) ≤
+        1 + (81 / 20 : ℝ) := by
+    linarith
+  calc
+    Real.exp (printedTailLReal μ a (printedTailX2 a : ℝ)) *
+        (1 + printedTailJReal μ a (printedTailX2 a : ℝ))
+        ≤ (182 : ℝ) * (1 + 81 / 20) :=
+          mul_le_mul hExp hJ_factor_le hJ_factor_nonneg (by norm_num)
+    _ ≤ 920 := by norm_num
 
 /-- Real version of the retained Gamma bracket lower polynomial. -/
 noncomputable def gammaRetainBracketLowerReal

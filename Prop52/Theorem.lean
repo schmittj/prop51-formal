@@ -335,6 +335,49 @@ theorem correctedCoeff_neg_of_gammaTruncationError
     (printedTailGammaIntegralLowerBound_of_truncationError htrunc)
     ha hμ
 
+/-- Public assembly from the paper-shaped Taylor--Gamma truncation lemma.
+The truncation error is stated directly with the displayed residue budget
+`truncationResidueRhs`, so the finite internal residue decomposition remains
+hidden from the human-facing theorem surface. -/
+theorem correctedCoeff_nonvanishing_of_gammaTruncationResidue
+    (htrunc : PrintedTailGammaTruncationResidueBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_gammaIntegral
+    (printedTailGammaIntegralLowerBound_of_truncationResidue htrunc)
+
+/-- Large-range strict negativity from the paper-shaped Taylor--Gamma
+truncation lemma. -/
+theorem correctedCoeff_neg_of_gammaTruncationResidue
+    (htrunc : PrintedTailGammaTruncationResidueBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_gammaIntegral
+    (printedTailGammaIntegralLowerBound_of_truncationResidue htrunc)
+    ha hμ
+
+/-- Public assembly with the remaining analytic work reduced to the
+paper-shaped upper-event Taylor bound
+`|W(t)-W_{\le r0}(t)| <= 920/2^(r0+1)` on `Y >= a/2`.
+The lower event, Gamma moments, residue arithmetic, mid-range, small range,
+and Proposition 5.1 rectangle input are all closed in Lean. -/
+theorem correctedCoeff_nonvanishing_of_upperEventResidue
+    (hupper : PrintedTailUpperEventResidueBound) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_gammaTruncationResidue
+    (printedTailGammaTruncationResidueBound_of_upperEvent hupper)
+
+/-- Large-range strict negativity with only the paper-shaped upper-event
+Taylor tail left as an input. -/
+theorem correctedCoeff_neg_of_upperEventResidue
+    (hupper : PrintedTailUpperEventResidueBound)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_gammaTruncationResidue
+    (printedTailGammaTruncationResidueBound_of_upperEvent hupper)
+    ha hμ
+
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite
 Gamma moments, finite-window upper tail, residue arithmetic, mid-range, and

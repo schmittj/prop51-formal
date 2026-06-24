@@ -50,6 +50,20 @@ def PrintedTailGammaTruncationErrorBound : Prop :=
           printedTailWTruncGammaIntegral μ a| ≤
         (truncationResiduePiecesLhs μ a : ℝ)
 
+/-- Paper-shaped Taylor--Gamma truncation estimate.
+
+This is weaker than `PrintedTailGammaTruncationErrorBound`: the finite residue
+pieces have already been absorbed into the displayed closed budget
+`truncationResidueRhs`.  It matches the final form of the printed
+Taylor--Gamma truncation lemma and is the cleaner public interface for the
+remaining analytic tail theorem. -/
+def PrintedTailGammaTruncationResidueBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      |printedTailWGammaIntegral μ a -
+          printedTailWTruncGammaIntegral μ a| ≤
+        (truncationResidueRhs a : ℝ)
+
 /-- Sharper remaining analytic target for the Taylor--Gamma truncation.
 
 The lower event and finite Gamma moment pieces are now proved in Lean.  The
@@ -68,6 +82,21 @@ def PrintedTailUpperEventTruncationBound : Prop :=
         ((∑ s ∈ (Finset.range (a + 1)).filter
             (fun s : Nat => printedTailR0 a + 1 ≤ s),
             printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ)
+
+/-- Paper-shaped upper-event Taylor bound.
+
+On the event `Y >= a/2`, the paper uses `t_Y <= x₁ = x₂/2` and the full
+analytic majorant `\widehat W(x₂) <= 920` to bound the whole Taylor tail by
+`920 / 2^(r0+1)`.  The finite-window version above is a useful internal
+auxiliary, but this is the statement matching the printed truncation lemma. -/
+def PrintedTailUpperEventResidueBound : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      (∫ y in Set.Ici ((a : ℝ) / 2),
+          |printedTailWGammaIntegrand μ a y -
+            printedTailWTruncReal μ a (printedTailR0 a) y|
+            ∂ gammaFullMeasure a) ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
 
 theorem printedTailGammaTruncationErrorBound_of_upperEvent
     (hupper : PrintedTailUpperEventTruncationBound) :
@@ -179,6 +208,151 @@ theorem printedTailGammaTruncationErrorBound_of_upperEvent
           norm_num
           ring
 
+/-- The exact finite-piece truncation estimate also implies the paper-shaped
+residue estimate after the closed rational residue budget is applied. -/
+theorem printedTailGammaTruncationResidueBound_of_truncationError
+    (htrunc : PrintedTailGammaTruncationErrorBound) :
+    PrintedTailGammaTruncationResidueBound := by
+  intro a ha μ hμ
+  have herr := htrunc a ha μ hμ
+  have hresQ := truncationResiduePiecesLhs_le_truncationResidueRhs
+    printedTailWPointBoundX2_closed
+    (printedTailAbsoluteMomentBounds_of_majorant
+      (printedTailMajorantMomentBounds_of_wPointMomentBounds
+        printedTailWPointMomentBounds_closed))
+    (a := a) ha (μ := μ) hμ
+  have hresR :
+      (truncationResiduePiecesLhs μ a : ℝ) ≤
+        (truncationResidueRhs a : ℝ) := by
+    exact_mod_cast hresQ
+  exact herr.trans hresR
+
+/-- The paper-shaped upper-event estimate implies the paper-shaped
+Taylor--Gamma truncation estimate.  The lower-event integral and the two
+finite Gamma-moment residue estimates are already closed in Lean; the only
+input here is the full analytic Taylor tail on `Y >= a/2`. -/
+theorem printedTailGammaTruncationResidueBound_of_upperEvent
+    (hupper : PrintedTailUpperEventResidueBound) :
+    PrintedTailGammaTruncationResidueBound := by
+  intro a ha μ hμ
+  let Slo : Set ℝ := Set.Iio ((a : ℝ) / 2)
+  let Shi : Set ℝ := Set.Ici ((a : ℝ) / 2)
+  let W : ℝ → ℝ := printedTailWGammaIntegrand μ a
+  let P : ℝ → ℝ := printedTailWTruncReal μ a (printedTailR0 a)
+  haveI : IsProbabilityMeasure (gammaFullMeasure a) := by
+    unfold gammaFullMeasure
+    exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+      (by exact_mod_cast (by omega : 0 < a)) (by norm_num)
+  have hW_bound :
+      ∀ᵐ y ∂ gammaFullMeasure a, ‖W y‖ ≤ (2 : ℝ) := by
+    filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy_nonneg
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    simpa [W, printedTailWGammaIntegrand, printedTailLGammaArg, Real.norm_eq_abs]
+      using abs_exp_neg_L_mul_one_sub_JReal_le_two
+        (a := a) (μ := μ) hμ (x := 1 / (6 * y)) hx
+  have hW_int : Integrable W (gammaFullMeasure a) := by
+    refine Integrable.of_bound ?_ 2 hW_bound
+    dsimp [W]
+    unfold printedTailWGammaIntegrand printedTailLGammaArg
+      printedTailLReal printedTailJReal
+    fun_prop
+  have hRle : printedTailR0 a ≤ printedTailP a + 1 := by
+    unfold printedTailR0 printedTailP
+    omega
+  have hP_int : Integrable P (gammaFullMeasure a) := by
+    dsimp [P]
+    exact integrable_printedTailWTruncReal
+      (a := a) (R := printedTailR0 a) (μ := μ) ha hRle
+  have hdiff_int : Integrable (fun y => W y - P y) (gammaFullMeasure a) :=
+    hW_int.sub hP_int
+  have hdiff_abs_int :
+      Integrable (fun y => |W y - P y|) (gammaFullMeasure a) :=
+    hdiff_int.abs
+  have hdiff_eq :
+      printedTailWGammaIntegral μ a -
+          printedTailWTruncGammaIntegral μ a =
+        ∫ y, W y - P y ∂ gammaFullMeasure a := by
+    calc
+      printedTailWGammaIntegral μ a -
+          printedTailWTruncGammaIntegral μ a
+          =
+        (∫ y, W y ∂ gammaFullMeasure a) -
+          ∫ y, P y ∂ gammaFullMeasure a := by
+            rfl
+      _ = ∫ y, W y - P y ∂ gammaFullMeasure a := by
+            rw [MeasureTheory.integral_sub hW_int hP_int]
+  have habs_global :
+      |printedTailWGammaIntegral μ a -
+          printedTailWTruncGammaIntegral μ a| ≤
+        ∫ y, |W y - P y| ∂ gammaFullMeasure a := by
+    rw [hdiff_eq]
+    exact MeasureTheory.abs_integral_le_integral_abs
+  have hsplit :
+      (∫ y, |W y - P y| ∂ gammaFullMeasure a) =
+        (∫ y in Slo, |W y - P y| ∂ gammaFullMeasure a) +
+          ∫ y in Shi, |W y - P y| ∂ gammaFullMeasure a := by
+    have h :=
+      MeasureTheory.integral_add_compl
+        (μ := gammaFullMeasure a) (s := Slo)
+        (f := fun y => |W y - P y|) measurableSet_Iio hdiff_abs_int
+    rw [Set.compl_Iio] at h
+    exact h.symm
+  let Low : ℚ :=
+    (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => s ≤ a / 8),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|)
+      * (9 / 10 : ℚ)^(a - a / 8)
+  let High : ℚ :=
+    ∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+        (fun s : Nat => a / 8 + 1 ≤ s),
+        gammaWeight a s * |printedTailOmegaCoeff μ a s|
+  have hlower :
+      (∫ y in Slo, |W y - P y| ∂ gammaFullMeasure a) ≤
+        ((2 * (5 / 6 : ℚ)^a + (Low + High) : ℚ) : ℝ) := by
+    simpa [Slo, W, P, Low, High, printedTailWGammaIntegrand] using
+      integral_abs_printedTailWGammaIntegrand_sub_WTruncReal_R0_lower_event_le_residue_terms
+        (a := a) ha (μ := μ) hμ
+  have hupper' :
+      (∫ y in Shi, |W y - P y| ∂ gammaFullMeasure a) ≤
+        ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+    simpa [Shi, W, P] using hupper a ha μ hμ
+  have hlowQ :
+      Low ≤ 9 * (9 / 10 : ℚ)^(a - a / 8) := by
+    simpa [Low] using
+      gammaWeight_absOmega_low_tail_le_residue_term
+        (printedTailAbsoluteMomentBounds_of_majorant
+          (printedTailMajorantMomentBounds_of_wPointMomentBounds
+            printedTailWPointMomentBounds_closed))
+        (a := a) ha (μ := μ) hμ
+  have hhighQ :
+      High ≤ 920 * (a : ℚ) * (3 / 10 : ℚ)^(a / 8 + 1) := by
+    simpa [High] using
+      gammaWeight_absOmega_high_tail_le_residue_term
+        printedTailWPointBoundX2_closed (a := a) ha (μ := μ) hμ
+  have hbudgetQ :
+      2 * (5 / 6 : ℚ)^a + (Low + High) +
+          920 / (2 : ℚ)^(printedTailR0 a + 1)
+        ≤ truncationResidueRhs a := by
+    unfold truncationResidueRhs printedTailR0 printedTailP
+    nlinarith [hlowQ, hhighQ]
+  calc
+    |printedTailWGammaIntegral μ a -
+        printedTailWTruncGammaIntegral μ a|
+        ≤ ∫ y, |W y - P y| ∂ gammaFullMeasure a := habs_global
+    _ =
+        (∫ y in Slo, |W y - P y| ∂ gammaFullMeasure a) +
+          ∫ y in Shi, |W y - P y| ∂ gammaFullMeasure a := hsplit
+    _ ≤
+        ((2 * (5 / 6 : ℚ)^a + (Low + High) : ℚ) : ℝ) +
+          ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) :=
+          add_le_add hlower hupper'
+    _ =
+        ((2 * (5 / 6 : ℚ)^a + (Low + High) +
+          920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+          norm_num
+    _ ≤ (truncationResidueRhs a : ℝ) := by
+          exact_mod_cast hbudgetQ
+
 /-- The closed point/moment certificates imply the rational residue budget
 needed after the analytic truncation comparison. -/
 theorem truncationResiduePiecesLhs_le_truncationResidueRhs_closed
@@ -237,6 +411,56 @@ theorem printedTailGammaIntegralLowerBound_of_truncationError
       _ ≤ (printedTailMainSum μ a : ℝ) +
               (truncationResidueRhs a : ℝ) := by
             linarith
+  have hreal :
+      ((9 / (40 * ((a : ℚ) - 2)) : ℚ) : ℝ) ≤
+        ((printedTailMainSum μ a + truncationResidueRhs a : ℚ) : ℝ) := by
+    calc
+      ((9 / (40 * ((a : ℚ) - 2)) : ℚ) : ℝ)
+          = 9 / (40 * ((a : ℝ) - 2)) := by norm_num
+      _ ≤ printedTailWGammaIntegral μ a := hlow
+      _ ≤ (printedTailMainSum μ a : ℝ) +
+            (truncationResidueRhs a : ℝ) := hupper
+      _ = ((printedTailMainSum μ a + truncationResidueRhs a : ℚ) : ℝ) := by
+            norm_num
+  exact (Rat.cast_le (K := ℝ)).mp hreal
+
+/-- Variant of `printedTailGammaIntegralLowerBound_of_truncationError` using
+the paper-shaped truncation estimate directly against `truncationResidueRhs`.
+This avoids exposing the internal finite residue decomposition at the public
+theorem surface. -/
+theorem printedTailGammaIntegralLowerBound_of_truncationResidue
+    (htrunc : PrintedTailGammaTruncationResidueBound) :
+    PrintedTailGammaIntegralLowerBound := by
+  intro a ha μ hμ
+  have hlow :
+      9 / (40 * ((a : ℝ) - 2)) ≤ printedTailWGammaIntegral μ a := by
+    simpa [printedTailWGammaIntegral, printedTailWGammaIntegrand,
+      one_div, mul_assoc, mul_comm, mul_left_comm] using
+      gammaFull_WIntegral_lower (a := a) (μ := μ) ha hμ
+  have herr := htrunc a ha μ hμ
+  have hmain :
+      printedTailWTruncGammaIntegral μ a =
+        (printedTailMainSum μ a : ℝ) := by
+    simpa [printedTailWTruncGammaIntegral] using
+      integral_printedTailWTruncReal_R0_eq_mainSum
+        (μ := μ) (a := a) ha
+  have hupper :
+      printedTailWGammaIntegral μ a ≤
+        (printedTailMainSum μ a : ℝ) +
+          (truncationResidueRhs a : ℝ) := by
+    have hdiff :
+        printedTailWGammaIntegral μ a -
+            printedTailWTruncGammaIntegral μ a ≤
+          (truncationResidueRhs a : ℝ) :=
+      (le_abs_self _).trans herr
+    calc
+      printedTailWGammaIntegral μ a
+          ≤ printedTailWTruncGammaIntegral μ a +
+              (truncationResidueRhs a : ℝ) := by
+            linarith
+      _ = (printedTailMainSum μ a : ℝ) +
+              (truncationResidueRhs a : ℝ) := by
+            rw [hmain]
   have hreal :
       ((9 / (40 * ((a : ℚ) - 2)) : ℚ) : ℝ) ≤
         ((printedTailMainSum μ a + truncationResidueRhs a : ℚ) : ℝ) := by

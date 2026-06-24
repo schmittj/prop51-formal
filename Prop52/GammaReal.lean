@@ -99,6 +99,58 @@ theorem real_exp_three_sevenths_lt_sixty_three_fortieths :
       norm_num [sum_range_succ, Nat.factorial]
     _ < 63 / 40 := by norm_num
 
+/-- Scalar endpoint for the printed `x₂` majorant:
+`exp(26/5) < 182`.  We prove a weak `<=` form, which is the form needed by
+the product estimate `exp(L(x₂)) (1+J(x₂)) <= 920`. -/
+theorem real_exp_twenty_six_fifths_le :
+    Real.exp (26 / 5 : ℝ) ≤ 182 := by
+  let xR : ℝ := 26 / 5
+  let xC : ℂ := (xR : ℂ)
+  let S : ℝ :=
+    ∑ m ∈ Finset.range 11, xR ^ m / ((m.factorial : Nat) : ℝ)
+  let SC : ℂ :=
+    ∑ m ∈ Finset.range 11, xC ^ m / ((m.factorial : Nat) : ℂ)
+  have hx : ‖xC‖ / ((11 : Nat).succ : ℝ) ≤ 1 / 2 := by
+    dsimp [xC, xR]
+    norm_num [Complex.normSq, Complex.normSq_apply]
+  have hC := Complex.exp_bound' (x := xC) (n := 11) hx
+  have hSC : (S : ℂ) = SC := by
+    dsimp [S, SC, xC]
+    rw [Complex.ofReal_sum]
+    refine Finset.sum_congr rfl fun m _hm => ?_
+    rw [Complex.ofReal_div, Complex.ofReal_pow]
+    norm_num
+  have hnorm_eq : ‖Complex.exp xC - SC‖ =
+      |Real.exp xR - S| := by
+    rw [← hSC]
+    have hcast :
+        Complex.exp xC - (S : ℂ) =
+          ((Real.exp xR - S : ℝ) : ℂ) := by
+      simp [xC, Complex.ofReal_sub, Complex.ofReal_exp]
+    rw [hcast, Complex.norm_real, Real.norm_eq_abs]
+  have hxnorm : ‖xC‖ = xR := by
+    dsimp [xC, xR]
+    norm_num [Complex.normSq, Complex.normSq_apply]
+  have hC' :
+      |Real.exp xR - S| ≤
+        xR ^ 11 / (((11 : Nat).factorial : Nat) : ℝ) * 2 := by
+    rw [← hnorm_eq]
+    simpa [SC, hxnorm] using hC
+  have hle :
+      Real.exp xR ≤
+        S + xR ^ 11 / (((11 : Nat).factorial : Nat) : ℝ) * 2 := by
+    have hleft : Real.exp xR - S ≤ |Real.exp xR - S| := le_abs_self _
+    have hsub :
+        Real.exp xR - S ≤
+          xR ^ 11 / (((11 : Nat).factorial : Nat) : ℝ) * 2 :=
+      hleft.trans hC'
+    linarith
+  calc
+    Real.exp (26 / 5 : ℝ) = Real.exp xR := rfl
+    _ ≤ S + xR ^ 11 / (((11 : Nat).factorial : Nat) : ℝ) * 2 := hle
+    _ ≤ 182 := by
+      norm_num [S, xR, Finset.sum_range_succ, Nat.factorial]
+
 /-- The scalar exponential endpoint used by the printed Gamma/Jensen margin. -/
 theorem real_exp_thirteen_tenths_lt :
     Real.exp (13 / 10 : ℝ) < 100 / 27 := by
