@@ -716,6 +716,86 @@ theorem integral_abs_printedTailWGammaIntegrand_lower_event_le_prob_term
       norm_num [Rat.cast_pow]
       ring
 
+/-- Integrated upper-event finite-window tail bound.  This is the integral
+version of `abs_printedTailWTruncReal_a_sub_R0_le_residue_term_closed`; the
+probability of the upper event is at most one. -/
+theorem integral_abs_printedTailWTruncReal_a_sub_R0_upper_event_le_residue_term
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∫ y in Set.Ici ((a : ℝ) / 2),
+        |printedTailWTruncReal μ a a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a) ≤
+      ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+  let S : Set ℝ := Set.Ici ((a : ℝ) / 2)
+  let C : ℝ := ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
+  haveI : IsProbabilityMeasure (gammaFullMeasure a) := by
+    unfold gammaFullMeasure
+    exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+      (by exact_mod_cast (by omega : 0 < a)) (by norm_num)
+  have hfinite : gammaFullMeasure a S ≠ ∞ := measure_ne_top _ _
+  have hC_nonneg : 0 ≤ C := by
+    dsimp [C]
+    positivity
+  have hbound_restrict :
+      ∀ᵐ y ∂(gammaFullMeasure a).restrict S,
+        ‖|printedTailWTruncReal μ a a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|‖ ≤ C := by
+    filter_upwards [ae_restrict_mem measurableSet_Ici] with y hy
+    have hpoint :=
+      abs_printedTailWTruncReal_a_sub_R0_le_residue_term_closed
+        (a := a) ha (μ := μ) hμ (y := y) hy
+    simpa [C, Real.norm_eq_abs] using hpoint
+  have hleft_int :
+      IntegrableOn
+        (fun y =>
+          |printedTailWTruncReal μ a a y -
+            printedTailWTruncReal μ a (printedTailR0 a) y|)
+        S (gammaFullMeasure a) := by
+    refine Measure.integrableOn_of_bounded hfinite ?_ hbound_restrict
+    unfold printedTailWTruncReal
+    fun_prop
+  have hright_int :
+      IntegrableOn (fun _ : ℝ => C) S (gammaFullMeasure a) :=
+    integrableOn_const hfinite
+  have hmono_restrict :
+      (fun y =>
+        |printedTailWTruncReal μ a a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|) ≤ᵐ[(gammaFullMeasure a).restrict S]
+        fun _ : ℝ => C := by
+    filter_upwards [ae_restrict_mem measurableSet_Ici] with y hy
+    exact abs_printedTailWTruncReal_a_sub_R0_le_residue_term_closed
+        (a := a) ha (μ := μ) hμ (y := y) hy
+  have hmeasure_le_one :
+      (gammaFullMeasure a S).toReal ≤ (1 : ℝ) := by
+    have hle : gammaFullMeasure a S ≤ (1 : ℝ≥0∞) := by
+      calc
+        gammaFullMeasure a S ≤ gammaFullMeasure a Set.univ :=
+          measure_mono (Set.subset_univ S)
+        _ = 1 := by simp
+    simpa using ENNReal.toReal_mono (by simp : (1 : ℝ≥0∞) ≠ ∞) hle
+  calc
+    (∫ y in Set.Ici ((a : ℝ) / 2),
+        |printedTailWTruncReal μ a a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a)
+        =
+      ∫ y in S,
+        |printedTailWTruncReal μ a a y -
+          printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a := rfl
+    _ ≤ ∫ y in S, C ∂ gammaFullMeasure a :=
+      MeasureTheory.setIntegral_mono_ae_restrict
+        hleft_int hright_int hmono_restrict
+    _ = (gammaFullMeasure a S).toReal * C := by
+      rw [MeasureTheory.setIntegral_const (μ := gammaFullMeasure a)
+        (s := S) (c := C)]
+      simp [MeasureTheory.measureReal_def, smul_eq_mul]
+    _ ≤ 1 * C := by
+      exact mul_le_mul_of_nonneg_right hmeasure_le_one hC_nonneg
+    _ = ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+      simp [C]
+
 /-- The four rational residue pieces which remain after the analytic
 Taylor--Gamma event split:
 
