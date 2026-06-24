@@ -78,4 +78,30 @@ theorem printedTailGammaExponentIntegral_le_bound
   exact (Rat.cast_le (K := ℝ)).2
     (printedTailGammaExponentMoment_le_bound (a := a) (μ := μ) ha hμ)
 
+/-- The Gamma law used in the large-tail argument, with integer shape
+`a - 2` and rate `1`. -/
+noncomputable def gammaTailMeasure (a : Nat) : Measure ℝ :=
+  ProbabilityTheory.gammaMeasure (((a - 2 : Nat) : ℝ)) 1
+
+theorem isProbabilityMeasure_gammaTailMeasure
+    {a : Nat} (ha : 150 ≤ a) :
+    IsProbabilityMeasure (gammaTailMeasure a) := by
+  unfold gammaTailMeasure
+  exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+    (by exact_mod_cast (by omega : 0 < a - 2)) (by norm_num)
+
+/-- Jensen and the scalar endpoint specialized to the Gamma law with shape
+`a - 2`. -/
+theorem gammaTailPrefactor_integral_exp_neg_lower_of_mean_le_bound
+    {a : Nat} (ha : 150 ≤ a) {f : ℝ → ℝ}
+    (hf : Integrable f (gammaTailMeasure a))
+    (hexp : Integrable (fun y => Real.exp (-f y)) (gammaTailMeasure a))
+    (hmean : ∫ y, f y ∂ gammaTailMeasure a ≤ (gammaExponentBound a : ℝ)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ∫ y, Real.exp (-f y) ∂ gammaTailMeasure a := by
+  haveI := isProbabilityMeasure_gammaTailMeasure ha
+  exact gammaPrefactor_integral_exp_neg_lower_of_mean_le_bound
+    (μ := gammaTailMeasure a) (a := a) ha hf hexp hmean
+
 end Prop52
