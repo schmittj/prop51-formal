@@ -148,4 +148,27 @@ theorem hasDerivAt_gammaIBPEnvelope_raw
   have hall := hleft.mul hexp_L
   convert hall using 1
 
+/-- Logarithmic-derivative form of the Gamma integration-by-parts envelope
+derivative. -/
+theorem hasDerivAt_gammaIBPEnvelope
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) {x : ℝ} (hx : x ≠ 0) :
+    HasDerivAt (fun z => gammaIBPEnvelope μ a z)
+      (gammaIBPEnvelope μ a x *
+        (((a - 1 : Nat) : ℝ) / x - 1 +
+          printedTailLDerivReal μ a (1 / (6 * x)) / (6 * x^2))) x := by
+  have hraw := hasDerivAt_gammaIBPEnvelope_raw μ a hx
+  convert hraw using 1
+  unfold gammaIBPEnvelope
+  have hpow :
+      x^(a - 1) = x^(a - 1 - 1) * x := by
+    calc
+      x^(a - 1) = x^((a - 1 - 1) + 1) := by
+        exact congrArg (fun n : Nat => x^n)
+          (by omega : a - 1 = (a - 1 - 1) + 1)
+      _ = x^(a - 1 - 1) * x := by
+        exact pow_succ x (a - 1 - 1)
+  rw [hpow]
+  field_simp [hx]
+  ring
+
 end Prop52
