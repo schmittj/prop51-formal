@@ -934,7 +934,6 @@ Prop52/            Prop 5.2 library: source facade (Theorem.lean), source--marke
 scripts/           axiom report, constants check, saddle scans/templates
 paper/             the release LaTeX paper (prop51.tex); archive/ holds the older tenth-revision note + errata
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
-blueprint/         (planned) Lean blueprint
 docs/DEVELOPMENT_HISTORY.md   formalization plan: Layers A, A′, B, C
 ```
 
