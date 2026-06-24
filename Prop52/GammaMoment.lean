@@ -75,6 +75,120 @@ theorem M_mul_gammaWeight_shift_two_eq
   field_simp [hpow6, hpow6s, hfac_num_ne, hfac_den_ne, ha2Q, ha1Q]
   ring
 
+/-- Adjacent recurrence for the integer-shape Gamma weights:
+`6(a-s) γ_s = γ_{s-1}`. -/
+theorem gammaWeight_mul_six_sub_eq_pred
+    {a s : Nat} (hspos : 1 ≤ s) (hslt : s < a) :
+    gammaWeight a s * (6 * ((a : ℚ) - s)) =
+      gammaWeight a (s - 1) := by
+  unfold gammaWeight
+  have hpow6 : (6 : ℚ)^(s - 1) ≠ 0 := by positivity
+  have hpow6s : (6 : ℚ)^s ≠ 0 := by positivity
+  have hfac_den_ne :
+      (((Nat.factorial (a - 1) : Nat) : ℚ)) ≠ 0 :=
+    factorial_cast_ne _
+  have hasubQ : (a : ℚ) - s ≠ 0 := by
+    have hsQ : (s : ℚ) < a := by exact_mod_cast hslt
+    nlinarith
+  have hpow_s : (6 : ℚ)^s = 6 * (6 : ℚ)^(s - 1) := by
+    rw [show s = 1 + (s - 1) by omega, pow_add]
+    norm_num
+  have hfac :
+      (((Nat.factorial (a - (s - 1) - 1) : Nat) : ℚ)) =
+        ((a : ℚ) - s) *
+          (((Nat.factorial (a - s - 1) : Nat) : ℚ)) := by
+    rw [show a - (s - 1) - 1 = (a - s - 1) + 1 by omega]
+    rw [Nat.factorial_succ]
+    rw [Nat.cast_mul]
+    rw [show (((a - s - 1 + 1 : Nat) : ℚ)) = (a : ℚ) - s by
+      rw [show a - s - 1 + 1 = a - s by omega]
+      rw [Nat.cast_sub (by omega : s ≤ a)]]
+  rw [hfac, hpow_s]
+  field_simp [hpow6, hpow6s, hfac_den_ne, hasubQ]
+
+/-- Coefficient recurrence for the low exponential `E=exp(-L)`, with the
+minus sign exposed in the form used by the discrete integration-by-parts
+calculation. -/
+theorem printedTailECoeff_succ_mul_eq_neg_lowDerivConv
+    (μ : List Nat) (a n : Nat) :
+    ((n + 1 : Nat) : ℚ) * printedTailECoeff μ a (n + 1) =
+      -∑ t ∈ Finset.range (n + 1),
+        if t + 1 ≤ printedTailP a then
+          ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+            printedTailECoeff μ a (n - t)
+        else 0 := by
+  have hrec := Prop51.expCoeff_succ_mul (printedTailLowExpInput μ a) n
+  unfold printedTailECoeff at hrec ⊢
+  rw [hrec]
+  rw [← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun t _ht => ?_
+  unfold printedTailLowExpInput
+  by_cases htp : t + 1 ≤ printedTailP a
+  · rw [if_pos htp, if_pos htp]
+    ring
+  · rw [if_neg htp, if_neg htp]
+    ring
+
+/-- The low-derivative convolution form for the coefficient of
+`t L'(t) E(t)`. -/
+theorem printedTailLowDerivConv_eq_neg
+    (μ : List Nat) (a n : Nat) :
+    (∑ t ∈ Finset.range n,
+      if t + 1 ≤ printedTailP a then
+        ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+          printedTailECoeff μ a (n - 1 - t)
+      else 0) =
+      -(n : ℚ) * printedTailECoeff μ a n := by
+  cases n with
+  | zero =>
+      simp
+  | succ n =>
+      have h := printedTailECoeff_succ_mul_eq_neg_lowDerivConv μ a n
+      have hneg := congrArg Neg.neg h
+      calc
+        (∑ t ∈ Finset.range (n + 1),
+          if t + 1 ≤ printedTailP a then
+            ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+              printedTailECoeff μ a (n + 1 - 1 - t)
+          else 0)
+            =
+          -(((n + 1 : Nat) : ℚ) *
+            printedTailECoeff μ a (n + 1)) := by
+            simpa [show n + 1 - 1 = n by omega] using hneg.symm
+        _ = -((n + 1 : Nat) : ℚ) * printedTailECoeff μ a (n + 1) := by
+            ring
+
+/-- The same low-derivative convolution with the bracket's factor `6`. -/
+theorem printedTailLowDerivConv_six_eq_neg
+    (μ : List Nat) (a n : Nat) :
+    (∑ t ∈ Finset.range n,
+      if t + 1 ≤ printedTailP a then
+        6 * ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+          printedTailECoeff μ a (n - 1 - t)
+      else 0) =
+      -6 * (n : ℚ) * printedTailECoeff μ a n := by
+  have h := printedTailLowDerivConv_eq_neg μ a n
+  calc
+    (∑ t ∈ Finset.range n,
+      if t + 1 ≤ printedTailP a then
+        6 * ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+          printedTailECoeff μ a (n - 1 - t)
+      else 0)
+        =
+      6 * (∑ t ∈ Finset.range n,
+        if t + 1 ≤ printedTailP a then
+          ((t + 1 : Nat) : ℚ) * hCoeff μ (t + 1) *
+            printedTailECoeff μ a (n - 1 - t)
+        else 0) := by
+          rw [Finset.mul_sum]
+          refine Finset.sum_congr rfl fun t _ht => ?_
+          by_cases ht : t + 1 ≤ printedTailP a
+          · simp [ht]
+            ring
+          · simp [ht]
+    _ = 6 * (-(n : ℚ) * printedTailECoeff μ a n) := by rw [h]
+    _ = -6 * (n : ℚ) * printedTailECoeff μ a n := by ring
+
 /-- The basic factorial-ratio identity behind the paper's Gamma-moment
 calculation:
 
