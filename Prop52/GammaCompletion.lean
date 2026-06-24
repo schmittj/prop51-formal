@@ -218,6 +218,21 @@ theorem hasSum_printedTailLowExpInput_pow_eval
   rw [printedTailLowExpInput_eval_eq_neg_printedTailLReal] at h
   simpa using h
 
+/-- The recurrence-defined low exponential coefficients really sum to
+`exp(-L(t))` on the whole real line, hence in particular on the upper-event
+interval `0 <= t <= x₁`. -/
+theorem printedTailERealSeriesHasSum : PrintedTailERealSeriesHasSum := by
+  intro a _ha μ _hμ t _ht0 _ht1
+  have hsupp :
+      ∀ r : Nat, printedTailP a < r → printedTailLowExpInput μ a r = 0 := by
+    intro r hr
+    exact printedTailLowExpInput_eq_zero_of_gt μ a r hr
+  have h := hasSum_expCoeff_eval_of_support
+    (L := printedTailLowExpInput μ a) (P := printedTailP a)
+    (printedTailLowExpInput_zero μ a) hsupp t
+  rw [printedTailLowExpInput_eval_eq_neg_printedTailLReal] at h
+  simpa [printedTailECoeff] using h
+
 theorem printedTailX1_lt_one_real {a : Nat} (ha : 150 ≤ a) :
     (printedTailX1 a : ℝ) < 1 := by
   have haR : (150 : ℝ) ≤ (a : ℝ) := by exact_mod_cast ha
@@ -363,6 +378,9 @@ theorem printedTailWRealSeriesHasSum_of_eSeries
   convert hWsum using 1
   ring
 
+theorem printedTailWRealSeriesHasSum : PrintedTailWRealSeriesHasSum :=
+  printedTailWRealSeriesHasSum_of_eSeries printedTailERealSeriesHasSum
+
 theorem printedTailWRealTailResidueBound_of_hasSum
     (hseries : PrintedTailWRealSeriesHasSum) :
     PrintedTailWRealTailResidueBound := by
@@ -476,6 +494,9 @@ theorem printedTailWRealTailResidueBound_of_hasSum
     _ ≤ ∑' i : Nat, G (i + R) := htail_norm_le
     _ ≤ ∑' s : Nat, G s := hG_shift_le_total
     _ ≤ ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := hG_total_le
+
+theorem printedTailWRealTailResidueBound : PrintedTailWRealTailResidueBound :=
+  printedTailWRealTailResidueBound_of_hasSum printedTailWRealSeriesHasSum
 
 theorem printedTailUpperEventPointwiseResidueBound_of_realTail
     (htail : PrintedTailWRealTailResidueBound) :

@@ -458,6 +458,21 @@ theorem correctedCoeff_neg_of_eSeriesHasSum
     (printedTailWRealSeriesHasSum_of_eSeries hEseries)
     ha hμ
 
+/-- Corrected Chen--Larson Proposition 5.2 nonvanishing statement.
+
+This is the assumption-free public theorem for the corrected `g ≡ 1 mod 3`
+case: the finite ranges, Gamma lower bound, Taylor truncation residue, and
+real exponential power-series identity are all closed in Lean. -/
+theorem correctedCoeff_nonvanishing : CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_eSeriesHasSum printedTailERealSeriesHasSum
+
+/-- Strict negativity form of the corrected Proposition 5.2 coefficient. -/
+theorem correctedCoeff_neg
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_eSeriesHasSum printedTailERealSeriesHasSum ha hμ
+
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite
 Gamma moments, finite-window upper tail, residue arithmetic, mid-range, and
