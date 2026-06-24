@@ -947,6 +947,51 @@ theorem coeff_printedTailESeries_mul_lowJSeries
       fun hc => hp (hcond.mp hc)
     rw [if_neg hc, if_neg hp]
 
+/-- The same low-`J` convolution coefficient as an explicit finite sum over
+the retained marked degrees.  This form is convenient for analytic summation,
+because each retained marked degree is just a shifted copy of the `E` series. -/
+theorem coeff_printedTailESeries_mul_lowJSeries_Ico
+    (μ : List Nat) (a s : Nat) :
+    coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) =
+      ∑ r ∈ Finset.Ico 1 (printedTailP a + 1),
+        if r ≤ s then kCoeff μ r * printedTailECoeff μ a (s - r) else 0 := by
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [coeff_printedTailESeries, coeff_printedTailLowJSeries]
+  rw [← Finset.sum_range_reflect (fun x : Nat =>
+    printedTailECoeff μ a x *
+      if 1 ≤ s - x ∧ s - x ≤ printedTailP a then
+        kCoeff μ (s - x)
+      else 0) (s + 1)]
+  trans ∑ r ∈ Finset.range (s + 1),
+      if 1 ≤ r ∧ r ≤ printedTailP a then
+        printedTailECoeff μ a (s - r) * kCoeff μ r
+      else 0
+  · refine Finset.sum_congr rfl fun r hr => ?_
+    have hrle : r ≤ s := by
+      have h := Finset.mem_range.mp hr
+      omega
+    have hsub₁ : s + 1 - 1 - r = s - r := by omega
+    have hsub₂ : s - (s - r) = r := by omega
+    rw [hsub₁, hsub₂]
+    by_cases hc : 1 ≤ r ∧ r ≤ printedTailP a
+    · rw [if_pos hc, if_pos hc]
+    · rw [if_neg hc, if_neg hc]
+      simp
+  have hfilter :
+      (Finset.range (s + 1)).filter
+          (fun r : Nat => 1 ≤ r ∧ r ≤ printedTailP a) =
+        (Finset.Ico 1 (printedTailP a + 1)).filter
+          (fun r : Nat => r ≤ s) := by
+    ext r
+    simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_Ico]
+    omega
+  rw [← Finset.sum_filter]
+  rw [← Finset.sum_filter]
+  rw [hfilter]
+  refine Finset.sum_congr rfl fun r hr => ?_
+  simp only [Finset.mem_filter, Finset.mem_Ico] at hr
+  ring
+
 theorem coeff_printedTailWSeries (μ : List Nat) (a s : Nat) :
     coeff s (printedTailWSeries μ a) = printedTailOmegaCoeff μ a s := by
   unfold printedTailWSeries printedTailOmegaCoeff

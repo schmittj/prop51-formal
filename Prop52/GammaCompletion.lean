@@ -16,6 +16,7 @@ import Prop52.GammaIBP
 namespace Prop52
 
 open MeasureTheory
+open PowerSeries
 open scoped ENNReal
 
 /-- The untruncated Gamma integrand
@@ -131,6 +132,52 @@ def PrintedTailWRealTailResidueBound : Prop :=
             (printedTailOmegaCoeff μ a s : ℝ) * t^s)| ≤
         ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ)
 
+/-- Real power-series representation for the low exponential factor
+`E(t)=exp(-L(t))`.
+
+This isolates the only genuinely exponential analytic identity.  The theorem
+`printedTailWRealSeriesHasSum_of_eSeries` below shows that the finite marked
+polynomial `J` then assembles the full `W=E(1-J)` series using only the formal
+coefficient convolution already proved in `Printed.lean`. -/
+def PrintedTailERealSeriesHasSum : Prop :=
+  ∀ a : Nat, 150 ≤ a →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      ∀ t : ℝ, 0 ≤ t → t ≤ (printedTailX1 a : ℝ) →
+        HasSum
+          (fun s : Nat => (printedTailECoeff μ a s : ℝ) * t^s)
+          (Real.exp (-(printedTailLReal μ a t)))
+
+private theorem hasSum_nat_shift_mul_left
+    {f : Nat → ℝ} {A c : ℝ} (hf : HasSum f A) (r : Nat) :
+    HasSum (fun s : Nat => if r ≤ s then c * f (s - r) else 0) (c * A) := by
+  let H : Nat → ℝ := fun s => if r ≤ s then c * f (s - r) else 0
+  have hshift : HasSum (fun n : Nat => H (n + r)) (c * A) := by
+    simpa [H] using HasSum.mul_left c hf
+  have hfull := (hasSum_nat_add_iff r).mp hshift
+  have hprefix : ∑ i ∈ Finset.range r, H i = 0 := by
+    refine Finset.sum_eq_zero fun i hi => ?_
+    have hlt : i < r := Finset.mem_range.mp hi
+    simp [H, not_le_of_gt hlt]
+  simpa [H, hprefix] using hfull
+
+private theorem hasSum_finset_sum_nat
+    {ι : Type*} [DecidableEq ι] (S : Finset ι)
+    {f : ι → Nat → ℝ} {A : ι → ℝ}
+    (h : ∀ i ∈ S, HasSum (f i) (A i)) :
+    HasSum (fun n : Nat => ∑ i ∈ S, f i n) (∑ i ∈ S, A i) := by
+  classical
+  revert h
+  refine Finset.induction_on S ?base ?step
+  · intro _h
+    simpa using (hasSum_zero : HasSum (fun _ : Nat => (0 : ℝ)) 0)
+  · intro i S hi ih h
+    have hi_sum : HasSum (f i) (A i) := h i (by simp [hi])
+    have hS_sum :
+        HasSum (fun n : Nat => ∑ j ∈ S, f j n) (∑ j ∈ S, A j) :=
+      ih fun j hj => h j (by simp [hj])
+    simpa [Finset.sum_insert hi, add_comm, add_left_comm, add_assoc] using
+      hi_sum.add hS_sum
+
 /-- Real power-series representation for the full upper-event function.
 
 This is the remaining analytic identity behind the Taylor tail: on the
@@ -146,6 +193,93 @@ def PrintedTailWRealSeriesHasSum : Prop :=
           (fun s : Nat => (printedTailOmegaCoeff μ a s : ℝ) * t^s)
           (Real.exp (-(printedTailLReal μ a t)) *
             (1 - printedTailJReal μ a t))
+
+theorem printedTailWRealSeriesHasSum_of_eSeries
+    (hEseries : PrintedTailERealSeriesHasSum) :
+    PrintedTailWRealSeriesHasSum := by
+  intro a ha μ hμ t ht0 ht1
+  let Efun : Nat → ℝ := fun s =>
+    (printedTailECoeff μ a s : ℝ) * t^s
+  let Eval : ℝ := Real.exp (-(printedTailLReal μ a t))
+  let S : Finset Nat := Finset.Ico 1 (printedTailP a + 1)
+  let Cfun : Nat → ℝ := fun s =>
+    ∑ r ∈ S,
+      if r ≤ s then ((kCoeff μ r : ℝ) * t^r) * Efun (s - r) else 0
+  have hE : HasSum Efun Eval := by
+    simpa [Efun, Eval] using hEseries a ha μ hμ t ht0 ht1
+  have hconv_terms :
+      ∀ r ∈ S,
+        HasSum
+          (fun s : Nat =>
+            if r ≤ s then ((kCoeff μ r : ℝ) * t^r) * Efun (s - r) else 0)
+          (((kCoeff μ r : ℝ) * t^r) * Eval) := by
+    intro r _hr
+    exact hasSum_nat_shift_mul_left hE r
+  have hconv_raw :
+      HasSum Cfun
+        (∑ r ∈ S, ((kCoeff μ r : ℝ) * t^r) * Eval) := by
+    simpa [Cfun] using
+      hasSum_finset_sum_nat (S := S) hconv_terms
+  have hconv_target :
+      (∑ r ∈ S, ((kCoeff μ r : ℝ) * t^r) * Eval) =
+        printedTailJReal μ a t * Eval := by
+    unfold printedTailJReal
+    dsimp [S]
+    rw [Finset.sum_mul]
+  have hconv :
+      HasSum Cfun (printedTailJReal μ a t * Eval) := by
+    simpa [hconv_target] using hconv_raw
+  have hC_coeff :
+      ∀ s : Nat,
+        ((coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) : ℚ) : ℝ) *
+            t^s = Cfun s := by
+    intro s
+    have hcoeff := coeff_printedTailESeries_mul_lowJSeries_Ico μ a s
+    rw [hcoeff]
+    rw [Rat.cast_sum]
+    rw [Finset.sum_mul]
+    dsimp [Cfun, S]
+    refine Finset.sum_congr rfl fun r hr => ?_
+    by_cases hrs : r ≤ s
+    · rw [if_pos hrs, if_pos hrs, Rat.cast_mul]
+      have hpow : t^s = t^r * t^(s - r) := by
+        have hs_eq : r + (s - r) = s := Nat.add_sub_of_le hrs
+        calc
+          t^s = t^(r + (s - r)) := by rw [hs_eq]
+          _ = t^r * t^(s - r) := by rw [pow_add]
+      rw [hpow]
+      ring
+    · rw [if_neg hrs, if_neg hrs]
+      simp
+  have hconv_coeff :
+      HasSum
+        (fun s : Nat =>
+          ((coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) : ℚ) : ℝ) *
+            t^s)
+        (printedTailJReal μ a t * Eval) :=
+    HasSum.congr_fun hconv hC_coeff
+  have homega_point :
+      ∀ s : Nat,
+        (printedTailOmegaCoeff μ a s : ℝ) * t^s =
+          Efun s -
+            ((coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) : ℚ) : ℝ) *
+              t^s := by
+    intro s
+    have hcoeff :
+        printedTailOmegaCoeff μ a s =
+          printedTailECoeff μ a s -
+            coeff s (printedTailESeries μ a * printedTailLowJSeries μ a) := by
+      rw [← coeff_printedTailWSeries μ a s]
+      unfold printedTailWSeries
+      rw [mul_sub, mul_one, map_sub, coeff_printedTailESeries]
+    rw [hcoeff, Rat.cast_sub, sub_mul]
+  have hWsum :
+      HasSum
+        (fun s : Nat => (printedTailOmegaCoeff μ a s : ℝ) * t^s)
+        (Eval - printedTailJReal μ a t * Eval) :=
+    HasSum.congr_fun (hE.sub hconv_coeff) homega_point
+  convert hWsum using 1
+  ring
 
 theorem printedTailWRealTailResidueBound_of_hasSum
     (hseries : PrintedTailWRealSeriesHasSum) :

@@ -438,6 +438,26 @@ theorem correctedCoeff_neg_of_realSeriesHasSum
     (printedTailWRealTailResidueBound_of_hasSum hseries)
     ha hμ
 
+/-- Public assembly from the real power-series representation of the low
+exponential factor `E(t)=exp(-L(t))`.  The finite marked polynomial `J` and
+the `W=E(1-J)` convolution are closed in Lean. -/
+theorem correctedCoeff_nonvanishing_of_eSeriesHasSum
+    (hEseries : PrintedTailERealSeriesHasSum) :
+    CorrectedCoeffNonvanishing :=
+  correctedCoeff_nonvanishing_of_realSeriesHasSum
+    (printedTailWRealSeriesHasSum_of_eSeries hEseries)
+
+/-- Large-range strict negativity from the real power-series representation
+of the low exponential factor `E(t)=exp(-L(t))`. -/
+theorem correctedCoeff_neg_of_eSeriesHasSum
+    (hEseries : PrintedTailERealSeriesHasSum)
+    {a : Nat} (ha : 14 ≤ a)
+    {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a)) :
+    correctedCoeff a μ < 0 :=
+  correctedCoeff_neg_of_realSeriesHasSum
+    (printedTailWRealSeriesHasSum_of_eSeries hEseries)
+    ha hμ
+
 /-- Public assembly with the remaining analytic work reduced to the upper
 event Taylor bound for the full `W` integrand.  The lower event, finite
 Gamma moments, finite-window upper tail, residue arithmetic, mid-range, and
