@@ -171,4 +171,34 @@ theorem hasDerivAt_gammaIBPEnvelope
   field_simp [hx]
   ring
 
+/-- Algebraic identification of the logarithmic derivative with the bracket
+appearing in the Gamma integration-by-parts identity. -/
+theorem gammaIBP_logDeriv_eq_bracket_add_J_sub_one
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) {x : ℝ} (hx : x ≠ 0) :
+    (((a - 1 : Nat) : ℝ) / x - 1 +
+        printedTailLDerivReal μ a (1 / (6 * x)) / (6 * x^2)) =
+      gammaLowBracketAlignedReal μ a (1 / (6 * x)) +
+        printedTailJReal μ a (1 / (6 * x)) - 1 := by
+  have hbr := gammaLowBracketAlignedReal_eq_deriv_form
+    (μ := μ) (a := a) ha (x := 1 / (6 * x))
+  rw [hbr]
+  unfold M
+  rw [Nat.cast_sub (by omega : 6 ≤ 6 * a)]
+  push_cast
+  rw [Nat.cast_sub (by omega : 1 ≤ a)]
+  field_simp [hx]
+  ring_nf
+
+/-- Bracket form of the Gamma integration-by-parts envelope derivative. -/
+theorem hasDerivAt_gammaIBPEnvelope_bracket
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) {x : ℝ} (hx : x ≠ 0) :
+    HasDerivAt (fun z => gammaIBPEnvelope μ a z)
+      (gammaIBPEnvelope μ a x *
+        (gammaLowBracketAlignedReal μ a (1 / (6 * x)) +
+          printedTailJReal μ a (1 / (6 * x)) - 1)) x := by
+  have h := hasDerivAt_gammaIBPEnvelope μ ha hx
+  convert h using 1
+  rw [gammaIBP_logDeriv_eq_bracket_add_J_sub_one
+    (μ := μ) (a := a) ha hx]
+
 end Prop52
