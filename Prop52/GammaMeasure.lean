@@ -78,6 +78,29 @@ theorem printedTailGammaExponentIntegral_le_bound
   exact (Rat.cast_le (K := ℝ)).2
     (printedTailGammaExponentMoment_le_bound (a := a) (μ := μ) ha hμ)
 
+/-- The low polynomial `L` from the printed Gamma proof, now as a real
+function. -/
+noncomputable def printedTailLReal (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  ∑ r ∈ Finset.Ico 1 (printedTailP a + 1), (hCoeff μ r : ℝ) * x^r
+
+theorem printedTailLReal_nonneg
+    {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
+    {x : ℝ} (hx : 0 ≤ x) :
+    0 ≤ printedTailLReal μ a x := by
+  unfold printedTailLReal
+  refine Finset.sum_nonneg fun r _hr => ?_
+  exact mul_nonneg
+    ((Rat.cast_nonneg (K := ℝ)).2 (hCoeff_nonneg_of_partition hμ r))
+    (pow_nonneg hx r)
+
+theorem real_exp_neg_printedTailLReal_le_one
+    {a : Nat} {μ : List Nat} (hμ : Prop51.IsPartitionOf μ (M a))
+    {x : ℝ} (hx : 0 ≤ x) :
+    Real.exp (-(printedTailLReal μ a x)) ≤ 1 := by
+  have hL := printedTailLReal_nonneg (a := a) (μ := μ) hμ hx
+  have hneg : -(printedTailLReal μ a x) ≤ 0 := by linarith
+  simpa using (Real.exp_le_exp_of_le hneg)
+
 /-- The Gamma law used in the large-tail argument, with integer shape
 `a - 2` and rate `1`. -/
 noncomputable def gammaTailMeasure (a : Nat) : Measure ℝ :=
