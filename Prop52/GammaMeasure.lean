@@ -16,6 +16,7 @@ namespace Prop52
 
 open Finset
 open MeasureTheory Set
+open scoped ENNReal
 
 private theorem gammaIntegral_nat_power_exp_eq_factorial (n : Nat) :
     ∫ y : ℝ in Set.Ioi 0, y ^ ((n : Nat) : ℝ) * Real.exp (-y) =
@@ -106,12 +107,47 @@ theorem real_exp_neg_printedTailLReal_le_one
 noncomputable def gammaTailMeasure (a : Nat) : Measure ℝ :=
   ProbabilityTheory.gammaMeasure (((a - 2 : Nat) : ℝ)) 1
 
+theorem ae_nonneg_gammaTailMeasure (a : Nat) :
+    ∀ᵐ y ∂ gammaTailMeasure a, 0 ≤ y := by
+  rw [ae_iff]
+  simpa [Set.compl_setOf, not_le] using
+    (show gammaTailMeasure a (Set.Iio 0) = 0 from by
+      unfold gammaTailMeasure ProbabilityTheory.gammaMeasure
+      rw [withDensity_apply _ measurableSet_Iio]
+      exact ProbabilityTheory.lintegral_gammaPDF_of_nonpos (x := 0)
+        (a := ((a - 2 : Nat) : ℝ)) (r := 1) le_rfl)
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by
   unfold gammaTailMeasure
   exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
     (by exact_mod_cast (by omega : 0 < a - 2)) (by norm_num)
+
+/-- The random variable `L(1/(6Y))` used in the Gamma/Jensen margin, where
+`Y` has the integer-shape Gamma law `gammaTailMeasure a`. -/
+noncomputable def printedTailLGammaArg (μ : List Nat) (a : Nat) (y : ℝ) : ℝ :=
+  printedTailLReal μ a (1 / (6 * y))
+
+/-- The negative exponential in the Jensen lower bound is integrable under the
+Gamma-tail probability measure.  The proof uses only the almost-everywhere
+support `Y >= 0` and the coefficientwise nonnegativity of `L`. -/
+theorem integrable_exp_neg_printedTailLGammaArg
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    Integrable (fun y => Real.exp (-(printedTailLGammaArg μ a y)))
+      (gammaTailMeasure a) := by
+  haveI := isProbabilityMeasure_gammaTailMeasure ha
+  refine Integrable.of_mem_Icc (μ := gammaTailMeasure a) 0 1 ?hmeas ?hbounds
+  · unfold printedTailLGammaArg printedTailLReal
+    fun_prop
+  · filter_upwards [ae_nonneg_gammaTailMeasure a] with y hy
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    have hle := real_exp_neg_printedTailLReal_le_one
+      (a := a) (μ := μ) hμ hx
+    constructor
+    · positivity
+    · simpa [printedTailLGammaArg] using hle
 
 /-- Jensen and the scalar endpoint specialized to the Gamma law with shape
 `a - 2`. -/
