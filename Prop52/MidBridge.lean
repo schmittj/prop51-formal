@@ -85,6 +85,207 @@ theorem printedMidACoeff_eq_prod_sub_convolution (μ : List Nat) (r : Nat) :
   unfold printedMidACoeff printedMidASeries
   rw [mul_sub, mul_one, map_sub, coeff_prodSeries_mul_printedFullKSeries]
 
+theorem sPower_nonneg (μ : List Nat) (r : Nat) :
+    0 ≤ sPower μ r := by
+  unfold sPower
+  refine List.sum_nonneg fun x hx => ?_
+  simp only [List.mem_map] at hx
+  obtain ⟨mi, _hmi, rfl⟩ := hx
+  positivity
+
+theorem prodSeries_eq_expSeries_sPower (μ : List Nat) :
+    Prop51.prodSeries μ =
+      Prop51.expSeries (fun r => Prop51.c r * sPower μ r) := by
+  rw [Prop51.prodSeries_eq_expSeries']
+  congr 1
+  funext r
+  unfold sPower
+  rw [mul_comm]
+  congr 1
+  refine congrArg List.sum (List.map_congr_left fun mi _hmi => ?_)
+  simp [Prop51.qq, one_div, inv_pow]
+
+/-- The exponential recurrence gives `P_r <= Σ (c_j s_j) P_{r-j}` for
+positive `r`. -/
+theorem coeff_prodSeries_le_log_sum (μ : List Nat) (r : Nat) (hr : 1 ≤ r) :
+    coeff r (Prop51.prodSeries μ) ≤
+      ∑ j ∈ Finset.range r,
+        (Prop51.c (j + 1) * sPower μ (j + 1)) *
+          coeff (r - (j + 1)) (Prop51.prodSeries μ) := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 1 := ⟨r - 1, by omega⟩
+  rw [prodSeries_eq_expSeries_sPower]
+  simp only [Prop51.coeff_expSeries]
+  let L : Nat → ℚ := fun r => Prop51.c r * sPower μ r
+  change Prop51.expCoeff L (n + 1) ≤
+      ∑ j ∈ Finset.range (n + 1),
+        L (j + 1) * Prop51.expCoeff L (n + 1 - (j + 1))
+  have hrec := Prop51.expCoeff_succ_mul L n
+  have hL_nonneg : ∀ r : Nat, 0 ≤ L r := by
+    intro r
+    exact mul_nonneg (Prop51.c_nonneg r) (sPower_nonneg μ r)
+  have hsum_bound :
+      ∑ t ∈ Finset.range (n + 1),
+          ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)
+        ≤
+      ((n + 1 : Nat) : ℚ) *
+        ∑ t ∈ Finset.range (n + 1),
+          L (t + 1) * Prop51.expCoeff L (n - t) := by
+    rw [Finset.mul_sum]
+    refine Finset.sum_le_sum fun t ht => ?_
+    have htlt : t < n + 1 := Finset.mem_range.mp ht
+    have hcoef_nonneg : 0 ≤ L (t + 1) * Prop51.expCoeff L (n - t) :=
+      mul_nonneg (hL_nonneg (t + 1))
+        (Prop51.expCoeff_nonneg hL_nonneg (n - t))
+    have hcast : ((t + 1 : Nat) : ℚ) ≤ ((n + 1 : Nat) : ℚ) := by
+      exact_mod_cast Nat.succ_le_of_lt htlt
+    calc
+      ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)
+          = ((t + 1 : Nat) : ℚ) *
+              (L (t + 1) * Prop51.expCoeff L (n - t)) := by ring
+      _ ≤ ((n + 1 : Nat) : ℚ) *
+              (L (t + 1) * Prop51.expCoeff L (n - t)) :=
+            mul_le_mul_of_nonneg_right hcast hcoef_nonneg
+  rw [← hrec] at hsum_bound
+  have hpos : (0 : ℚ) < (n + 1 : Nat) := by positivity
+  have hsum_reindex :
+      (∑ t ∈ Finset.range (n + 1),
+          L (t + 1) * Prop51.expCoeff L (n - t)) =
+        ∑ j ∈ Finset.range (n + 1),
+          L (j + 1) * Prop51.expCoeff L (n + 1 - (j + 1)) := by
+    refine Finset.sum_congr rfl fun j hj => ?_
+    have hjlt : j < n + 1 := Finset.mem_range.mp hj
+    have hsub : n - j = n + 1 - (j + 1) := by omega
+    rw [hsub]
+  rw [hsum_reindex] at hsum_bound
+  nlinarith
+
+/-- Positive-degree `A_μ` coefficients are nonpositive once the marked
+coefficients dominate the logarithmic coefficients of `P_μ`. -/
+theorem printedMidACoeff_nonpos_of_kCoeff_ge_logCoeff (μ : List Nat) (r : Nat)
+    (hr : 1 ≤ r)
+    (hK : ∀ j : Nat, 1 ≤ j → j ≤ r →
+      Prop51.c j * sPower μ j ≤ kCoeff μ j) :
+    printedMidACoeff μ r ≤ 0 := by
+  rw [printedMidACoeff_eq_prod_sub_convolution]
+  have hP_le := coeff_prodSeries_le_log_sum μ r hr
+  have hlog_le_K :
+      (∑ j ∈ Finset.range r,
+          (Prop51.c (j + 1) * sPower μ (j + 1)) *
+            coeff (r - (j + 1)) (Prop51.prodSeries μ)) ≤
+        ∑ j ∈ Finset.range r,
+          kCoeff μ (j + 1) *
+            coeff (r - (j + 1)) (Prop51.prodSeries μ) := by
+    refine Finset.sum_le_sum fun j hj => ?_
+    have hjlt : j < r := Finset.mem_range.mp hj
+    have hKj := hK (j + 1) (by omega) (by omega)
+    have hPnonneg :
+        0 ≤ coeff (r - (j + 1)) (Prop51.prodSeries μ) :=
+      Prop51.coeff_prodSeries_nonneg μ (r - (j + 1))
+    exact mul_le_mul_of_nonneg_right hKj hPnonneg
+  linarith
+
+theorem sPower_le_markedWeight_of_positive (μ : List Nat)
+    (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) :
+    sPower μ r ≤ markedWeight μ r := by
+  induction μ with
+  | nil =>
+      simp [sPower, markedWeight]
+  | cons mi μ ih =>
+      have hmi_nat : 1 ≤ mi := hpos mi (by simp)
+      have htail : ∀ m ∈ μ, 1 ≤ m := by
+        intro m hm
+        exact hpos m (by simp [hm])
+      have ih' := ih htail
+      unfold sPower markedWeight at ih' ⊢
+      simp only [List.map_cons, List.sum_cons]
+      have hmi : (1 : ℚ) ≤ (mi : ℚ) := by exact_mod_cast hmi_nat
+      have hterm :
+          1 / (((mi : ℚ) + 1)^r) ≤ (mi : ℚ) / (((mi : ℚ) + 1)^r) :=
+        div_le_div_of_nonneg_right hmi (by positivity)
+      have hterm' :
+          1 / (((mi + 1 : Nat) : ℚ)^r) ≤
+            (mi : ℚ) / (((mi + 1 : Nat) : ℚ)^r) := by
+        simpa [Nat.cast_add, Nat.cast_one] using hterm
+      exact add_le_add hterm' ih'
+
+theorem c_le_phiCoeff_of_two_le (r : Nat) (hr : 2 ≤ r) :
+    Prop51.c r ≤ phiCoeff r := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 2 := ⟨r - 2, by omega⟩
+  have hdub : Prop51.d (n + 2) ≤ 4 / 25 :=
+    Prop51.d_ub (n + 2) (by omega)
+  have hdlb : 5 / 36 ≤ Prop51.d (n + 1) :=
+    Prop51.d_lb (n + 1) (by omega)
+  have hd2 : Prop51.d (n + 2) ≤ 2 * Prop51.d (n + 1) := by
+    nlinarith
+  let A : ℚ := (6 : ℚ)^(n + 1) * ((n.factorial : Nat) : ℚ)
+  have hA_nonneg : 0 ≤ A := by
+    dsimp [A]
+    positivity
+  have hfactor_nonneg : 0 ≤ 6 * ((n + 1 : Nat) : ℚ) * A := by
+    positivity
+  calc
+    Prop51.c (n + 2)
+        = (6 * ((n + 1 : Nat) : ℚ) * A) * Prop51.d (n + 2) := by
+          rw [Prop51.c_eq_d (n + 2)]
+          dsimp [A]
+          rw [show n + 2 = (n + 1) + 1 by omega, pow_succ]
+          rw [show (n + 1).factorial = (n + 1) * n.factorial by
+            rw [Nat.factorial_succ]]
+          push_cast
+          ring
+    _ ≤ (6 * ((n + 1 : Nat) : ℚ) * A) * (2 * Prop51.d (n + 1)) :=
+          mul_le_mul_of_nonneg_left hd2 hfactor_nonneg
+    _ = phiCoeff (n + 2) := by
+          simp [phiCoeff]
+          rw [Prop51.c_eq_d (n + 1)]
+          dsimp [A]
+          ring
+
+theorem kCoeff_ge_logCoeff_of_positive (μ : List Nat)
+    (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) (hr : 1 ≤ r) :
+    Prop51.c r * sPower μ r ≤ kCoeff μ r := by
+  rcases r with _ | r
+  · omega
+  rcases r with _ | r
+  · simp [kCoeff, Prop51.c_one]
+    have hsle := sPower_le_markedWeight_of_positive μ hpos 1
+    have hs_nonneg := sPower_nonneg μ 1
+    have hmw_nonneg := markedWeight_nonneg_of_coeffs μ 1
+    nlinarith
+  · have hsle := sPower_le_markedWeight_of_positive μ hpos (r + 2)
+    have hphi : Prop51.c (r + 2) ≤
+        12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1) := by
+      simpa [phiCoeff] using c_le_phiCoeff_of_two_le (r + 2) (by omega)
+    have hs_nonneg := sPower_nonneg μ (r + 2)
+    have hmw_nonneg := markedWeight_nonneg_of_coeffs μ (r + 2)
+    have hphi_nonneg :
+        0 ≤ 12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1) := by
+      exact mul_nonneg (mul_nonneg (by norm_num) (by positivity))
+        (Prop51.c_nonneg (r + 1))
+    simp [kCoeff]
+    calc
+      Prop51.c (r + 2) * sPower μ (r + 2)
+          ≤ (12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1)) *
+              sPower μ (r + 2) :=
+            mul_le_mul_of_nonneg_right hphi hs_nonneg
+      _ ≤ (12 * ((r + 1 : Nat) : ℚ) * Prop51.c (r + 1)) *
+              markedWeight μ (r + 2) :=
+            mul_le_mul_of_nonneg_left hsle hphi_nonneg
+      _ = 12 * ((r : ℚ) + 1) * Prop51.c (r + 1) *
+              markedWeight μ (r + 2) := by
+            norm_num [Nat.cast_add, Nat.cast_one]
+
+theorem printedMidACoeff_nonpos_of_positive (μ : List Nat)
+    (hpos : ∀ m ∈ μ, 1 ≤ m) (r : Nat) (hr : 1 ≤ r) :
+    printedMidACoeff μ r ≤ 0 :=
+  printedMidACoeff_nonpos_of_kCoeff_ge_logCoeff μ r hr
+    (fun j hj _hjr => kCoeff_ge_logCoeff_of_positive μ hpos j hj)
+
+theorem printedMidACoeff_nonpos_of_partition {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) (hr : 1 ≤ r) :
+    printedMidACoeff μ r ≤ 0 := by
+  exact printedMidACoeff_nonpos_of_positive μ hμ.2 r hr
+
 /--
 Exact convolution form of the printed coefficient after the `A_μ` rewrite.
 
@@ -187,6 +388,14 @@ theorem printedCoeff_le_rawUpper_of_A_bounds (μ : List Nat) (a M Ntot : Nat)
       exact hA
   linarith
 
+theorem printedCoeff_le_rawUpper_of_Acomparison {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hAcomp : ∀ r : Nat, printedMidSimpleACoeff (M a) r ≤ printedMidACoeff μ r) :
+    printedCoeff μ a ≤ printedMidRawUpper (M a) (N μ) a :=
+  printedCoeff_le_rawUpper_of_A_bounds μ a (M a) (N μ) rfl
+    (fun r hr => printedMidACoeff_nonpos_of_partition hμ r hr)
+    hAcomp
+
 /--
 Remaining mid-range bridge target.
 
@@ -199,6 +408,28 @@ def PrintedMidUpperBound : Prop :=
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       printedCoeff μ a ≤ (((N μ : Nat) : ℚ) * Prop51.c a) *
         midUNormFast a (N μ)
+
+/-- The all-simple comparison target from the printed proof. -/
+def PrintedMidSimpleComparison : Prop :=
+  ∀ a : Nat, 14 ≤ a → a ≤ 149 →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      ∀ r : Nat, printedMidSimpleACoeff (M a) r ≤ printedMidACoeff μ r
+
+/-- Identification of the raw `B/R` bound with the normalized certificate
+kernel, after undoing the factor `N c_a`. -/
+def PrintedMidRawToNormBound : Prop :=
+  ∀ a : Nat, 14 ≤ a → a ≤ 149 →
+    ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
+      printedMidRawUpper (M a) (N μ) a ≤
+        (((N μ : Nat) : ℚ) * Prop51.c a) * midUNormFast a (N μ)
+
+theorem printedMidUpperBound_of_simpleComparison_rawToNorm
+    (hcomp : PrintedMidSimpleComparison)
+    (hraw : PrintedMidRawToNormBound) :
+    PrintedMidUpperBound := by
+  intro a ha_lo ha_hi μ hμ
+  exact (printedCoeff_le_rawUpper_of_Acomparison hμ
+    (hcomp a ha_lo ha_hi μ hμ)).trans (hraw a ha_lo ha_hi μ hμ)
 
 private theorem mid_N_pos_of_partition {a : Nat} {μ : List Nat}
     (ha : 14 ≤ a) (hμ : Prop51.IsPartitionOf μ (M a)) :
