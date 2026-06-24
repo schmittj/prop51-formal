@@ -247,6 +247,11 @@ theorem fiveM_x2_le_gammaLowBracketAlignedReal
 noncomputable def gammaTailMeasure (a : Nat) : Measure ℝ :=
   ProbabilityTheory.gammaMeasure (((a - 2 : Nat) : ℝ)) 1
 
+/-- The integer-shape Gamma law with shape `a`, used for the
+integration-by-parts side before shifting two powers of `1/(6Y)`. -/
+noncomputable def gammaFullMeasure (a : Nat) : Measure ℝ :=
+  ProbabilityTheory.gammaMeasure ((a : ℝ)) 1
+
 theorem ae_nonneg_gammaTailMeasure (a : Nat) :
     ∀ᵐ y ∂ gammaTailMeasure a, 0 ≤ y := by
   rw [ae_iff]
@@ -256,6 +261,16 @@ theorem ae_nonneg_gammaTailMeasure (a : Nat) :
       rw [withDensity_apply _ measurableSet_Iio]
       exact ProbabilityTheory.lintegral_gammaPDF_of_nonpos (x := 0)
         (a := ((a - 2 : Nat) : ℝ)) (r := 1) le_rfl)
+
+theorem ae_nonneg_gammaFullMeasure (a : Nat) :
+    ∀ᵐ y ∂ gammaFullMeasure a, 0 ≤ y := by
+  rw [ae_iff]
+  simpa [Set.compl_setOf, not_le] using
+    (show gammaFullMeasure a (Set.Iio 0) = 0 from by
+      unfold gammaFullMeasure ProbabilityTheory.gammaMeasure
+      rw [withDensity_apply _ measurableSet_Iio]
+      exact ProbabilityTheory.lintegral_gammaPDF_of_nonpos (x := 0)
+        (a := (a : ℝ)) (r := 1) le_rfl)
 
 /-- Unfold integrals against the Gamma-tail measure to integrals against
 Lebesgue measure with the Gamma density. -/
@@ -290,6 +305,146 @@ theorem integral_gammaTailMeasure_eq_integral_Ici_gammaPDF_toReal_smul
     have hynot : y ∉ Set.Ici (0 : ℝ) := hy
     rw [ProbabilityTheory.gammaPDF_of_neg hyneg]
     simp [Set.indicator, hynot]
+
+/-- Unfold integrals against the full shape-`a` Gamma measure to integrals
+against Lebesgue measure with the Gamma density. -/
+theorem integral_gammaFullMeasure_eq_integral_gammaPDF_toReal_smul
+    (a : Nat) (g : ℝ → ℝ) :
+    (∫ y, g y ∂ gammaFullMeasure a) =
+      ∫ y, (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal • g y := by
+  unfold gammaFullMeasure ProbabilityTheory.gammaMeasure
+  rw [integral_withDensity_eq_integral_toReal_smul]
+  · unfold ProbabilityTheory.gammaPDF
+    exact (ProbabilityTheory.measurable_gammaPDFReal (a : ℝ) 1).ennreal_ofReal
+  · filter_upwards with y
+    simp [ProbabilityTheory.gammaPDF]
+
+/-- Same density conversion for the full shape-`a` Gamma law, restricted to
+its support `[0,∞)`. -/
+theorem integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul
+    (a : Nat) (g : ℝ → ℝ) :
+    (∫ y, g y ∂ gammaFullMeasure a) =
+      ∫ y in Set.Ici 0,
+        (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal • g y := by
+  rw [integral_gammaFullMeasure_eq_integral_gammaPDF_toReal_smul]
+  rw [← MeasureTheory.integral_indicator measurableSet_Ici]
+  refine MeasureTheory.integral_congr_ae ?_
+  filter_upwards with y
+  by_cases hy : 0 ≤ y
+  · have hymem : y ∈ Set.Ici (0 : ℝ) := hy
+    simp [Set.indicator, hymem]
+  · have hyneg : y < 0 := lt_of_not_ge hy
+    have hynot : y ∉ Set.Ici (0 : ℝ) := hy
+    rw [ProbabilityTheory.gammaPDF_of_neg hyneg]
+    simp [Set.indicator, hynot]
+
+private theorem fiveM_gammaPDF_full_mul_invSq_eq_tail_prefactor
+    {a : Nat} (ha : 150 ≤ a) {y : ℝ} (hy : 0 < y) :
+    (5 * (M a : ℝ)) *
+        ((ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+          (1 / (6 * y))^2) =
+      (5 / (6 * ((a : ℝ) - 2))) *
+        (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal := by
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hy.le]
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hy.le]
+  rw [ENNReal.toReal_ofReal, ENNReal.toReal_ofReal]
+  · simp only [Real.one_rpow, one_mul]
+    have hMcast : (M a : ℝ) = 6 * ((a : ℝ) - 1) := by
+      unfold M
+      rw [Nat.cast_sub (by omega : 6 ≤ 6 * a)]
+      push_cast
+      ring
+    have hshapeFull : (a : ℝ) = ((a - 1 : Nat) : ℝ) + 1 := by
+      rw [show a = (a - 1) + 1 by omega]
+      norm_num
+    have hshapeTail : (((a - 2 : Nat) : ℝ)) = ((a - 3 : Nat) : ℝ) + 1 := by
+      rw [show a - 2 = (a - 3) + 1 by omega]
+      norm_num
+    rw [hMcast, hshapeFull, hshapeTail]
+    rw [Real.Gamma_nat_eq_factorial (a - 1),
+      Real.Gamma_nat_eq_factorial (a - 3)]
+    have hpowFull :
+        y ^ (((a - 1 : Nat) : ℝ) + 1 - 1) = y^(a - 1) := by
+      rw [show (((a - 1 : Nat) : ℝ) + 1 - 1) =
+        ((a - 1 : Nat) : ℝ) by ring]
+      exact Real.rpow_natCast y (a - 1)
+    have hpowTail :
+        y ^ (((a - 3 : Nat) : ℝ) + 1 - 1) = y^(a - 3) := by
+      rw [show (((a - 3 : Nat) : ℝ) + 1 - 1) =
+        ((a - 3 : Nat) : ℝ) by ring]
+      exact Real.rpow_natCast y (a - 3)
+    rw [hpowFull, hpowTail]
+    have hfac1 :
+        (((a - 1).factorial : Nat) : ℝ) =
+          ((a : ℝ) - 1) * (((a - 2).factorial : Nat) : ℝ) := by
+      rw [show a - 1 = (a - 2) + 1 by omega, Nat.factorial_succ]
+      rw [Nat.cast_mul]
+      rw [show (((a - 2 + 1 : Nat) : ℝ)) = (a : ℝ) - 1 by
+        rw [Nat.cast_add, Nat.cast_one, Nat.cast_sub (by omega : 2 ≤ a)]
+        ring]
+    have hfac2 :
+        (((a - 2).factorial : Nat) : ℝ) =
+          ((a : ℝ) - 2) * (((a - 3).factorial : Nat) : ℝ) := by
+      rw [show a - 2 = (a - 3) + 1 by omega, Nat.factorial_succ]
+      rw [Nat.cast_mul]
+      rw [show (((a - 3 + 1 : Nat) : ℝ)) = (a : ℝ) - 2 by
+        rw [Nat.cast_add, Nat.cast_one, Nat.cast_sub (by omega : 3 ≤ a)]
+        ring]
+    rw [hfac1, hfac2]
+    have hy_ne : y ≠ 0 := hy.ne'
+    have ha1 : (a : ℝ) - 1 ≠ 0 := by
+      have haR : (150 : ℝ) ≤ a := by exact_mod_cast ha
+      nlinarith
+    have ha2 : (a : ℝ) - 2 ≠ 0 := by
+      have haR : (150 : ℝ) ≤ a := by exact_mod_cast ha
+      nlinarith
+    field_simp [hy_ne, ha1, ha2, factorial_cast_real_ne (a - 3)]
+    rw [show a - 1 = (a - 3) + 2 by omega, pow_add]
+    field_simp [hy_ne]
+    rw [show a - 3 + 2 = a - 1 by omega]
+    rw [Nat.cast_sub (by omega : 1 ≤ a)]
+    ring_nf
+  · positivity
+  · positivity
+
+/-- Integral form of the Gamma shape shift
+`5M * E_a[(1/(6Y))^2 g(Y)] =
+  5/(6(a-2)) * E_{a-2}[g(Y)]`.
+
+This is the formal version of the scalar change of Gamma shape used between
+the integration-by-parts bracket and Jensen's inequality. -/
+theorem fiveM_integral_invSq_mul_gammaFull_eq_tail_prefactor
+    {a : Nat} (ha : 150 ≤ a) (g : ℝ → ℝ) :
+    (5 * (M a : ℝ)) *
+        ∫ y, (1 / (6 * y))^2 * g y ∂ gammaFullMeasure a =
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ∫ y, g y ∂ gammaTailMeasure a := by
+  rw [integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+  rw [integral_gammaTailMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+  rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+  rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+  rw [← MeasureTheory.integral_const_mul]
+  rw [← MeasureTheory.integral_const_mul]
+  refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun y hy => ?_
+  have hshift := fiveM_gammaPDF_full_mul_invSq_eq_tail_prefactor
+    (a := a) ha (Set.mem_Ioi.mp hy)
+  simp only [smul_eq_mul]
+  calc
+    (5 * (M a : ℝ)) *
+        ((ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+          ((1 / (6 * y))^2 * g y))
+        =
+      ((5 * (M a : ℝ)) *
+        ((ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+          (1 / (6 * y))^2)) * g y := by ring
+    _ =
+      ((5 / (6 * ((a : ℝ) - 2))) *
+        (ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal) *
+          g y := by rw [hshift]
+    _ =
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ((ProbabilityTheory.gammaPDF (((a - 2 : Nat) : ℝ)) 1 y).toReal *
+          g y) := by ring
 
 private theorem gammaPDF_toReal_mul_invPow_eq_gammaMonomial_integrand
     {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a)
@@ -392,6 +547,18 @@ theorem isProbabilityMeasure_gammaTailMeasure
 noncomputable def printedTailLGammaArg (μ : List Nat) (a : Nat) (y : ℝ) : ℝ :=
   printedTailLReal μ a (1 / (6 * y))
 
+theorem fiveM_integral_invSq_exp_neg_printedTailLGammaArg_gammaFull_eq_tail_prefactor
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a) :
+    (5 * (M a : ℝ)) *
+        ∫ y, (1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y)) ∂ gammaFullMeasure a =
+      (5 / (6 * ((a : ℝ) - 2))) *
+        ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) ∂ gammaTailMeasure a := by
+  simpa using
+    fiveM_integral_invSq_mul_gammaFull_eq_tail_prefactor
+      (a := a) ha
+      (fun y => Real.exp (-(printedTailLGammaArg μ a y)))
+
 theorem integrable_printedTailLGammaArg
     {a : Nat} {μ : List Nat} (ha : 150 ≤ a) :
     Integrable (printedTailLGammaArg μ a) (gammaTailMeasure a) := by
@@ -477,5 +644,19 @@ theorem gammaTailPrefactor_integral_exp_neg_printedTailLGammaArg_lower
     (integrable_printedTailLGammaArg (a := a) (μ := μ) ha)
     (integrable_exp_neg_printedTailLGammaArg (a := a) (μ := μ) ha hμ)
     (integral_printedTailLGammaArg_le_bound (a := a) (μ := μ) ha hμ)
+
+/-- Jensen lower bound transported back to the shape-`a` Gamma expectation
+with the two retained powers of `1/(6Y)`. -/
+theorem fiveM_integral_invSq_exp_neg_printedTailLGammaArg_gammaFull_lower
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      (5 * (M a : ℝ)) *
+        ∫ y, (1 / (6 * y))^2 *
+          Real.exp (-(printedTailLGammaArg μ a y)) ∂ gammaFullMeasure a := by
+  rw [fiveM_integral_invSq_exp_neg_printedTailLGammaArg_gammaFull_eq_tail_prefactor
+    (a := a) (μ := μ) ha]
+  exact gammaTailPrefactor_integral_exp_neg_printedTailLGammaArg_lower
+    (a := a) (μ := μ) ha hμ
 
 end Prop52
