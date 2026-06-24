@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-target="${1:-/home/jo314/lean/prop51build/.lake/packages}"
+target="${1:?usage: bash scripts/use-local-lake-packages.sh /path/to/existing/.lake/packages}"
 
 if [ ! -d "$target" ]; then
   echo "Lake package directory does not exist: $target" >&2

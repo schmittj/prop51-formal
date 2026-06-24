@@ -47,22 +47,37 @@ jobs:
           ]
           text = pathlib.Path("public_axioms.txt").read_text() \
                + "\n" + pathlib.Path("axioms.txt").read_text()
+          low = text.lower()
           for bad in ("error:", "unknown identifier", "unknown constant"):
-              if bad in text:
+              if bad in low:
                   sys.exit(f"FAIL: axiom report contains {bad!r} (elaboration error / missing decl)")
-          if "sorryAx" in text:
+          if "sorryax" in low:
               sys.exit("FAIL: an audited theorem depends on sorryAx")
           # Pair each theorem with its OWN axiom block (theorem-specific, not a
-          # global union); handle the "does not depend on any axioms" wording too.
+          # global union); handle the "does not depend on any axioms" wording and
+          # reject conflicting duplicate blocks for the same theorem name.
           axioms_of = {}
+          def record(name, axset):
+              if name in axioms_of and axioms_of[name] != axset:
+                  sys.exit(f"FAIL: conflicting axiom blocks reported for {name}")
+              axioms_of[name] = axset
           for m in re.finditer(r"'([^']+)' depends on axioms:\s*\[([^\]]*)\]", text):
-              axioms_of[m.group(1)] = {n.strip() for n in m.group(2).split(",") if n.strip()}
+              record(m.group(1), {n.strip() for n in m.group(2).split(",") if n.strip()})
           for m in re.finditer(r"'([^']+)' does not depend on any axioms", text):
-              axioms_of.setdefault(m.group(1), set())
+              record(m.group(1), set())
+          # The two headline public theorems must depend on EXACTLY the five allowed
+          # axioms (this backs the README's "reports exactly" claim); the remaining
+          # required theorems must depend only on a subset.
+          exact = {
+              "Prop51.chenLarsonCoefficient_neg",
+              "Prop52.chenLarsonProp52Coefficient_nonvanishing",
+          }
           problems = []
           for n in required:
               if n not in axioms_of:
                   problems.append(f"{n}: no axiom block found in report")
+              elif n in exact and axioms_of[n] != allowed:
+                  problems.append(f"{n}: expected exactly {sorted(allowed)}, got {sorted(axioms_of[n])}")
               elif axioms_of[n] - allowed:
                   problems.append(f"{n}: unexpected axioms {sorted(axioms_of[n] - allowed)}")
           if problems:
@@ -72,13 +87,31 @@ jobs:
           if overall:
               sys.exit(f"FAIL: blocks with unexpected axioms: {overall}")
           print(f"Axiom allowlist OK: {len(axioms_of)} theorem blocks; "
-                f"all {len(required)} required theorems individually within {sorted(allowed)}")
+                f"the headline theorems use exactly {sorted(allowed)}; "
+                f"all {len(required)} required theorems within the allowlist")
           PY
+      - name: Upload axiom reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: axiom-reports
+          path: |
+            public_axioms.txt
+            axioms.txt
+          if-no-files-found: warn
       - name: Python certificate scripts (fast layer)
         run: |
           python3 -m py_compile scripts/*.py
+          python3 - <<'PY'
+          import yaml, sys
+          d = yaml.safe_load(open("CITATION.cff"))
+          for key in ("cff-version", "title", "authors", "version"):
+              if not d.get(key):
+                  sys.exit(f"FAIL: CITATION.cff missing required field {key!r}")
+          print("CITATION.cff OK:", d["cff-version"], "version", d["version"])
+          PY
           python3 scripts/constants_check.py
-          python3 scripts/positive_saddle_scan.py --quick
+          python3 scripts/positive_saddle_scan.py
       - name: Positive saddle generator smoke (legacy-regression)
         # NB: this exercises the historical tangent/exact-product generator
         # interface, kept as a regression guard. It is not the canonical
@@ -136,3 +169,9 @@ jobs:
           working_directory: paper
           root_file: prop51.tex
           latexmk_use_xelatex: false
+      - name: Upload built PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: paper/prop51.pdf
+          if-no-files-found: error

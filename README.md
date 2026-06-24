@@ -109,7 +109,8 @@ finitely many large computations (partition enumeration, exact rational and
 192-bit dyadic-interval certificates) are run by `native_decide`, which compiles
 the finite Boolean check to machine code and executes it; this is what makes the
 millions of certificate cases feasible, in exchange for trusting the Lean
-compiler on those steps (`Lean.ofReduceBool`, `Lean.trustCompiler`). The
+compiler and its runtime (and any native implementations they invoke) on those
+steps (`Lean.ofReduceBool`, `Lean.trustCompiler`). The
 192-bit interval kernel is Lean's own — the external Arb run is **not** trusted.
 
 ## Repository layout
