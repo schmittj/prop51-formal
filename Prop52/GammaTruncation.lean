@@ -644,6 +644,78 @@ theorem integral_abs_printedTailWTruncReal_R0_lower_event_le_residue_terms
           gammaWeight a s * |printedTailOmegaCoeff μ a s|) : ℚ) : ℝ) := by
         simpa [T, G, F] using hsplit
 
+/-- Lower-event bound for the untruncated analytic `W` integrand.  This is
+the `2 * (5/6)^a` residue term in the Taylor--Gamma event split. -/
+theorem integral_abs_printedTailWGammaIntegrand_lower_event_le_prob_term
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |Real.exp (-(printedTailLGammaArg μ a y)) *
+          (1 - printedTailJReal μ a (1 / (6 * y)))|
+          ∂ gammaFullMeasure a) ≤
+      ((2 * (5 / 6 : ℚ)^a : ℚ) : ℝ) := by
+  let S : Set ℝ := Set.Iio ((a : ℝ) / 2)
+  haveI : IsProbabilityMeasure (gammaFullMeasure a) := by
+    unfold gammaFullMeasure
+    exact ProbabilityTheory.isProbabilityMeasure_gammaMeasure
+      (by exact_mod_cast (by omega : 0 < a)) (by norm_num)
+  have hfinite : gammaFullMeasure a S ≠ ∞ := measure_ne_top _ _
+  let W : ℝ → ℝ := fun y =>
+    Real.exp (-(printedTailLGammaArg μ a y)) *
+      (1 - printedTailJReal μ a (1 / (6 * y)))
+  have hW_abs_bound :
+      (fun y => |W y|) ≤ᵐ[gammaFullMeasure a] fun _ : ℝ => (2 : ℝ) := by
+    filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy_nonneg
+    have hx : 0 ≤ 1 / (6 * y) := by positivity
+    simpa [W, printedTailLGammaArg] using
+      abs_exp_neg_L_mul_one_sub_JReal_le_two
+        (a := a) (μ := μ) hμ (x := 1 / (6 * y)) hx
+  have hW_abs_bound_restrict :
+      ∀ᵐ y ∂(gammaFullMeasure a).restrict S, ‖|W y|‖ ≤ (2 : ℝ) := by
+    filter_upwards [ae_restrict_of_ae hW_abs_bound] with y hy
+    simpa [Real.norm_eq_abs] using hy
+  have hleft_int :
+      IntegrableOn (fun y => |W y|) S (gammaFullMeasure a) := by
+    refine Measure.integrableOn_of_bounded hfinite ?_ hW_abs_bound_restrict
+    dsimp [W]
+    unfold printedTailLGammaArg printedTailLReal printedTailJReal
+    fun_prop
+  have hright_int :
+      IntegrableOn (fun _ : ℝ => (2 : ℝ)) S (gammaFullMeasure a) :=
+    integrableOn_const hfinite
+  have hprob :=
+    gammaFullMeasure_Iio_half_le_five_six_pow
+      (a := a) (by omega : 1 ≤ a)
+  have hprobR :
+      (gammaFullMeasure a S).toReal ≤ (5 / 6 : ℝ)^a := by
+    have hreal :
+        (gammaFullMeasure a S).toReal ≤ (5 / 6 : ℝ)^a := by
+      have hnonneg : 0 ≤ (5 / 6 : ℝ)^a := by positivity
+      have hprob' :
+          gammaFullMeasure a S ≤
+            ENNReal.ofReal ((5 / 6 : ℝ)^a) := by
+        simpa [S] using hprob
+      exact ENNReal.toReal_le_of_le_ofReal hnonneg hprob'
+    exact hreal
+  calc
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |Real.exp (-(printedTailLGammaArg μ a y)) *
+          (1 - printedTailJReal μ a (1 / (6 * y)))|
+          ∂ gammaFullMeasure a)
+        =
+      ∫ y in S, |W y| ∂ gammaFullMeasure a := rfl
+    _ ≤ ∫ y in S, (2 : ℝ) ∂ gammaFullMeasure a :=
+      MeasureTheory.setIntegral_mono_ae hleft_int hright_int hW_abs_bound
+    _ = (gammaFullMeasure a S).toReal * 2 := by
+      rw [MeasureTheory.setIntegral_const (μ := gammaFullMeasure a)
+        (s := S) (c := (2 : ℝ))]
+      simp [MeasureTheory.measureReal_def, smul_eq_mul]
+    _ ≤ (5 / 6 : ℝ)^a * 2 := by
+      exact mul_le_mul_of_nonneg_right hprobR (by norm_num)
+    _ = ((2 * (5 / 6 : ℚ)^a : ℚ) : ℝ) := by
+      norm_num [Rat.cast_pow]
+      ring
+
 /-- The four rational residue pieces which remain after the analytic
 Taylor--Gamma event split:
 
