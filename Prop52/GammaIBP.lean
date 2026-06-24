@@ -637,6 +637,49 @@ theorem tendsto_gammaIBPEnvelope_atTop_zero
   unfold gammaIBPEnvelope
   simpa using hpoly_exp.mul hexpL
 
+/-- The Gamma integration-by-parts envelope is continuous from the right at
+the origin.  This is the only singular endpoint: on the positive ray the
+extra factor `exp(-L(1/(6x)))` is bounded by `1`, so the envelope is squeezed
+by `x^(a-1) exp(-x)`, which vanishes at `0` for `a >= 150`. -/
+theorem continuousWithinAt_gammaIBPEnvelope_zero
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0 := by
+  have hzero : gammaIBPEnvelope μ a 0 = 0 := by
+    unfold gammaIBPEnvelope
+    have hpow : (0 : ℝ)^(a - 1) = 0 := by
+      exact zero_pow (by omega : a - 1 ≠ 0)
+    simp [hpow]
+  rw [ContinuousWithinAt, hzero]
+  have hcore_tendsto :
+      Tendsto (fun x : ℝ => x^(a - 1) * Real.exp (-x))
+        (nhdsWithin (0 : ℝ) (Set.Ici (0 : ℝ))) (nhds 0) := by
+    have hcont :
+        ContinuousWithinAt
+          (fun x : ℝ => x^(a - 1) * Real.exp (-x))
+          (Set.Ici (0 : ℝ)) 0 := by
+      fun_prop
+    have hpow : (0 : ℝ)^(a - 1) = 0 := by
+      exact zero_pow (by omega : a - 1 ≠ 0)
+    simpa [ContinuousWithinAt, hpow] using hcont
+  refine squeeze_zero' ?hnonneg ?hbound hcore_tendsto
+  · filter_upwards [self_mem_nhdsWithin] with x hx
+    have hxnonneg : 0 ≤ x := hx
+    unfold gammaIBPEnvelope
+    positivity
+  · filter_upwards [self_mem_nhdsWithin] with x hx
+    have hxnonneg : 0 ≤ x := hx
+    have ht_nonneg : 0 ≤ 1 / (6 * x) :=
+      div_nonneg zero_le_one (mul_nonneg (by norm_num) hxnonneg)
+    have hexp_le := real_exp_neg_printedTailLReal_le_one
+      (a := a) (μ := μ) hμ ht_nonneg
+    have hcore_nonneg :
+        0 ≤ x^(a - 1) * Real.exp (-x) :=
+      mul_nonneg (pow_nonneg hxnonneg _) (Real.exp_pos _).le
+    unfold gammaIBPEnvelope
+    exact mul_le_of_le_one_right hcore_nonneg
+      (by simpa [printedTailLGammaArg] using hexp_le)
+
 /-- The derivative integral vanishes after the infinity endpoint has been
 closed; the remaining hypotheses are the origin continuity and derivative
 integrability required by the improper FTC. -/
@@ -688,6 +731,15 @@ theorem gammaIBP_integral_W_eq_bracket_of_origin
         (a := a) (μ := μ) ha hμ))
     (integrableOn_gammaIBPBracketIntegrand (a := a) (μ := μ) ha hμ)
     (integrableOn_gammaIBPWIntegrand (a := a) (μ := μ) ha hμ)
+
+/-- Closed Gamma integration-by-parts identity. -/
+theorem gammaIBP_integral_W_eq_bracket
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x) =
+      ∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x := by
+  exact gammaIBP_integral_W_eq_bracket_of_origin μ ha hμ
+    (continuousWithinAt_gammaIBPEnvelope_zero (a := a) (μ := μ) ha hμ)
 
 /-- Convert the bracket Gamma expectation to the Lebesgue envelope integral
 used by the integration-by-parts identity. -/
@@ -819,5 +871,17 @@ theorem gammaFull_WIntegral_lower_of_IBP_origin
           rw [gammaFull_WIntegral_eq_invGamma_mul_IBPWIntegral
             (μ := μ) (a := a) ha]
           rw [hIBP]
+
+/-- Closed Gamma lower bound for the untruncated
+`W=exp(-L)(1-J)` expectation. -/
+theorem gammaFull_WIntegral_lower
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
+  exact gammaFull_WIntegral_lower_of_IBP_origin
+    (a := a) (μ := μ) ha hμ
+    (continuousWithinAt_gammaIBPEnvelope_zero (a := a) (μ := μ) ha hμ)
 
 end Prop52
