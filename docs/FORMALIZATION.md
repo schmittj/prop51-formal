@@ -828,6 +828,78 @@ All Lean proofs are sorry-free.  Headline theorems:
   their defining recurrences (`c_succ_succ`, `cList_getD_eq`, …) — these
   carry no computational axioms.
 
+## Proposition 5.2 (corrected, `g ≡ 1 mod 3`)
+
+The companion residue class is formalized under `Prop52/`, on the same trust
+model (standard axioms + `native_decide`) and the same Lean/mathlib pin.
+
+### The two coefficients and the bridge
+
+* **Marked** (computed by the certificates), `Prop52/Statement.lean`:
+  `correctedCoeff a μ = (M a)·bCoeff μ a − markedConvolution μ a
+  = [tᵃ] B_μ(t)·(M − K_μ(t))`, with `M a = 6a−6`,
+  `K_μ(t) = Σ_i m_i·Φ(t/(m_i+1))`, `Φ = 2t + 12t²·C'/C`.  `printedCoeff` is the
+  same with leading constant `1`.
+* **Source** (what the geometry supplies), `Prop52/Source.lean`:
+  `sourceCoeff (M a) μ a = [tᵃ] B_μ(t)·D_μ^cor(t)` with
+  `D_μ^cor = M − 2(N−s₁)t − 12t²·(N·C'/C − Σ_i q_i^{-2}·C'(t/q_i)/C(t/q_i))`.
+* **Bridge** `Prop52.sourceCorrectedCoeff_eq`: for `IsPartitionOf μ (M a)` and
+  `a ≥ 1`, `sourceCoeff (M a) μ a = correctedCoeff a μ`.  This is a *pure
+  rational identity* — its `#print axioms` is the three standard axioms only,
+  with no `native_decide`.  Mechanism:
+  `B_μ·(D_{μ,λ} − (λ − K_μ)) = −2Mt·B_μ + 12t²·B_μ'`, so the degree-`a` defect is
+  `(12(a−1) − 2·μ.sum)·b_{a−1}`, which vanishes because `μ.sum = M a = 6a−6`.
+
+### Public facade (`Prop52/Theorem.lean`) — minimal, source-shaped
+
+* `Prop52.chenLarsonProp52Coefficient_nonvanishing {g} (2 ≤ g) (g % 3 = 1) {μ}
+  (IsPartitionOf μ (2g−2)) : sourceCoeff (M (g/3+1)) μ (g/3+1) ≠ 0`.
+* `Prop52.chenLarsonProp52Coefficient_neg {g} (40 ≤ g) (g % 3 = 1) … < 0`.
+
+These mirror `Prop51.chenLarsonCoefficient_neg`; the file contains nothing else.
+
+### The central identity
+
+`Prop52.correctedCoeff_eq_printedCoeff_add` (`Prop52/Assembly.lean`):
+`correctedCoeff a μ = printedCoeff μ a + (M a − 1)·bCoeff μ a`, i.e.
+`T^cor = T^old + (M−1)·b_a`.  Both summands are `< 0` for `a ≥ 14`.
+
+### Non-vanishing for all `a ≥ 2` (`Prop52.correctedCoeff_nonvanishing`)
+
+| range | method | files |
+|---|---|---|
+| `2 ≤ a ≤ 8`  | exact rational `native_decide` over generated partitions | `Prop52/Finite.lean` |
+| `9 ≤ a ≤ 13` | nonzero residue mod `p = 1000000007` + ℚ→𝔽ₚ cast | `Prop52/Finite.lean`, `Modular*`, `RatModBridge.lean` |
+| `a ≥ 14`     | strict negativity (next block) | `Prop52/Assembly.lean` |
+
+### Strict negativity for `a ≥ 14` — via the central identity
+
+* `bCoeff μ a < 0`: `Prop51.bCoeff_neg_of_rectangle` (the Prop 5.1 rectangle
+  `6a−7 ≤ N ≤ 12a−8`, `Prop51/Rectangle.lean`; reuses the closed Prop 5.1
+  direct-saddle certificates).
+* `printedCoeff μ a < 0` (`T^old`):
+  * `14 ≤ a ≤ 149`: exact dyadic interval certificate
+    `Prop52.printedCoeffNegativityMid_closed` (`Prop52/MidBridge.lean`, `Mid*`).
+  * `a ≥ 150`: a Gamma-integral / Taylor-truncation argument reduced to the
+    closed real exponential power-series identity
+    `Prop52.printedTailERealSeriesHasSum` (`Prop52/Gamma*`); standard axioms only.
+
+### Public dependency path
+
+`chenLarsonProp52Coefficient_nonvanishing` → `sourceCorrectedCoeff_nonvanishing`
+→ `sourceCorrectedCoeff_eq` (bridge) with `correctedCoeff_nonvanishing`
+→ `correctedCoeff_finite_nonvanishing` (finite) together with the `a ≥ 14`
+negativity → central identity + `Prop51.bCoeff_neg_of_rectangle` + printed-sign
+layers.
+
+### What is *not* formalized
+
+The algebraic-geometric reduction (Ionel's relation; the pullback
+`κ_j ↦ (N − s_j)·η^j`; the conclusion `η^a = 0`) is cited from Chen--Larson, not
+formalized — the same trust boundary as Proposition 5.1.  Lean certifies the
+scalar coefficient (non-)vanishing, now in the exact source form the geometry
+uses.
+
 ## Trust model
 
 Certificate theorems are proved by `native_decide`, so they depend on the
@@ -856,6 +928,7 @@ build time.
 ```
 Prop51Kernel.lean  executable interval kernel (no Mathlib; natively precompiled)
 Prop51/            Lean library (public facade, soundness theory, certificates)
+Prop52/            Prop 5.2 library: source facade (Theorem.lean), source--marked bridge (Source.lean), finite/modular/mid/Gamma layers
 scripts/           axiom report, constants check, saddle scans/templates
 paper/             the release LaTeX paper (prop51.tex); archive/ holds the older tenth-revision note + errata
 certificates/      external Arb certificate package (192-bit, 9 ≤ a ≤ 400)
