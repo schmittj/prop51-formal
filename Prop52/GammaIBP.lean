@@ -240,6 +240,269 @@ noncomputable def gammaIBPDerivativeIntegrand
     (gammaLowBracketAlignedReal μ a (1 / (6 * x)) +
       printedTailJReal μ a (1 / (6 * x)) - 1)
 
+/-- The scalar Gamma density core `x^(a-1) exp(-x)` is integrable on
+`(0,∞)` for the integer shapes used here. -/
+private theorem integrableOn_gammaIBP_core
+    {a : Nat} (ha : 150 ≤ a) :
+    IntegrableOn (fun x : ℝ => x^(a - 1) * Real.exp (-x))
+      (Set.Ioi (0 : ℝ)) := by
+  have hgamma := Real.GammaIntegral_convergent
+    (s := (a : ℝ)) (by exact_mod_cast (by omega : 0 < a))
+  refine hgamma.congr_fun ?_ measurableSet_Ioi
+  intro x hx
+  have hshape : (a : ℝ) - 1 = ((a - 1 : Nat) : ℝ) := by
+    rw [Nat.cast_sub (by omega : 1 ≤ a)]
+    ring
+  simp [hshape, mul_comm]
+
+/-- Gamma-density core with one of the inverse-power factors appearing in the
+bracket polynomial. -/
+private theorem integrableOn_gammaIBP_core_invPow
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a + 1) :
+    IntegrableOn
+      (fun x : ℝ => x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r)
+      (Set.Ioi (0 : ℝ)) := by
+  have hrle : r ≤ a - 1 := by
+    unfold printedTailP at hr
+    omega
+  have hshape_pos : (0 : ℝ) < (a - r : Nat) := by
+    exact_mod_cast (by omega : 0 < a - r)
+  have hgamma := Real.GammaIntegral_convergent
+    (s := ((a - r : Nat) : ℝ)) hshape_pos
+  have hconst :
+      IntegrableOn
+        (fun x : ℝ =>
+          (1 / (6 : ℝ)^r) *
+            (Real.exp (-x) * x^(((a - r : Nat) : ℝ) - 1)))
+        (Set.Ioi (0 : ℝ)) :=
+    hgamma.const_mul (1 / (6 : ℝ)^r)
+  refine hconst.congr_fun ?_ measurableSet_Ioi
+  intro x hx
+  have hxpos : 0 < x := Set.mem_Ioi.mp hx
+  have hxne : x ≠ 0 := hxpos.ne'
+  have hshape :
+      ((a - r : Nat) : ℝ) - 1 = ((a - 1 - r : Nat) : ℝ) := by
+    rw [← Nat.cast_one, ← Nat.cast_sub (by omega : 1 ≤ a - r)]
+    congr 1
+    omega
+  rw [hshape]
+  change
+    (1 / (6 : ℝ)^r) *
+        (Real.exp (-x) * x^(((a - 1 - r : Nat) : ℝ))) =
+      x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r
+  rw [Real.rpow_natCast]
+  have hpow :
+      x^(a - 1) = x^(a - 1 - r) * x^r := by
+    rw [← pow_add]
+    congr 1
+    omega
+  rw [hpow]
+  field_simp [hxne, pow_ne_zero r (by norm_num : (6 : ℝ) ≠ 0)]
+  rw [← mul_pow (6 : ℝ) x r]
+  rw [← mul_pow (6 * x) (1 / (x * 6)) r]
+  have hunit : (6 * x) * (1 / (x * 6)) = (1 : ℝ) := by
+    field_simp [hxne]
+  rw [hunit, one_pow]
+
+/-- The inverse-power Gamma core remains integrable after multiplication by
+`exp(-L(1/(6x)))`, since `L >= 0` on the positive ray. -/
+private theorem integrableOn_gammaIBP_core_invPow_expNegL
+    {a r : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hr : r ≤ printedTailP a + 1) :
+    IntegrableOn
+      (fun x : ℝ =>
+        x^(a - 1) * Real.exp (-x) *
+          Real.exp (-(printedTailLGammaArg μ a x)) *
+            (1 / (6 * x))^r)
+      (Set.Ioi (0 : ℝ)) := by
+  change Integrable
+    (fun x : ℝ =>
+      x^(a - 1) * Real.exp (-x) *
+        Real.exp (-(printedTailLGammaArg μ a x)) *
+          (1 / (6 * x))^r)
+    (volume.restrict (Set.Ioi (0 : ℝ)))
+  have hbase :
+      Integrable
+        (fun x : ℝ => x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r)
+        (volume.restrict (Set.Ioi (0 : ℝ))) :=
+    (integrableOn_gammaIBP_core_invPow (a := a) (r := r) ha hr)
+  refine hbase.mono' ?hmeas ?hbound
+  · unfold printedTailLGammaArg printedTailLReal
+    fun_prop
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
+    have hxpos : 0 < x := Set.mem_Ioi.mp hx
+    have hxnonneg : 0 ≤ x := hxpos.le
+    have ht_nonneg : 0 ≤ 1 / (6 * x) := by positivity
+    have hexp_le := real_exp_neg_printedTailLReal_le_one
+      (a := a) (μ := μ) hμ ht_nonneg
+    have hcore_nonneg :
+        0 ≤ x^(a - 1) * Real.exp (-x) :=
+      mul_nonneg (pow_nonneg hxnonneg _) (Real.exp_pos _).le
+    have ht_pow_nonneg : 0 ≤ (1 / (6 * x))^r :=
+      pow_nonneg ht_nonneg r
+    have hbase_nonneg :
+        0 ≤ x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r :=
+      mul_nonneg hcore_nonneg ht_pow_nonneg
+    calc
+      |x^(a - 1) * Real.exp (-x) *
+          Real.exp (-(printedTailLGammaArg μ a x)) *
+            (1 / (6 * x))^r|
+          =
+        (x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r) *
+          Real.exp (-(printedTailLGammaArg μ a x)) := by
+            rw [abs_of_nonneg]
+            · ring
+            · positivity
+      _ ≤ x^(a - 1) * Real.exp (-x) * (1 / (6 * x))^r :=
+          mul_le_of_le_one_right hbase_nonneg
+            (by simpa [printedTailLGammaArg] using hexp_le)
+
+/-- The `W=exp(-L)(1-J)` side of the integration-by-parts identity is
+Lebesgue-integrable on `(0,∞)`.  This uses the pointwise bound `|W| <= 2`
+from the Gamma-measure file and domination by the Gamma density core. -/
+theorem integrableOn_gammaIBPWIntegrand
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ)) := by
+  change Integrable (gammaIBPWIntegrand μ a)
+    (volume.restrict (Set.Ioi (0 : ℝ)))
+  have hbase :
+      Integrable (fun x : ℝ => x^(a - 1) * Real.exp (-x))
+        (volume.restrict (Set.Ioi (0 : ℝ))) :=
+    (integrableOn_gammaIBP_core (a := a) ha)
+  refine (hbase.const_mul (2 : ℝ)).mono' ?hmeas ?hbound
+  · unfold gammaIBPWIntegrand gammaIBPEnvelope printedTailLGammaArg
+      printedTailLReal printedTailJReal
+    fun_prop
+  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with x hx
+    have hxpos : 0 < x := Set.mem_Ioi.mp hx
+    have hxnonneg : 0 ≤ x := hxpos.le
+    have ht_nonneg : 0 ≤ 1 / (6 * x) := by positivity
+    have hW := abs_exp_neg_L_mul_one_sub_JReal_le_two
+      (a := a) (μ := μ) hμ ht_nonneg
+    have hW' :
+        |Real.exp (-(printedTailLGammaArg μ a x)) *
+            (1 - printedTailJReal μ a (1 / (6 * x)))| ≤ 2 := by
+      simpa [printedTailLGammaArg] using hW
+    have hcore_nonneg :
+        0 ≤ x^(a - 1) * Real.exp (-x) :=
+      mul_nonneg (pow_nonneg hxnonneg _) (Real.exp_pos _).le
+    unfold gammaIBPWIntegrand gammaIBPEnvelope
+    calc
+      |x^(a - 1) * Real.exp (-x) *
+          Real.exp (-(printedTailLGammaArg μ a x)) *
+            (1 - printedTailJReal μ a (1 / (6 * x)))|
+          =
+        (x^(a - 1) * Real.exp (-x)) *
+          |Real.exp (-(printedTailLGammaArg μ a x)) *
+            (1 - printedTailJReal μ a (1 / (6 * x)))| := by
+            rw [show
+              x^(a - 1) * Real.exp (-x) *
+                    Real.exp (-(printedTailLGammaArg μ a x)) *
+                  (1 - printedTailJReal μ a (1 / (6 * x))) =
+                (x^(a - 1) * Real.exp (-x)) *
+                  (Real.exp (-(printedTailLGammaArg μ a x)) *
+                    (1 - printedTailJReal μ a (1 / (6 * x)))) by ring]
+            rw [abs_mul, abs_of_nonneg hcore_nonneg]
+      _ ≤ (x^(a - 1) * Real.exp (-x)) * 2 :=
+            mul_le_mul_of_nonneg_left hW' hcore_nonneg
+      _ = 2 * (x^(a - 1) * Real.exp (-x)) := by ring
+
+/-- The bracket side of the integration-by-parts identity is
+Lebesgue-integrable on `(0,∞)`. -/
+theorem integrableOn_gammaIBPBracketIntegrand
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)) := by
+  let G : ℝ → ℝ := fun x =>
+    x^(a - 1) * Real.exp (-x) *
+      Real.exp (-(printedTailLGammaArg μ a x))
+  have hlin :
+      IntegrableOn
+        (fun x : ℝ =>
+          G x * (((M a : ℝ) - (kCoeff μ 1 : ℝ)) * (1 / (6 * x))))
+        (Set.Ioi (0 : ℝ)) := by
+    have hbase := integrableOn_gammaIBP_core_invPow_expNegL
+      (a := a) (r := 1) (μ := μ) ha hμ (by
+        unfold printedTailP
+        omega)
+    simpa [G, pow_one, mul_assoc, mul_comm, mul_left_comm] using
+      hbase.const_mul ((M a : ℝ) - (kCoeff μ 1 : ℝ))
+  have hsumF :
+      IntegrableOn
+        (fun x : ℝ =>
+          G x *
+            (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+              6 * (j : ℝ) * (hCoeff μ j : ℝ) *
+                (1 / (6 * x))^(j + 1)))
+        (Set.Ioi (0 : ℝ)) := by
+    have hsum :
+        IntegrableOn
+          (fun x : ℝ =>
+            ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+              G x * (6 * (j : ℝ) * (hCoeff μ j : ℝ) *
+                (1 / (6 * x))^(j + 1)))
+          (Set.Ioi (0 : ℝ)) := by
+      change Integrable
+        (fun x : ℝ =>
+          ∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+            G x * (6 * (j : ℝ) * (hCoeff μ j : ℝ) *
+              (1 / (6 * x))^(j + 1)))
+        (volume.restrict (Set.Ioi (0 : ℝ)))
+      refine MeasureTheory.integrable_finset_sum _ ?_
+      intro j hj
+      have hr : j + 1 ≤ printedTailP a + 1 := (Finset.mem_Ico.mp hj).2
+      have hbase := integrableOn_gammaIBP_core_invPow_expNegL
+        (a := a) (r := j + 1) (μ := μ) ha hμ hr
+      simpa [G, mul_assoc, mul_comm, mul_left_comm] using
+        hbase.const_mul (6 * (j : ℝ) * (hCoeff μ j : ℝ))
+    simpa [Finset.mul_sum, G, mul_assoc, mul_comm, mul_left_comm] using hsum
+  have hsumG :
+      IntegrableOn
+        (fun x : ℝ =>
+          G x *
+            (∑ j ∈ Finset.Ico 1 (printedTailP a),
+              (kCoeff μ (j + 1) : ℝ) * (1 / (6 * x))^(j + 1)))
+        (Set.Ioi (0 : ℝ)) := by
+    have hsum :
+        IntegrableOn
+          (fun x : ℝ =>
+            ∑ j ∈ Finset.Ico 1 (printedTailP a),
+              G x * ((kCoeff μ (j + 1) : ℝ) *
+                (1 / (6 * x))^(j + 1)))
+          (Set.Ioi (0 : ℝ)) := by
+      change Integrable
+        (fun x : ℝ =>
+          ∑ j ∈ Finset.Ico 1 (printedTailP a),
+            G x * ((kCoeff μ (j + 1) : ℝ) *
+              (1 / (6 * x))^(j + 1)))
+        (volume.restrict (Set.Ioi (0 : ℝ)))
+      refine MeasureTheory.integrable_finset_sum _ ?_
+      intro j hj
+      have hr : j + 1 ≤ printedTailP a + 1 := by
+        have hjlt : j < printedTailP a := (Finset.mem_Ico.mp hj).2
+        omega
+      have hbase := integrableOn_gammaIBP_core_invPow_expNegL
+        (a := a) (r := j + 1) (μ := μ) ha hμ hr
+      simpa [G, mul_assoc, mul_comm, mul_left_comm] using
+        hbase.const_mul (kCoeff μ (j + 1) : ℝ)
+    simpa [Finset.mul_sum, G, mul_assoc, mul_comm, mul_left_comm] using hsum
+  unfold gammaIBPBracketIntegrand gammaIBPEnvelope gammaLowBracketAlignedReal
+  change IntegrableOn
+    (fun x : ℝ =>
+      G x *
+        ((((M a : ℝ) - (kCoeff μ 1 : ℝ)) * (1 / (6 * x)) +
+          (∑ j ∈ Finset.Ico 1 (printedTailP a + 1),
+            6 * (j : ℝ) * (hCoeff μ j : ℝ) *
+              (1 / (6 * x))^(j + 1))) -
+          ∑ j ∈ Finset.Ico 1 (printedTailP a),
+            (kCoeff μ (j + 1) : ℝ) *
+              (1 / (6 * x))^(j + 1)))
+      (Set.Ioi (0 : ℝ))
+  simpa [mul_add, mul_sub, Finset.mul_sum, mul_assoc, mul_comm,
+    mul_left_comm] using (hlin.add hsumF).sub hsumG
+
 theorem gammaIBPDerivativeIntegrand_eq_bracket_sub_W
     (μ : List Nat) (a : Nat) (x : ℝ) :
     gammaIBPDerivativeIntegrand μ a x =
@@ -247,6 +510,23 @@ theorem gammaIBPDerivativeIntegrand_eq_bracket_sub_W
   unfold gammaIBPDerivativeIntegrand gammaIBPBracketIntegrand
     gammaIBPWIntegrand
   ring
+
+/-- The derivative integrand is integrable once the two sides of the
+integration-by-parts identity are integrable. -/
+theorem integrableOn_gammaIBPDerivativeIntegrand
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    IntegrableOn (gammaIBPDerivativeIntegrand μ a) (Set.Ioi (0 : ℝ)) := by
+  have hsub :
+      IntegrableOn
+        (fun x : ℝ =>
+          gammaIBPBracketIntegrand μ a x - gammaIBPWIntegrand μ a x)
+        (Set.Ioi (0 : ℝ)) :=
+    (integrableOn_gammaIBPBracketIntegrand (a := a) (μ := μ) ha hμ).sub
+      (integrableOn_gammaIBPWIntegrand (a := a) (μ := μ) ha hμ)
+  refine hsub.congr_fun ?_ measurableSet_Ioi
+  intro x _hx
+  exact (gammaIBPDerivativeIntegrand_eq_bracket_sub_W μ a x).symm
 
 /-- Conditional integral form of the Gamma integration-by-parts identity.
 
@@ -391,6 +671,24 @@ theorem gammaIBP_integral_W_eq_bracket_of_endpoints
       μ ha hcont hderivInt)
     hbracket hW
 
+/-- Closed integration-by-parts identity with only the origin-continuity
+condition left explicit.  The infinity endpoint and integrability conditions
+are discharged above. -/
+theorem gammaIBP_integral_W_eq_bracket_of_origin
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0) :
+    (∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x) =
+      ∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x := by
+  exact gammaIBP_integral_W_eq_bracket_of_derivative_integral_zero
+    μ a
+    (gammaIBP_derivative_integral_zero_of_origin
+      μ ha hcont (integrableOn_gammaIBPDerivativeIntegrand
+        (a := a) (μ := μ) ha hμ))
+    (integrableOn_gammaIBPBracketIntegrand (a := a) (μ := μ) ha hμ)
+    (integrableOn_gammaIBPWIntegrand (a := a) (μ := μ) ha hμ)
+
 /-- Convert the bracket Gamma expectation to the Lebesgue envelope integral
 used by the integration-by-parts identity. -/
 theorem gammaFull_bracketIntegral_eq_invGamma_mul_IBPBracketIntegral
@@ -480,6 +778,34 @@ theorem gammaFull_WIntegral_lower_of_IBP_endpoints
     (a := a) (μ := μ) ha hμ
   have hIBP := gammaIBP_integral_W_eq_bracket_of_endpoints
     μ ha hcont hderivInt hbracket hW
+  calc
+    9 / (40 * ((a : ℝ) - 2))
+        ≤ ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+          gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂
+            gammaFullMeasure a := hlower
+    _ =
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
+          rw [gammaFull_bracketIntegral_eq_invGamma_mul_IBPBracketIntegral
+            (μ := μ) (a := a) ha]
+          rw [gammaFull_WIntegral_eq_invGamma_mul_IBPWIntegral
+            (μ := μ) (a := a) ha]
+          rw [hIBP]
+
+/-- Gamma lower bound for the untruncated `W` expectation with only the
+origin-continuity condition still explicit. -/
+theorem gammaFull_WIntegral_lower_of_IBP_origin
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
+  have hlower := gammaLowBracketAlignedIntegral_lower
+    (a := a) (μ := μ) ha hμ
+  have hIBP := gammaIBP_integral_W_eq_bracket_of_origin
+    μ ha hμ hcont
   calc
     9 / (40 * ((a : ℝ) - 2))
         ≤ ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
