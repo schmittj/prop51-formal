@@ -630,6 +630,106 @@ theorem integrable_invPow_gammaFullMeasure
     omega
   exact integrable_invPow_gammaTailMeasure (a := a + 2) (r := r) hA hrA
 
+private theorem gammaPDF_full_mul_invPow_eq_gammaWeight_pdf_shift
+    {a s : Nat} (ha : 150 ≤ a) (hs : s < a)
+    {y : ℝ} (hy : 0 < y) :
+    (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+        (1 / (6 * y))^s =
+      (gammaWeight a s : ℝ) *
+        (ProbabilityTheory.gammaPDF ((a - s : Nat) : ℝ) 1 y).toReal := by
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hy.le]
+  rw [ProbabilityTheory.gammaPDF_of_nonneg hy.le]
+  rw [ENNReal.toReal_ofReal, ENNReal.toReal_ofReal]
+  · simp only [Real.one_rpow, one_div, one_mul]
+    have hshapeFull : (a : ℝ) = ((a - 1 : Nat) : ℝ) + 1 := by
+      rw [show a = (a - 1) + 1 by omega]
+      norm_num
+    have hshapeShift :
+        ((a - s : Nat) : ℝ) = ((a - s - 1 : Nat) : ℝ) + 1 := by
+      rw [show a - s = (a - s - 1) + 1 by omega]
+      norm_num
+    rw [hshapeFull, hshapeShift]
+    rw [Real.Gamma_nat_eq_factorial (a - 1),
+      Real.Gamma_nat_eq_factorial (a - s - 1)]
+    have hpowFull :
+        y ^ (((a - 1 : Nat) : ℝ) + 1 - 1) = y^(a - 1) := by
+      rw [show (((a - 1 : Nat) : ℝ) + 1 - 1) =
+        ((a - 1 : Nat) : ℝ) by ring]
+      exact Real.rpow_natCast y (a - 1)
+    have hpowShift :
+        y ^ (((a - s - 1 : Nat) : ℝ) + 1 - 1) =
+          y^(a - s - 1) := by
+      rw [show (((a - s - 1 : Nat) : ℝ) + 1 - 1) =
+        ((a - s - 1 : Nat) : ℝ) by ring]
+      exact Real.rpow_natCast y (a - s - 1)
+    rw [hpowFull, hpowShift]
+    unfold gammaWeight
+    norm_num [Rat.cast_div, Rat.cast_mul, Rat.cast_pow]
+    have hsplit : a - 1 = (a - s - 1) + s := by omega
+    rw [hsplit, pow_add]
+    field_simp [hy.ne', factorial_cast_real_ne (a - 1),
+      factorial_cast_real_ne (a - s - 1),
+      pow_ne_zero s (by norm_num : (6 : ℝ) ≠ 0),
+      pow_ne_zero s hy.ne', pow_ne_zero (a - s - 1) hy.ne']
+    rw [← mul_pow y (1 / (y * 6)) s]
+    have hy6 : y * (1 / (y * 6)) = (1 / 6 : ℝ) := by
+      field_simp [hy.ne']
+    rw [hy6]
+    rw [show (1 / 6 : ℝ)^s * 6^s = ((1 / 6 : ℝ) * 6)^s by
+      rw [mul_pow]]
+    norm_num
+  · positivity
+  · positivity
+
+/-- Lower-event inverse-power Gamma moment as a shifted Gamma probability.
+For `s < a`, multiplying the shape-`a` Gamma density by `(1/(6Y))^s`
+changes the density to shape `a-s`, with scalar factor `gammaWeight a s`. -/
+theorem setIntegral_invPow_gammaFullMeasure_Iio_eq_gammaWeight_mul_shifted
+    {a s : Nat} (ha : 150 ≤ a) (hs : s < a) (c : ℝ) :
+    (∫ y in Set.Iio c, (1 / (6 * y))^s ∂ gammaFullMeasure a) =
+      (gammaWeight a s : ℝ) *
+        (gammaFullMeasure (a - s) (Set.Iio c)).toReal := by
+  let S : Set ℝ := Set.Iio c
+  let f : ℝ → ℝ := fun y => (1 / (6 * y))^s
+  calc
+    (∫ y in Set.Iio c, (1 / (6 * y))^s ∂ gammaFullMeasure a)
+        = ∫ y, S.indicator f y ∂ gammaFullMeasure a := by
+          rw [MeasureTheory.integral_indicator measurableSet_Iio]
+    _ = ∫ y in Set.Ioi 0,
+          (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+            S.indicator f y := by
+          rw [integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+          rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+          rfl
+    _ = ∫ y in Set.Ioi 0,
+          (gammaWeight a s : ℝ) *
+            ((ProbabilityTheory.gammaPDF ((a - s : Nat) : ℝ) 1 y).toReal *
+              S.indicator (fun _ : ℝ => (1 : ℝ)) y) := by
+          refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun y hy => ?_
+          have hypos : 0 < y := Set.mem_Ioi.mp hy
+          have hshift :=
+            gammaPDF_full_mul_invPow_eq_gammaWeight_pdf_shift
+              (a := a) (s := s) ha hs hypos
+          by_cases hyS : y ∈ S
+          · simpa [S, f, Set.indicator, hyS] using hshift
+          · simp [S, f, Set.indicator, hyS]
+    _ = (gammaWeight a s : ℝ) *
+          ∫ y in Set.Ioi 0,
+            (ProbabilityTheory.gammaPDF ((a - s : Nat) : ℝ) 1 y).toReal *
+              S.indicator (fun _ : ℝ => (1 : ℝ)) y := by
+          rw [MeasureTheory.integral_const_mul]
+    _ = (gammaWeight a s : ℝ) *
+          ∫ y, S.indicator (fun _ : ℝ => (1 : ℝ)) y
+            ∂ gammaFullMeasure (a - s) := by
+          congr 1
+          rw [integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+          rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+          rfl
+    _ = (gammaWeight a s : ℝ) *
+          (gammaFullMeasure (a - s) (Set.Iio c)).toReal := by
+          rw [MeasureTheory.integral_indicator_const (1 : ℝ) measurableSet_Iio]
+          simp [MeasureTheory.measureReal_def]
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by

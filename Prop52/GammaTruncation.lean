@@ -395,6 +395,255 @@ theorem gammaWeight_absOmega_low_tail_le_residue_term
   exact mul_le_mul_of_nonneg_right
     (hsum_subset.trans hmom0) hfactor_nonneg
 
+/-- Integral lower-event bound for the retained `W_{\le r0}` Taylor
+polynomial.  The terms with `s <= a/8` use the shifted Gamma lower-tail
+probability, while the terms with `s > a/8` are bounded by their full Gamma
+moments. -/
+theorem integral_abs_printedTailWTruncReal_R0_lower_event_le_residue_terms
+    {a : Nat} (ha : 150 ≤ a) (μ : List Nat) :
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a) ≤
+      (((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) : ℚ) : ℝ) := by
+  let S : Set ℝ := Set.Iio ((a : ℝ) / 2)
+  let T : Finset Nat := Finset.range (printedTailR0 a + 1)
+  let G : Nat → ℚ := fun s =>
+    gammaWeight a s * |printedTailOmegaCoeff μ a s|
+  let F : ℚ := (9 / 10 : ℚ)^(a - a / 8)
+  have hRle : printedTailR0 a ≤ printedTailP a + 1 := by
+    unfold printedTailR0 printedTailP
+    omega
+  have hmono :
+      (fun y => |printedTailWTruncReal μ a (printedTailR0 a) y|) ≤ᵐ[gammaFullMeasure a]
+        fun y => ∑ s ∈ T,
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (1 / (6 * y))^s := by
+    filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy_nonneg
+    have ht_nonneg : 0 ≤ 1 / (6 * y) := by positivity
+    simpa [T] using
+      abs_printedTailWTruncReal_le_absOmega_sum
+        (μ := μ) (a := a) (R := printedTailR0 a) ht_nonneg
+  have hleft_int :
+      IntegrableOn
+        (fun y => |printedTailWTruncReal μ a (printedTailR0 a) y|)
+        S (gammaFullMeasure a) := by
+    exact ((integrable_printedTailWTruncReal
+      (a := a) (R := printedTailR0 a) (μ := μ) ha hRle).abs).integrableOn
+  have hright_int :
+      IntegrableOn
+        (fun y => ∑ s ∈ T,
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (1 / (6 * y))^s)
+        S (gammaFullMeasure a) := by
+    refine (MeasureTheory.integrable_finset_sum T ?_).integrableOn
+    intro s hs
+    have hsle : s ≤ printedTailP a + 1 := by
+      have hsR : s < printedTailR0 a + 1 := by
+        simpa [T] using Finset.mem_range.mp hs
+      omega
+    exact (integrable_invPow_gammaFullMeasure
+      (a := a) (r := s) ha hsle).const_mul _
+  have hpoint_integral :
+      (∫ y in S, |printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a) ≤
+        ∫ y in S, (∑ s ∈ T,
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (1 / (6 * y))^s) ∂ gammaFullMeasure a :=
+    MeasureTheory.setIntegral_mono_ae
+      hleft_int hright_int hmono
+  have hsum_eval :
+      (∫ y in S, (∑ s ∈ T,
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (1 / (6 * y))^s) ∂ gammaFullMeasure a)
+        =
+        ∑ s ∈ T,
+          ∫ y in S,
+            ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+              (1 / (6 * y))^s ∂ gammaFullMeasure a := by
+    rw [MeasureTheory.integral_finset_sum]
+    intro s hs
+    have hsle : s ≤ printedTailP a + 1 := by
+      have hsR : s < printedTailR0 a + 1 := by
+        simpa [T] using Finset.mem_range.mp hs
+      omega
+    exact ((integrable_invPow_gammaFullMeasure
+      (a := a) (r := s) ha hsle).const_mul _).integrableOn.integrable
+  have hterm :
+      (∑ s ∈ T,
+          ∫ y in S,
+            ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+              (1 / (6 * y))^s ∂ gammaFullMeasure a)
+        ≤
+        ∑ s ∈ T,
+          if s ≤ a / 8 then
+            (G s : ℝ) * (F : ℝ)
+          else
+            (G s : ℝ) := by
+    refine Finset.sum_le_sum fun s hs => ?_
+    have hsleR0 : s ≤ printedTailR0 a := by
+      have hslt : s < printedTailR0 a + 1 := by
+        simpa [T] using Finset.mem_range.mp hs
+      omega
+    have hslt : s < a := by
+      unfold printedTailR0 printedTailP at hsleR0
+      omega
+    have hsleP : s ≤ printedTailP a + 1 := by omega
+    have hcoeff_nonneg :
+        0 ≤ (((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ)) := by
+      exact_mod_cast (abs_nonneg (printedTailOmegaCoeff μ a s))
+    by_cases hslow : s ≤ a / 8
+    · have hprob :=
+        gammaFullMeasure_shifted_Iio_half_le_nine_tenths_pow
+          (a := a) (s := s) ha hslow
+      have hprobR :
+          (gammaFullMeasure (a - s) S).toReal ≤ (F : ℝ) := by
+        have hF_nonneg : 0 ≤ (F : ℝ) := by
+          dsimp [F]
+          positivity
+        have hprob' :
+            gammaFullMeasure (a - s) S ≤ ENNReal.ofReal (F : ℝ) := by
+          simpa [S, F, Rat.cast_pow] using hprob
+        exact ENNReal.toReal_le_of_le_ofReal hF_nonneg hprob'
+      have hweight_nonneg : 0 ≤ (gammaWeight a s : ℝ) := by
+        unfold gammaWeight
+        positivity
+      calc
+        (∫ y in S,
+            ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+              (1 / (6 * y))^s ∂ gammaFullMeasure a)
+            =
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            ∫ y in S, (1 / (6 * y))^s ∂ gammaFullMeasure a := by
+            rw [MeasureTheory.integral_const_mul]
+        _ =
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            ((gammaWeight a s : ℝ) *
+              (gammaFullMeasure (a - s) S).toReal) := by
+            rw [setIntegral_invPow_gammaFullMeasure_Iio_eq_gammaWeight_mul_shifted
+              (a := a) (s := s) ha hslt ((a : ℝ) / 2)]
+        _ ≤
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            ((gammaWeight a s : ℝ) * (F : ℝ)) := by
+            exact mul_le_mul_of_nonneg_left
+              (mul_le_mul_of_nonneg_left hprobR hweight_nonneg)
+              hcoeff_nonneg
+        _ = (G s : ℝ) * (F : ℝ) := by
+            dsimp [G]
+            norm_num
+            ring
+        _ = (if s ≤ a / 8 then (G s : ℝ) * (F : ℝ)
+            else (G s : ℝ)) := by simp [hslow]
+    · have hintegral_nonneg :
+          0 ≤ᵐ[gammaFullMeasure a]
+            fun y : ℝ => (1 / (6 * y))^s := by
+        filter_upwards [ae_nonneg_gammaFullMeasure a] with y hy_nonneg
+        have ht_nonneg : 0 ≤ 1 / (6 * y) := by positivity
+        exact pow_nonneg ht_nonneg s
+      have hset_le :
+          (∫ y in S, (1 / (6 * y))^s ∂ gammaFullMeasure a) ≤
+            ∫ y, (1 / (6 * y))^s ∂ gammaFullMeasure a :=
+        MeasureTheory.setIntegral_le_integral
+          (integrable_invPow_gammaFullMeasure
+            (a := a) (r := s) ha hsleP) hintegral_nonneg
+      calc
+        (∫ y in S,
+            ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+              (1 / (6 * y))^s ∂ gammaFullMeasure a)
+            =
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            ∫ y in S, (1 / (6 * y))^s ∂ gammaFullMeasure a := by
+            rw [MeasureTheory.integral_const_mul]
+        _ ≤
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            ∫ y, (1 / (6 * y))^s ∂ gammaFullMeasure a :=
+            mul_le_mul_of_nonneg_left hset_le hcoeff_nonneg
+        _ =
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (gammaWeight a s : ℝ) := by
+            rw [integral_invPow_gammaFullMeasure_eq_gammaMonomialMoment
+              (a := a) (r := s) ha hsleP]
+            rw [gammaMonomialMoment_eq_gammaWeight]
+        _ = (G s : ℝ) := by
+            dsimp [G]
+            norm_num
+            ring
+        _ = (if s ≤ a / 8 then (G s : ℝ) * (F : ℝ)
+            else (G s : ℝ)) := by simp [hslow]
+  have hsplit :
+      (∑ s ∈ T,
+          if s ≤ a / 8 then
+            (G s : ℝ) * (F : ℝ)
+          else
+            (G s : ℝ)) =
+        ((∑ s ∈ T.filter (fun s : Nat => s ≤ a / 8), G s) * F +
+          ∑ s ∈ T.filter (fun s : Nat => a / 8 + 1 ≤ s), G s : ℚ) := by
+    have hsum :=
+      Finset.sum_filter_add_sum_filter_not
+        (s := T) (p := fun s : Nat => s ≤ a / 8)
+        (f := fun s : Nat =>
+          if s ≤ a / 8 then
+            (G s : ℝ) * (F : ℝ)
+          else
+            (G s : ℝ))
+    rw [← hsum]
+    rw [Rat.cast_add, Rat.cast_mul, Rat.cast_sum]
+    congr 1
+    · rw [Finset.sum_mul]
+      refine Finset.sum_congr rfl fun s hs => ?_
+      simp [T] at hs
+      simp [hs.2]
+    · have hnot_eq :
+        T.filter (fun s : Nat => ¬s ≤ a / 8) =
+          T.filter (fun s : Nat => a / 8 + 1 ≤ s) := by
+        ext s
+        simp only [Finset.mem_filter]
+        constructor
+        · intro h
+          exact ⟨h.1, by omega⟩
+        · intro h
+          exact ⟨h.1, by omega⟩
+      rw [hnot_eq, Rat.cast_sum]
+      refine Finset.sum_congr rfl fun s hs => ?_
+      simp at hs
+      simp [hs.2]
+  calc
+    (∫ y in Set.Iio ((a : ℝ) / 2),
+        |printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a)
+        =
+      ∫ y in S, |printedTailWTruncReal μ a (printedTailR0 a) y|
+          ∂ gammaFullMeasure a := rfl
+    _ ≤
+      ∫ y in S, (∑ s ∈ T,
+          ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+            (1 / (6 * y))^s) ∂ gammaFullMeasure a := hpoint_integral
+    _ =
+      ∑ s ∈ T,
+          ∫ y in S,
+            ((|printedTailOmegaCoeff μ a s| : ℚ) : ℝ) *
+              (1 / (6 * y))^s ∂ gammaFullMeasure a := hsum_eval
+    _ ≤
+      ∑ s ∈ T,
+          if s ≤ a / 8 then
+            (G s : ℝ) * (F : ℝ)
+          else
+            (G s : ℝ) := hterm
+    _ =
+      (((∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => s ≤ a / 8),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) *
+          (9 / 10 : ℚ)^(a - a / 8) +
+        (∑ s ∈ (Finset.range (printedTailR0 a + 1)).filter
+          (fun s : Nat => a / 8 + 1 ≤ s),
+          gammaWeight a s * |printedTailOmegaCoeff μ a s|) : ℚ) : ℝ) := by
+        simpa [T, G, F] using hsplit
+
 /-- The four rational residue pieces which remain after the analytic
 Taylor--Gamma event split:
 
