@@ -12,11 +12,11 @@
 \usepackage{xurl}
 \usepackage[hidelinks]{hyperref}
 \hypersetup{
-  pdftitle={Strict negativity of a Chen--Larson hypergeometric coefficient},
+  pdftitle={Strict negativity and non-vanishing of Chen--Larson hypergeometric coefficients},
   pdfauthor={Johannes Schmitt},
-  pdfsubject={A computer-assisted and formally verified proof},
+  pdfsubject={A computer-assisted and formally verified proof of Propositions 5.1 and 5.2 (the latter corrected)},
   pdfkeywords={Lean 4, formal verification, strata of differentials,
-               hypergeometric series, AI-assisted mathematics}
+               hypergeometric series, Ionel relation, AI-assisted mathematics}
 }
 
 \newtheorem{theorem}{Theorem}[section]
@@ -80,38 +80,53 @@
 \newcommand{\haiprompt}[1]{\par\vspace{0.2em}\leftskip1.2em\rightskip1.2em\relax
   \small\itshape #1\par\leftskip0pt\rightskip0pt\vspace{0.2em}}
 
-\title{Strict negativity of a Chen--Larson hypergeometric coefficient\\
-\large A computer-assisted and formally verified proof}
+\title{Strict negativity and non-vanishing of Chen--Larson hypergeometric coefficients\\
+\large A computer-assisted and formally verified proof of Propositions~5.1 and~5.2 (the latter corrected)}
 \author{Johannes Schmitt}
-\date{Version 1.0 (20 June 2026)}
+\date{Version 2.0 (24 June 2026)}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
 Chen and Larson reduce a geometric vanishing problem for strata of
-holomorphic abelian differentials to the non-vanishing of a coefficient in a
-quotient of hypergeometric generating series.  We prove the stronger statement
-that this coefficient is always strictly negative in the two residue classes
-covered by their Proposition~5.1.  More precisely, let
+holomorphic abelian differentials to the (non-)vanishing of a coefficient in a
+quotient of hypergeometric generating series.  We treat both series their
+argument produces.  For the residue classes $g\equiv0,2\pmod 3$ covered by their
+Proposition~5.1 we prove the stronger statement that the relevant coefficient is
+always strictly negative: with
 \[
-  \C(t)=\sum_{r\ge 0}\frac{(6r)!}{(3r)!(2r)!}\left(\frac{t}{72}\right)^r.
+  \C(t)=\sum_{r\ge 0}\frac{(6r)!}{(3r)!(2r)!}\left(\frac{t}{72}\right)^r,
 \]
-If $g\ge2$, $g\equiv0,2\pmod 3$, $a=\floor{g/3}+1$, and
+if $g\ge2$, $g\equiv0,2\pmod 3$, $a=\floor{g/3}+1$, and
 $\mu=(m_1,\ldots,m_n)$ is a positive partition of $2g-2$, then
 \[
  [t^a]\frac{\prod_{i=1}^n\C(t/(m_i+1))}
                    {\C(t)^{2g-2+n}}<0.
 \]
-The proof first removes the partition by a coefficientwise majorization.  A
-sign-lock estimate with an explicit rational final margin then shows that all
-convolution indices above $0.9a$ contribute nonpositively.  The remaining positive part is controlled
-by a direct saddle method based on finite exponential prefixes, rather than
-on real-analytic exponential estimates.  Small ranges are discharged by
-exact enumeration and verified rational or dyadic interval certificates; the
-large range is closed by symbolic ratio and reserve bounds.  The complete
-argument has been formalized in \Lean{} 4 and Mathlib.  We also describe the
-role of long-horizon generative-AI assistance in the development and the
+For the complementary class $g\equiv1\pmod3$, governed by their
+Proposition~5.2, we first \emph{correct} the printed relation: the constant
+$\kappa_0=2g-2$ of Ionel's relation was inadvertently replaced by $1$, which
+changes the coefficient.  We then prove that the corrected coefficient is
+non-vanishing for every positive partition, and strictly negative for $a\ge14$.
+Together the two results settle the coefficient (non-)vanishing in all three
+residue classes, hence in every genus, beyond the authors' computer check
+($g\le30$).
+
+The Proposition~5.1 proof removes the partition by a coefficientwise
+majorization; a sign-lock estimate with an explicit rational final margin then
+shows that all convolution indices above $0.9a$ contribute nonpositively, and the
+remaining positive part is controlled by a direct saddle method based on finite
+exponential prefixes.  Small ranges are discharged by exact enumeration and
+verified rational or dyadic interval certificates; the large range is closed by
+symbolic ratio and reserve bounds.  The corrected Proposition~5.2 reduces,
+through a one-line identity, to two sign inputs already controlled by the
+Proposition~5.1 analysis, together with an exhaustive finite check.  The complete
+argument --- both propositions and the correction --- has been formalized in
+\Lean{}~4 and Mathlib, the public theorems depending only on the standard axioms
+and the two compiler-trust axioms of \code{native\_decide}.  We also describe the
+role of long-horizon generative-AI assistance in the development, including an AI
+audit that uncovered the Proposition~5.2 error in the original paper, and the
 precise trust boundary of the computational certificates.
 \end{abstract}
 
@@ -143,9 +158,10 @@ theorem, namely $a=\floor{g/3}+1$; for $g\equiv0,2\pmod3$, Proposition~5.1
 reduces the geometric vanishing $\eta^a=0$ to the nonvanishing of the single
 coefficient in~\eqref{eq:CL-series-intro}.  The complementary class
 $g\equiv1\pmod3$ is governed by their Proposition~5.2, which uses a different,
-derivative-corrected series, and is not addressed here.  The geometric statement
-requires only that this coefficient be nonzero; our main result gives a uniform
-sign.
+derivative-corrected series; we treat it --- in corrected form --- in
+Section~\ref{sec:prop52}.  The geometric statement requires only that the
+relevant coefficient be nonzero; for Proposition~5.1 our main result gives a
+uniform sign.
 
 \begin{theorem}[Main theorem]\label{thm:main}
 Let $g\ge2$ satisfy $g\equiv0$ or $2\pmod 3$, and set
@@ -171,6 +187,32 @@ for every positive holomorphic partition when $g\equiv0,2\pmod3$.
 \begin{proof}
 Combine Theorem~\ref{thm:main} with Chen--Larson Proposition~5.1.
 \end{proof}
+
+For the remaining residue class we prove a non-vanishing statement for the
+\emph{corrected} Proposition~5.2 series; the correction itself is explained in
+Section~\ref{sec:prop52}.
+
+\begin{theorem}[Corrected Proposition~5.2]\label{thm:main52}
+Let $g\equiv1\pmod3$, write $g=3a-2$ so that $M:=2g-2=6a-6$, and let
+$\mu=(m_1,\ldots,m_n)$ be a positive partition of $M$.  With
+\[
+  B_\mu(t)=\frac{\prod_{i=1}^n\C(t/(m_i+1))}{\C(t)^{N}},\quad N=\sum_i(m_i+1),
+  \qquad
+  K_\mu(t)=\sum_{i=1}^n m_i\,\Phi(t/(m_i+1)),\quad
+  \Phi(t)=2t+12t^2\frac{\C'(t)}{\C(t)},
+\]
+the corrected Proposition~5.2 coefficient $[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)$
+is nonzero for every $a\ge2$, and strictly negative for $a\ge14$.  The series
+printed by Chen and Larson is the same expression with the leading constant $M$
+replaced by~$1$.
+\end{theorem}
+
+\begin{corollary}\label{cor:geometric52}
+Combining Theorems~\ref{thm:main} and~\ref{thm:main52} with the geometric
+reductions of Chen--Larson Propositions~5.1 and~5.2 (the latter corrected as in
+Section~\ref{sec:prop52}), the class $\eta^{\floor{g/3}+1}$ vanishes for every
+positive holomorphic partition, in \emph{every} genus $g\ge2$.
+\end{corollary}
 
 \subsection{Outline}\label{sec:outline}
 
@@ -1096,6 +1138,163 @@ Together with the direct partition enumeration for $a\le8$, the exact
 majorant certificate for $9\le a\le60$, and the dyadic interval certificate
 for $61\le a\le400$, this proves Theorem~\ref{thm:main}.
 
+\section{The corrected Proposition~5.2}\label{sec:prop52}
+
+The companion residue class $g\equiv1\pmod3$ is governed by Chen--Larson
+Proposition~5.2, which replaces the quotient $B_\mu$ by a derivative-corrected
+numerator.  We record a correction to the printed relation, reduce the corrected
+coefficient to the Proposition~5.1 analysis by a one-line identity, and close the
+finitely many remaining degrees by an exhaustive check.  Throughout, $g=3a-2$,
+$M:=2g-2=6a-6$, $q_i:=m_i+1\ge2$, $N:=\sum_iq_i=M+n$, $s_j:=\sum_iq_i^{-j}$, and
+$B_\mu(t)=\prod_i\C(t/q_i)/\C(t)^N$, $b_a(\mu)=[t^a]B_\mu(t)$ denote the
+Proposition~5.1 quotient series and its coefficient.
+
+\subsection{The correction}\label{subsec:correction}
+
+Ionel's relation~\cite{Ionel}, specialized to the degree $b=1$ relevant here,
+contributes the factor
+\begin{equation}\label{eq:ionel-b1}
+ \kappa_0-2\kappa_1t-12\sum_{j\ge1}jc_j\kappa_{j+1}t^{j+1},
+\end{equation}
+where on $\mathcal M_g$ one has $\kappa_0=2g-2=M$.  The series printed in
+Chen--Larson Proposition~5.2 instead has constant term $1$.  Dividing the whole
+relation by $\kappa_0=M$ would be legitimate, but it would divide \emph{every}
+term of~\eqref{eq:ionel-b1}; replacing only $\kappa_0$ by $1$ is therefore not a
+normalization, and it changes the coefficient under consideration.  Writing
+\[
+ \Phi(t)=2t+12t^2\frac{\C'(t)}{\C(t)},
+\]
+and using the stratum pullback $\iota^*f^*\kappa_j=(N-s_j)\eta^j$ for $j\ge1$,
+the factor~\eqref{eq:ionel-b1} pulls back to $M-K_\mu(\eta t)$ with
+\begin{equation}\label{eq:Kdef52}
+ K_\mu(t)=\sum_i(q_i-1)\,\Phi(t/q_i)=\sum_i m_i\,\Phi(t/q_i),
+\end{equation}
+while the exponential prefactor pulls back to $B_\mu(\eta t)$.  The corrected
+geometric reduction is therefore
+\begin{equation}\label{eq:corrected52}
+ \eta^a\,[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)=0,
+\end{equation}
+so $\eta^a=0$ as soon as the scalar coefficient is nonzero.  The scalar class
+$\kappa_0=2g-2$ pulls back to $M$, not to $1$; this is the entire content of the
+correction.
+
+\subsection{The decisive identity}\label{subsec:identity52}
+
+Set
+\[
+ T_a^{\mathrm{old}}(\mu):=[t^a]\,B_\mu(t)\bigl(1-K_\mu(t)\bigr),
+ \qquad
+ T_a^{\mathrm{cor}}(\mu):=[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)
+\]
+for the printed and corrected coefficients.  Subtracting and using
+$b_a(\mu)=[t^a]B_\mu(t)$ gives the exact identity
+\begin{equation}\label{eq:central52}
+ \boxed{\;T_a^{\mathrm{cor}}(\mu)=T_a^{\mathrm{old}}(\mu)+(M-1)\,b_a(\mu).\;}
+\end{equation}
+This is the point of the correction: it isolates the change as a multiple of the
+Proposition~5.1 coefficient $b_a(\mu)$, whose sign is already understood.
+
+\begin{remark}[Marked versus derivative form]
+The factor $M-K_\mu$ is the marked-numerator form of the geometric factor
+$M-2A_\mu t-12t^2\mathcal B_\mu(t)$ read off from~\eqref{eq:ionel-b1}, where
+$A_\mu=N-s_1$ and
+$\mathcal B_\mu(t)=N\dfrac{\C'(t)}{\C(t)}-\sum_i\dfrac{\C'(t/q_i)}{q_i^2\C(t/q_i)}$.
+The two forms give the same coefficient $[t^a]B_\mu(\cdot)$ because their
+difference contributes a multiple of $[t^{a-1}]B_\mu(t)$ that vanishes precisely
+when $M=6a-6$ --- which is where the genus constraint $g=3a-2$ enters.  The Lean
+development uses the marked form $M-K_\mu$ throughout.
+\end{remark}
+
+\subsection{Strict negativity for \texorpdfstring{$a\ge14$}{a>=14}}\label{subsec:large52}
+
+Two sign inputs feed~\eqref{eq:central52} in the uniform range.
+
+\paragraph{The quotient coefficient.}
+For a positive partition of $M=6a-6$ one has $N=M+n$ with $1\le n\le M$, hence
+\begin{equation}\label{eq:Nrange52}
+ 6a-5\le N\le 12a-12.
+\end{equation}
+The Proposition~5.1 analysis of
+Sections~\ref{sec:majorant}--\ref{sec:completion} in fact proves a stronger
+\emph{rectangular} statement: $b_a(\mu)<0$ whenever $a\ge9$ and
+$6a-7\le N\le12a-8$.  Indeed, from the point at which the majorant
+$b_a(\mu)\le U_a(N)$ is introduced, no hypothesis on $\sum_i(q_i-1)$ is used, and
+$U_a(N)<0$ is established across that whole rectangle --- exactly for
+$9\le a\le60$, by verified dyadic intervals for $61\le a\le400$, and analytically
+for $a\ge401$.  The interval~\eqref{eq:Nrange52} is contained in the rectangle,
+so
+\begin{equation}\label{eq:bneg52}
+ b_a(\mu)<0\qquad(a\ge14).
+\end{equation}
+(Formally this rectangular form is the theorem
+\code{Prop51.bCoeff\_neg\_of\_rectangle}, obtained from the same certificates
+that prove Theorem~\ref{thm:main}.)
+
+\paragraph{The printed coefficient.}
+The printed-series coefficient is itself strictly negative in the uniform range,
+\begin{equation}\label{eq:Toldneg52}
+ T_a^{\mathrm{old}}(\mu)<0\qquad(a\ge14),
+\end{equation}
+a formal power-series statement independent of the geometric correction.  Its
+proof splits at $a=149$: an exact dyadic-interval certificate for
+$14\le a\le149$, and, for $a\ge150$, a Gamma-integral and Taylor-truncation
+estimate of the normalized coefficient, reduced to a closed real exponential
+power-series identity.  The whole argument is formalized in Lean ---
+\code{Prop52.printedCoeffNegativityMid\_closed} for the interval range and the
+\code{Prop52.Gamma}$\cdots$ modules for the tail; in particular the
+directed-rounding interval layer of the original Proposition~5.2 note is replaced
+by exact dyadic intervals checked by \code{native\_decide}, so that this input
+too sits inside the formal trust boundary of Section~\ref{sec:formalization}.
+
+\paragraph{Conclusion.}
+For $a\ge14$, combining~\eqref{eq:central52}, \eqref{eq:bneg52},
+\eqref{eq:Toldneg52}, and $M-1>0$ gives
+\[
+ T_a^{\mathrm{cor}}(\mu)=T_a^{\mathrm{old}}(\mu)+(M-1)\,b_a(\mu)<0.
+\]
+The correction moves the coefficient further into the negative half-line: no new
+large-$a$ cancellation has to be controlled.
+
+\subsection{The finite range \texorpdfstring{$2\le a\le13$}{2<=a<=13} and the theorem}\label{subsec:finite52}
+
+It remains to prove $T_a^{\mathrm{cor}}(\mu)\ne0$ for $2\le a\le13$, where the two
+summands of~\eqref{eq:central52} need not share a sign.  The coefficient is a
+rational number assembled from the finite recurrences for $c_r$, the exponential
+coefficients $b_r$, and the marked coefficients $k_r$, via
+$T_a^{\mathrm{cor}}=Mb_a-\sum_{j=1}^a k_jb_{a-j}$.  For $2\le a\le8$ the Lean
+proof evaluates the exact rational coefficient over every partition by
+\code{native\_decide}; for $9\le a\le13$, where the partition counts run into the
+millions, it reduces each coefficient modulo a large prime and certifies a
+nonzero residue --- a rational with a nonzero reduction at a prime not dividing
+its denominator cannot vanish --- with the reduction map to $\Q$ proved in Lean.
+
+\begin{theorem}[Corrected Proposition~5.2, non-vanishing]\label{thm:prop52-full}
+For every integer $a\ge2$ and every positive partition $\mu$ of $M=6a-6$, the
+corrected coefficient $T_a^{\mathrm{cor}}(\mu)$ is nonzero; for $a\ge14$ it is
+strictly negative.  This is Theorem~\ref{thm:main52}.
+\end{theorem}
+
+\begin{proof}
+For $a\ge14$ this is the conclusion of Section~\ref{subsec:large52}; for
+$2\le a\le13$ it is the finite certificate above.
+\end{proof}
+
+\begin{remark}[The correction is not cosmetic]
+For $g=4$ ($a=2$, $M=6$) and $\mu=(1^6)$ one finds $b_2=-195/8$,
+$T_2^{\mathrm{old}}=45/8$, and $T_2^{\mathrm{cor}}=-465/4$, consistent
+with~\eqref{eq:central52} since $-465/4-45/8=5\cdot(-195/8)=(M-1)b_2$.  The
+printed and corrected coefficients are not scalar multiples --- here they even
+have opposite signs --- so the correction is not a harmless renormalization.
+These three values are checked by \code{native\_decide} in
+\code{Prop52/Theorem.lean}.
+\end{remark}
+
+\begin{remark}[Scope]
+The non-vanishing theorem is proved for positive integral partitions $m_i\ge1$.
+The corrected geometric pullback can be written in a broader rational-part
+setting, but no global sign statement is claimed there.
+\end{remark}
+
 \section{Formalization architecture and trust}\label{sec:formalization}
 
 \subsection{Public statement layer}
@@ -1115,6 +1314,19 @@ The bridge from the recurrence-defined $c_r$ to the formal power series is
 proved by showing that both $\C$ and
 $\exp(\sum_{r\ge1}c_rt^r)$ solve the same formal differential equation with
 constant term one.
+
+For the corrected Proposition~5.2 the public facade is
+\code{Prop52/Theorem.lean}.  It defines the corrected coefficient
+$T_a^{\mathrm{cor}}=Mb_a-[t^a]B_\mu K_\mu$ (as \code{correctedCoeff}), records the
+decisive identity~\eqref{eq:central52}
+(\code{correctedCoeff\_eq\_printedCoeff\_add}), and exposes the two
+assumption-free theorems \code{correctedCoeff\_nonvanishing} (every $a\ge2$) and
+\code{correctedCoeff\_neg} ($a\ge14$), together with the $g=4$ executable checks.
+It imports \code{Prop51.bCoeff\_neg\_of\_rectangle} for the quotient sign and the
+\code{Prop52} proof library --- the finite and modular certificates and the
+printed-coefficient interval and Gamma-tail arguments --- for the analytic
+inputs.  Both public theorems carry the same axiom report as the
+Proposition~5.1 facade.
 
 \subsection{Proof layers}
 
@@ -1157,9 +1369,10 @@ else --- in particular no \code{sorry}, no project-specific axiom, and no
 floating-point assumption --- enters the final theorem.
 
 This is verifiable in one command.  The repository ships a short audit script
-that prints, for the series bridge, the majorant inequality, the final
-negativity theorem, and the non-vanishing corollary, the full list of axioms
-each depends on; a reader can reproduce it from a clean checkout with
+that prints, for the series bridge, the majorant inequality, the
+Proposition~5.1 negativity theorem and non-vanishing corollary, and the corrected
+Proposition~5.2 theorems, the full list of axioms each depends on; a reader can
+reproduce it from a clean checkout with
 \begin{lstlisting}
 lake exe cache get   # download the prebuilt Mathlib
 lake build           # check every proof, including the certificates
@@ -1406,6 +1619,56 @@ mathematics, the author's contribution to the write-up was direction and
 editorial judgement rather than composition; and acceptance of each mathematical
 claim ultimately rested on its Lean formalization, not on any model's assurance.
 
+\subsection{Addendum: the corrected Proposition~5.2}\label{subsec:ai52}
+
+The same methodology produced the companion result, with two features worth
+recording: an AI audit caught a genuine error in the \emph{published} paper, and
+the formalization then ran to completion with no human intervention at all.
+
+After the Proposition~5.1 result was shared with the authors --- who were open to
+the approach and asked whether the remaining case $g\equiv1\pmod3$
+(Proposition~5.2) could now be attacked --- the author posed that problem to a
+ChatGPT~5.5 Pro
+conversation,\footnote{\url{https://chatgpt.com/share/6a3bc8c9-e06c-83eb-b3e5-d098bb04573f}}
+which produced a candidate non-vanishing proof for the \emph{printed}
+Proposition~5.2 within three rounds.  A separate ChatGPT~5.5 Pro audit of that
+candidate\footnote{\url{https://chatgpt.com/share/6a3bc91c-0460-83eb-857d-d821168e38b7}}
+flagged that the derivation of the series in Proposition~5.2 was itself in error:
+the constant $\kappa_0=2g-2$ of Ionel's relation had been replaced by $1$.  An
+independent AI audit of the Chen--Larson paper
+alone\footnote{\url{https://chatgpt.com/share/6a393ddd-bbc0-83eb-aa30-44806c9edc58}}
+confirmed the error and supplied the corrected derivation of
+Section~\ref{subsec:correction}; asked to validate the point, the authors
+responded promptly that it was correct.
+
+The corrected target was fed back into the original conversation, which --- in
+two further rounds with intermediate
+feedback\footnote{\url{https://chatgpt.com/share/6a3bc93b-3c68-83eb-8735-cb143fe10b12}}
+--- assembled a complete bundle: an informal proof of the corrected statement, an
+independent audit, the pinned Proposition~5.1 dependency, and a detailed Lean
+formalization plan with milestones.  That bundle was handed to a fresh OpenAI
+Codex CLI worker, which completed the entire Lean formalization --- the rectangle
+export, the correction identity, the finite and modular certificates, the
+in-Lean re-proof of the printed-coefficient sign, and the two assumption-free
+public theorems --- \emph{autonomously, with no further mathematical or technical
+intervention}, in roughly twenty hours.  In the classification
+of~\cite{FengAletheia} this is again Level~A, and the human role was smaller still
+than for Proposition~5.1, reducing to relaying the problem, the audit verdict, and
+the finished bundle.
+
+Two points deserve emphasis.  First, the error was in the \emph{published
+mathematics}, not in any formalization: the series printed in Proposition~5.2 is a
+valid power series, but it is not the one Ionel's relation produces, so a formal
+proof about the printed coefficient would have certified a true statement that
+does not carry the intended geometric meaning.  The defect was surfaced by
+adversarial AI review of the paper itself --- exactly the kind of error formal
+verification does not catch, because verification certifies \emph{what one
+states}, while deciding what to state still needs independent mathematical
+judgement.  Second, the contrast with Proposition~5.1 is instructive: given a
+sufficiently detailed, AI-authored formalization plan, the autonomous worker
+needed none of the mid-run redirection (Cards~6 and~7) that the first development
+had required.
+
 \paragraph{Quantitative notes.}
 The ``roughly sixty-four hours'' attributed to the completion phase is the
 elapsed wall-clock time recorded in the Codex goal log for that thread; it is not
@@ -1444,12 +1707,15 @@ provenance can be inspected directly.
 
 The repository exposes a small public API:
 \[
-  \code{Statement.lean},\qquad \code{Theorem.lean},\qquad \code{Prop51.lean}.
+  \code{Prop51/Theorem.lean},\qquad \code{Prop52/Theorem.lean},\qquad
+  \code{Prop51.lean},\qquad \code{Prop52.lean}.
 \]
-The file \code{Theorem.lean} is intended as the first audit surface: it names
-the series \(\C\), states the quotient-series identity, and exposes the
-strict-negativity and non-vanishing theorems.  The root file
-\code{Prop51.lean} imports this facade.
+The file \code{Prop51/Theorem.lean} is intended as the first audit surface: it
+names the series \(\C\), states the quotient-series identity, and exposes the
+strict-negativity and non-vanishing theorems for Proposition~5.1.  Its
+counterpart \code{Prop52/Theorem.lean} exposes the corrected Proposition~5.2
+coefficient and its two assumption-free theorems.  The root files
+\code{Prop51.lean} and \code{Prop52.lean} import the respective libraries.
 
 The proof backend remains more historical.  In the current release,
 \code{Completion.lean} imports \code{OpenGoals.lean}, which contains both the
@@ -1462,10 +1728,10 @@ preserve both the completed proof state and the public-facade state.
 
 The release records the Lean toolchain, Mathlib revision, generated
 certificate provenance, and build commands.  Continuous integration is set to
-run on both \code{main} and \code{master}; the Lake manifest agrees with the
-package name; the compact public axiom report is run in CI; and internal AI
-correspondence is kept in a development archive rather than at repository
-root.
+run on both \code{main} and \code{master}; the default \code{lake build} now
+covers both the Proposition~5.1 and Proposition~5.2 libraries; the compact public
+axiom report (covering both facades) is run in CI; and internal AI correspondence
+is kept in a development archive rather than at repository root.
 
 \appendix
 \section{Exact ratio and reserve estimates for the large positive tail}
@@ -2167,6 +2433,30 @@ theorem chenLarsonCoefficient_ne_zero
 end Prop51
 \end{lstlisting}
 
+For the corrected Proposition~5.2, the analogous public facade is
+\code{Prop52/Theorem.lean}; the two final theorems read as follows (again lightly
+edited for readability).
+
+\begin{lstlisting}
+import Prop52.Assembly
+
+namespace Prop52
+
+-- correctedCoeff a mu = M(a) * Prop51.bCoeff mu a - markedConvolution mu a
+--                     = [t^a] B_mu(t) * (M - K_mu(t)),   with M = 6*a - 6
+
+theorem correctedCoeff_nonvanishing :
+    forall a, 2 <= a -> forall mu, Prop51.IsPartitionOf mu (M a) ->
+      correctedCoeff a mu != 0
+
+theorem correctedCoeff_neg
+    {a : Nat} (ha : 14 <= a)
+    {mu : List Nat} (hmu : Prop51.IsPartitionOf mu (M a)) :
+    correctedCoeff a mu < 0
+
+end Prop52
+\end{lstlisting}
+
 \section{Paper-to-Lean correspondence}\label{app:map}
 
 \begin{center}
@@ -2196,7 +2486,23 @@ finite edge budget & \code{positiveSaddleFiniteScaledEdgeBudget} in
 closed proof & \code{completion\_of\_directSaddle\_closed} and
   \code{coefficientNegativity}\\
 public theorem & \code{chenLarsonCoefficient\_neg},
-  \code{chenLarsonCoefficient\_ne\_zero} in \code{Theorem.lean}\\
+  \code{chenLarsonCoefficient\_ne\_zero} in \code{Prop51/Theorem.lean}\\
+\midrule
+\multicolumn{2}{l}{\emph{Corrected Proposition~5.2}}\\
+corrected coefficient $T_a^{\mathrm{cor}}$ & \code{correctedCoeff} in
+  \code{Prop52/Statement.lean}\\
+central identity~\eqref{eq:central52} &
+  \code{correctedCoeff\_eq\_printedCoeff\_add} in \code{Prop52/Assembly.lean}\\
+rectangle quotient sign & \code{Prop51.bCoeff\_neg\_of\_rectangle} in
+  \code{Prop51/Rectangle.lean}\\
+finite range $2\le a\le13$ & \code{correctedCoeff\_finite\_nonvanishing} in
+  \code{Prop52/Finite.lean}\\
+printed sign, $14\le a\le149$ & \code{printedCoeffNegativityMid\_closed} in
+  \code{Prop52/MidBridge.lean}\\
+printed sign, Gamma tail & \code{printedTailERealSeriesHasSum} in
+  \code{Prop52/GammaCompletion.lean}\\
+public theorems (Prop.~5.2) & \code{correctedCoeff\_nonvanishing},
+  \code{correctedCoeff\_neg} in \code{Prop52/Theorem.lean}\\
 \bottomrule
 \end{tabular}
 \end{center}
