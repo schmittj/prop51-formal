@@ -3,9 +3,12 @@ Copyright (c) 2026 the prop51-formal contributors. Released under Apache 2.0.
 
 # Modular finite checker for corrected Proposition 5.2
 
-The corrected finite bundle verifies `2 <= a <= 13` modulo two large primes.
-This file begins the Lean-side modular checker.  It uses the same one-pass
-recurrence as `Prop52.Recurrence`, but evaluates it in `ZMod p`.
+The external corrected-finite bundle (the C++ checker) verifies `2 <= a <= 13`
+modulo two large primes; the Lean side below uses a single prime
+(`finitePrime1 = 1000000007`), since one nonzero reduction already proves
+nonvanishing over `ℚ`.  This file begins the Lean-side modular checker: it uses
+the same one-pass recurrence as `Prop52.Recurrence`, but evaluates it in
+`ZMod p`.
 
 The theorems in this file are not yet the final rational nonvanishing theorem:
 the remaining bridge is to prove that the modular recurrence is the reduction

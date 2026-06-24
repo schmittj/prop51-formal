@@ -10,13 +10,14 @@ Complete, machine-checked proofs — in **Lean 4 + Mathlib** — of the coeffici
 (*Independence of tautological classes and cohomological stability for strata of
 differentials*, [arXiv:2603.23850](https://arxiv.org/abs/2603.23850)). The
 repository contains the Lean formalization, the LaTeX paper, and the
-computational certificates, with continuous integration that rebuilds every
-proof and audits its axioms.
+computational certificates, with continuous integration that rebuilds the
+production proof closure and audits its axioms.
 
 Proposition 5.2 is formalized in its **corrected** form: the series printed in
 the preprint used the constant term `1` where Ionel's relation gives
 `κ₀ = 2g − 2`, which changes the coefficient. The repository proves the
-corrected non-vanishing statement; the correction was confirmed by the authors.
+corrected non-vanishing statement; the authors agreed with this correction in
+private correspondence (the public arXiv v1 is not yet updated).
 
 ## The theorem
 
@@ -38,7 +39,8 @@ Proposition 5.1 — so via their geometric reduction it yields their
 Conjecture 1.4 for holomorphic abelian strata in the residue classes
 `g ≡ 0, 2 (mod 3)`. The remaining class `g ≡ 1 (mod 3)` is their
 Proposition 5.2, handled (in corrected form) below — so **all residue classes,
-hence all genera**, are now covered, well beyond their computer check (`g ≤ 30`).
+hence all genera** (for positive holomorphic abelian partitions), are now
+covered, well beyond their computer check (`g ≤ 30`).
 
 The public Lean statement is `Prop51.chenLarsonCoefficient_neg` in
 [`Prop51/Theorem.lean`](Prop51/Theorem.lean); that small file also names the
@@ -54,15 +56,18 @@ negative for `a ≥ 14`), where `F_μ(t) = Π_i C(t/(m_i+1)) / C(t)^N` is the
 Proposition 5.1 quotient and `A_μ, B_μ` are the marked first/second-derivative
 terms of the corrected note. The public Lean statement is
 `Prop52.correctedCoeff_nonvanishing` in
-[`Prop52/Theorem.lean`](Prop52/Theorem.lean). The decisive step is the identity
-`T^cor = T^old + (2g − 3)·b_a`, which reduces the corrected coefficient to two
-sign inputs already controlled by the Proposition 5.1 analysis.
+[`Prop52/Theorem.lean`](Prop52/Theorem.lean); it is stated for the equivalent
+**marked** coefficient `[t^a] F_μ·(M − K_μ)` with `K_μ = Σ_i m_i·Φ(t/(m_i+1))`,
+`Φ = 2t + 12t²·C'/C`, which agrees with the displayed source coefficient in
+degree `a` because `M = 6a − 6` (the bridge identity of the paper). The decisive
+step is then `T^cor = T^old + (2g − 3)·b_a`, reducing the corrected coefficient
+to two sign inputs already controlled by the Proposition 5.1 analysis.
 
 ## Verify it yourself
 
 ```sh
 lake exe cache get   # download the prebuilt Mathlib oleans
-lake build           # check every Prop 5.1 and 5.2 proof, incl. the native_decide certificates
+lake build           # check the Prop 5.1 and 5.2 production proof closure (native_decide certs incl.)
 lake env lean scripts/PublicAxiomsReport.lean   # print the axioms the result depends on
 ```
 

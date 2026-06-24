@@ -109,9 +109,9 @@ Proposition~5.2, we first \emph{correct} the printed relation: the constant
 $\kappa_0=2g-2$ of Ionel's relation was inadvertently replaced by $1$, which
 changes the coefficient.  We then prove that the corrected coefficient is
 non-vanishing for every positive partition, and strictly negative for $a\ge14$.
-Together the two results settle the coefficient (non-)vanishing in all three
-residue classes, hence in every genus, beyond the authors' computer check
-($g\le30$).
+Together the two results settle the coefficient (non-)vanishing for positive
+holomorphic abelian partitions in all three residue classes, hence in every
+genus, beyond the authors' computer check ($g\le30$).
 
 The Proposition~5.1 proof removes the partition by a coefficientwise
 majorization; a sign-lock estimate with an explicit rational final margin then
@@ -121,10 +121,12 @@ exponential prefixes.  Small ranges are discharged by exact enumeration and
 verified rational or dyadic interval certificates; the large range is closed by
 symbolic ratio and reserve bounds.  The corrected Proposition~5.2 reduces,
 through a one-line identity, to two sign inputs already controlled by the
-Proposition~5.1 analysis, together with an exhaustive finite check.  The complete
-argument --- both propositions and the correction --- has been formalized in
-\Lean{}~4 and Mathlib, the public theorems depending only on the standard axioms
-and the two compiler-trust axioms of \code{native\_decide}.  We also describe the
+Proposition~5.1 analysis, together with an exhaustive finite check.  The scalar
+power-series theorems behind both propositions --- after the geometric reduction,
+and including the elementary correction bridge --- are formalized in \Lean{}~4 and
+Mathlib, the public theorems depending only on the standard axioms and the two
+compiler-trust axioms of \code{native\_decide}; the algebraic-geometric reduction
+itself is cited from Chen--Larson, not formalized here.  We also describe the
 role of long-horizon generative-AI assistance in the development, including an AI
 audit that uncovered the Proposition~5.2 error in the original paper, and the
 precise trust boundary of the computational certificates.
@@ -193,25 +195,31 @@ For the remaining residue class we prove a non-vanishing statement for the
 Section~\ref{sec:prop52}.
 
 \begin{theorem}[Corrected Proposition~5.2]\label{thm:main52}
-Let $g\equiv1\pmod3$, write $g=3a-2$ so that $M:=2g-2=6a-6$, and let
-$\mu=(m_1,\ldots,m_n)$ be a positive partition of $M$.  With
+Let $g\ge4$ with $g\equiv1\pmod3$, write $g=3a-2$ so that
+$a=\floor{g/3}+1\ge2$ and $M:=2g-2=6a-6$, and let $\mu=(m_1,\ldots,m_n)$ be a
+positive partition of $M$.  Let $B_\mu(t)=\prod_{i=1}^n\C(t/(m_i+1))/\C(t)^{N}$
+with $N=\sum_i(m_i+1)$, and let $D_\mu^{\mathrm{cor}}(t)$ be the factor obtained
+by pulling back the corrected ($\kappa_0=2g-2$) Ionel relation, made explicit
+in~\eqref{eq:Dcor52}.  Then the corrected Proposition~5.2 coefficient
 \[
-  B_\mu(t)=\frac{\prod_{i=1}^n\C(t/(m_i+1))}{\C(t)^{N}},\quad N=\sum_i(m_i+1),
-  \qquad
-  K_\mu(t)=\sum_{i=1}^n m_i\,\Phi(t/(m_i+1)),\quad
-  \Phi(t)=2t+12t^2\frac{\C'(t)}{\C(t)},
+  [t^a]\,B_\mu(t)\,D_\mu^{\mathrm{cor}}(t)
 \]
-the corrected Proposition~5.2 coefficient $[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)$
-is nonzero for every $a\ge2$, and strictly negative for $a\ge14$.  The series
-printed by Chen and Larson is the same expression with the leading constant $M$
-replaced by~$1$.
+is nonzero; for $a\ge14$ (equivalently $g\ge40$) it is strictly negative.  The
+factor printed by Chen and Larson is the same relation with $\kappa_0=2g-2$
+replaced by~$1$.  Equivalently --- and as the Lean development computes it --- the
+coefficient may be taken from the marked factor $M-K_\mu$ of
+Section~\ref{sec:prop52}, which agrees with $D_\mu^{\mathrm{cor}}$ in degree~$a$
+by Lemma~\ref{lem:bridge52}.
 \end{theorem}
 
 \begin{corollary}\label{cor:geometric52}
 Combining Theorems~\ref{thm:main} and~\ref{thm:main52} with the geometric
 reductions of Chen--Larson Propositions~5.1 and~5.2 (the latter corrected as in
 Section~\ref{sec:prop52}), the class $\eta^{\floor{g/3}+1}$ vanishes for every
-positive holomorphic partition, in \emph{every} genus $g\ge2$.
+positive holomorphic abelian partition, in \emph{every} genus $g\ge2$.  The
+algebraic-geometric reductions are taken from Chen--Larson (with the
+Proposition~5.2 constant corrected here); they are not themselves formalized in
+Lean, which establishes the scalar coefficient statements.
 \end{corollary}
 
 \subsection{Outline}\label{sec:outline}
@@ -1160,50 +1168,80 @@ where on $\mathcal M_g$ one has $\kappa_0=2g-2=M$.  The series printed in
 Chen--Larson Proposition~5.2 instead has constant term $1$.  Dividing the whole
 relation by $\kappa_0=M$ would be legitimate, but it would divide \emph{every}
 term of~\eqref{eq:ionel-b1}; replacing only $\kappa_0$ by $1$ is therefore not a
-normalization, and it changes the coefficient under consideration.  Writing
-\[
- \Phi(t)=2t+12t^2\frac{\C'(t)}{\C(t)},
-\]
-and using the stratum pullback $\iota^*f^*\kappa_j=(N-s_j)\eta^j$ for $j\ge1$,
-the factor~\eqref{eq:ionel-b1} pulls back to $M-K_\mu(\eta t)$ with
-\begin{equation}\label{eq:Kdef52}
- K_\mu(t)=\sum_i(q_i-1)\,\Phi(t/q_i)=\sum_i m_i\,\Phi(t/q_i),
+normalization, and it changes the coefficient under consideration.  Using the
+stratum pullback $\iota^*f^*\kappa_j=(N-s_j)\eta^j$ for $j\ge1$ (and
+$\kappa_0=2g-2=M$), and writing $L=\C'/\C$, the factor~\eqref{eq:ionel-b1} pulls
+back to $D_\mu^{\mathrm{cor}}(\eta t)$, where
+\begin{equation}\label{eq:Dcor52}
+ D_\mu^{\mathrm{cor}}(t)
+ =M-2(N-s_1)\,t-12t^2\Bigl(N L(t)-\sum_i q_i^{-2}L(t/q_i)\Bigr),
 \end{equation}
 while the exponential prefactor pulls back to $B_\mu(\eta t)$.  The corrected
 geometric reduction is therefore
 \begin{equation}\label{eq:corrected52}
- \eta^a\,[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)=0,
+ \eta^a\,[t^a]\,B_\mu(t)\,D_\mu^{\mathrm{cor}}(t)=0,
 \end{equation}
-so $\eta^a=0$ as soon as the scalar coefficient is nonzero.  The scalar class
-$\kappa_0=2g-2$ pulls back to $M$, not to $1$; this is the entire content of the
-correction.
+so $\eta^a=0$ as soon as this scalar coefficient is nonzero.  The factor printed
+by Chen--Larson is~\eqref{eq:Dcor52} with the leading $M$ replaced by $1$; only
+the constant term changes, which is the entire content of the correction.
 
-\subsection{The decisive identity}\label{subsec:identity52}
+\subsection{The marked proxy and the decisive identity}\label{subsec:identity52}
 
-Set
+For the coefficient analysis it is convenient to replace the source
+factor~\eqref{eq:Dcor52} by a \emph{marked} factor.  Set
+\begin{equation}\label{eq:Kdef52}
+ \Phi(t)=2t+12t^2L(t),\qquad
+ K_\mu(t)=\sum_i(q_i-1)\,\Phi(t/q_i)=\sum_i m_i\,\Phi(t/q_i),
+\end{equation}
+and consider the marked factors $M-K_\mu(t)$ and $1-K_\mu(t)$.  These are
+\emph{not} equal, as formal power series, to the source
+factors~\eqref{eq:Dcor52}; they agree only in the degree we need, by the
+following elementary bridge.
+
+\begin{lemma}[Source--marked bridge]\label{lem:bridge52}
+For $\lambda\in\{1,M\}$, let $D_{\mu,\lambda}$ denote~\eqref{eq:Dcor52} with $M$
+replaced by $\lambda$.  Then
 \[
- T_a^{\mathrm{old}}(\mu):=[t^a]\,B_\mu(t)\bigl(1-K_\mu(t)\bigr),
- \qquad
- T_a^{\mathrm{cor}}(\mu):=[t^a]\,B_\mu(t)\bigl(M-K_\mu(t)\bigr)
+ B_\mu(t)\bigl(D_{\mu,\lambda}(t)-(\lambda-K_\mu(t))\bigr)
+ =-2Mt\,B_\mu(t)+12t^2B_\mu'(t),
 \]
-for the printed and corrected coefficients.  Subtracting and using
+and hence, for every $a\ge1$,
+\[
+ [t^a]\,B_\mu D_{\mu,\lambda}-[t^a]\,B_\mu(\lambda-K_\mu)
+ =\bigl(12(a-1)-2M\bigr)\,b_{a-1}(\mu).
+\]
+\end{lemma}
+
+\begin{proof}
+The $\lambda$ cancels, and combining the two $t^2$ sums through
+$q_i^{-2}+(q_i-1)q_i^{-2}=q_i^{-1}$ gives
+$D_{\mu,\lambda}-(\lambda-K_\mu)=-2Mt+12t^2\bigl(\sum_iq_i^{-1}L(t/q_i)-NL(t)\bigr)$,
+the $t$-coefficient using $\sum_i(q_i-1)q_i^{-1}=n-s_1$ and $N-n=M$.  Since
+$B_\mu'/B_\mu=\sum_iq_i^{-1}L(t/q_i)-NL(t)$, the bracket is $B_\mu'/B_\mu$, and
+multiplying by $B_\mu$ gives the first identity.  Reading off $[t^a]$, with
+$[t^a]\bigl(t^2B_\mu'\bigr)=(a-1)\,b_{a-1}(\mu)$, gives the second.
+\end{proof}
+
+For the Proposition~5.2 specialization $M=6a-6$ the universal scalar
+$12(a-1)-2M$ vanishes, so the source and marked coefficients of degree $a$
+coincide (their difference could in any case enter only through
+$b_{a-1}(\mu)$).  We therefore define the printed and corrected coefficients by
+either form,
+\[
+ T_a^{\mathrm{old}}(\mu):=[t^a]\,B_\mu D_{\mu,1}=[t^a]\,B_\mu(1-K_\mu),
+ \qquad
+ T_a^{\mathrm{cor}}(\mu):=[t^a]\,B_\mu D_{\mu,M}=[t^a]\,B_\mu(M-K_\mu),
+\]
+the second equality in each holding because $M=6a-6$.  Subtracting and using
 $b_a(\mu)=[t^a]B_\mu(t)$ gives the exact identity
 \begin{equation}\label{eq:central52}
- \boxed{\;T_a^{\mathrm{cor}}(\mu)=T_a^{\mathrm{old}}(\mu)+(M-1)\,b_a(\mu).\;}
+ \boxed{\;T_a^{\mathrm{cor}}(\mu)=T_a^{\mathrm{old}}(\mu)+(M-1)\,b_a(\mu),\;}
 \end{equation}
-This is the point of the correction: it isolates the change as a multiple of the
-Proposition~5.1 coefficient $b_a(\mu)$, whose sign is already understood.
-
-\begin{remark}[Marked versus derivative form]
-The factor $M-K_\mu$ is the marked-numerator form of the geometric factor
-$M-2A_\mu t-12t^2\mathcal B_\mu(t)$ read off from~\eqref{eq:ionel-b1}, where
-$A_\mu=N-s_1$ and
-$\mathcal B_\mu(t)=N\dfrac{\C'(t)}{\C(t)}-\sum_i\dfrac{\C'(t/q_i)}{q_i^2\C(t/q_i)}$.
-The two forms give the same coefficient $[t^a]B_\mu(\cdot)$ because their
-difference contributes a multiple of $[t^{a-1}]B_\mu(t)$ that vanishes precisely
-when $M=6a-6$ --- which is where the genus constraint $g=3a-2$ enters.  The Lean
-development uses the marked form $M-K_\mu$ throughout.
-\end{remark}
+which isolates the correction as a multiple of the Proposition~5.1 coefficient
+$b_a(\mu)$, whose sign is already understood.  The Lean development computes
+$T_a^{\mathrm{old}}$ and $T_a^{\mathrm{cor}}$ in the marked form
+(\code{printedCoeff}, \code{correctedCoeff}); Lemma~\ref{lem:bridge52} is the
+elementary bridge from these to the source factor~\eqref{eq:Dcor52}.
 
 \subsection{Strict negativity for \texorpdfstring{$a\ge14$}{a>=14}}\label{subsec:large52}
 
@@ -1616,14 +1654,15 @@ subsequent revisions --- including those prompted by an external review of the
 release candidate --- were carried out in Claude Code under the author's
 direction, together with further ChatGPT~5.5 Pro review.  As with the
 mathematics, the author's contribution to the write-up was direction and
-editorial judgement rather than composition; and acceptance of each mathematical
-claim ultimately rested on its Lean formalization, not on any model's assurance.
+editorial judgement rather than composition; and acceptance of each formalized
+claim rested on its Lean proof rather than on any model's assurance.
 
 \subsection{Addendum: the corrected Proposition~5.2}\label{subsec:ai52}
 
 The same methodology produced the companion result, with two features worth
-recording: an AI audit caught a genuine error in the \emph{published} paper, and
-the formalization then ran to completion with no human intervention at all.
+recording: an AI audit caught a genuine error in the \emph{printed} (arXiv~v1)
+relation, and the formalization then ran to completion without further
+mathematical or technical intervention.
 
 After the Proposition~5.1 result was shared with the authors --- who were open to
 the approach and asked whether the remaining case $g\equiv1\pmod3$
@@ -1639,7 +1678,8 @@ independent AI audit of the Chen--Larson paper
 alone\footnote{\url{https://chatgpt.com/share/6a393ddd-bbc0-83eb-aa30-44806c9edc58}}
 confirmed the error and supplied the corrected derivation of
 Section~\ref{subsec:correction}; asked to validate the point, the authors
-responded promptly that it was correct.
+agreed, in private correspondence (June~2026), that the printed relation was in
+error.  (The public arXiv~v1 still prints the leading constant~$1$.)
 
 The corrected target was fed back into the original conversation, which --- in
 two further rounds with intermediate
@@ -1656,8 +1696,8 @@ of~\cite{FengAletheia} this is again Level~A, and the human role was smaller sti
 than for Proposition~5.1, reducing to relaying the problem, the audit verdict, and
 the finished bundle.
 
-Two points deserve emphasis.  First, the error was in the \emph{published
-mathematics}, not in any formalization: the series printed in Proposition~5.2 is a
+Two points deserve emphasis.  First, the error was in the \emph{printed
+manuscript}, not in any formalization: the series printed in Proposition~5.2 is a
 valid power series, but it is not the one Ionel's relation produces, so a formal
 proof about the printed coefficient would have certified a true statement that
 does not carry the intended geometric meaning.  The defect was surfaced by
@@ -1738,9 +1778,11 @@ is kept in a development archive rather than at repository root.
 \label{app:large-tail-details}
 
 This appendix supplies the scalar inequalities behind the ratio--reserve
-argument of the large positive tail.  Its purpose is twofold: to make the
-infinite summation in Section~\ref{sec:positive} reproducible without reading
-Lean code, and to record exactly where the finite prefix certificates enter.
+argument of the large positive tail.  Its purpose is twofold: to record the exact
+inequalities and certificate interfaces used by the Lean proof of
+Section~\ref{sec:positive}, so that the large positive tail can be audited
+without reconstructing the implementation, and to record exactly where the finite
+prefix certificates enter.
 All quantities below are rational.  We use the convention $0^0=1$.
 
 \subsection{Candidate summands}
@@ -2482,7 +2524,7 @@ finite saddle and prefix convolution & \code{expCoeff\_saddle},
 direct product estimates & \code{Bq\_Qq\_small\_core},
   \code{Bq\_Qq\_tempered\_core} in \code{SaddleDirect.lean}\\
 finite edge budget & \code{positiveSaddleFiniteScaledEdgeBudget} in
-  \code{Generated/PositiveSaddleFiniteScaledEdge.lean}\\
+  \code{Prop51/Generated/PositiveSaddleFiniteScaledEdge.lean}\\
 closed proof & \code{completion\_of\_directSaddle\_closed} and
   \code{coefficientNegativity}\\
 public theorem & \code{chenLarsonCoefficient\_neg},
@@ -2526,6 +2568,28 @@ $2001\le a<3000$ & direct saddle plus generated prefix ratios & pointwise
 product and solo bounds; finite quotient/raw-budget chunks\\
 $a\ge3000$ & symbolic rational tail & adjacent quotients, reverse upper band,
 unit reserves, and sharp solo envelope\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent For the corrected Proposition~5.2 the ranges are as follows.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.16\textwidth}p{0.30\textwidth}p{0.42\textwidth}}
+\toprule
+range & method & verification surface\\
+\midrule
+$2\le a\le8$ & exact rational partition enumeration & exact corrected coefficient
+for every positive partition (with permutation/generator completeness)\\
+$9\le a\le13$ & modular certificate at $p=1{,}000{,}000{,}007$ & nonzero residue,
+plus the rational-to-$\mathbb F_p$ reduction bridge\\
+$14\le a\le149$ & exact dyadic interval certificate & strict negativity of the
+printed marked coefficient $T_a^{\mathrm{old}}$\\
+$a\ge150$ & Gamma-integral, moment, and Taylor-truncation estimates & real
+exponential power-series identity for the upper-event integrand\\
+$a\ge14$ (assembly) & central identity~\eqref{eq:central52} with the rectangle &
+$T_a^{\mathrm{cor}}<0$ from $T_a^{\mathrm{old}}<0$ and $b_a<0$\\
 \bottomrule
 \end{tabular}
 \end{center}
