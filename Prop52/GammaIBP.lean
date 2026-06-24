@@ -106,4 +106,46 @@ theorem hasDerivAt_printedTailLGammaArg
   convert hcomp using 1
   field_simp [hx]
 
+/-- Envelope whose derivative is integrated in the Gamma integration by
+parts argument. -/
+noncomputable def gammaIBPEnvelope
+    (μ : List Nat) (a : Nat) (x : ℝ) : ℝ :=
+  x^(a - 1) * Real.exp (-x) *
+    Real.exp (-(printedTailLGammaArg μ a x))
+
+/-- Raw product/chain-rule derivative of the Gamma integration-by-parts
+envelope.  The following algebraic simplification is intentionally kept
+separate from this local differentiability fact. -/
+theorem hasDerivAt_gammaIBPEnvelope_raw
+    (μ : List Nat) (a : Nat) {x : ℝ} (hx : x ≠ 0) :
+    HasDerivAt (fun z => gammaIBPEnvelope μ a z)
+      ((((a - 1 : Nat) : ℝ) * x^(a - 1 - 1) * Real.exp (-x) +
+          x^(a - 1) * (-Real.exp (-x))) *
+          Real.exp (-(printedTailLGammaArg μ a x)) +
+        (x^(a - 1) * Real.exp (-x)) *
+          (Real.exp (-(printedTailLGammaArg μ a x)) *
+            (printedTailLDerivReal μ a (1 / (6 * x)) / (6 * x^2)))) x := by
+  unfold gammaIBPEnvelope
+  have hpow : HasDerivAt (fun z : ℝ => z^(a - 1))
+      (((a - 1 : Nat) : ℝ) * x^(a - 1 - 1)) x :=
+    hasDerivAt_pow (a - 1) x
+  have hexp_neg :
+      HasDerivAt (fun z : ℝ => Real.exp (-z)) (-Real.exp (-x)) x := by
+    have hneg : HasDerivAt (fun z : ℝ => -z) (-1) x :=
+      (hasDerivAt_id x).neg
+    convert hneg.exp using 1
+    ring
+  have hLG := hasDerivAt_printedTailLGammaArg μ a hx
+  have hexp_L :
+      HasDerivAt (fun z : ℝ => Real.exp (-(printedTailLGammaArg μ a z)))
+        (Real.exp (-(printedTailLGammaArg μ a x)) *
+          (printedTailLDerivReal μ a (1 / (6 * x)) / (6 * x^2))) x := by
+    have hneg := hLG.neg
+    convert hneg.exp using 1
+    simp only [Pi.neg_apply]
+    ring
+  have hleft := hpow.mul hexp_neg
+  have hall := hleft.mul hexp_L
+  convert hall using 1
+
 end Prop52
