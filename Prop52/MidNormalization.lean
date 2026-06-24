@@ -146,4 +146,72 @@ theorem midR_pos (k r : Nat) (hk : 1 ≤ k) (hkr : k < r) :
   exact div_pos (div_pos (mul_pos hd_k hd_rk) hd_r)
     (mul_pos hrminus hchoose)
 
+private theorem midR_factorial_identity (k r : Nat) (hk : 1 ≤ k) (hkr : k < r) :
+    (((r - 1 : Nat) : ℚ) *
+        (((r - 2).choose (k - 1) : Nat) : ℚ)) *
+        (((k - 1).factorial : Nat) : ℚ) *
+        (((r - k - 1).factorial : Nat) : ℚ) =
+      (((r - 1).factorial : Nat) : ℚ) := by
+  have hchooseNat :=
+    Nat.choose_mul_factorial_mul_factorial
+      (n := r - 2) (k := k - 1) (by omega : k - 1 ≤ r - 2)
+  have hchoose :
+      (((r - 2).choose (k - 1) : Nat) : ℚ) *
+          (((k - 1).factorial : Nat) : ℚ) *
+          ((((r - 2) - (k - 1)).factorial : Nat) : ℚ) =
+        (((r - 2).factorial : Nat) : ℚ) := by
+    exact_mod_cast hchooseNat
+  have hsub : (r - 2) - (k - 1) = r - k - 1 := by omega
+  rw [hsub] at hchoose
+  have hfact :
+      (((r - 1).factorial : Nat) : ℚ) =
+        ((r - 1 : Nat) : ℚ) * (((r - 2).factorial : Nat) : ℚ) := by
+    have hnat : (r - 1).factorial = (r - 1) * (r - 2).factorial := by
+      rw [show r - 1 = (r - 2) + 1 by omega, Nat.factorial_succ]
+    exact_mod_cast hnat
+  rw [hfact, ← hchoose]
+  ring
+
+/-- The executable `midR` is the coefficient quotient
+`c_k c_{r-k} / c_r` in the active range. -/
+theorem midR_eq_c_ratio (k r : Nat) (hk : 1 ≤ k) (hkr : k < r) :
+    midR k r = Prop51.c k * Prop51.c (r - k) / Prop51.c r := by
+  rw [midR_eq_d_ratio k r hk hkr]
+  rw [Prop51.c_eq_d k, Prop51.c_eq_d (r - k), Prop51.c_eq_d r]
+  let D : ℚ :=
+    ((r - 1 : Nat) : ℚ) * (((r - 2).choose (k - 1) : Nat) : ℚ)
+  let A : ℚ := (6 : ℚ)^k * (((k - 1).factorial : Nat) : ℚ)
+  let B : ℚ := (6 : ℚ)^(r - k) * (((r - k - 1).factorial : Nat) : ℚ)
+  let C : ℚ := (6 : ℚ)^r * (((r - 1).factorial : Nat) : ℚ)
+  have hpow : (6 : ℚ)^k * (6 : ℚ)^(r - k) = (6 : ℚ)^r := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have hfact := midR_factorial_identity k r hk hkr
+  have hC : C = A * B * D := by
+    dsimp [A, B, C, D]
+    rw [← hpow, ← hfact]
+    ring
+  have hd_r_ne : Prop51.d r ≠ 0 :=
+    (Prop51.d_pos r (by omega)).ne'
+  have hA_ne : A ≠ 0 := by
+    dsimp [A]
+    positivity
+  have hB_ne : B ≠ 0 := by
+    dsimp [B]
+    positivity
+  have hD_ne : D ≠ 0 := by
+    dsimp [D]
+    have hrminus : (0 : ℚ) < ((r - 1 : Nat) : ℚ) := by
+      exact_mod_cast (by omega : 0 < r - 1)
+    have hchoose_nat : 0 < (r - 2).choose (k - 1) :=
+      Nat.choose_pos (by omega : k - 1 ≤ r - 2)
+    have hchoose : (0 : ℚ) < (((r - 2).choose (k - 1 : Nat) : Nat) : ℚ) := by
+      exact_mod_cast hchoose_nat
+    exact (mul_pos hrminus hchoose).ne'
+  change Prop51.d k * Prop51.d (r - k) / Prop51.d r / D =
+    (A * Prop51.d k) * (B * Prop51.d (r - k)) / (C * Prop51.d r)
+  rw [hC]
+  field_simp [hd_r_ne, hA_ne, hB_ne, hD_ne]
+
 end Prop52
