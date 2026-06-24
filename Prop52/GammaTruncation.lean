@@ -81,6 +81,36 @@ theorem integral_printedTailWTruncReal_R0_eq_mainSum
   unfold printedTailMainSum
   rw [Prop51.list_range_map_sum]
 
+/-- Termwise absolute majorant for the finite Taylor polynomial of `W`,
+valid at any nonnegative evaluation point. -/
+theorem abs_printedTailWTruncReal_le_WAbsCoeff_sum
+    (μ : List Nat) (a R : Nat) {y : ℝ}
+    (hy : 0 ≤ 1 / (6 * y)) :
+    |printedTailWTruncReal μ a R y| ≤
+      ∑ s ∈ Finset.range (R + 1),
+        (printedTailWAbsCoeff μ a s : ℝ) * (1 / (6 * y))^s := by
+  unfold printedTailWTruncReal
+  calc
+    |∑ s ∈ Finset.range (R + 1),
+        (printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s|
+        ≤ ∑ s ∈ Finset.range (R + 1),
+            |(printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s| :=
+          Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ s ∈ Finset.range (R + 1),
+          (printedTailWAbsCoeff μ a s : ℝ) * (1 / (6 * y))^s := by
+        refine Finset.sum_le_sum fun s _hs => ?_
+        have homega :
+            |(printedTailOmegaCoeff μ a s : ℝ)| ≤
+              (printedTailWAbsCoeff μ a s : ℝ) := by
+          exact_mod_cast abs_printedTailOmegaCoeff_le_WAbsCoeff μ a s
+        have hpow_nonneg : 0 ≤ (1 / (6 * y))^s :=
+          pow_nonneg hy s
+        have hW_nonneg :
+            0 ≤ (printedTailWAbsCoeff μ a s : ℝ) := by
+          exact_mod_cast printedTailWAbsCoeff_nonneg μ a s
+        rw [abs_mul, abs_of_nonneg hpow_nonneg]
+        exact mul_le_mul homega le_rfl hpow_nonneg hW_nonneg
+
 private theorem printedTailX1_eq_half_mul_X2
     {a : Nat} (ha : 150 ≤ a) :
     printedTailX1 a = (1 / 2 : ℚ) * printedTailX2 a := by
@@ -101,6 +131,102 @@ private theorem printedTailX1_pow_le_scaled_X2_pow
     pow_le_pow_of_le_one (by norm_num : (0 : ℚ) ≤ 1 / 2)
       (by norm_num : (1 / 2 : ℚ) ≤ 1) hRs
   exact mul_le_mul_of_nonneg_right hhalf (pow_nonneg hx2_nonneg s)
+
+private theorem inv_six_mul_le_printedTailX1_of_half_le
+    {a : Nat} (ha : 150 ≤ a) {y : ℝ}
+    (hy : (a : ℝ) / 2 ≤ y) :
+    1 / (6 * y) ≤ (printedTailX1 a : ℝ) := by
+  have ha_pos : (0 : ℝ) < a := by
+    exact_mod_cast (by omega : 0 < a)
+  have hy_pos : 0 < y := by nlinarith
+  have hden_pos : 0 < 3 * (a : ℝ) := by nlinarith
+  have hden_le : 3 * (a : ℝ) ≤ 6 * y := by nlinarith
+  have hx1_cast : (printedTailX1 a : ℝ) = 1 / (3 * (a : ℝ)) := by
+    unfold printedTailX1
+    norm_num
+  rw [hx1_cast]
+  exact one_div_le_one_div_of_le hden_pos hden_le
+
+private theorem printedTailWTruncReal_a_sub_R0_eq_tail
+    {a : Nat} (ha : 150 ≤ a) (μ : List Nat) (y : ℝ) :
+    printedTailWTruncReal μ a a y -
+        printedTailWTruncReal μ a (printedTailR0 a) y =
+      ∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        (printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s := by
+  have hsubset :
+      Finset.range (printedTailR0 a + 1) ⊆ Finset.range (a + 1) := by
+    intro s hs
+    have hslt : s < printedTailR0 a + 1 := Finset.mem_range.mp hs
+    unfold printedTailR0 printedTailP at hslt
+    exact Finset.mem_range.mpr (by omega)
+  unfold printedTailWTruncReal
+  rw [← Finset.sum_sdiff hsubset]
+  have hsdiff :
+      Finset.range (a + 1) \ Finset.range (printedTailR0 a + 1) =
+        (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s) := by
+    ext s
+    simp only [Finset.mem_sdiff, Finset.mem_range, Finset.mem_filter]
+    omega
+  rw [hsdiff]
+  abel
+
+/-- On the upper event `y >= a/2`, the finite Taylor tail between the
+degree-`a` polynomial and the retained `r0` prefix is bounded by the `x1`
+coefficient tail.  This is the finite-window part of the Taylor--Gamma
+event split; the separate analytic issue is whether the full function `W`
+can be replaced by its degree-`a` window. -/
+theorem abs_printedTailWTruncReal_a_sub_R0_le_x1_tail
+    {a : Nat} (ha : 150 ≤ a) (μ : List Nat) {y : ℝ}
+    (hy : (a : ℝ) / 2 ≤ y) :
+    |printedTailWTruncReal μ a a y -
+        printedTailWTruncReal μ a (printedTailR0 a) y| ≤
+      ((∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ) := by
+  have ht_nonneg : 0 ≤ 1 / (6 * y) := by
+    have ha_pos : (0 : ℝ) < a := by
+      exact_mod_cast (by omega : 0 < a)
+    have hy_pos : 0 < y := by nlinarith
+    positivity
+  have ht_le : 1 / (6 * y) ≤ (printedTailX1 a : ℝ) :=
+    inv_six_mul_le_printedTailX1_of_half_le (a := a) ha hy
+  rw [printedTailWTruncReal_a_sub_R0_eq_tail (a := a) ha μ y]
+  calc
+    |∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        (printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s|
+        ≤ ∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            |(printedTailOmegaCoeff μ a s : ℝ) * (1 / (6 * y))^s| :=
+          Finset.abs_sum_le_sum_abs _ _
+    _ ≤ ∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+            (printedTailWAbsCoeff μ a s : ℝ) *
+              (printedTailX1 a : ℝ)^s := by
+          refine Finset.sum_le_sum fun s _hs => ?_
+          have homega :
+              |(printedTailOmegaCoeff μ a s : ℝ)| ≤
+                (printedTailWAbsCoeff μ a s : ℝ) := by
+            exact_mod_cast abs_printedTailOmegaCoeff_le_WAbsCoeff μ a s
+          have hpow :
+              (1 / (6 * y))^s ≤ (printedTailX1 a : ℝ)^s :=
+            pow_le_pow_left₀ ht_nonneg ht_le s
+          have hpow_nonneg : 0 ≤ (1 / (6 * y))^s :=
+            pow_nonneg ht_nonneg s
+          have hW_nonneg :
+              0 ≤ (printedTailWAbsCoeff μ a s : ℝ) := by
+            exact_mod_cast printedTailWAbsCoeff_nonneg μ a s
+          rw [abs_mul, abs_of_nonneg hpow_nonneg]
+          exact mul_le_mul homega hpow hpow_nonneg hW_nonneg
+    _ =
+      ((∑ s ∈ (Finset.range (a + 1)).filter
+          (fun s : Nat => printedTailR0 a + 1 ≤ s),
+        printedTailWAbsCoeff μ a s * (printedTailX1 a)^s : ℚ) : ℝ) := by
+          rw [Rat.cast_sum]
+          refine Finset.sum_congr rfl fun s _ => ?_
+          rw [Rat.cast_mul, Rat.cast_pow]
 
 /-- Upper-event coefficient tail used for the first term of
 `truncationResidueRhs`: on `X >= a/2`, one has `t_X <= x1 = x2/2`, so the
@@ -179,6 +305,34 @@ theorem printedTailWAbsCoeff_x1_tail_le_residue_term
           dsimp [C]
           rw [one_div_pow]
           ring
+
+/-- Pointwise upper-event finite-window tail bound in the displayed residue
+constant form. -/
+theorem abs_printedTailWTruncReal_a_sub_R0_le_residue_term
+    (hpoint : PrintedTailWPointBoundX2)
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) {y : ℝ}
+    (hy : (a : ℝ) / 2 ≤ y) :
+    |printedTailWTruncReal μ a a y -
+        printedTailWTruncReal μ a (printedTailR0 a) y| ≤
+      ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) := by
+  have htail := abs_printedTailWTruncReal_a_sub_R0_le_x1_tail
+    (a := a) ha μ hy
+  have hbudget := printedTailWAbsCoeff_x1_tail_le_residue_term
+    hpoint (a := a) ha (μ := μ) hμ
+  exact htail.trans (by exact_mod_cast hbudget)
+
+/-- Closed pointwise upper-event finite-window tail bound using the proved
+`x₂` point certificate. -/
+theorem abs_printedTailWTruncReal_a_sub_R0_le_residue_term_closed
+    {a : Nat} (ha : 150 ≤ a) {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) {y : ℝ}
+    (hy : (a : ℝ) / 2 ≤ y) :
+    |printedTailWTruncReal μ a a y -
+        printedTailWTruncReal μ a (printedTailR0 a) y| ≤
+      ((920 / (2 : ℚ)^(printedTailR0 a + 1) : ℚ) : ℝ) :=
+  abs_printedTailWTruncReal_a_sub_R0_le_residue_term
+    printedTailWPointBoundX2_closed (a := a) ha (μ := μ) hμ hy
 
 /-- Low-index part of the lower-tail event, after the Chernoff probability
 factor has been pulled out.  This is the finite algebraic companion to
