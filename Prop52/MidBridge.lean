@@ -649,6 +649,268 @@ theorem midDeltaL_le_midDeltaK_of_partition {a : Nat} {μ : List Nat}
   refine List.sum_le_sum fun x hx => ?_
   exact midDelta_term_le x r (hμ.2 x hx)
 
+noncomputable def midDeltaExpSeries (M : Nat) (μ : List Nat) : ℚ⟦X⟧ :=
+  Prop51.expSeries (midDeltaL M μ)
+
+noncomputable def midDeltaKSeries (M : Nat) (μ : List Nat) : ℚ⟦X⟧ :=
+  mk (midDeltaK M μ)
+
+theorem prodSeries_simpleParts_eq_prod_mul_deltaExp (M : Nat) (μ : List Nat) :
+    Prop51.prodSeries (simpleParts M) =
+      Prop51.prodSeries μ * midDeltaExpSeries M μ := by
+  rw [prodSeries_eq_expSeries_sPower, prodSeries_eq_expSeries_sPower]
+  unfold midDeltaExpSeries
+  rw [Prop51.expSeries_mul]
+  congr 1
+  funext r
+  unfold midDeltaL
+  ring
+
+theorem printedFullKSeries_simpleParts_eq_add_deltaK (M : Nat) (μ : List Nat) :
+    printedFullKSeries (simpleParts M) =
+      printedFullKSeries μ + midDeltaKSeries M μ := by
+  ext r
+  rw [map_add, coeff_printedFullKSeries, coeff_printedFullKSeries]
+  unfold midDeltaKSeries midDeltaK
+  simp [coeff_mk]
+
+theorem printedMidASeries_simpleParts_eq_delta (M : Nat) (μ : List Nat) :
+    printedMidASeries (simpleParts M) =
+      midDeltaExpSeries M μ * printedMidASeries μ -
+        Prop51.prodSeries (simpleParts M) * midDeltaKSeries M μ := by
+  unfold printedMidASeries
+  rw [prodSeries_simpleParts_eq_prod_mul_deltaExp M μ,
+    printedFullKSeries_simpleParts_eq_add_deltaK M μ]
+  ring
+
+private theorem coeff_mul_le_of_coeff_nonneg_le
+    {F G H K : ℚ⟦X⟧}
+    (hF_nonneg : ∀ n : Nat, 0 ≤ coeff n F)
+    (hG_nonneg : ∀ n : Nat, 0 ≤ coeff n G)
+    (hFH : ∀ n : Nat, coeff n F ≤ coeff n H)
+    (hGK : ∀ n : Nat, coeff n G ≤ coeff n K)
+    (n : Nat) :
+    coeff n (F * G) ≤ coeff n (H * K) := by
+  rw [coeff_mul, coeff_mul]
+  refine Finset.sum_le_sum fun p hp => ?_
+  exact mul_le_mul (hFH p.1) (hGK p.2) (hG_nonneg p.2)
+    ((hF_nonneg p.1).trans (hFH p.1))
+
+private theorem coeff_le_coeff_mul_left_of_nonneg
+    {F G : ℚ⟦X⟧}
+    (hF_zero : coeff 0 F = 1)
+    (hF_nonneg : ∀ n : Nat, 0 ≤ coeff n F)
+    (hG_nonneg : ∀ n : Nat, 0 ≤ coeff n G)
+    (n : Nat) :
+    coeff n G ≤ coeff n (F * G) := by
+  have hone_nonneg : ∀ n : Nat, 0 ≤ coeff n (1 : ℚ⟦X⟧) := by
+    intro n
+    by_cases hn : n = 0
+    · subst hn
+      simp
+    · simp [coeff_one, hn]
+  have hone_le : ∀ n : Nat, coeff n (1 : ℚ⟦X⟧) ≤ coeff n F := by
+    intro n
+    by_cases hn : n = 0
+    · subst hn
+      simp [hF_zero]
+    · simp [coeff_one, hn, hF_nonneg n]
+  have h := coeff_mul_le_of_coeff_nonneg_le hone_nonneg hG_nonneg
+    hone_le (fun n => le_rfl : ∀ n : Nat, coeff n G ≤ coeff n G) n
+  simpa using h
+
+theorem coeff_midDeltaExpSeries_nonneg {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (n : Nat) :
+    0 ≤ coeff n (midDeltaExpSeries (M a) μ) := by
+  unfold midDeltaExpSeries
+  rw [Prop51.coeff_expSeries]
+  exact Prop51.expCoeff_nonneg (fun r => midDeltaL_nonneg_of_partition hμ r) n
+
+theorem coeff_midDeltaKSeries_nonneg {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (n : Nat) :
+    0 ≤ coeff n (midDeltaKSeries (M a) μ) := by
+  unfold midDeltaKSeries
+  rw [coeff_mk]
+  exact midDeltaK_nonneg_of_partition hμ n
+
+theorem coeff_midDeltaExp_le_prodSeries_simpleParts {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (n : Nat) :
+    coeff n (midDeltaExpSeries (M a) μ) ≤
+      coeff n (Prop51.prodSeries (simpleParts (M a))) := by
+  rw [prodSeries_eq_expSeries_sPower]
+  unfold midDeltaExpSeries
+  rw [Prop51.coeff_expSeries, Prop51.coeff_expSeries]
+  refine Prop51.expCoeff_mono
+    (fun r => midDeltaL_nonneg_of_partition hμ r) ?_ n
+  intro r
+  unfold midDeltaL
+  have hs_nonneg : 0 ≤ sPower μ r := sPower_nonneg μ r
+  have hc_nonneg : 0 ≤ Prop51.c r := Prop51.c_nonneg r
+  nlinarith
+
+private theorem expCoeff_le_log_sum_of_nonneg {L : Nat → ℚ}
+    (hL : ∀ r : Nat, 0 ≤ L r) (r : Nat) (hr : 1 ≤ r) :
+    Prop51.expCoeff L r ≤
+      ∑ j ∈ Finset.range r, L (j + 1) * Prop51.expCoeff L (r - (j + 1)) := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 1 := ⟨r - 1, by omega⟩
+  have hrec := Prop51.expCoeff_succ_mul L n
+  have hsum_bound :
+      ∑ t ∈ Finset.range (n + 1),
+          ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)
+        ≤
+      ((n + 1 : Nat) : ℚ) *
+        ∑ t ∈ Finset.range (n + 1),
+          L (t + 1) * Prop51.expCoeff L (n - t) := by
+    rw [Finset.mul_sum]
+    refine Finset.sum_le_sum fun t ht => ?_
+    have htlt : t < n + 1 := Finset.mem_range.mp ht
+    have hcoef_nonneg : 0 ≤ L (t + 1) * Prop51.expCoeff L (n - t) :=
+      mul_nonneg (hL (t + 1)) (Prop51.expCoeff_nonneg hL (n - t))
+    have hcast : ((t + 1 : Nat) : ℚ) ≤ ((n + 1 : Nat) : ℚ) := by
+      exact_mod_cast Nat.succ_le_of_lt htlt
+    calc
+      ((t + 1 : Nat) : ℚ) * L (t + 1) * Prop51.expCoeff L (n - t)
+          = ((t + 1 : Nat) : ℚ) *
+              (L (t + 1) * Prop51.expCoeff L (n - t)) := by ring
+      _ ≤ ((n + 1 : Nat) : ℚ) *
+              (L (t + 1) * Prop51.expCoeff L (n - t)) :=
+            mul_le_mul_of_nonneg_right hcast hcoef_nonneg
+  rw [← hrec] at hsum_bound
+  have hsum_reindex :
+      (∑ t ∈ Finset.range (n + 1),
+          L (t + 1) * Prop51.expCoeff L (n - t)) =
+        ∑ j ∈ Finset.range (n + 1),
+          L (j + 1) * Prop51.expCoeff L (n + 1 - (j + 1)) := by
+    refine Finset.sum_congr rfl fun j hj => ?_
+    have hjlt : j < n + 1 := Finset.mem_range.mp hj
+    have hsub : n - j = n + 1 - (j + 1) := by omega
+    rw [hsub]
+  rw [hsum_reindex] at hsum_bound
+  have hpos : (0 : ℚ) < (n + 1 : Nat) := by positivity
+  nlinarith
+
+private theorem coeff_expSeries_le_coeff_expSeries_mul_mk_self {L : Nat → ℚ}
+    (hL : ∀ r : Nat, 0 ≤ L r) (r : Nat) (hr : 1 ≤ r) :
+    coeff r (Prop51.expSeries L) ≤ coeff r (Prop51.expSeries L * mk L) := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 1 := ⟨r - 1, by omega⟩
+  have hlog := expCoeff_le_log_sum_of_nonneg hL (n + 1) (by omega)
+  rw [Prop51.coeff_expSeries]
+  refine hlog.trans ?_
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  rw [← Finset.sum_range_reflect (fun x : Nat =>
+    coeff x (Prop51.expSeries L) * coeff (n + 1 - x) (mk L)) (n + 2)]
+  simp only [show n + 2 - 1 = n + 1 by omega]
+  have hreflect :
+      (∑ x ∈ Finset.range (n + 2),
+          coeff (n + 1 - x) (Prop51.expSeries L) *
+            coeff (n + 1 - (n + 1 - x)) (mk L)) =
+        ∑ x ∈ Finset.range (n + 2),
+          coeff (n + 1 - x) (Prop51.expSeries L) * coeff x (mk L) := by
+    refine Finset.sum_congr rfl fun x hx => ?_
+    have hxlt : x < n + 2 := Finset.mem_range.mp hx
+    have hsub : n + 1 - (n + 1 - x) = x := by omega
+    rw [hsub]
+  rw [hreflect]
+  have hsplit :
+      (∑ x ∈ Finset.range (n + 2),
+          coeff (n + 1 - x) (Prop51.expSeries L) * coeff x (mk L)) =
+        (∑ j ∈ Finset.range (n + 1),
+          coeff (n - j) (Prop51.expSeries L) * coeff (j + 1) (mk L)) +
+          coeff (n + 1) (Prop51.expSeries L) * coeff 0 (mk L) := by
+    simpa [show n + 2 = n + 1 + 1 by omega] using
+      (Finset.sum_range_succ' (fun x : Nat =>
+        coeff (n + 1 - x) (Prop51.expSeries L) * coeff x (mk L)) (n + 1))
+  rw [hsplit]
+  have hmain :
+      (∑ j ∈ Finset.range (n + 1),
+          L (j + 1) * Prop51.expCoeff L (n + 1 - (j + 1))) =
+        ∑ j ∈ Finset.range (n + 1),
+          coeff (n - j) (Prop51.expSeries L) * coeff (j + 1) (mk L) := by
+    refine Finset.sum_congr rfl fun j hj => ?_
+    have hjlt : j < n + 1 := Finset.mem_range.mp hj
+    have hsub : n + 1 - (j + 1) = n - j := by omega
+    rw [hsub, Prop51.coeff_expSeries, coeff_mk]
+    ring
+  rw [hmain]
+  have hextra_nonneg :
+      0 ≤ coeff (n + 1) (Prop51.expSeries L) * coeff 0 (mk L) := by
+    rw [Prop51.coeff_expSeries, coeff_mk]
+    exact mul_nonneg (Prop51.expCoeff_nonneg hL (n + 1)) (hL 0)
+  linarith
+
+theorem coeff_midDeltaExp_mul_deltaL_le_prod_deltaK {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (n : Nat) :
+    coeff n (midDeltaExpSeries (M a) μ * mk (midDeltaL (M a) μ)) ≤
+      coeff n (Prop51.prodSeries (simpleParts (M a)) * midDeltaKSeries (M a) μ) := by
+  refine coeff_mul_le_of_coeff_nonneg_le
+    (fun n => coeff_midDeltaExpSeries_nonneg hμ n)
+    (fun n => ?_) (fun n => coeff_midDeltaExp_le_prodSeries_simpleParts hμ n)
+    (fun n => ?_) n
+  · rw [coeff_mk]
+    exact midDeltaL_nonneg_of_partition hμ n
+  · rw [coeff_mk]
+    unfold midDeltaKSeries
+    rw [coeff_mk]
+    exact midDeltaL_le_midDeltaK_of_partition hμ n
+
+theorem coeff_midDeltaExp_le_prod_deltaK_of_pos {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) (hr : 1 ≤ r) :
+    coeff r (midDeltaExpSeries (M a) μ) ≤
+      coeff r (Prop51.prodSeries (simpleParts (M a)) * midDeltaKSeries (M a) μ) := by
+  unfold midDeltaExpSeries
+  have hself := coeff_expSeries_le_coeff_expSeries_mul_mk_self
+    (fun n => midDeltaL_nonneg_of_partition hμ n) r hr
+  exact hself.trans (coeff_midDeltaExp_mul_deltaL_le_prod_deltaK hμ r)
+
+theorem coeff_deltaExp_mul_printedMidASeries_le {a : Nat} {μ : List Nat}
+    (hμ : Prop51.IsPartitionOf μ (M a)) (r : Nat) (hr : 1 ≤ r) :
+    coeff r (midDeltaExpSeries (M a) μ * printedMidASeries μ) ≤
+      printedMidACoeff μ r + coeff r (midDeltaExpSeries (M a) μ) := by
+  obtain ⟨n, rfl⟩ : ∃ n : Nat, r = n + 1 := ⟨r - 1, by omega⟩
+  rw [coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  let F : Nat → ℚ := fun i =>
+    coeff i (midDeltaExpSeries (M a) μ) *
+      coeff (n + 1 - i) (printedMidASeries μ)
+  change (∑ i ∈ Finset.range (n + 2), F i) ≤
+    printedMidACoeff μ (n + 1) + coeff (n + 1) (midDeltaExpSeries (M a) μ)
+  have hsplit0 :
+      (∑ i ∈ Finset.range (n + 2), F i) =
+        (∑ j ∈ Finset.range (n + 1), F (j + 1)) + F 0 := by
+    simpa [show n + 2 = n + 1 + 1 by omega] using
+      (Finset.sum_range_succ' F (n + 1))
+  rw [hsplit0]
+  have hF0 : F 0 = printedMidACoeff μ (n + 1) := by
+    dsimp [F]
+    unfold midDeltaExpSeries printedMidACoeff
+    rw [Prop51.coeff_expSeries]
+    simp
+  have hshift :
+      (∑ j ∈ Finset.range (n + 1), F (j + 1)) ≤
+        coeff (n + 1) (midDeltaExpSeries (M a) μ) := by
+    rw [Finset.sum_range_succ]
+    have hpre :
+        (∑ j ∈ Finset.range n, F (j + 1)) ≤ 0 := by
+      refine Finset.sum_nonpos fun j hj => ?_
+      have hjlt : j < n := Finset.mem_range.mp hj
+      dsimp [F]
+      have hdeg : 1 ≤ n - j := by omega
+      have hA : coeff (n + 1 - (j + 1)) (printedMidASeries μ) ≤ 0 := by
+        have hsub : n + 1 - (j + 1) = n - j := by omega
+        rw [hsub, coeff_printedMidASeries]
+        exact printedMidACoeff_nonpos_of_partition hμ (n - j) hdeg
+      exact mul_nonpos_of_nonneg_of_nonpos
+        (coeff_midDeltaExpSeries_nonneg hμ (j + 1)) hA
+    have hlast : F (n + 1) = coeff (n + 1) (midDeltaExpSeries (M a) μ) := by
+      dsimp [F]
+      rw [Nat.sub_self]
+      have hA0 : coeff 0 (printedMidASeries μ) = 1 := by
+        rw [coeff_printedMidASeries]
+        exact coeff_printedMidASeries_zero μ
+      rw [hA0]
+      ring
+    nlinarith
+  nlinarith
+
 theorem coeff_prodSeries_simpleParts (M r : Nat) :
     coeff r (Prop51.prodSeries (simpleParts M)) = midQCoeff M r := by
   rw [prodSeries_eq_expSeries_sPower]
@@ -920,6 +1182,21 @@ def PrintedMidSimpleComparison : Prop :=
     ∀ μ : List Nat, Prop51.IsPartitionOf μ (M a) →
       ∀ r : Nat, printedMidSimpleACoeff (M a) r ≤ printedMidACoeff μ r
 
+theorem printedMidSimpleComparison_closed : PrintedMidSimpleComparison := by
+  intro a _ha_lo _ha_hi μ hμ r
+  rcases r with _ | r
+  · unfold printedMidSimpleACoeff
+    rw [coeff_printedMidASeries_zero, coeff_printedMidASeries_zero]
+  unfold printedMidSimpleACoeff printedMidACoeff
+  rw [printedMidASeries_simpleParts_eq_delta (M a) μ]
+  rw [map_sub]
+  have hupper :=
+    coeff_deltaExp_mul_printedMidASeries_le (a := a) (μ := μ) hμ (r + 1) (by omega)
+  rw [← coeff_printedMidASeries μ (r + 1)] at hupper
+  have hlower :=
+    coeff_midDeltaExp_le_prod_deltaK_of_pos (a := a) (μ := μ) hμ (r + 1) (by omega)
+  linarith
+
 /-- Identification of the raw `B/R` bound with the normalized certificate
 kernel, after undoing the factor `N c_a`. -/
 def PrintedMidRawToNormBound : Prop :=
@@ -975,6 +1252,11 @@ theorem printedMidRawToNormBound_of_exactToFast
 theorem printedMidRawToNormBound_closed : PrintedMidRawToNormBound :=
   printedMidRawToNormBound_of_exactToFast printedMidExactToFast_closed
 
+theorem printedMidUpperBound_closed : PrintedMidUpperBound :=
+  printedMidUpperBound_of_simpleComparison_rawToNorm
+    printedMidSimpleComparison_closed
+    printedMidRawToNormBound_closed
+
 /--
 Closing the printed mid-range sign from the coefficientwise bridge and the
 native interval certificates.
@@ -991,5 +1273,8 @@ theorem printedCoeffNegativityMid_of_upperBound
       (((N μ : Nat) : ℚ) * Prop51.c a) * midUNormFast a (N μ) < 0 :=
     mul_neg_of_pos_of_neg hden hU
   exact lt_of_le_of_lt (hbound a ha_lo ha_hi μ hμ) hscaled
+
+theorem printedCoeffNegativityMid_closed : PrintedCoeffNegativityMid :=
+  printedCoeffNegativityMid_of_upperBound printedMidUpperBound_closed
 
 end Prop52
