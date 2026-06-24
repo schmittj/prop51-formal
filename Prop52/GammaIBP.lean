@@ -310,4 +310,129 @@ theorem gammaIBP_derivative_integral_zero_of_tendsto
     simp [hpow]
   simpa [hzero] using hFTC
 
+/-- Endpoint-and-integrability packaged version of the Gamma
+integration-by-parts identity. -/
+theorem gammaIBP_integral_W_eq_bracket_of_endpoints
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a)
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0)
+    (hderivInt :
+      IntegrableOn (gammaIBPDerivativeIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (hbracket :
+      IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (hW :
+      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (htop : Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0)) :
+    (∫ x in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a x) =
+      ∫ x in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a x := by
+  exact gammaIBP_integral_W_eq_bracket_of_derivative_integral_zero
+    μ a
+    (gammaIBP_derivative_integral_zero_of_tendsto
+      μ ha hcont hderivInt htop)
+    hbracket hW
+
+/-- Convert the bracket Gamma expectation to the Lebesgue envelope integral
+used by the integration-by-parts identity. -/
+theorem gammaFull_bracketIntegral_eq_invGamma_mul_IBPBracketIntegral
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) :
+    (∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂ gammaFullMeasure a) =
+      (Real.Gamma (a : ℝ))⁻¹ *
+        ∫ y in Set.Ioi (0 : ℝ), gammaIBPBracketIntegrand μ a y := by
+  rw [integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+  rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+  rw [← MeasureTheory.integral_const_mul]
+  refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun y hy => ?_
+  have hy_nonneg : 0 ≤ y := le_of_lt (Set.mem_Ioi.mp hy)
+  have hpdf := gammaPDF_toReal_mul_exp_neg_L_eq_invGamma_mul_envelope
+    (μ := μ) (a := a) ha (x := y) hy_nonneg
+  simp only [smul_eq_mul]
+  unfold gammaIBPBracketIntegrand
+  calc
+    (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+        (Real.exp (-(printedTailLGammaArg μ a y)) *
+          gammaLowBracketAlignedReal μ a (1 / (6 * y)))
+        =
+      ((ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+          Real.exp (-(printedTailLGammaArg μ a y))) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) := by ring
+    _ =
+      ((Real.Gamma (a : ℝ))⁻¹ * gammaIBPEnvelope μ a y) *
+        gammaLowBracketAlignedReal μ a (1 / (6 * y)) := by
+          rw [hpdf]
+    _ =
+      (Real.Gamma (a : ℝ))⁻¹ *
+        (gammaIBPEnvelope μ a y *
+          gammaLowBracketAlignedReal μ a (1 / (6 * y))) := by ring
+
+/-- Convert the `W=exp(-L)(1-J)` Gamma expectation to the Lebesgue envelope
+integral used by the integration-by-parts identity. -/
+theorem gammaFull_WIntegral_eq_invGamma_mul_IBPWIntegral
+    (μ : List Nat) {a : Nat} (ha : 150 ≤ a) :
+    (∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a) =
+      (Real.Gamma (a : ℝ))⁻¹ *
+        ∫ y in Set.Ioi (0 : ℝ), gammaIBPWIntegrand μ a y := by
+  rw [integral_gammaFullMeasure_eq_integral_Ici_gammaPDF_toReal_smul]
+  rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
+  rw [← MeasureTheory.integral_const_mul]
+  refine MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun y hy => ?_
+  have hy_nonneg : 0 ≤ y := le_of_lt (Set.mem_Ioi.mp hy)
+  have hpdf := gammaPDF_toReal_mul_exp_neg_L_eq_invGamma_mul_envelope
+    (μ := μ) (a := a) ha (x := y) hy_nonneg
+  simp only [smul_eq_mul]
+  unfold gammaIBPWIntegrand
+  calc
+    (ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+        (Real.exp (-(printedTailLGammaArg μ a y)) *
+          (1 - printedTailJReal μ a (1 / (6 * y))))
+        =
+      ((ProbabilityTheory.gammaPDF (a : ℝ) 1 y).toReal *
+          Real.exp (-(printedTailLGammaArg μ a y))) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) := by ring
+    _ =
+      ((Real.Gamma (a : ℝ))⁻¹ * gammaIBPEnvelope μ a y) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) := by
+          rw [hpdf]
+    _ =
+      (Real.Gamma (a : ℝ))⁻¹ *
+        (gammaIBPEnvelope μ a y *
+          (1 - printedTailJReal μ a (1 / (6 * y)))) := by ring
+
+/-- Conditional closed Gamma lower bound for the untruncated
+`W=exp(-L)(1-J)` expectation.  The hypotheses record exactly the remaining
+endpoint and integrability facts needed by the integration-by-parts step. -/
+theorem gammaFull_WIntegral_lower_of_IBP_endpoints
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a))
+    (hcont :
+      ContinuousWithinAt (gammaIBPEnvelope μ a) (Set.Ici (0 : ℝ)) 0)
+    (hderivInt :
+      IntegrableOn (gammaIBPDerivativeIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (hbracket :
+      IntegrableOn (gammaIBPBracketIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (hW :
+      IntegrableOn (gammaIBPWIntegrand μ a) (Set.Ioi (0 : ℝ)))
+    (htop : Tendsto (gammaIBPEnvelope μ a) atTop (nhds 0)) :
+    9 / (40 * ((a : ℝ) - 2)) ≤
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
+  have hlower := gammaLowBracketAlignedIntegral_lower
+    (a := a) (μ := μ) ha hμ
+  have hIBP := gammaIBP_integral_W_eq_bracket_of_endpoints
+    μ ha hcont hderivInt hbracket hW htop
+  calc
+    9 / (40 * ((a : ℝ) - 2))
+        ≤ ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+          gammaLowBracketAlignedReal μ a (1 / (6 * y)) ∂
+            gammaFullMeasure a := hlower
+    _ =
+      ∫ y, Real.exp (-(printedTailLGammaArg μ a y)) *
+        (1 - printedTailJReal μ a (1 / (6 * y))) ∂ gammaFullMeasure a := by
+          rw [gammaFull_bracketIntegral_eq_invGamma_mul_IBPBracketIntegral
+            (μ := μ) (a := a) ha]
+          rw [gammaFull_WIntegral_eq_invGamma_mul_IBPWIntegral
+            (μ := μ) (a := a) ha]
+          rw [hIBP]
+
 end Prop52
