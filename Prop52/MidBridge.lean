@@ -451,6 +451,80 @@ noncomputable def printedMidRawUpper (M N a : Nat) : ℚ :=
         (-Prop51.Bq N k) * printedMidRCoeff M (a - k)
       else 0
 
+theorem printedMidRawUpper_term_eq_norm (a N k : Nat)
+    (hN : 1 ≤ N) (hk : 1 ≤ k) (hka : k < a) :
+    (if 1 ≤ k ∧ Prop51.Bq N k < 0 then
+        (-Prop51.Bq N k) * printedMidRCoeff (M a) (a - k)
+      else 0) =
+      (((N : ℚ) * Prop51.c a) * (M a : ℚ)) *
+        (midR k a * (1 / (2 : ℚ)^(a - k)) *
+          midNegPart (midX N k) * midS (M a) (a - k)) := by
+  have hka_pos : 1 ≤ a - k := by omega
+  have hB := Bq_eq_N_c_mul_midX N k hk
+  have hR := printedMidRCoeff_eq_midS_scaled (M a) (a - k) hka_pos
+  have hmidR := midR_eq_c_ratio k a hk hka
+  have hscale_pos : 0 < ((N : ℚ) * Prop51.c k) := by
+    have hNq : (0 : ℚ) < (N : ℚ) := by exact_mod_cast hN
+    exact mul_pos hNq (Prop51.c_pos k hk)
+  have hca_ne : Prop51.c a ≠ 0 :=
+    (Prop51.c_pos a (by omega)).ne'
+  by_cases hx : midX N k < 0
+  · have hBneg : Prop51.Bq N k < 0 := by
+      rw [hB]
+      exact mul_neg_of_pos_of_neg hscale_pos hx
+    rw [if_pos ⟨hk, hBneg⟩, hB, hR, hmidR]
+    simp [midNegPart, hx]
+    field_simp [hca_ne, (by positivity : (2 : ℚ)^(a - k) ≠ 0)]
+  · have hBnot : ¬ Prop51.Bq N k < 0 := by
+      rw [hB]
+      exact not_lt_of_ge (mul_nonneg hscale_pos.le (le_of_not_gt hx))
+    rw [if_neg (by exact fun h => hBnot h.2)]
+    simp [midNegPart, hx]
+
+theorem printedMidRawUpper_eq_scaled_midUNormExact (a N : Nat)
+    (ha : 1 ≤ a) (hN : 1 ≤ N) :
+    printedMidRawUpper (M a) N a =
+      (((N : ℚ) * Prop51.c a) * midUNormExact a N) := by
+  rcases a with _ | n
+  · omega
+  let G : Nat → ℚ := fun k =>
+    if 1 ≤ k ∧ Prop51.Bq N k < 0 then
+      (-Prop51.Bq N k) * printedMidRCoeff (M (n + 1)) (n + 1 - k)
+    else 0
+  let H : Nat → ℚ := fun j =>
+    midR (j + 1) (n + 1) * (1 / (2 : ℚ)^(n + 1 - (j + 1))) *
+      midNegPart (midX N (j + 1)) * midS (M (n + 1)) (n + 1 - (j + 1))
+  unfold printedMidRawUpper midUNormExact
+  simp only [Prop51.list_range_map_sum]
+  rw [show n + 1 - 1 = n by omega]
+  change Prop51.Bq N (n + 1) + (∑ k ∈ Finset.range (n + 1), G k) =
+    ((N : ℚ) * Prop51.c (n + 1)) *
+      (midX N (n + 1) + (M (n + 1) : ℚ) *
+        ∑ j ∈ Finset.range n, H j)
+  rw [Bq_eq_N_c_mul_midX N (n + 1) (by omega)]
+  have hsplit :
+      (∑ k ∈ Finset.range (n + 1), G k) =
+        (∑ j ∈ Finset.range n, G (j + 1)) + G 0 := by
+    simpa [show n + 1 = n + 1 by rfl] using
+      (Finset.sum_range_succ' G n)
+  have hG0 : G 0 = 0 := by
+    dsimp [G]
+  have hsum :
+      (∑ k ∈ Finset.range (n + 1), G k) =
+        (((N : ℚ) * Prop51.c (n + 1)) * (M (n + 1) : ℚ)) *
+          ∑ j ∈ Finset.range n, H j := by
+    rw [hsplit, hG0, add_zero]
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun j hj => ?_
+    have hjlt : j < n := Finset.mem_range.mp hj
+    have hterm := printedMidRawUpper_term_eq_norm (n + 1) N (j + 1)
+      hN (by omega) (by omega)
+    dsimp [G, H]
+    have hsub : n + 1 - (j + 1) = n - j := by omega
+    simpa [hsub, mul_assoc] using hterm
+  rw [hsum]
+  ring
+
 /--
 Convolution/sign bookkeeping for the mid majorant.
 
@@ -542,6 +616,12 @@ def PrintedMidRawToNormBound : Prop :=
       printedMidRawUpper (M a) (N μ) a ≤
         (((N μ : Nat) : ℚ) * Prop51.c a) * midUNormFast a (N μ)
 
+/-- Remaining executable-kernel identification: the list specification used in
+the algebraic bridge equals the array-backed kernel used by certificates. -/
+def PrintedMidExactToFast : Prop :=
+  ∀ a N : Nat, 14 ≤ a → a ≤ 149 →
+    midUNormExact a N = midUNormFast a N
+
 theorem printedMidUpperBound_of_simpleComparison_rawToNorm
     (hcomp : PrintedMidSimpleComparison)
     (hraw : PrintedMidRawToNormBound) :
@@ -566,6 +646,15 @@ private theorem mid_den_pos_of_partition {a : Nat} {μ : List Nat}
     exact_mod_cast mid_N_pos_of_partition (a := a) (μ := μ) ha hμ
   have hc : 0 < Prop51.c a := Prop51.c_pos a (by omega)
   exact mul_pos hN hc
+
+theorem printedMidRawToNormBound_of_exactToFast
+    (hfast : PrintedMidExactToFast) :
+    PrintedMidRawToNormBound := by
+  intro a ha_lo ha_hi μ hμ
+  have hNpos : 1 ≤ N μ :=
+    mid_N_pos_of_partition (a := a) (μ := μ) ha_lo hμ
+  rw [printedMidRawUpper_eq_scaled_midUNormExact a (N μ) (by omega) hNpos]
+  rw [hfast a (N μ) ha_lo ha_hi]
 
 /--
 Closing the printed mid-range sign from the coefficientwise bridge and the
