@@ -1,23 +1,28 @@
 cff-version: 1.2.0
 message: "If you use this repository, please cite it as below."
 title: >-
-  Strict negativity of a Chen–Larson hypergeometric coefficient:
-  a computer-assisted and formally verified proof
+  Strict negativity and non-vanishing of Chen–Larson hypergeometric
+  coefficients: a computer-assisted and formally verified proof of
+  Propositions 5.1 and 5.2 (the latter corrected)
 authors:
   - family-names: Schmitt
     given-names: Johannes
 type: software
-version: "1.0"
-date-released: "2026-06-20"
+version: "2.0"
+date-released: "2026-06-24"
 license: Apache-2.0
 repository-code: "https://github.com/schmittj/prop51-formal"
 abstract: >-
-  A complete, machine-checked proof in Lean 4 and Mathlib of the coefficient
-  negativity behind Chen–Larson Proposition 5.1: for every g ≥ 2 with
-  g ≡ 0, 2 (mod 3), writing a = ⌊g/3⌋ + 1, and for every positive partition μ of
-  2g − 2, the coefficient [t^a] ∏_i C(t/(m_i+1)) / C(t)^(2g-2+n) is strictly
-  negative, where C(t) = Σ_r (6r)!/((3r)!(2r)!) (t/72)^r. The repository contains
-  the Lean formalization, the LaTeX paper, and the computational certificates.
+  Complete, machine-checked proofs in Lean 4 and Mathlib of the coefficient
+  (non-)vanishing behind Chen–Larson Propositions 5.1 and 5.2. For Proposition
+  5.1 (g ≡ 0, 2 mod 3) the coefficient [t^a] ∏_i C(t/(m_i+1)) / C(t)^(2g-2+n) is
+  shown strictly negative, with a = ⌊g/3⌋ + 1 and C(t) = Σ_r (6r)!/((3r)!(2r)!)
+  (t/72)^r. For Proposition 5.2 (g ≡ 1 mod 3) the printed relation is first
+  corrected — Ionel's constant κ₀ = 2g − 2 had been replaced by 1 — and the
+  corrected coefficient is shown non-vanishing for all a ≥ 2 (strictly negative
+  for a ≥ 14). Together the results cover all residue classes, hence all genera.
+  The repository contains the Lean formalization, the LaTeX paper, and the
+  computational certificates.
 keywords:
   - Lean 4
   - Mathlib
@@ -25,12 +30,14 @@ keywords:
   - tautological classes
   - strata of abelian differentials
   - Chen–Larson conjecture
+  - Ionel relation
   - hypergeometric series
 preferred-citation:
   type: article
   title: >-
-    Strict negativity of a Chen–Larson hypergeometric coefficient:
-    a computer-assisted and formally verified proof
+    Strict negativity and non-vanishing of Chen–Larson hypergeometric
+    coefficients: a computer-assisted and formally verified proof of
+    Propositions 5.1 and 5.2 (the latter corrected)
   authors:
     - family-names: Schmitt
       given-names: Johannes
