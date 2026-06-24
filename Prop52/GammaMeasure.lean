@@ -226,6 +226,20 @@ theorem integral_invPow_gammaTailMeasure_eq_gammaMonomialMoment
           have hden : a - 2 - 1 = a - 3 := by omega
           rw [hshape, hden]
 
+private theorem gammaMonomialMoment_pos (shape r : Nat) :
+    0 < gammaMonomialMoment shape r := by
+  rw [gammaMonomialMoment_eq_gammaWeight]
+  unfold gammaWeight
+  positivity
+
+theorem integrable_invPow_gammaTailMeasure
+    {a r : Nat} (ha : 150 ≤ a) (hr : r ≤ printedTailP a) :
+    Integrable (fun y : ℝ => (1 / (6 * y))^r) (gammaTailMeasure a) := by
+  apply Integrable.of_integral_ne_zero
+  rw [integral_invPow_gammaTailMeasure_eq_gammaMonomialMoment
+    (a := a) (r := r) ha hr]
+  exact ne_of_gt (gammaMonomialMoment_pos (a - 2) r)
+
 theorem isProbabilityMeasure_gammaTailMeasure
     {a : Nat} (ha : 150 ≤ a) :
     IsProbabilityMeasure (gammaTailMeasure a) := by
@@ -237,6 +251,44 @@ theorem isProbabilityMeasure_gammaTailMeasure
 `Y` has the integer-shape Gamma law `gammaTailMeasure a`. -/
 noncomputable def printedTailLGammaArg (μ : List Nat) (a : Nat) (y : ℝ) : ℝ :=
   printedTailLReal μ a (1 / (6 * y))
+
+theorem integrable_printedTailLGammaArg
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a) :
+    Integrable (printedTailLGammaArg μ a) (gammaTailMeasure a) := by
+  unfold printedTailLGammaArg printedTailLReal
+  refine MeasureTheory.integrable_finset_sum _ ?_
+  intro r hr
+  have hrle : r ≤ printedTailP a :=
+    Nat.lt_succ_iff.mp (Finset.mem_Ico.mp hr).2
+  exact (integrable_invPow_gammaTailMeasure (a := a) (r := r) ha hrle).const_mul _
+
+/-- The actual Gamma-tail mean of `L(1/(6Y))` is the finite monomial expansion
+`printedTailGammaExponentIntegral`. -/
+theorem integral_printedTailLGammaArg_eq_exponentIntegral
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a) :
+    (∫ y, printedTailLGammaArg μ a y ∂ gammaTailMeasure a) =
+      printedTailGammaExponentIntegral μ a := by
+  unfold printedTailLGammaArg printedTailLReal printedTailGammaExponentIntegral
+  rw [MeasureTheory.integral_finset_sum]
+  · refine Finset.sum_congr rfl fun r hr => ?_
+    have hrle : r ≤ printedTailP a :=
+      Nat.lt_succ_iff.mp (Finset.mem_Ico.mp hr).2
+    rw [MeasureTheory.integral_const_mul]
+    rw [integral_invPow_gammaTailMeasure_eq_gammaMonomialMoment
+      (a := a) (r := r) ha hrle]
+  · intro r hr
+    have hrle : r ≤ printedTailP a :=
+      Nat.lt_succ_iff.mp (Finset.mem_Ico.mp hr).2
+    exact (integrable_invPow_gammaTailMeasure
+      (a := a) (r := r) ha hrle).const_mul _
+
+theorem integral_printedTailLGammaArg_le_bound
+    {a : Nat} {μ : List Nat} (ha : 150 ≤ a)
+    (hμ : Prop51.IsPartitionOf μ (M a)) :
+    (∫ y, printedTailLGammaArg μ a y ∂ gammaTailMeasure a) ≤
+      (gammaExponentBound a : ℝ) := by
+  rw [integral_printedTailLGammaArg_eq_exponentIntegral (a := a) (μ := μ) ha]
+  exact printedTailGammaExponentIntegral_le_bound (a := a) (μ := μ) ha hμ
 
 /-- The negative exponential in the Jensen lower bound is integrable under the
 Gamma-tail probability measure.  The proof uses only the almost-everywhere
