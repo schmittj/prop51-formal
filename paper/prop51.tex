@@ -31,12 +31,9 @@
 \newcommand{\C}{\mathsf C}
 \newcommand{\PE}{\mathsf E}
 \newcommand{\Q}{\mathbb Q}
-\newcommand{\N}{\mathbb N}
 \newcommand{\e}{\mathrm e}
-\newcommand{\coeff}{\operatorname{coeff}}
 \newcommand{\floor}[1]{\left\lfloor #1\right\rfloor}
 \newcommand{\ceil}[1]{\left\lceil #1\right\rceil}
-\newcommand{\abs}[1]{\left|#1\right|}
 \newcommand{\Lean}{\textsc{Lean}}
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -92,10 +89,12 @@
 Chen and Larson reduce a geometric vanishing problem for strata of
 holomorphic abelian differentials to the (non-)vanishing of a coefficient in a
 quotient of hypergeometric generating series.  Their argument produces two
-such series, and we treat both.  For the residue classes $g\equiv0,2\pmod 3$
-covered by their
-Proposition~5.1 we prove the stronger statement that the relevant coefficient is
-always strictly negative: with
+such series, and we treat both.  The upshot is that these coefficients never
+vanish --- so the predicted geometric vanishing $\eta^a=0$ holds --- for every
+positive partition and in every genus, beyond the range $g\le30$ that Chen and
+Larson verify by computer.  For the residue classes $g\equiv0,2\pmod 3$ covered
+by their Proposition~5.1 we prove the stronger statement that the relevant
+coefficient is always strictly negative: with
 \[
   \C(t)=\sum_{r\ge 0}\frac{(6r)!}{(3r)!(2r)!}\left(\frac{t}{72}\right)^r,
 \]
@@ -110,9 +109,7 @@ Proposition~5.2, we first \emph{correct} the printed relation: the constant
 $\kappa_0=2g-2$ of Ionel's relation was inadvertently replaced by $1$, which
 changes the coefficient.  We then prove that the corrected coefficient is
 non-vanishing for every positive partition, and strictly negative for $a\ge14$.
-Together the two results settle the coefficient (non-)vanishing for positive
-holomorphic abelian partitions in all three residue classes, hence in every
-genus, beyond the authors' computer check ($g\le30$).
+Together the two results cover all three residue classes $g\equiv0,1,2\pmod3$.
 
 The Proposition~5.1 proof removes the partition by a coefficientwise
 majorization; a sign-lock estimate with an explicit rational final margin then
@@ -121,8 +118,9 @@ remaining positive part is controlled by a direct saddle method based on finite
 exponential prefixes.  Small ranges are discharged by exact enumeration and
 verified rational or dyadic interval certificates; the large range is closed by
 symbolic ratio and reserve bounds.  The corrected Proposition~5.2 reduces,
-through a one-line identity, to two sign inputs already controlled by the
-Proposition~5.1 analysis, together with an exhaustive finite check.  The scalar
+through a one-line identity, to two sign inputs --- one inherited from the
+Proposition~5.1 analysis, the other an independent strict-negativity estimate for
+the printed coefficient --- together with an exhaustive finite check.  The scalar
 power-series theorems behind both propositions --- after the geometric reduction,
 and including the elementary correction bridge --- are formalized in \Lean{}~4 and
 Mathlib, the public theorems depending only on the standard axioms and the two
@@ -184,8 +182,9 @@ The strict negativity is stronger than the nonvanishing needed geometrically; we
 attach no geometric meaning to the sign itself.
 
 \begin{corollary}\label{cor:geometric}
-In the setting of Chen--Larson Proposition~5.1, the class $\eta^a$ vanishes
-for every positive holomorphic partition when $g\equiv0,2\pmod3$.
+In the setting of Chen--Larson Proposition~5.1, the class $\eta^a$ vanishes on
+the stratum $\mathcal P(\mu)$ for every positive holomorphic partition $\mu$ when
+$g\equiv0,2\pmod3$.
 \end{corollary}
 
 \begin{proof}
@@ -206,19 +205,21 @@ in~\eqref{eq:Dcor52}.  Then the corrected Proposition~5.2 coefficient
 \[
   [t^a]\,B_\mu(t)\,D_\mu^{\mathrm{cor}}(t)
 \]
-is nonzero; for $a\ge14$ (equivalently $g\ge40$) it is strictly negative.  The
-factor printed by Chen and Larson is the same relation with $\kappa_0=2g-2$
-replaced by~$1$.  Equivalently --- and as the Lean development computes it --- the
-coefficient may be taken from the marked factor $M-K_\mu$ of
-Section~\ref{sec:prop52}, which agrees with $D_\mu^{\mathrm{cor}}$ in degree~$a$
-by Lemma~\ref{lem:bridge52}.
+is nonzero; for $a\ge14$ (equivalently $g\ge40$) it is strictly negative.
 \end{theorem}
+
+The factor printed by Chen and Larson is the same relation with the constant term
+$\kappa_0=2g-2$ replaced by~$1$.  Equivalently --- and as the Lean development
+computes it --- the degree-$a$ coefficient may be taken from the marked factor
+$M-K_\mu$ of Section~\ref{sec:prop52}, which agrees with $D_\mu^{\mathrm{cor}}$ in
+that degree by Lemma~\ref{lem:bridge52}.
 
 \begin{corollary}\label{cor:geometric52}
 Combining Theorems~\ref{thm:main} and~\ref{thm:main52} with the geometric
 reductions of Chen--Larson Propositions~5.1 and~5.2 (the latter corrected as in
-Section~\ref{sec:prop52}), the class $\eta^{\floor{g/3}+1}$ vanishes for every
-positive holomorphic abelian partition, in \emph{every} genus $g\ge2$.  The
+Section~\ref{sec:prop52}), the class $\eta^{\floor{g/3}+1}$ vanishes on the
+stratum $\mathcal P(\mu)$ for every positive holomorphic abelian partition $\mu$,
+in \emph{every} genus $g\ge2$.  The
 algebraic-geometric reductions are taken from Chen--Larson (with the
 Proposition~5.2 constant corrected here); they are not themselves formalized in
 Lean, which establishes the scalar coefficient statements.
@@ -292,8 +293,8 @@ The proof is a contest between the two sides: we bound \(X_a(N)\) above by a
 correction below that margin.  The corrections come from the convolution and
 are indexed by splittings \(a=k+j\) with \(1\le k<a\).
 
-Most splittings contribute nothing.  We prove a \emph{sign lock}: once
-\(k>0.9a\), the coefficient \(X_k(N)\) is already negative throughout the
+Most splittings need no positive estimate at all.  We prove a \emph{sign lock}:
+once \(k>0.9a\), the coefficient \(X_k(N)\) is already negative throughout the
 whole range of \(N\), so such terms only help an upper bound and may be
 dropped.  This is the technical heart of the negative side, and it leaves only
 the splittings with \(1\le k\le\floor{0.9a}\) to be controlled.
@@ -318,7 +319,7 @@ bridge in the sign-lock argument of Section~\ref{sec:signlock} does use formal
 estimates for the real logarithm and exponential to control the factorial
 product $\Pi_s$, after which the argument returns to rational inequalities; no
 estimate involving \(\pi\) is used.  The slight loss in the resulting constants is absorbed by the
-large slack in the final budget.} and no transcendental constant enters.
+large slack in the final budget.} and no transcendental constant enters the final certificates.
 Two finite exponentials multiply in the same spirit,
 \[
   P_m(x)\,P_n(y)\le P_{m+n}(x+y)\qquad(x,y\ge0),
@@ -346,6 +347,24 @@ closed by showing that consecutive terms shrink by a fixed rational ratio, so
 each tail is at most its first term times a geometric series.  The positive
 budget never exceeds \(10^{-8}\), while the negative margin is strictly larger;
 hence \(U_a(N)<0\), and the Chen--Larson coefficient is negative.
+
+\paragraph{The corrected Proposition~5.2.}
+The companion class \(g\equiv1\pmod3\) is assembled in
+Section~\ref{sec:prop52} from three ingredients.  First, correcting the constant
+\(\kappa_0\) of Ionel's relation changes only the constant term of the relevant
+factor (Section~\ref{subsec:correction}), so it is not a mere normalization.
+Second, a one-line bridge writes the corrected degree-\(a\) coefficient as
+\(T_a^{\mathrm{cor}}=T_a^{\mathrm{old}}+(M-1)\,b_a\) --- the printed coefficient
+\(T_a^{\mathrm{old}}\) plus a positive multiple of the Proposition~5.1
+coefficient \(b_a\).  Its sign for \(a\ge14\) then rests on two inputs:
+\(b_a<0\), \emph{inherited} from the Proposition~5.1 analysis (in a rectangular
+form that does not use the partition sum), and \(T_a^{\mathrm{old}}<0\), proved
+\emph{independently} for the printed series by an exact interval check for
+\(14\le a\le149\) and a Gamma-integral and Taylor estimate for \(a\ge150\).  The
+remaining low degrees \(2\le a\le13\), where the two summands need not share a
+sign, are settled by an exhaustive exact or modular check.  The companion case is
+thus not free: it reuses one Proposition~5.1 input and adds one genuinely new
+analytic estimate.
 
 \subsection{Formal verification and scope}
 
@@ -407,8 +426,13 @@ coefficients of
 \[
   \exp\left(\alpha\sum_{r\ge1}c_r2^{-r}t^r\right)
 \]
-are polynomials in $\alpha$ with nonnegative coefficients.  Moreover,
-$q_i\ge2$ and $n\le N/2$.  It follows that
+are polynomials in $\alpha$ with nonnegative coefficients.  Writing the
+numerator as $\prod_i\C(t/q_i)=\exp(\sum_rc_r\sigma_rt^r)$ with
+$\sigma_r=\sum_iq_i^{-r}$, its coefficients $P_r(\mu)$ are therefore nondecreasing
+in each $\sigma_r$.  Since $q_i\ge2$ and $n\le N/2$ give
+$\sigma_r\le n2^{-r}\le\tfrac N2\,2^{-r}$, raising each $\sigma_r$ to
+$\tfrac N2\,2^{-r}$ --- which turns the numerator into $\C(t/2)^{N/2}$ --- only
+increases coefficients.  It follows that
 \begin{equation}\label{eq:PleQ}
   0\le P_r(\mu)\le Q_r(N).
 \end{equation}
@@ -441,7 +465,11 @@ and set
 \begin{equation}\label{eq:R}
   R_{k,a}=\frac{c_kc_{a-k}}{c_a}.
 \end{equation}
-The standard exponential-coefficient recurrence gives
+For a series $E(t)=\exp(\sum_{r\ge1}\ell_rt^r)=\sum_{r\ge0}e_rt^r$, logarithmic
+differentiation gives the recurrence $r\,e_r=\sum_{k=1}^rk\,\ell_ke_{r-k}$.
+Applied to $\C(t)^{-N}$ and $\C(t/2)^{N/2}$ --- whose logarithmic coefficients
+are $-Nc_r$ and $\tfrac N2c_r2^{-r}$ --- and normalized by~\eqref{eq:XY}, it
+gives
 \begin{align}
   X_1&=-1,&
   X_r&=-1-\frac Nr\sum_{k=1}^{r-1}kR_{k,r}X_{r-k},
@@ -467,8 +495,14 @@ defined by $\log\C(t)=\sum_{r\ge1}c_rt^r$: their nonnegativity is what removed
 the partition in Section~\ref{sec:majorant}, and the rational bounds derived
 here drive every later estimate.  We establish both in turn.
 
-The hypergeometric series $\C$ satisfies a Riccati differential equation.
-Equating coefficients in the logarithmic derivative yields
+The series $\C$ satisfies the second-order linear differential equation
+\[
+  6t^2\C''+(12t-1)\C'+\tfrac56\,\C=0,\qquad \C(0)=1,
+\]
+from which the bridge identifies $\C$ with $\exp(\sum_rc_rt^r)$ --- the two
+series solve it with the same constant term.  Passing to the logarithmic
+derivative $L=\C'/\C$ turns it into a first-order (Riccati) equation, quadratic
+in $L$; equating coefficients there yields
 \begin{equation}\label{eq:crec}
   c_1=\frac56,
   \qquad
@@ -562,7 +596,11 @@ reciprocal denominator in \eqref{eq:R-bound}.
 \section{Finite verification through \texorpdfstring{$a=400$}{a=400}}\label{sec:finite}
 
 The majorant is not strong enough for the smallest values of $a$, so the
-formal proof begins with direct finite verification.
+formal proof begins with direct finite verification.  The cut points $8$, $60$,
+and $400$ below are computational thresholds --- each marks where one exact
+method becomes infeasible and a cheaper one takes over --- not mathematically
+distinguished values; the analytic argument begins at $a=401$, where its margin
+first beats the positive budget (Section~\ref{sec:completion}).
 
 \subsection{Positive partitions for \texorpdfstring{$a\le8$}{a<=8}}
 
@@ -597,8 +635,9 @@ to decide the sign of $B_k(N)$ from an interval approximation.
 The interval kernel contains definitions only and imports no Mathlib code;
 its soundness theory is proved separately over $\Q$.  Eight native-evaluation
 chunks cover the $N$-range.  Their conjunction proves \eqref{eq:Uneg} for all
-$61\le a\le400$.  The $192$-bit precision matches the reference Arb
-calculation used during discovery, but Arb is not part of the trusted proof:
+$61\le a\le400$.  The $192$-bit precision matches the reference \emph{Arb}
+(arbitrary-precision ball arithmetic) calculation used during discovery, but
+Arb is not part of the trusted proof:
 Lean checks its own dyadic kernel and its rational enclosure semantics.
 
 \section{The effective sign lock}\label{sec:signlock}
@@ -616,10 +655,14 @@ Write the nonlinear part of the logarithm as
   \qquad
   E^-_p(N)=[t^p]\exp\!\big(-N\,H(t)\big),
 \]
-so that $\C(t)^{-N}=\exp(-Nc_1t)\exp(-NH(t))$.  Expanding this coefficient into
-factorial-composition blocks and bounding their total by the rational
-coefficient bounds of Section~\ref{sec:coeff} and a rational form of Stirling's
-estimate yields the \emph{normalized residual envelope}: for
+so that $\C(t)^{-N}=\exp(-Nc_1t)\exp(-NH(t))$.  Expanding $E^-_p(N)$ over the
+integer compositions of $p$ into parts $\ge2$ --- the
+\emph{factorial-composition blocks}, each a factorial-weighted product of the
+$c_r$ --- isolates the one-block term $-Nc_p$ (the part equal to $p$) and leaves a
+multi-block remainder.  Bounding that remainder by the rational coefficient
+bounds of Section~\ref{sec:coeff} and a rational form of Stirling's estimate
+yields the \emph{normalized residual envelope}, which says that $E^-_p(N)$ lies
+within relative error $O(1/m)$ of its one-block term $-Nc_p$: for
 $m\ge361$, $N\le(40/3)m$, and $p\ge2m/3$,
 \begin{equation}\label{eq:residual-envelope}
   \left|\frac{E^-_p(N)}{-Nc_p}-1\right|\le\frac{66}{5m}.
@@ -673,7 +716,9 @@ any appeal to an infinite exponential.  Put
   C_{12}(z)=\sum_{s=0}^{11}\frac{(-z)^s}{s!}\big(e_1(s)-z\big),
 \]
 so the twelve-term prefix of $\mathcal B_m$ is $A_{12}(\zeta)+C_{12}(\zeta)/m$.
-Two Bernstein-basis certificates on $0\le z\le50/27$ give
+Two Bernstein-basis certificates on $0\le z\le50/27$ --- nonnegative coefficients
+in the Bernstein basis of that interval, which force the polynomial to be
+nonnegative on it --- give
 \[
   A_{12}(z)\ge\lambda,
   \qquad
@@ -688,8 +733,10 @@ A short monotonicity argument in $1/m$ extends the second inequality from $m=361
 to every $m\ge361$, and the base terms from $s=12$ onward pair into nonnegative
 even--odd blocks; hence $\mathcal B_m\ge\lambda(1-2/m)$.
 
-\paragraph{The near error and far tail.}  The other two pieces are bounded by
-seven independent rational budgets:
+\paragraph{The near error and far tail.}  The remaining two pieces of
+\eqref{eq:signlock-three} --- the near error and the far signed tail --- are
+bounded by seven independent rational budgets, one for each source of slack in
+$\Pi_sD_s(1+\varepsilon_{m-s})$ and in the discarded tail:
 \begin{center}
 \begin{tabular}{lr}
 \toprule
@@ -707,9 +754,14 @@ total & $2215$\\
 \bottomrule
 \end{tabular}
 \end{center}
-Every final allowance is a rational inequality.  The factorial-ratio allowance
-uses a short real-logarithm and real-exponential bridge to control $\Pi_s$, after
-which the result is converted back into its rational budget.
+Every final allowance is a rational inequality.  The seven rows are the complete
+list of slack sources: the factorial ratio $\Pi_s$ and the $d$-ratio
+$D_s=d_{m-s}/d_m$ (the first two rows), the corrections $w_s$ from the two-block
+and higher-block parts of the residual expansion together with their cross terms
+(the middle four), and the discarded far signed tail (the last); the total
+$2215$ is a sufficient budget, not an optimized one.  The factorial-ratio
+allowance uses a short real-logarithm and real-exponential bridge to control
+$\Pi_s$, after which the result is converted back into its rational budget.
 The near-error budgets are certified after rescaling $\zeta$ to $[0,1]$ by
 nonnegative Bernstein coefficients, and the far signed tail (its first omitted
 $s=\floor{m/3}+1$ block onward) is bounded by a crude rational saddle estimate
@@ -764,13 +816,16 @@ one.
 
 \subsection{Generic finite saddle lemmas}
 
-Let $L_r\ge0$, $L_0=0$, and write
+The quantities $m,n,\rho$ and the sequence $(L_r)$ in this subsection are generic;
+in particular $m$ and $n$ are not the partition data of
+Section~\ref{sec:majorant}.  Let $L_r\ge0$, $L_0=0$, and write
 \[
   E_m(L)=[t^m]\exp\left(\sum_{r\ge1}L_rt^r\right).
 \]
-For $\rho\ge0$, scaling gives
+Writing $L^{(\rho)}$ for the scaled sequence $L^{(\rho)}_r=\rho^rL_r$, scaling
+gives, for $\rho\ge0$,
 \[
- E_m(r\mapsto \rho^rL_r)=\rho^mE_m(L).
+ E_m(L^{(\rho)})=\rho^mE_m(L).
 \]
 Expanding the exponential and bounding the coefficient of $t^m$ by the
 corresponding total --- the \emph{gas} $\sum_{r=1}^mL_r\rho^r$ fed into the
@@ -1153,8 +1208,18 @@ For every $a\ge401$ and every $N$ satisfying \eqref{eq:rectangle},
 \end{equation}
 \end{theorem}
 
+\begin{proof}
+For $401\le a\le2000$ this is the finite edge certificate
+\eqref{eq:finite-edge-budget} for the convolution sum together with the solo
+bound \eqref{eq:solo-budget}, which sum to $10^{-8}$.  For every $a>2000$ ---
+covering both the prefix strip $2001\le a<3000$ and the infinite tail
+$a\ge3000$ --- it is Proposition~\ref{prop:app-tail-final} of
+Appendix~\ref{app:large-tail-details}.
+\end{proof}
+
 \section{Completion of the proof}\label{sec:completion}
 
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
 For $a\ge401$, the rectangle gives $N\le12a-8<(40/3)a$, so
 Theorem~\ref{thm:signlock}, applied with $m=a$, yields
 \begin{equation}\label{eq:Xa-margin}
@@ -1170,15 +1235,17 @@ Combining \eqref{eq:Unorm}, Theorem~\ref{thm:positive-envelope}, and
 
 Together with the direct partition enumeration for $a\le8$, the exact
 majorant certificate for $9\le a\le60$, and the dyadic interval certificate
-for $61\le a\le400$, this proves Theorem~\ref{thm:main}.
+for $61\le a\le400$, every case is covered.
+\end{proof}
 
 \section{The corrected Proposition~5.2}\label{sec:prop52}
 
 The companion residue class $g\equiv1\pmod3$ is governed by Chen--Larson
 Proposition~5.2, which replaces the quotient $B_\mu$ by a derivative-corrected
-numerator.  We record a correction to the printed relation, reduce the corrected
-coefficient to the Proposition~5.1 analysis by a one-line identity, and close the
-finitely many remaining degrees by an exhaustive check.  Throughout, $g=3a-2$,
+numerator.  We record a correction to the printed relation; a one-line identity then reduces
+the corrected coefficient to two sign inputs --- one inherited from the
+Proposition~5.1 analysis, one proved independently for the printed series --- and
+an exhaustive check closes the finitely many remaining degrees.  Throughout, $g=3a-2$,
 $M:=2g-2=6a-6$, $q_i:=m_i+1\ge2$, $N:=\sum_iq_i=M+n$, $s_j:=\sum_iq_i^{-j}$, and
 $B_\mu(t)=\prod_i\C(t/q_i)/\C(t)^N$, $b_a(\mu)=[t^a]B_\mu(t)$ denote the
 Proposition~5.1 quotient series and its coefficient.
@@ -1199,7 +1266,8 @@ relation by $\kappa_0=M$ would be legitimate, but it would divide \emph{every}
 term of~\eqref{eq:ionel-b1}; replacing only $\kappa_0$ by $1$ is therefore not a
 normalization, and it changes the coefficient under consideration.  Using the
 stratum pullback $\iota^*f^*\kappa_j=(N-s_j)\eta^j$ for $j\ge1$ (and
-$\kappa_0=2g-2=M$), and writing $L=\C'/\C$, the factor~\eqref{eq:ionel-b1} pulls
+$\kappa_0=2g-2=M$), and writing $L=\C'/\C$ for the logarithmic derivative of
+$\C$, the factor~\eqref{eq:ionel-b1} pulls
 back to $D_\mu^{\mathrm{cor}}(\eta t)$, where
 \begin{equation}\label{eq:Dcor52}
  D_\mu^{\mathrm{cor}}(t)
@@ -1228,23 +1296,23 @@ factors~\eqref{eq:Dcor52}; they agree only in the degree we need, by the
 following elementary bridge.
 
 \begin{lemma}[Source--marked bridge]\label{lem:bridge52}
-For $\lambda\in\{1,M\}$, let $D_{\mu,\lambda}$ denote~\eqref{eq:Dcor52} with $M$
-replaced by $\lambda$.  Then
+For $\varkappa\in\{1,M\}$, let $D_{\mu,\varkappa}$ denote~\eqref{eq:Dcor52} with
+$M$ replaced by $\varkappa$.  Then
 \[
- B_\mu(t)\bigl(D_{\mu,\lambda}(t)-(\lambda-K_\mu(t))\bigr)
+ B_\mu(t)\bigl(D_{\mu,\varkappa}(t)-(\varkappa-K_\mu(t))\bigr)
  =-2Mt\,B_\mu(t)+12t^2B_\mu'(t),
 \]
 and hence, for every $a\ge1$,
 \[
- [t^a]\,B_\mu D_{\mu,\lambda}-[t^a]\,B_\mu(\lambda-K_\mu)
+ [t^a]\,B_\mu D_{\mu,\varkappa}-[t^a]\,B_\mu(\varkappa-K_\mu)
  =\bigl(12(a-1)-2M\bigr)\,b_{a-1}(\mu).
 \]
 \end{lemma}
 
 \begin{proof}
-The $\lambda$ cancels, and combining the two $t^2$ sums through
+The $\varkappa$ cancels, and combining the two $t^2$ sums through
 $q_i^{-2}+(q_i-1)q_i^{-2}=q_i^{-1}$ gives
-$D_{\mu,\lambda}-(\lambda-K_\mu)=-2Mt+12t^2\bigl(\sum_iq_i^{-1}L(t/q_i)-NL(t)\bigr)$,
+$D_{\mu,\varkappa}-(\varkappa-K_\mu)=-2Mt+12t^2\bigl(\sum_iq_i^{-1}L(t/q_i)-NL(t)\bigr)$,
 the $t$-coefficient using $\sum_i(q_i-1)q_i^{-1}=n-s_1$ and $N-n=M$.  Since
 $B_\mu'/B_\mu=\sum_iq_i^{-1}L(t/q_i)-NL(t)$, the bracket is $B_\mu'/B_\mu$, and
 multiplying by $B_\mu$ gives the first identity.  Reading off $[t^a]$, with
@@ -1329,23 +1397,22 @@ large-$a$ cancellation has to be controlled.
 It remains to prove $T_a^{\mathrm{cor}}(\mu)\ne0$ for $2\le a\le13$, where the two
 summands of~\eqref{eq:central52} need not share a sign.  The coefficient is a
 rational number assembled from the finite recurrences for $c_r$, the exponential
-coefficients $b_r$, and the marked coefficients $k_r$, via
+coefficients $b_r$, and the marked coefficients $k_r=[t^r]K_\mu(t)$, via
 $T_a^{\mathrm{cor}}=Mb_a-\sum_{j=1}^a k_jb_{a-j}$.  For $2\le a\le8$ the Lean
 proof evaluates the exact rational coefficient over every partition by
 \code{native\_decide}; for $9\le a\le13$, where the partition counts run into the
 millions, it reduces each coefficient modulo a large prime and certifies a
 nonzero residue --- a rational with a nonzero reduction at a prime not dividing
-its denominator cannot vanish --- with the reduction map to $\Q$ proved in Lean.
+its denominator cannot vanish --- the soundness of this rational-to-$\mathbb F_p$
+reduction being proved in Lean.
 
-\begin{theorem}[Corrected Proposition~5.2, non-vanishing]\label{thm:prop52-full}
-For every integer $a\ge2$ and every positive partition $\mu$ of $M=6a-6$, the
-corrected coefficient $T_a^{\mathrm{cor}}(\mu)$ is nonzero; for $a\ge14$ it is
-strictly negative.  This is Theorem~\ref{thm:main52}.
-\end{theorem}
-
-\begin{proof}
-For $a\ge14$ this is the conclusion of Section~\ref{subsec:large52}; for
-$2\le a\le13$ it is the finite certificate above.
+\begin{proof}[Proof of Theorem~\ref{thm:main52}]
+By Lemma~\ref{lem:bridge52} the source coefficient $[t^a]B_\mu D_\mu^{\mathrm{cor}}$
+of Theorem~\ref{thm:main52} equals the marked coefficient $T_a^{\mathrm{cor}}(\mu)$
+in degree~$a$ (the universal scalar $12(a-1)-2M$ vanishes for $M=6a-6$), so it
+suffices to treat $T_a^{\mathrm{cor}}$.  This is nonzero for every $a\ge2$, and
+strictly negative for $a\ge14$: the case $a\ge14$ is the conclusion of
+Section~\ref{subsec:large52}, and $2\le a\le13$ is the finite certificate above.
 \end{proof}
 
 \begin{remark}[The correction is not cosmetic]
@@ -1712,7 +1779,8 @@ alone\footnote{\url{https://chatgpt.com/share/6a393ddd-bbc0-83eb-aa30-44806c9edc
 confirmed the error and supplied the corrected derivation of
 Section~\ref{subsec:correction}; asked to validate the point, the authors
 agreed, in private correspondence (June~2026), that the printed relation was in
-error.  (The public arXiv~v1 still prints the leading constant~$1$.)
+error.  (As of June~2026, the public arXiv~v1 still prints the leading
+constant~$1$.)
 
 The corrected target was fed back into the original conversation, which --- in
 two further rounds with intermediate
@@ -1722,8 +1790,9 @@ independent audit, the pinned Proposition~5.1 dependency, and a detailed Lean
 formalization plan with milestones.  That bundle was handed to a fresh OpenAI
 Codex CLI worker, which completed the entire Lean formalization --- the rectangle
 export, the correction identity, the finite and modular certificates, the
-in-Lean re-proof of the printed-coefficient sign, and the two assumption-free
-public theorems --- \emph{autonomously, with no further mathematical or technical
+in-Lean re-proof of the printed-coefficient sign, and the two public theorems
+(sorry-free, with no project-specific axioms) --- \emph{autonomously, with no
+further mathematical or technical
 intervention}, in roughly twenty hours.  In the classification
 of~\cite{FengAletheia} this is again Level~A, and the human role was smaller still
 than for Proposition~5.1, reducing to relaying the problem, the audit verdict, and
@@ -2569,6 +2638,11 @@ theorem chenLarsonProp52Coefficient_neg
 
 end Prop52
 \end{lstlisting}
+
+Here the non-vanishing facade carries \code{2 <= g} where
+Theorem~\ref{thm:main52} states $g\ge4$; the two select the same genera, since
+for $g\equiv1\pmod3$ the condition $g\ge2$ already forces $g\ge4$.  The
+strict-negativity facade carries \code{40 <= g}, matching $g\ge40$ directly.
 
 \section{Paper-to-Lean correspondence}\label{app:map}
 
