@@ -91,8 +91,9 @@
 \begin{abstract}
 Chen and Larson reduce a geometric vanishing problem for strata of
 holomorphic abelian differentials to the (non-)vanishing of a coefficient in a
-quotient of hypergeometric generating series.  We treat both series their
-argument produces.  For the residue classes $g\equiv0,2\pmod 3$ covered by their
+quotient of hypergeometric generating series.  Their argument produces two
+such series, and we treat both.  For the residue classes $g\equiv0,2\pmod 3$
+covered by their
 Proposition~5.1 we prove the stronger statement that the relevant coefficient is
 always strictly negative: with
 \[
@@ -368,6 +369,9 @@ small logical kernel in the usual way.
 
 \section{The partition-free majorant}\label{sec:majorant}
 
+This section makes the partition removal sketched in Section~\ref{sec:outline}
+precise, ending at the majorant inequality $b_a(\mu)\le U_a(N)$.
+
 Let $\mu=(m_1,\ldots,m_n)$ be a positive partition of $2g-2$ and put
 \begin{equation}\label{eq:qN}
   q_i=m_i+1\ge2,
@@ -424,7 +428,10 @@ instead verify $b_a(\mu)<0$ directly.
 
 \subsection{Normalized form}
 
-For $r\ge1$ define
+We pass to rescaled coefficients whose leading terms are the clean values
+$X_1=-1$ and $Y_1=1$.  In this normalization the majorant splits transparently
+into one negative term and two positive contributions --- the split the rest of
+the proof exploits.  For $r\ge1$ define
 \begin{equation}\label{eq:XY}
   X_r(N)=\frac{B_r(N)}{Nc_r},
   \qquad
@@ -454,6 +461,11 @@ The proof therefore consists of a uniform negative lower margin for $-X_a$
 and an upper budget for the remaining two positive contributions.
 
 \section{Logarithmic coefficients}\label{sec:coeff}
+
+Everything downstream rests on the logarithmic coefficients $c_r$ of $\C$,
+defined by $\log\C(t)=\sum_{r\ge1}c_rt^r$: their nonnegativity is what removed
+the partition in Section~\ref{sec:majorant}, and the rational bounds derived
+here drive every later estimate.  We establish both in turn.
 
 The hypergeometric series $\C$ satisfies a Riccati differential equation.
 Equating coefficients in the logarithmic derivative yields
@@ -719,7 +731,10 @@ $\lambda(1-2/m)-2215/m^2>0$.  The latter is an exact rational check at $m=361$
 so it holds for every $m\ge361$.
 \end{proof}
 
-Let
+The cutoff $9a/10$ is forced by the shape of Theorem~\ref{thm:signlock}: its
+hypothesis $N\le\tfrac{40}{3}k$ has to be supplied by the rectangle bound
+$N\le12a-8$, and $\tfrac{40}{3}k\ge12a$ already requires $k\ge\tfrac{9}{10}a$.
+Accordingly set
 \[
   k_{\max}(a)=\floor{9a/10}.
 \]
@@ -742,7 +757,10 @@ real exponential directly.  Instead, it works with finite prefixes
 \begin{equation}\label{eq:exp-prefix}
   P_m(x)=\sum_{r=0}^m\frac{x^r}{r!}.
 \end{equation}
-This keeps all intermediate statements rational.
+This keeps all intermediate statements rational.  Section~\ref{sec:positive}
+then runs on two tools assembled here: a finite-prefix saddle bound for a single
+coefficient, and a convolution inequality that multiplies two such prefixes as
+one.
 
 \subsection{Generic finite saddle lemmas}
 
@@ -754,8 +772,9 @@ For $\rho\ge0$, scaling gives
 \[
  E_m(r\mapsto \rho^rL_r)=\rho^mE_m(L).
 \]
-Expanding the exponential and bounding the coefficient of a power by the
-corresponding total gas yields the finite saddle inequality
+Expanding the exponential and bounding the coefficient of $t^m$ by the
+corresponding total --- the \emph{gas} $\sum_{r=1}^mL_r\rho^r$ fed into the
+prefix --- yields the finite saddle inequality
 \begin{equation}\label{eq:finite-saddle}
   \rho^mE_m(L)\le
   P_m\left(\sum_{r=1}^mL_r\rho^r\right).
@@ -792,10 +811,14 @@ and the elementary absorption
 
 \subsection{Factorial-gas estimates}
 
-The rational saddle radius is
+The gas sums that arise here carry a factorial weight, since
+$c_r=6^r(r-1)!\,d_r$; this subsection bounds them.  The rational saddle radius
+is
 \begin{equation}\label{eq:beta}
   \beta=\frac{34}{15}.
 \end{equation}
+Its particular value is calibrated to the normalization below --- the balance
+$\tfrac{15}{34}\cdot\tfrac{68}{25}=\tfrac65$ recorded after~\eqref{eq:factorial-lb}.
 For $n\ge40$ define
 \[
  u_{n,r}=\beta^r\frac{(r-1)!}{n^r}.
@@ -1043,7 +1066,8 @@ reductions in Sections~\ref{sec:majorant}--\ref{sec:positive} are meant to
 explain the mathematics, while the Lean development is authoritative for the
 final constants and case splits.
 
-The solo term in \eqref{eq:Unorm} is handled separately.  The formal proof
+The \emph{solo term} of \eqref{eq:Unorm} --- the lone non-convolution positive
+contribution $2^{-a-1}Y_a(N)$ --- is handled separately.  The formal proof
 uses a sharpened factorial-composition estimate and proves
 \begin{equation}\label{eq:solo-budget}
   2^{-a-1}Y_a(N)\le\frac1{200000000}
@@ -1116,7 +1140,8 @@ comparing the result to a $(10/7)^a$ envelope.  The remaining dyadic factor
 then yields \eqref{eq:solo-budget}.  All steps are rational inequalities; no
 floating-point assertion is imported into the theorem.
 
-We summarize the outcome.
+The product budget and the solo budget now combine into a single bound on the
+positive side.
 
 \begin{theorem}[Positive envelope]\label{thm:positive-envelope}
 For every $a\ge401$ and every $N$ satisfying \eqref{eq:rectangle},
@@ -1718,6 +1743,12 @@ needed none of the mid-run redirection (Cards~6 and~7) that the first developmen
 had required.
 
 \paragraph{Quantitative notes.}
+% FLAG(writing-pass): ``roughly sixty-four hours'' has no antecedent in the body.
+% Elsewhere the Prop 5.1 Codex run is described as ``about two days'' and the
+% Prop 5.2 completion as ``roughly twenty hours''; this 64h figure matches
+% neither, and its referent (``the completion phase'') is ambiguous.  Please
+% reconcile the figure and state it once in the body before this caveat refers
+% back to it.  (Left unedited by the writing pass: number could not be verified.)
 The ``roughly sixty-four hours'' attributed to the completion phase is the
 elapsed wall-clock time recorded in the Codex goal log for that thread; it is not
 active compute time, is not summed over parallel workers, and includes waiting
