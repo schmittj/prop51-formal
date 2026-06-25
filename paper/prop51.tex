@@ -14,7 +14,7 @@
 \hypersetup{
   pdftitle={Strict negativity and non-vanishing of Chen--Larson hypergeometric coefficients},
   pdfauthor={Johannes Schmitt},
-  pdfsubject={A computer-assisted and formally verified proof of Propositions 5.1 and 5.2 (the latter corrected)},
+  pdfsubject={A computer-assisted proof, formally verified in Lean 4, of the Chen-Larson nonvanishing predictions (one corrected)},
   pdfkeywords={Lean 4, formal verification, strata of differentials,
                hypergeometric series, Ionel relation, AI-assisted mathematics}
 }
@@ -78,7 +78,7 @@
   \small\itshape #1\par\leftskip0pt\rightskip0pt\vspace{0.2em}}
 
 \title{Strict negativity and non-vanishing of Chen--Larson hypergeometric coefficients\\
-\large A computer-assisted and formally verified proof of Propositions~5.1 and~5.2 (the latter corrected)}
+\large A computer-assisted proof, formally verified in Lean~4, with a correction to the Chen--Larson derivation}
 \author{Johannes Schmitt}
 \date{Version 2.0 (24 June 2026)}
 
@@ -86,50 +86,26 @@
 \maketitle
 
 \begin{abstract}
-Chen and Larson reduce a geometric vanishing problem for strata of
-holomorphic abelian differentials to the (non-)vanishing of a coefficient in a
-quotient of hypergeometric generating series.  Their argument produces two
-such series, and we treat both.  The upshot is that these coefficients never
-vanish --- so the predicted geometric vanishing $\eta^a=0$ holds --- for every
-positive partition and in every genus, beyond the range $g\le30$ that Chen and
-Larson verify by computer.  For the residue classes $g\equiv0,2\pmod 3$ covered
-by their Proposition~5.1 we prove the stronger statement that the relevant
-coefficient is always strictly negative: with
-\[
-  \C(t)=\sum_{r\ge 0}\frac{(6r)!}{(3r)!(2r)!}\left(\frac{t}{72}\right)^r,
-\]
-if $g\ge2$, $g\equiv0,2\pmod 3$, $a=\floor{g/3}+1$, and
-$\mu=(m_1,\ldots,m_n)$ is a positive partition of $2g-2$, then
-\[
- [t^a]\frac{\prod_{i=1}^n\C(t/(m_i+1))}
-                   {\C(t)^{2g-2+n}}<0.
-\]
-For the complementary class $g\equiv1\pmod3$, governed by their
-Proposition~5.2, we first \emph{correct} the printed relation: the constant
-$\kappa_0=2g-2$ of Ionel's relation was inadvertently replaced by $1$, which
-changes the coefficient.  We then prove that the corrected coefficient is
-non-vanishing for every positive partition, and strictly negative for $a\ge14$.
-Together the two results cover all three residue classes $g\equiv0,1,2\pmod3$.
+Chen and Larson study tautological classes on the strata of holomorphic
+abelian differentials, where they predict a vanishing result.  Using known
+tautological relations on the moduli space of curves, they reduce this
+prediction to the non-vanishing of certain coefficients of a quotient of
+hypergeometric generating series, treating the residue classes
+$g\equiv0,2\pmod3$ and $g\equiv1\pmod3$ through two separate series; they verify
+the non-vanishing by computer for small genus.
 
-The Proposition~5.1 proof removes the partition by a coefficientwise
-majorization; a sign-lock estimate with an explicit rational final margin then
-shows that all convolution indices above $0.9a$ contribute nonpositively, and the
-remaining positive part is controlled by a direct saddle method based on finite
-exponential prefixes.  Small ranges are discharged by exact enumeration and
-verified rational or dyadic interval certificates; the large range is closed by
-symbolic ratio and reserve bounds.  The corrected Proposition~5.2 reduces,
-through a one-line identity, to two sign inputs --- one inherited from the
-Proposition~5.1 analysis, the other an independent strict-negativity estimate for
-the printed coefficient --- together with an exhaustive finite check.  The scalar
-power-series theorems behind both propositions --- after the geometric reduction,
-and including the elementary correction bridge --- are formalized in \Lean{}~4 and
-Mathlib, the public theorems depending only on the standard axioms and the two
-compiler-trust axioms of \code{native\_decide}.  The tautological relations of
-Ionel and Chen--Larson and their pullback to the strata are cited, not formalized
-here.  We also describe the
-role of long-horizon generative-AI assistance in the development, including an AI
-audit that uncovered the Proposition~5.2 error in the original paper, and the
-precise trust boundary of the computational certificates.
+We prove it in general: in both cases the relevant coefficient is non-vanishing
+for every genus and every stratum, and in the first case it has, more strongly,
+a uniform strict sign.  Along the way we correct an error in the Chen--Larson
+derivation of the $g\equiv1\pmod3$ series, where a constant of the underlying
+relation of Ionel had inadvertently been changed.
+
+All of the resulting power-series statements --- the part of the argument that
+is not classical algebraic geometry --- are formally verified in \Lean{}~4 and
+Mathlib; the only non-standard part of the trusted base is the compiler invoked
+by \code{native\_decide} for the large finite computations.  We also describe
+the substantial role of long-horizon generative-AI assistance in finding and
+checking the proof, including the AI audit that uncovered the error above.
 \end{abstract}
 
 \tableofcontents
@@ -1812,19 +1788,17 @@ needed none of the mid-run redirection (Cards~6 and~7) that the first developmen
 had required.
 
 \paragraph{Quantitative notes.}
-% FLAG(writing-pass): ``roughly sixty-four hours'' has no antecedent in the body.
-% Elsewhere the Prop 5.1 Codex run is described as ``about two days'' and the
-% Prop 5.2 completion as ``roughly twenty hours''; this 64h figure matches
-% neither, and its referent (``the completion phase'') is ambiguous.  Please
-% reconcile the figure and state it once in the body before this caveat refers
-% back to it.  (Left unedited by the writing pass: number could not be verified.)
-The ``roughly sixty-four hours'' attributed to the completion phase is the
-elapsed wall-clock time recorded in the Codex goal log for that thread; it is not
-active compute time, is not summed over parallel workers, and includes waiting
-and compilation.  Human active time was not separately measured, and token
-counts and monetary cost were not retained.  The figure is given only to convey
-scale.  The formal proof was checked under Lean~4.27.0 and a Mathlib revision
-pinned in the package manifest.
+The Proposition~5.1 completion drive ran as a single Codex \texttt{/goal} thread,
+for which the goal tracker recorded about sixty-four hours of elapsed time; the
+separate Proposition~5.2 drive took roughly twenty hours by the same measure.
+These are elapsed wall-clock figures as logged, not active compute time: they
+include waiting and compilation and are not summed over parallel workers.  The
+calendar span of the Proposition~5.1 thread was longer still --- it stayed open
+from 15 to 20~June~2026 --- because the goal was paused between work sessions.
+Human active time was not separately measured, and token counts and monetary
+cost were not retained; the figures are given only to convey scale.  The formal
+proof was checked under Lean~4.27.0 and a Mathlib revision pinned in the package
+manifest.
 
 \paragraph{On the persistent goal.}
 The \texttt{/goal} prompt of Card~5 is reproduced as it was actually used.  By
@@ -2610,31 +2584,57 @@ theorem chenLarsonCoefficient_ne_zero
 end Prop51
 \end{lstlisting}
 
-For the corrected Proposition~5.2, the analogous public facade is
-\code{Prop52/Theorem.lean}; the two final theorems read as follows (again lightly
-edited for readability).
+For the corrected Proposition~5.2 the analogous public facade is
+\code{Prop52/Theorem.lean}.  Besides re-exporting the series of
+Proposition~5.1, it \emph{defines} the corrected source factor
+$D_\mu^{\mathrm{cor}}$ coefficientwise, pins its coefficients, and states the two
+final source theorems (again lightly edited for readability).
 
 \begin{lstlisting}
+import Prop51.Theorem
 import Prop52.Source
 
 namespace Prop52
 
--- chenLarsonSeries mu is B_mu(t).
--- chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu is D_mu^cor(t).
+-- B_mu(X) is re-exported from Prop 5.1.
+noncomputable abbrev chenLarsonSeries (mu : List Nat) : Q[[X]] :=
+  Prop51.chenLarsonSeries mu
 
+-- The corrected factor D^cor, defined coefficientwise.
+-- Geometrically lead = M(g/3+1) = 2g-2; printed factor uses 1.
+noncomputable abbrev chenLarsonProp52SourceFactor
+    (lead : Q) (mu : List Nat) : Q[[X]] :=
+  mk (sourceFactorCoeff lead mu)
+
+-- Its coefficients pin D^cor exactly:
+theorem coeff_sourceFactor_zero (lead : Q) (mu : List Nat) :
+    coeff 0 (chenLarsonProp52SourceFactor lead mu) = lead
+
+theorem coeff_sourceFactor_one (lead : Q) (mu : List Nat) :
+    coeff 1 (chenLarsonProp52SourceFactor lead mu)
+      = -2 * ((N mu : Q) - sPower mu 1)
+
+theorem coeff_sourceFactor_succ_succ
+    (lead : Q) (mu : List Nat) (r : Nat) :
+    coeff (r + 2) (chenLarsonProp52SourceFactor lead mu)
+      = -12 * (r + 1) * Prop51.c (r + 1)
+          * ((N mu : Q) - sPower mu (r + 2))
+
+-- Non-vanishing for g >= 2, g = 1 (mod 3):
 theorem chenLarsonProp52Coefficient_nonvanishing
     {g : Nat} (hg : 2 <= g) (hmod : g % 3 = 1)
     {mu : List Nat} (hmu : Prop51.IsPartitionOf mu (2 * g - 2)) :
     coeff (g / 3 + 1)
-      (chenLarsonSeries mu *
-        chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) != 0
+      (chenLarsonSeries mu
+        * chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) != 0
 
+-- ... and strict negativity for g >= 40:
 theorem chenLarsonProp52Coefficient_neg
     {g : Nat} (hg : 40 <= g) (hmod : g % 3 = 1)
     {mu : List Nat} (hmu : Prop51.IsPartitionOf mu (2 * g - 2)) :
     coeff (g / 3 + 1)
-      (chenLarsonSeries mu *
-        chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) < 0
+      (chenLarsonSeries mu
+        * chenLarsonProp52SourceFactor (M (g / 3 + 1)) mu) < 0
 
 end Prop52
 \end{lstlisting}
